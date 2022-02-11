@@ -58,7 +58,7 @@ const processData = async (data, { url, protobufPath, protobufType }) => {
       })
     );
   } else {
-    console.log('Report data:', data);
+    console.log('Report data:', JSON.stringify(data, null, 2));
   }
 };
 
