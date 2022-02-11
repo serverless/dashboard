@@ -1,6 +1,11 @@
 {
   "name": "@serverless/aws-lambda-otel-extension",
   "version": "0.0.0",
+  "devDependencies": {
+    "adm-zip": "^0.5.9",
+    "essentials": "^1.2.0",
+    "fs2": "^0.3.9"
+  },
   "license": "MIT",
   "scripts": {
     "test": "mocha \"test/**/*.test.js\""
@@ -11,12 +16,14 @@
         "error",
         {
           "devDependencies": [
+            "**/scripts/**",
             "**/test/**",
             "prettier.config.js"
           ],
           "packageDir": [
-            "./packages/aws-lambda-otel-extension",
-            "./"
+            "./",
+            "./packages",
+            "./packages/aws-lambda-otel-extension"
           ]
         }
       ]
