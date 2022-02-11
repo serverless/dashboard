@@ -13,6 +13,7 @@ const mkdir = require('fs2/mkdir');
 const AdmZip = require('adm-zip');
 
 const rootDir = path.resolve(__dirname, '../');
+const optDir = path.resolve(rootDir, 'opt');
 const distDir = path.resolve(rootDir, 'dist');
 const distFilename = path.resolve(distDir, 'extension.zip');
 
@@ -21,18 +22,14 @@ const distFilename = path.resolve(distDir, 'extension.zip');
   await Promise.all([
     unlink(distFilename, { loose: true }),
     mkdir(distDir, { silent: true }),
-    ...['extensions', 'otel-extension'].map(async (relativeDirname) => {
-      const dirname = path.resolve(rootDir, relativeDirname);
-      for (const relativeFilename of await readdir(dirname, {
+    (async () => {
+      for (const relativeFilename of await readdir(optDir, {
         depth: Infinity,
         type: { file: true },
       })) {
-        zip.addLocalFile(
-          path.resolve(dirname, relativeFilename),
-          path.join(relativeDirname, path.dirname(relativeFilename))
-        );
+        zip.addLocalFile(path.resolve(optDir, relativeFilename), path.dirname(relativeFilename));
       }
-    }),
+    })(),
   ]);
   zip.writeZip(distFilename);
 })();
