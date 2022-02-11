@@ -1,6 +1,6 @@
 'use strict';
 
-const { detectEventType } = require('.');
+const { detectEventType } = require('../eventDetection');
 
 describe('detectEventType', () => {
   it('should return alexa skill', () => {
