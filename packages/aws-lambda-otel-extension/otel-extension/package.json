@@ -5,8 +5,6 @@
   "license": "MIT",
   "scripts": {
     "test": "jest src/**/*.test.js",
-    "lint": "eslint --ext .js ./src",
-    "lint:fix": "eslint --ext .js ./src --fix",
     "build": "esbuild src/index.js --bundle --platform=node --target=node12 --minify --outfile=build/index.js && esbuild src/wrapper.js --bundle --minify --platform=node --target=node12 --outfile=build/wrapper.js"
   },
   "dependencies": {
@@ -33,10 +31,6 @@
   },
   "devDependencies": {
     "esbuild": "^0.14.18",
-    "eslint": "^8.8.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "jest": "^27.5.1",
-    "prettier": "^2.5.1"
+    "jest": "^27.5.1"
   }
 }
