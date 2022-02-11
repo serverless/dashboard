@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 
-const { detectEventType } = require('../eventDetection');
+const { detectEventType } = require('../otel-extension/eventDetection');
 
 describe('detectEventType', () => {
   it('should return alexa skill', () => {
