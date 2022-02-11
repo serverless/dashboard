@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function eventType(event) {
   const type = 'aws.apigateway.http';
 
@@ -9,7 +11,7 @@ module.exports = function eventType(event) {
     const valuesArePresent =
       keysThatNeedValues
         .map(() => {
-          return typeof event?.key !== 'undefined';
+          return typeof event.key !== 'undefined';
         })
         .filter(Boolean).length === keysThatNeedValues.length;
     return keysArePresent && valuesArePresent ? type : false;

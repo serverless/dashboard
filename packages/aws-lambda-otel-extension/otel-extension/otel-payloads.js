@@ -1,3 +1,5 @@
+'use strict';
+
 const get = require('lodash.get');
 const { resourceAttributes, measureAttributes, logMessage } = require('./helper');
 
@@ -7,7 +9,7 @@ const createMetricAttributes = (fun, report) => {
     {
       key: 'faas.error_timeout',
       value: {
-        boolValue: timedOut ? true : false,
+        boolValue: !!timedOut,
       },
     },
   ];
@@ -15,7 +17,7 @@ const createMetricAttributes = (fun, report) => {
   const metricAttributes = [
     ...measureAttributes.map(({ key, value, source, type }) => {
       switch (type) {
-        case 'intValue':
+        case 'intValue': {
           const intValue = value || get(fun.record, source, 0);
           return {
             key,
@@ -23,7 +25,8 @@ const createMetricAttributes = (fun, report) => {
               [type]: intValue,
             },
           };
-        case 'boolValue':
+        }
+        case 'boolValue': {
           const boolValue = value || get(fun.record, source, false);
           return {
             key,
@@ -31,8 +34,9 @@ const createMetricAttributes = (fun, report) => {
               [type]: boolValue,
             },
           };
+        }
         case 'stringValue':
-        default:
+        default: {
           const recordValue = value || get(fun.record, source);
           const finalValue = recordValue === undefined ? null : recordValue;
           return {
@@ -41,6 +45,7 @@ const createMetricAttributes = (fun, report) => {
               [type]: `${finalValue}`,
             },
           };
+        }
       }
     }),
     {
@@ -76,7 +81,7 @@ const createMetricAttributes = (fun, report) => {
 const createResourceAttributes = (fun) =>
   resourceAttributes.map(({ key, value, source, type }) => {
     switch (type) {
-      case 'intValue':
+      case 'intValue': {
         const intValue = value || get(fun.record, source, 0);
         return {
           key,
@@ -84,7 +89,8 @@ const createResourceAttributes = (fun) =>
             [type]: intValue,
           },
         };
-      case 'boolValue':
+      }
+      case 'boolValue': {
         const boolValue = value || get(fun.record, source, false);
         return {
           key,
@@ -92,8 +98,9 @@ const createResourceAttributes = (fun) =>
             [type]: boolValue,
           },
         };
+      }
       case 'stringValue':
-      default:
+      default: {
         const recordValue = value || get(fun.record, source);
         const finalValue = recordValue === undefined ? null : recordValue;
         return {
@@ -102,6 +109,7 @@ const createResourceAttributes = (fun) =>
             [type]: `${finalValue}`,
           },
         };
+      }
     }
   });
 
@@ -254,38 +262,40 @@ const createTracePayload = (groupedByRequestId) =>
           attributes: createResourceAttributes(fun),
         },
         instrumentationLibrarySpans: [
-          ...(traces.record.resourceSpans || [])[0].instrumentationLibrarySpans.map((librarySpans) => {
-            return {
-              ...librarySpans,
-              spans: librarySpans.spans.map((span) => {
-                const existingKeys = Object.keys(span.attributes);
-                return {
-                  ...span,
-                  attributes: [
-                    ...Object.keys(span.attributes).map((key) => {
-                      const jsType = typeof span.attributes[key];
+          ...(traces.record.resourceSpans || [])[0].instrumentationLibrarySpans.map(
+            (librarySpans) => {
+              return {
+                ...librarySpans,
+                spans: librarySpans.spans.map((span) => {
+                  const existingKeys = Object.keys(span.attributes);
+                  return {
+                    ...span,
+                    attributes: [
+                      ...Object.keys(span.attributes).map((key) => {
+                        const jsType = typeof span.attributes[key];
 
-                      let type = 'stringValue';
-                      let value = `${span.attributes[key]}`;
+                        let type = 'stringValue';
+                        let value = `${span.attributes[key]}`;
 
-                      if (jsType === 'number') {
-                        type = 'intValue';
-                        value = span.attributes[key];
-                      }
+                        if (jsType === 'number') {
+                          type = 'intValue';
+                          value = span.attributes[key];
+                        }
 
-                      return {
-                        key,
-                        value: {
-                          [type]: value,
-                        },
-                      };
-                    }),
-                    ...metricAttributes.filter(({ key }) => !existingKeys.includes(key)),
-                  ],
-                };
-              }),
-            };
-          }),
+                        return {
+                          key,
+                          value: {
+                            [type]: value,
+                          },
+                        };
+                      }),
+                      ...metricAttributes.filter(({ key }) => !existingKeys.includes(key)),
+                    ],
+                  };
+                }),
+              };
+            }
+          ),
         ],
       },
     ];

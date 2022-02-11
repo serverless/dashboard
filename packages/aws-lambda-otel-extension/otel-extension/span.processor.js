@@ -1,10 +1,12 @@
+'use strict';
+
 const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
 const clone = require('lodash.clone');
 
 class SlsSpanProcessor extends SimpleSpanProcessor {
-  incompleteSpans = {};
   constructor(...args) {
     super(...args);
+    this.incompleteSpans = {};
   }
 
   onStart(span) {
