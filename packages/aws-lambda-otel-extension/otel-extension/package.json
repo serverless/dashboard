@@ -7,6 +7,11 @@
     "test": "jest src/**/*.test.js",
     "build": "esbuild src/index.js --bundle --platform=node --target=node12 --minify --outfile=build/index.js && esbuild src/wrapper.js --bundle --minify --platform=node --target=node12 --outfile=build/wrapper.js"
   },
+  "eslintConfig": {
+    "rules": {
+      "no-console": "off"
+    }
+  },
   "dependencies": {
     "@opentelemetry/api": "^1.1.0",
     "@opentelemetry/auto-instrumentations-node": "^0.27.2",

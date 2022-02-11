@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+
+'use strict';
+
 const { unzip: unzipWtithCallback } = require('zlib');
 const { writeFileSync } = require('fs');
 const protobuf = require('protobufjs');
@@ -18,6 +21,7 @@ const {
   SAVE_FILE,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
+
 const unzip = promisify(unzipWtithCallback);
 
 function handleShutdown() {
@@ -49,7 +53,9 @@ function handleShutdown() {
       filteredItems.map(async (log) => {
         if (log.type === 'function') {
           try {
-            const jsonString = log.record.substring(log.record.indexOf('{'), log.record.length).trim();
+            const jsonString = log.record
+              .substring(log.record.indexOf('{'), log.record.length)
+              .trim();
             const { b, origin } = JSON.parse(jsonString);
             const raw = (await unzip(Buffer.from(b, 'base64'))).toString();
             const parsed = JSON.parse(raw);
@@ -111,8 +117,8 @@ function handleShutdown() {
     const { ready, notReady } = Object.keys(groupedByRequestId).reduce(
       (obj, id) => {
         const data = groupedByRequestId[id];
-        let report = data['platform.report'];
-        const { function: fun, traces } = data?.layer?.record || {};
+        const report = data['platform.report'];
+        const { function: fun, traces } = get(data, 'layer.record') || {};
 
         if (report && fun && traces) {
           return {
@@ -121,8 +127,8 @@ function handleShutdown() {
               ...obj.ready,
               [id]: {
                 'platform.report': report,
-                function: { record: fun },
-                traces: { record: traces },
+                'function': { record: fun },
+                'traces': { record: traces },
               },
             },
           };
@@ -158,7 +164,7 @@ function handleShutdown() {
         async (metric) =>
           new Promise((resolve) => {
             try {
-              protobuf.load(`${__dirname}/proto/metric_service.proto`, function (err, root) {
+              protobuf.load(`${__dirname}/proto/metric_service.proto`, (err, root) => {
                 try {
                   if (err) throw err;
 
@@ -191,7 +197,7 @@ function handleShutdown() {
         (trace) =>
           new Promise((resolve) => {
             try {
-              protobuf.load(`${__dirname}/proto/trace_service.proto`, function (err, root) {
+              protobuf.load(`${__dirname}/proto/trace_service.proto`, (err, root) => {
                 try {
                   if (err) throw err;
 
@@ -239,9 +245,8 @@ function handleShutdown() {
         const saveList = subList.filter((log) => {
           if (log.type === 'function') {
             return incompleteRequestIds.includes(log.record.split('\t')[1]);
-          } else {
-            return incompleteRequestIds.includes(log.record.requestId);
           }
+          return incompleteRequestIds.includes(log.record.requestId);
         });
         subList.splice(0);
         subList.push(...saveList);
@@ -311,7 +316,7 @@ function handleShutdown() {
       }
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
     } else {
-      throw new Error('unknown event: ' + event.eventType);
+      throw new Error(`unknown event: ${event.eventType}`);
     }
   }
 })();

@@ -1,3 +1,5 @@
+'use strict';
+
 const fetch = require('node-fetch');
 
 const baseUrl = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime`;

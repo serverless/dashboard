@@ -1,3 +1,5 @@
+'use strict';
+
 const resourceAttributes = [
   {
     key: 'faas.id',

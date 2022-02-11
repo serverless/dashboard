@@ -1,3 +1,5 @@
+'use strict';
+
 const { gzipSync } = require('zlib');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
@@ -14,6 +16,7 @@ const { logMessage } = require('./helper');
 const SlsSpanProcessor = require('./span.processor');
 const { detectEventType } = require('./eventDetection');
 
+// eslint-disable-next-line no-new
 new ExpressInstrumentation();
 
 let tracerProvider;
@@ -77,7 +80,8 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     functionData.errorCulprit = 'timeout';
     functionData.errorExceptionType = 'TimeoutError';
     functionData.errorExceptionMessage = '';
-    functionData.errorExceptionStacktrace = 'Function execution duration going to exceeded configured timeout limit.';
+    functionData.errorExceptionStacktrace =
+      'Function execution duration going to exceeded configured timeout limit.';
   } else if (err) {
     functionData.error = true;
     functionData.errorCulprit = err.message;
@@ -118,7 +122,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
 
   // Check for Koa path
   pathData['http.path'] = spans.reduce((finalPath, val) => {
-    if (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-koa' && /router - /gi.test(val.name)) {
+    if (
+      val.instrumentationLibrary.name === '@opentelemetry/instrumentation-koa' &&
+      /router - /gi.test(val.name)
+    ) {
       return val.attributes['http.route'];
     }
     return finalPath;
@@ -142,7 +149,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
           parentSpanId: val.parentSpanId,
           // This is a bug with the express instrumentation where the route handler
           // does not resolve until the lambda invocation is complete 🤷‍♂️
-          name: val.name === 'middleware - bound ' ? `request handler - ${pathData['http.path']}` : val.name,
+          name:
+            val.name === 'middleware - bound '
+              ? `request handler - ${pathData['http.path']}`
+              : val.name,
           kind: 'SPAN_KIND_SERVER',
           startTimeUnixNano: `${startTime[0] * 1000000000 + startTime[1]}`,
           endTimeUnixNano: `${endTime[0] * 1000000000 + endTime[1]}`,
@@ -153,8 +163,8 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
           status: {},
         };
       })
-      .reduce((obj, span) => {
-        obj[span.spanId] = span;
+      .reduce((obj, innerSpan) => {
+        obj[innerSpan.spanId] = innerSpan;
         return obj;
       }, {});
 
@@ -255,7 +265,8 @@ const instrumentations = [
         eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
-        eventData[context.awsRequestId].eventCustomRequestTimeEpoch = event.requestContext.requestTimeEpoch;
+        eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
+          event.requestContext.requestTimeEpoch;
       } else if (eventType === 'aws.apigatewayv2.http') {
         eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
         eventData[context.awsRequestId].eventSource = 'aws.apigateway';
@@ -265,7 +276,8 @@ const instrumentations = [
         eventData[context.awsRequestId].httpPath = path;
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
-        eventData[context.awsRequestId].eventCustomRequestTimeEpoch = event.requestContext.timeEpoch;
+        eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
+          event.requestContext.timeEpoch;
       }
     },
     responseHook: async (span, { err, res }) => {
@@ -280,7 +292,7 @@ diag.setLogger(new DiagConsoleLogger(), logLevel);
 
 // Register instrumentations synchronously to ensure code is patched even before provider is ready.
 registerInstrumentations({
-  instrumentations: instrumentations,
+  instrumentations,
 });
 
 async function initializeProvider() {
@@ -295,7 +307,7 @@ async function initializeProvider() {
   spanProcessor = new SlsSpanProcessor(memoryExporter);
   tracerProvider.addSpanProcessor(spanProcessor);
 
-  let sdkRegistrationConfig = {};
+  const sdkRegistrationConfig = {};
   tracerProvider.register(sdkRegistrationConfig);
 
   // Re-register instrumentation with initialized provider. Patched code will see the update.

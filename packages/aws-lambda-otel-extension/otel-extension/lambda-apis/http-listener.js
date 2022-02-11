@@ -1,3 +1,5 @@
+'use strict';
+
 const http = require('http');
 const { readFileSync, existsSync } = require('fs');
 const { logMessage, slsLayerRegex, SAVE_FILE } = require('./../helper');
@@ -14,13 +16,13 @@ function listen(address, port) {
   }
 
   // init HTTP server for the Logs API subscription
-  const server = http.createServer(function (request, response) {
-    if (request.method == 'POST') {
-      var body = '';
-      request.on('data', function (data) {
+  const server = http.createServer((request, response) => {
+    if (request.method === 'POST') {
+      let body = '';
+      request.on('data', (data) => {
         body += data;
       });
-      request.on('end', function () {
+      request.on('end', () => {
         try {
           const batch = JSON.parse(body);
           logMessage('Current data before write: ', JSON.stringify(logsQueue));
