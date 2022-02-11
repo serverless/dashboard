@@ -4,13 +4,12 @@
 
 const { unzip: unzipWtithCallback } = require('zlib');
 const { writeFileSync } = require('fs');
-const protobuf = require('protobufjs');
-const fetch = require('node-fetch');
 const { promisify } = require('util');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
 const { listen } = require('./lambda-apis/http-listener');
+const reportOtelData = require('./report-otel-data');
 const {
   EventType,
   logMessage,
@@ -92,23 +91,6 @@ function handleShutdown() {
     }, {});
   };
 
-  const sendToOTELEndpoints = (url, data) =>
-    Promise.all(
-      data.map(({ body, orgId }) =>
-        fetch(url, {
-          method: 'post',
-          body,
-          headers: {
-            'accept-encoding': 'gzip',
-            'content-type': 'application/x-protobuf',
-            'serverless-token': orgId,
-          },
-        }).then((res) => {
-          if (!res.ok) console.log(res);
-        })
-      )
-    );
-
   // function for processing collected logs
   async function uploadLogs(logList) {
     const currentIndex = logList.length;
@@ -159,78 +141,17 @@ function handleShutdown() {
     logMessage('OrgId: ', orgId);
     const metricData = createMetricsPayload(ready);
     logMessage('Metric Data: ', JSON.stringify(metricData));
-    const metricPayloads = await Promise.all(
-      metricData.map(
-        async (metric) =>
-          new Promise((resolve) => {
-            try {
-              protobuf.load(`${__dirname}/proto/metric_service.proto`, (err, root) => {
-                try {
-                  if (err) throw err;
-
-                  const MetricServiceRequest = root.lookupType(
-                    'opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest'
-                  );
-                  const body = MetricServiceRequest.encode(metric).finish();
-                  // const message = Buffer.from(encoded).toString('base64');
-                  resolve({
-                    orgId,
-                    body,
-                  });
-                } catch (error) {
-                  console.log('Buffer error: ', error);
-                  resolve(metric);
-                }
-              });
-            } catch (error) {
-              console.log('Could not convert to proto buff', error);
-              resolve(metric);
-            }
-          })
-      )
-    );
 
     const traces = createTracePayload(ready);
     logMessage('Traces Data: ', JSON.stringify(traces));
-    const tracePayloads = await Promise.all(
-      traces.map(
-        (trace) =>
-          new Promise((resolve) => {
-            try {
-              protobuf.load(`${__dirname}/proto/trace_service.proto`, (err, root) => {
-                try {
-                  if (err) throw err;
-
-                  const ExportTraceServiceRequest = root.lookupType(
-                    'opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest'
-                  );
-
-                  const body = ExportTraceServiceRequest.encode(trace).finish();
-                  // const message = Buffer.from(encoded).toString('base64');
-                  resolve({
-                    orgId,
-                    body,
-                  });
-                } catch (error) {
-                  console.log('Buffer error: ', error);
-                  resolve(trace);
-                }
-              });
-            } catch (error) {
-              console.log('Could not convert to proto buff', error);
-              resolve(trace);
-            }
-          })
-      )
-    );
 
     try {
-      await sendToOTELEndpoints(`${process.env.SLS_PUBLISH}/v1/metrics`, metricPayloads);
+      await reportOtelData.metrics(metricData);
     } catch (error) {
       console.log('Metric send Error:', error);
     }
     try {
-      await sendToOTELEndpoints(`${process.env.SLS_PUBLISH}/v1/traces`, tracePayloads);
+      await reportOtelData.traces(traces);
     } catch (error) {
       console.log('Trace send Error:', error);
     }
