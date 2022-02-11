@@ -8,6 +8,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "build": "./scripts/build.js",
     "test": "mocha \"test/**/*.test.js\""
   },
   "eslintConfig": {
