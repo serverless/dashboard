@@ -1,5 +1,7 @@
 'use strict';
 
+const { expect } = require('chai');
+
 const { detectEventType } = require('../eventDetection');
 
 describe('detectEventType', () => {
@@ -20,7 +22,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.alexaskill');
+    expect(out).to.equal('aws.alexaskill');
   });
 
   it('should return custom authorizer', () => {
@@ -30,7 +32,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.apigateway.authorizer');
+    expect(out).to.equal('aws.apigateway.authorizer');
   });
 
   it('should return api gateway v1', () => {
@@ -47,7 +49,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.apigateway.http');
+    expect(out).to.equal('aws.apigateway.http');
   });
 
   it('should return api gateway v2', () => {
@@ -64,7 +66,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.apigatewayv2.http');
+    expect(out).to.equal('aws.apigatewayv2.http');
   });
 
   it('should return cloud front', () => {
@@ -77,7 +79,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.cloudfront');
+    expect(out).to.equal('aws.cloudfront');
   });
 
   it('should return cloudwatch event', () => {
@@ -88,7 +90,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.cloudwatch.log');
+    expect(out).to.equal('aws.cloudwatch.log');
   });
 
   it('should return firehose event', () => {
@@ -104,7 +106,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.firehose');
+    expect(out).to.equal('aws.firehose');
   });
 
   it('should return kinesis event', () => {
@@ -118,7 +120,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.kinesis');
+    expect(out).to.equal('aws.kinesis');
   });
 
   it('should return s3 event', () => {
@@ -131,7 +133,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.s3');
+    expect(out).to.equal('aws.s3');
   });
 
   it('should return scheduled event', () => {
@@ -140,7 +142,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.scheduled');
+    expect(out).to.equal('aws.scheduled');
   });
 
   it('should return ses event', () => {
@@ -153,7 +155,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.ses');
+    expect(out).to.equal('aws.ses');
   });
 
   it('should return sns event', () => {
@@ -166,7 +168,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.sns');
+    expect(out).to.equal('aws.sns');
   });
 
   it('should return sqs event', () => {
@@ -179,7 +181,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.sqs');
+    expect(out).to.equal('aws.sqs');
   });
 
   it('should return dynamodb event', () => {
@@ -192,7 +194,7 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.dynamodb');
+    expect(out).to.equal('aws.dynamodb');
   });
 
   it('should return cloudwatch event', () => {
@@ -202,13 +204,13 @@ describe('detectEventType', () => {
     };
 
     const out = detectEventType(event);
-    expect(out).toEqual('aws.cloudwatch.event');
+    expect(out).to.equal('aws.cloudwatch.event');
   });
 
   it('should return null', () => {
     const event = {};
 
     const out = detectEventType(event);
-    expect(out).toEqual(null);
+    expect(out).to.equal(null);
   });
 });
