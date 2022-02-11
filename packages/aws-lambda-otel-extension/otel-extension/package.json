@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest src/**/*.test.js",
+    "test": "jest **/*.test.js",
     "build": "esbuild src/index.js --bundle --platform=node --target=node12 --minify --outfile=build/index.js && esbuild src/wrapper.js --bundle --minify --platform=node --target=node12 --outfile=build/wrapper.js"
   },
   "eslintConfig": {
