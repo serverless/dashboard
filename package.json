@@ -1,0 +1,42 @@
+{
+  "repository": "serverless/runtime",
+  "author": "Serverless, Inc.",
+  "eslintConfig": {
+    "extends": "@serverless/eslint-config/node",
+    "root": true
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ],
+    "*.{css,html,js,json,md,yaml,yml}": [
+      "prettier -c"
+    ]
+  },
+  "devDependencies": {
+    "@serverless/eslint-config": "^4.0.0",
+    "eslint": "^8.8.0",
+    "eslint-plugin-import": "^2.22.0",
+    "git-list-updated": "^1.2.1",
+    "husky": "^4.2.5",
+    "lint-staged": "^12.3.3",
+    "prettier": "^2.1.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:updated": "pipe-git-updated --ext=js --base=main -- eslint",
+    "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
+    "prettier-check:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier -c",
+    "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
+    "prettify:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier --write"
+  },
+  "engines": {
+    "node": ">=12.0"
+  },
+  "license": "MIT"
+}
