@@ -1,5 +1,7 @@
 'use strict';
 
+require('essentials');
+
 const { expect } = require('chai');
 
 const { detectEventType } = require('../otel-extension/eventDetection');
