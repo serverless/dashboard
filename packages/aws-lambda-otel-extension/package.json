@@ -14,25 +14,6 @@
     "build:prod": "./scripts/build.prod.js",
     "test": "mocha \"test/**/*.test.js\""
   },
-  "eslintConfig": {
-    "rules": {
-      "import/no-extraneous-dependencies": [
-        "error",
-        {
-          "devDependencies": [
-            "**/scripts/**",
-            "**/test/**",
-            "prettier.config.js"
-          ],
-          "packageDir": [
-            "./",
-            "./packages",
-            "./packages/aws-lambda-otel-extension"
-          ]
-        }
-      ]
-    }
-  },
   "mocha": {
     "require": [
       "@serverless/test/setup/patch",
