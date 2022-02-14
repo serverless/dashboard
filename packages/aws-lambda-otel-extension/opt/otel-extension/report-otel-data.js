@@ -1,8 +1,8 @@
 'use strict';
 
 const reportModes = new Set(['json', 'proto']);
-const MODE = reportModes.has(process.env.SLS_OTEL_REPORT_MODE)
-  ? process.env.SLS_OTEL_REPORT_MODE
+const REPORT_TYPE = reportModes.has(process.env.SLS_OTEL_REPORT_TYPE)
+  ? process.env.SLS_OTEL_REPORT_TYPE
   : 'proto';
 
 const METRICS_URL = process.env.SLS_OTEL_REPORT_METRICS_URL;
@@ -11,11 +11,11 @@ const EXTRA_REQUEST_HEADERS = process.env.SLS_OTEL_REPORT_REQUEST_HEADERS
   ? Object.fromEntries(new URLSearchParams(process.env.SLS_OTEL_REPORT_REQUEST_HEADERS).entries())
   : {};
 
-const protobuf = MODE === 'proto' ? require('protobufjs') : null;
+const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 const fetch = require('node-fetch');
 
 const processData = async (data, { url, protobufPath, protobufType }) => {
-  if (MODE === 'proto') {
+  if (REPORT_TYPE === 'proto') {
     data = (
       await Promise.all(
         data.map(
@@ -51,7 +51,7 @@ const processData = async (data, { url, protobufPath, protobufType }) => {
           body: datum,
           headers: {
             'accept-encoding': 'gzip',
-            'content-type': MODE === 'proto' ? 'application/x-protobuf' : 'application/json',
+            'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
             ...EXTRA_REQUEST_HEADERS,
           },
         });
