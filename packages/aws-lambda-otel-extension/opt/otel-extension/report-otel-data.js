@@ -5,8 +5,8 @@ const MODE = reportModes.has(process.env.SLS_OTEL_REPORT_MODE)
   ? process.env.SLS_OTEL_REPORT_MODE
   : 'proto';
 
-const METRICS_URL = `${process.env.SLS_OTEL_REPORT_URL}/v1/metrics`;
-const TRACES_URL = `${process.env.SLS_OTEL_REPORT_URL}/v1/traces`;
+const METRICS_URL = process.env.SLS_OTEL_REPORT_METRICS_URL;
+const TRACES_URL = process.env.SLS_OTEL_REPORT_METRICS_URL;
 const EXTRA_REQUEST_HEADERS = process.env.SLS_OTEL_REPORT_REQUEST_HEADERS
   ? Object.fromEntries(new URLSearchParams(process.env.SLS_OTEL_REPORT_REQUEST_HEADERS).entries())
   : {};
@@ -28,6 +28,7 @@ const processData = async (data, { url, protobufPath, protobufType }) => {
 
                     const ServiceRequest = root.lookupType(protobufType);
                     resolve(ServiceRequest.encode(datum).finish());
+                    // const message = Buffer.from(encoded).toString('base64');
                   } catch (error) {
                     console.log('Buffer error: ', error);
                     resolve(null);
