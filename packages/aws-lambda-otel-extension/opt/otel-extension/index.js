@@ -145,17 +145,20 @@ function handleShutdown() {
     const traces = createTracePayload(ready);
     logMessage('Traces Data: ', JSON.stringify(traces));
 
-    try {
-      await reportOtelData.metrics(metricData);
-    } catch (error) {
-      console.log('Metric send Error:', error);
+    if (metricData.length) {
+      try {
+        await reportOtelData.metrics(metricData);
+      } catch (error) {
+        console.log('Metric send Error:', error);
+      }
     }
-    try {
-      await reportOtelData.traces(traces);
-    } catch (error) {
-      console.log('Trace send Error:', error);
+    if (traces.length) {
+      try {
+        await reportOtelData.traces(traces);
+      } catch (error) {
+        console.log('Trace send Error:', error);
+      }
     }
-
     // Save request ids so we don't send them twice
     Object.keys(ready).forEach((id) => sentRequestIds.push(id));
 
