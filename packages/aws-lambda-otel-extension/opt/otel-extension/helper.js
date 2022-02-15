@@ -182,7 +182,7 @@ const measureAttributes = [
 ];
 
 const logMessage = (...args) => {
-  if (process.env.DEBUG_SLS_OTEL_LAYER === 'true') {
+  if (process.env.DEBUG_SLS_OTEL_LAYER) {
     console.log(...args);
   }
 };
