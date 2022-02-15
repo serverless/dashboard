@@ -16,7 +16,6 @@ async function subscribe(extensionId, subscriptionBody) {
 
   switch (res.status) {
     case 200:
-      console.info('logs subscription ok: ', await res.text());
       break;
     case 202:
       console.warn(
