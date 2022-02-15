@@ -1,13 +1,6 @@
 {
   "repository": "serverless/runtime",
   "author": "Serverless, Inc.",
-  "eslintConfig": {
-    "extends": "@serverless/eslint-config/node",
-    "root": true,
-    "ignorePatterns": [
-      "!.mocharc.js"
-    ]
-  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
