@@ -27,7 +27,8 @@ function handleShutdown() {
   process.exit(0);
 }
 
-(async function main() {
+// Exported for testing convienence
+module.exports = (async function main() {
   const extensionId = await register();
 
   const sentRequestIds = [];
@@ -215,7 +216,7 @@ function handleShutdown() {
       await uploadLogs(logsQueue);
 
       logMessage('DONE...', JSON.stringify(logsQueue));
-      handleShutdown(event);
+      break;
     } else if (event.eventType === EventType.INVOKE) {
       await uploadLogs(logsQueue); // upload queued logs, during invoke event
       const logLength = logsQueue.length;
