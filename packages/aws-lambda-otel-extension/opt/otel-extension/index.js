@@ -203,6 +203,7 @@ module.exports = (async function main() {
             logMessage('Checking log length...', initialQueueLength, logsQueue.length);
             if (initialQueueLength < logsQueue.length) {
               resolve();
+              return;
             }
             await waitRecursive();
           }, 1000);
