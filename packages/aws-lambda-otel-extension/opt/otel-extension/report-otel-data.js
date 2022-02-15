@@ -71,7 +71,7 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
       })
       .promise();
   } else {
-    console.log('Report data:', REPORT_TYPE === 'json' ? JSON.stringify(data, null, 2) : data);
+    console.log(REPORT_TYPE === 'json' ? JSON.stringify(data, null, 2) : data);
   }
 };
 
