@@ -226,7 +226,6 @@ module.exports = (async function main() {
       // logMessage('Response data: ', JSON.stringify(responseData, null, 2));
 
       // Give lambda a little extra time to post some more logs
-      await next(extensionId);
       const waitForMe = () =>
         new Promise((resolve) => {
           setTimeout(() => {
