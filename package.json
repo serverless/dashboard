@@ -3,7 +3,10 @@
   "author": "Serverless, Inc.",
   "eslintConfig": {
     "extends": "@serverless/eslint-config/node",
-    "root": true
+    "root": true,
+    "ignorePatterns": [
+      "!.mocharc.js"
+    ]
   },
   "husky": {
     "hooks": {
