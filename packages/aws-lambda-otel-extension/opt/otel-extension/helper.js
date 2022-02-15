@@ -221,12 +221,9 @@ const SUBSCRIPTION_BODY = {
 const slsTxRegex = new RegExp('origin":s*"sls-agent', 'm');
 const slsLayerRegex = new RegExp('origin":s*"sls-layer', 'm');
 
-const SAVE_FILE = '/tmp/sls-save-log.json';
-
 module.exports = {
   logMessage,
   receiverAddress,
-  SAVE_FILE,
   RECEIVER_PORT,
   RECEIVER_NAME,
   SUBSCRIPTION_BODY,
