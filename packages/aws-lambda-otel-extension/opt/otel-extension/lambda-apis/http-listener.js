@@ -1,19 +1,10 @@
 'use strict';
 
 const http = require('http');
-const { readFileSync, existsSync } = require('fs');
-const { logMessage, slsLayerRegex, SAVE_FILE } = require('./../helper');
+const { logMessage, slsLayerRegex } = require('./../helper');
 
 function listen(address, port) {
-  let logsQueue = [];
-
-  if (existsSync(SAVE_FILE)) {
-    try {
-      logsQueue = JSON.parse(readFileSync(SAVE_FILE, { encoding: 'utf-8' }));
-    } catch (error) {
-      logMessage('Failed to parse logs queue file');
-    }
-  }
+  const logsQueue = [];
 
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {

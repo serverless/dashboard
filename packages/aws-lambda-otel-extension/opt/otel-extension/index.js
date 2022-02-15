@@ -3,7 +3,6 @@
 'use strict';
 
 const { unzip: unzipWtithCallback } = require('zlib');
-const { writeFileSync } = require('fs');
 const { promisify } = require('util');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
@@ -17,7 +16,6 @@ const {
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
   slsLayerRegex,
-  SAVE_FILE,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
@@ -239,7 +237,6 @@ module.exports = (async function main() {
       if (logLength < logsQueue.length) {
         await uploadLogs(logsQueue);
       }
-      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
     } else {
       throw new Error(`unknown event: ${event.eventType}`);
     }
