@@ -30,7 +30,7 @@ module.exports = (async function main() {
   const extensionId = await register();
 
   const sentRequestIds = [];
-  const { logsQueue } = listen(receiverAddress(), RECEIVER_PORT);
+  const { logsQueue, server } = listen(receiverAddress(), RECEIVER_PORT);
 
   // subscribing listener to the Logs API
   await subscribe(extensionId, SUBSCRIPTION_BODY);
@@ -215,6 +215,7 @@ module.exports = (async function main() {
       await uploadLogs(logsQueue);
 
       logMessage('DONE...', JSON.stringify(logsQueue));
+      server.close();
       break;
     } else if (event.eventType === EventType.INVOKE) {
       await uploadLogs(logsQueue); // upload queued logs, during invoke event
