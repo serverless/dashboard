@@ -14,5 +14,6 @@ module.exports = {
         packageDir: [__dirname],
       },
     ],
+    'no-console': 'off',
   },
 };
