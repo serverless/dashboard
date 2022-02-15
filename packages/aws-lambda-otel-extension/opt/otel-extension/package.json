@@ -1,17 +1,4 @@
 {
-  "eslintConfig": {
-    "rules": {
-      "import/no-extraneous-dependencies": [
-        "error",
-        {
-          "packageDir": [
-            "./packages/aws-lambda-otel-extension/otel-extension"
-          ]
-        }
-      ],
-      "no-console": "off"
-    }
-  },
   "dependencies": {
     "@opentelemetry/api": "^1.1.0",
     "@opentelemetry/auto-instrumentations-node": "^0.27.2",
