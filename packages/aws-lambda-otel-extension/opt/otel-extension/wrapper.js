@@ -16,6 +16,9 @@ const { logMessage } = require('./helper');
 const SlsSpanProcessor = require('./span.processor');
 const { detectEventType } = require('./eventDetection');
 
+const logLevel = getEnv().OTEL_LOG_LEVEL;
+diag.setLogger(new DiagConsoleLogger(), logLevel);
+
 // eslint-disable-next-line no-new
 new ExpressInstrumentation();
 
@@ -286,9 +289,6 @@ const instrumentations = [
     },
   }),
 ];
-
-const logLevel = getEnv().OTEL_LOG_LEVELl;
-diag.setLogger(new DiagConsoleLogger(), logLevel);
 
 // Register instrumentations synchronously to ensure code is patched even before provider is ready.
 registerInstrumentations({
