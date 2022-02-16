@@ -6,8 +6,8 @@ const evilDns = require('evil-dns');
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
-const getExtensionServerMock = require('./utils/get-extension-server-mock');
-const normalizeOtelAttributes = require('./utils/normalize-otel-attributes');
+const getExtensionServerMock = require('../utils/get-extension-server-mock');
+const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 
 const port = 9001;
 
