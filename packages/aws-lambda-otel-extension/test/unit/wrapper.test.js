@@ -10,8 +10,7 @@ const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 
 const lambdaFixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
-describe('wrapper', function () {
-  this.timeout(10000);
+describe('wrapper', () => {
   before(() => {
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_REGION = 'us-east-1';
