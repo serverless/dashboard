@@ -317,4 +317,4 @@ async function initializeProvider() {
   });
 }
 
-initializeProvider();
+module.exports = initializeProvider();
