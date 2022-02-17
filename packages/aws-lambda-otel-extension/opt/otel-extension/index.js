@@ -191,6 +191,7 @@ module.exports = (async function main() {
   // execute extensions logic
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    logMessage('Waiting for next event');
     const event = await next(extensionId);
     logMessage('Processing event: ', event.eventType);
     if (event.eventType === EventType.SHUTDOWN) {
