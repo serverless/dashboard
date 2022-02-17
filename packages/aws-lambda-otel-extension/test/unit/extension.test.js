@@ -11,8 +11,7 @@ const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 
 const port = 9001;
 
-describe('extension', function () {
-  this.timeout(10000);
+describe('extension', () => {
   before(() => {
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
