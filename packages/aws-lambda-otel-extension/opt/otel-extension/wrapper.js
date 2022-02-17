@@ -76,6 +76,16 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   functionData.startTime = st.getTime();
   functionData.endTime = et.getTime();
 
+  if (!err && !res) {
+    pathData['http.status_code'] = 500;
+  } else if (pathData) {
+    let statusCode = (res || {}).statusCode || 200;
+    if (err && !(res || {}).statusCode) {
+      statusCode = 500;
+    }
+    pathData['http.status_code'] = statusCode;
+  }
+
   functionData.error = false;
   functionData.timeout = isTimeout;
   if (isTimeout) {
@@ -91,16 +101,13 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     functionData.errorExceptionType = typeof err;
     functionData.errorExceptionMessage = err.message;
     functionData.errorExceptionStacktrace = err.stack;
-  }
-
-  if (!err && !res) {
-    pathData['http.status_code'] = 500;
-  } else if (pathData) {
-    let statusCode = (res || {}).statusCode || 200;
-    if (err && !(res || {}).statusCode) {
-      statusCode = 500;
-    }
-    pathData['http.status_code'] = statusCode;
+  } else if (pathData['http.status_code'] >= 500) {
+    // This happens if we get a 500 status code set explicity within in the app
+    functionData.error = true;
+    functionData.errorCulprit = 'internal server error';
+    functionData.errorExceptionType = typeof new Error();
+    functionData.errorExceptionMessage = 'internal server error';
+    functionData.errorExceptionStacktrace = 'internal server error';
   }
 
   const grouped = spans.reduce((obj, val) => {
@@ -265,7 +272,12 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
         eventData[context.awsRequestId].eventSource = 'aws.apigateway';
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-        eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
+        if (/{proxy\+}/.test(event.requestContext.resourcePath)) {
+          // Raw path from the requests instead of proxy
+          eventData[context.awsRequestId].httpPath = event.path;
+        } else {
+          eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
+        }
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
@@ -276,7 +288,12 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
         const routeKey = event.requestContext.routeKey;
         const path = routeKey.split(' ')[1];
-        eventData[context.awsRequestId].httpPath = path;
+        if (/{proxy\+}/.test(path)) {
+          // Raw path from the requests instead of proxy
+          eventData[context.awsRequestId].httpPath = event.rawPath;
+        } else {
+          eventData[context.awsRequestId].httpPath = path;
+        }
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
