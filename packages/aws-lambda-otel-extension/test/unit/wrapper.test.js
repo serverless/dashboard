@@ -39,7 +39,9 @@ describe('wrapper', () => {
           });
         })
     );
-    const reportLog = stdoutData.split('\n').find((log) => log.startsWith('SERVERLESS_ENTERPRISE'));
+    const reportLog = stdoutData
+      .split('\n')
+      .find((logLine) => logLine.startsWith('SERVERLESS_ENTERPRISE'));
     const reportCompressed = JSON.parse(reportLog.slice(reportLog.indexOf('{'))).b;
     const report = JSON.parse(String(await unzip(Buffer.from(reportCompressed, 'base64'))));
     log.debug('result report: %o', report);
