@@ -15,6 +15,9 @@
     ]
   },
   "devDependencies": {
+    "@aws-sdk/client-iam": "^3.51.0",
+    "@aws-sdk/client-lambda": "^3.51.0",
+    "@aws-sdk/client-s3": "^3.51.0",
     "@serverless/eslint-config": "^4.0.0",
     "@serverless/test": "^10.0.0",
     "chai": "^4.3.6",
@@ -30,6 +33,7 @@
     "node-fetch": "^2.6.7",
     "prettier": "^2.1.1",
     "process-utils": "^4.0.0",
+    "stream-promise": "^3.2.0",
     "uuid": "^8.3.2"
   },
   "scripts": {
