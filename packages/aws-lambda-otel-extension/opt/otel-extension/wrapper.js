@@ -101,7 +101,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     functionData.errorExceptionType = typeof err;
     functionData.errorExceptionMessage = err.message;
     functionData.errorExceptionStacktrace = err.stack;
-  } else if (pathData['http.status_code']) {
+  } else if (pathData['http.status_code'] >= 500) {
     // This happens if we get a 500 status code set explicity within in the app
     functionData.error = true;
     functionData.errorCulprit = 'internal server error';
