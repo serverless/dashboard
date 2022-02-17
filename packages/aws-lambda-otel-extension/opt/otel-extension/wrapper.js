@@ -278,7 +278,6 @@ const instrumentations = [
         } else {
           eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
         }
-        eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
