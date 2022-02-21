@@ -206,24 +206,21 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     )
   );
 
+  // TODO: Replace with process.stdout.write once extension does not depend on requestId being in logs
   console.log(
-    `SERVERLESS_ENTERPRISE ${JSON.stringify({
-      c: true,
-      b: gzipSync(
-        JSON.stringify({
-          function: functionData,
-          traces: {
-            resourceSpans: [
-              {
-                resource: tracerProvider.resource.attributes,
-                instrumentationLibrarySpans: data,
-              },
-            ],
-          },
-        })
-      ).toString('base64'),
-      origin: 'sls-layer',
-    })}`
+    `⚡.${gzipSync(
+      JSON.stringify({
+        function: functionData,
+        traces: {
+          resourceSpans: [
+            {
+              resource: tracerProvider.resource.attributes,
+              instrumentationLibrarySpans: data,
+            },
+          ],
+        },
+      })
+    ).toString('base64')}`
   );
 
   // Reset the exporter so we don't see duplicates

@@ -1,7 +1,7 @@
 'use strict';
 
 const http = require('http');
-const { logMessage, slsLayerRegex } = require('./../helper');
+const { logMessage } = require('./../helper');
 
 function listen(address, port) {
   const logsQueue = [];
@@ -22,7 +22,7 @@ function listen(address, port) {
               batch.filter((log) => {
                 if (log.type === 'platform.report') {
                   return true;
-                } else if (log.type === 'function' && slsLayerRegex.test(log.record)) {
+                } else if (log.type === 'function' && log.record.includes('⚡.')) {
                   return true;
                 }
                 return false;
