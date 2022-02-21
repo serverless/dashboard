@@ -39,10 +39,8 @@ describe('wrapper', () => {
           });
         })
     );
-    const reportLog = stdoutData
-      .split('\n')
-      .find((logLine) => logLine.startsWith('SERVERLESS_ENTERPRISE'));
-    const reportCompressed = JSON.parse(reportLog.slice(reportLog.indexOf('{'))).b;
+    const reportLog = stdoutData.split('\n').find((logLine) => logLine.includes('⚡.'));
+    const reportCompressed = reportLog.slice(reportLog.indexOf('⚡.') + 2);
     const report = JSON.parse(String(await unzip(Buffer.from(reportCompressed, 'base64'))));
     log.debug('result report: %o', report);
     expect(report.function['telemetry.sdk.language']).to.equal('nodejs');

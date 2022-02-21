@@ -219,7 +219,6 @@ const SUBSCRIPTION_BODY = {
 };
 
 const slsTxRegex = new RegExp('origin":s*"sls-agent', 'm');
-const slsLayerRegex = new RegExp('origin":s*"sls-layer', 'm');
 
 module.exports = {
   logMessage,
@@ -231,5 +230,4 @@ module.exports = {
   resourceAttributes,
   measureAttributes,
   slsTxRegex,
-  slsLayerRegex,
 };

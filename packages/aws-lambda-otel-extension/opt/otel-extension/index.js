@@ -15,7 +15,6 @@ const {
   receiverAddress,
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
-  slsLayerRegex,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
@@ -41,7 +40,7 @@ module.exports = (async function main() {
     const filteredItems = combinedLogs.filter((log) => {
       if (log.type === 'platform.report') {
         return true;
-      } else if (log.type === 'function' && slsLayerRegex.test(log.record)) {
+      } else if (log.type === 'function' && log.record.includes('⚡.')) {
         return true;
       }
       return false;
@@ -51,17 +50,14 @@ module.exports = (async function main() {
       filteredItems.map(async (log) => {
         if (log.type === 'function') {
           try {
-            const jsonString = log.record
-              .substring(log.record.indexOf('{'), log.record.length)
-              .trim();
-            const { b, origin } = JSON.parse(jsonString);
-            const raw = (await unzip(Buffer.from(b, 'base64'))).toString();
+            const reportCompressed = log.record.slice(log.record.indexOf('⚡.') + 2).trim();
+            const raw = (await unzip(Buffer.from(reportCompressed, 'base64'))).toString();
             const parsed = JSON.parse(raw);
             const requestId = log.record.split('\t')[1];
             return {
               ...log,
               record: parsed,
-              origin,
+              origin: 'sls-layer',
               requestId,
             };
           } catch (error) {
