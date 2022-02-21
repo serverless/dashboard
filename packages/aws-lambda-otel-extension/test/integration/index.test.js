@@ -14,7 +14,7 @@ const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 
 const nameTimeBase = new Date(2022, 1, 17).getTime();
-const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
+const layerFilename = buildLayer.distFilename;
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 describe('integration', function () {
