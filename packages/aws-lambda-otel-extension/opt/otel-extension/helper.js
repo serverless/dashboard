@@ -218,8 +218,6 @@ const SUBSCRIPTION_BODY = {
   schemaVersion: '2021-03-18',
 };
 
-const slsTxRegex = new RegExp('origin":s*"sls-agent', 'm');
-
 module.exports = {
   logMessage,
   receiverAddress,
@@ -229,5 +227,4 @@ module.exports = {
   EventType,
   resourceAttributes,
   measureAttributes,
-  slsTxRegex,
 };
