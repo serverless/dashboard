@@ -9,7 +9,7 @@ const AdmZip = require('adm-zip');
 const rootDir = path.resolve(__dirname, '../../');
 const optDir = path.resolve(rootDir, 'opt');
 const distDir = path.resolve(rootDir, '../aws-lambda-otel-extension-dist');
-const distFilename = path.resolve(distDir, 'regular.zip');
+const distFilename = path.resolve(distDir, 'extension.zip');
 
 module.exports = async () => {
   const zip = new AdmZip();
