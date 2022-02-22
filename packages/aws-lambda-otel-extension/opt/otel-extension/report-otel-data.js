@@ -6,7 +6,7 @@ const REPORT_TYPE = reportModes.has(process.env.SLS_OTEL_REPORT_TYPE)
   : 'proto';
 
 const METRICS_URL = process.env.SLS_OTEL_REPORT_METRICS_URL;
-const TRACES_URL = process.env.SLS_OTEL_REPORT_METRICS_URL;
+const TRACES_URL = process.env.SLS_OTEL_REPORT_TRACES_URL;
 const EXTRA_REQUEST_HEADERS = process.env.SLS_OTEL_REPORT_REQUEST_HEADERS
   ? Object.fromEntries(new URLSearchParams(process.env.SLS_OTEL_REPORT_REQUEST_HEADERS).entries())
   : {};
