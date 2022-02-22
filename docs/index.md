@@ -20,7 +20,7 @@ authentication, and collection. To enable this you’ll need to do the following
 
 **Upgrade to Serverless frame 3.1 pre-release.**
 
-```
+```bash
 # install locally in a project
 npm i serverless@pre-3.1
 # or update globally
@@ -32,11 +32,11 @@ npm -g i serverless@pre-3.1
 ```yaml
 org: serverless-inc
 frameworkVersion: '3.1'
-console:true
+console: true
 ```
 
 **Redeploy with Serverless Framework.**
 
-```
+```bash
 serverless deploy
 ```
