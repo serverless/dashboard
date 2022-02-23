@@ -50,16 +50,32 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
   if (url) {
     await Promise.all(
       data.map(async (datum) => {
-        const res = await fetch(url, {
+        const headers = {
+          'accept-encoding': 'gzip',
+          'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
+          ...EXTRA_REQUEST_HEADERS,
+        };
+        const options = {
           method: 'post',
           body: datum,
-          headers: {
-            'accept-encoding': 'gzip',
-            'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
-            ...EXTRA_REQUEST_HEADERS,
-          },
-        });
-        if (!res.ok) console.log(res);
+          headers,
+        };
+        const res = await fetch(url, options);
+        if (!res.ok) {
+          process._rawDebug(
+            'Ingestion server error',
+            JSON.stringify({
+              request: {
+                url,
+                headers,
+              },
+              response: {
+                status: res.status,
+                text: await res.text(),
+              },
+            })
+          );
+        }
       })
     );
   } else if (s3Client && s3Key) {
