@@ -1,0 +1,72 @@
+# @serverless/aws-lambda-otel-extensiom@{version} tags only
+name: Publish @serverless/aws-lambda-otel-extension
+
+on:
+  push:
+    tags:
+      - '@serverless/aws-lambda-otel-extension@[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  publishNewVersion:
+    name: Publish new version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Retrieve node_modules from cache
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
+          restore-keys: node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+
+      - name: Retrieve packages/aws-lambda-otel-extension/node_modules from cache
+        id: cacheAwsLambdaOtelExtensionNodeModules
+        uses: actions/cache@v2
+        with:
+          path: packages/aws-lambda-otel-extension/node_modules
+          key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+      - name: Retrieve packages/aws-lambda-otel-extension/opt/otel-extension/node_modules from cache
+        id: cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules
+        uses: actions/cache@v2
+        with:
+          path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          restore-keys: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org
+
+      - name: Install packages/aws-lambda-otel-extension dependencies
+        if: steps.cacheAwsLambdaOtelExtensionNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd packages/aws-lambda-otel-extension
+          npm update --no-save
+          npm update --save-dev --no-save
+
+      - name: Build distributables
+        run: |
+          cd packages/aws-lambda-otel-extension
+          npm run build
+
+      - name: Publish new version
+        # Note: Setting NODE_AUTH_TOKEN as job|workspace wide env var won't work
+        #       as it appears actions/setup-node sets own value
+        env:
+          # serverless-main npm user auth token
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/aws-lambda-otel-extension
+          npm publish
+          cd ../aws-lambda-otel-extension-dist
+          npm publish
