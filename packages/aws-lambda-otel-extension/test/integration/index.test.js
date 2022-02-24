@@ -18,7 +18,7 @@ const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 describe('integration', function () {
-  this.timeout(30000);
+  this.timeout(120000);
   let name;
   let s3;
   let lambda;
