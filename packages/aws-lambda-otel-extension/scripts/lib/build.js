@@ -1,24 +1,22 @@
 'use strict';
 
 const path = require('path');
-const fsp = require('fs').promises;
 const readdir = require('fs2/readdir');
 const rmdir = require('fs2/rmdir');
 const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
+const mkdir = require('fs2/mkdir');
 const spawn = require('child-process-ext/spawn');
-const pkgJson = require('../../package');
 
 const rootDir = path.resolve(__dirname, '../../');
 const optDir = path.resolve(rootDir, 'opt');
 const otelExtensionDir = path.resolve(optDir, 'otel-extension');
-const distDir = path.resolve(rootDir, '../aws-lambda-otel-extension-dist');
-const distFilename = path.resolve(distDir, 'extension.zip');
 
-module.exports = async () => {
+module.exports = async (distFilename) => {
   const zip = new AdmZip();
   await Promise.all([
     unlink(distFilename, { loose: true }),
+    mkdir(path.dirname(distFilename), { intermediate: true, silent: true }),
     (async () => {
       await rmdir(path.resolve(otelExtensionDir, 'node_modules'), {
         loose: true,
@@ -34,25 +32,6 @@ module.exports = async () => {
         zip.addLocalFile(path.resolve(optDir, relativeFilename), path.dirname(relativeFilename));
       }
     })(),
-    (async () => {
-      const distPkgJsonPath = path.resolve(distDir, 'package.json');
-      await unlink(distPkgJsonPath, { loose: true });
-      await fsp.writeFile(
-        distPkgJsonPath,
-        JSON.stringify(
-          {
-            name: '@serverless/aws-lambda-otel-extension-dist',
-            version: pkgJson.version,
-            publishConfig: { access: 'public' },
-            license: 'MIT',
-          },
-          null,
-          2
-        )
-      );
-    })(),
   ]);
   zip.writeZip(distFilename);
 };
-
-module.exports.distFilename = distFilename;

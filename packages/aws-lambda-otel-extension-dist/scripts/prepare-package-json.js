@@ -4,4 +4,4 @@
 
 require('essentials');
 
-require('./build')();
+require('./lib/prepare-package-json')();
