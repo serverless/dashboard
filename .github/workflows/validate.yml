@@ -73,7 +73,6 @@ jobs:
       - name: Install main project dependencies
         if: steps.cacheNodeModules.outputs.cache-hit != 'true'
         run: |
-          npm update --no-save
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionNodeModules.outputs.cache-hit != 'true'
@@ -97,7 +96,7 @@ jobs:
           npm test
 
   linuxNode14:
-    name: '[Linux] Node.js v14: Unit Tests'
+    name: '[Linux] Node.js v14: Isolated unit Tests'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -148,7 +147,6 @@ jobs:
       - name: Install main project dependencies
         if: steps.cacheNodeModules.outputs.cache-hit != 'true'
         run: |
-          npm update --no-save
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionNodeModules.outputs.cache-hit != 'true'
@@ -163,6 +161,8 @@ jobs:
           npm update --no-save
 
       - name: Unit tests
+        # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
         run: |
+          export PATH="$PWD/node_modules/.bin:$PATH"
           cd packages/aws-lambda-otel-extension
-          npm test
+          npm test:isolated
