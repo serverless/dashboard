@@ -4,6 +4,7 @@ const { expect } = require('chai');
 
 const path = require('path');
 const fsp = require('fs').promises;
+const wait = require('timers-ext/promise/sleep');
 const { S3 } = require('@aws-sdk/client-s3');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { IAM } = require('@aws-sdk/client-iam');
@@ -85,19 +86,20 @@ describe('integration', function () {
     await ensureIsActive();
     log.info('Invoke function %s', handlerName);
     await invokeFunction();
-    log.info('Invoke function again %s', handlerName);
-    await invokeFunction();
-    log.info('Delete function %s', handlerName);
-    await deleteFunction();
 
-    log.info('Retrieve list of generated S3 objects %s', handlerName);
     let objects;
     do {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      log.info('Invoke function again %s', handlerName);
+      await invokeFunction();
+      await wait(1000);
+      log.info('Retrieve list of generated S3 objects %s', handlerName);
       objects = ((await s3.listObjectsV2({ Bucket: name })).Contents || [])
         .map((object) => object.Key)
         .filter((key) => key.startsWith(`${functionName}/`));
     } while (!objects.length);
+
+    log.info('Delete function %s', handlerName);
+    await deleteFunction();
     log.info('Retrieve body of generated S3 objects %s', handlerName);
     return Promise.all(
       objects.map(async (objectKey) =>
