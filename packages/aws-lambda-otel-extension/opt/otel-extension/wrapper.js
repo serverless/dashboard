@@ -9,8 +9,19 @@ const { AwsInstrumentation } = require('@opentelemetry/instrumentation-aws-sdk')
 const { getEnv } = require('@opentelemetry/core');
 const { awsLambdaDetector } = require('@opentelemetry/resource-detector-aws');
 const { AwsLambdaInstrumentation } = require('@opentelemetry/instrumentation-aws-lambda');
-const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+const { DnsInstrumentation } = require('@opentelemetry/instrumentation-dns');
 const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
+const { GraphQLInstrumentation } = require('@opentelemetry/instrumentation-graphql');
+const { GrpcInstrumentation } = require('@opentelemetry/instrumentation-grpc');
+const { HapiInstrumentation } = require('@opentelemetry/instrumentation-hapi');
+const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
+const { IORedisInstrumentation } = require('@opentelemetry/instrumentation-ioredis');
+const { KoaInstrumentation } = require('@opentelemetry/instrumentation-koa');
+const { MongoDBInstrumentation } = require('@opentelemetry/instrumentation-mongodb');
+const { MySQLInstrumentation } = require('@opentelemetry/instrumentation-mysql');
+const { NetInstrumentation } = require('@opentelemetry/instrumentation-net');
+const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
+const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const { logMessage } = require('./helper');
 const SlsSpanProcessor = require('./span.processor');
@@ -18,9 +29,6 @@ const { detectEventType } = require('./eventDetection');
 
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
-
-// eslint-disable-next-line no-new
-new ExpressInstrumentation();
 
 let tracerProvider;
 let memoryExporter;
@@ -236,7 +244,6 @@ const handleTimeouts = (remainingTime) => {
 };
 
 const instrumentations = [
-  getNodeAutoInstrumentations(),
   new AwsInstrumentation({
     suppressInternalInstrumentation: true,
   }),
@@ -302,6 +309,19 @@ const instrumentations = [
       await responseHandler(span, { err, res });
     },
   }),
+  new DnsInstrumentation(),
+  new ExpressInstrumentation(),
+  new GraphQLInstrumentation(),
+  new GrpcInstrumentation(),
+  new HapiInstrumentation(),
+  new HttpInstrumentation(),
+  new IORedisInstrumentation(),
+  new KoaInstrumentation(),
+  new MongoDBInstrumentation(),
+  new MySQLInstrumentation(),
+  new NetInstrumentation(),
+  new PgInstrumentation(),
+  new RedisInstrumentation(),
 ];
 
 // Register instrumentations synchronously to ensure code is patched even before provider is ready.
