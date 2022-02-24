@@ -66,6 +66,11 @@ jobs:
           cd packages/aws-lambda-otel-extension
           npm update --no-save
           npm update --save-dev --no-save
+      - name: Install packages/aws-lambda-otel-extension-dist dependencies
+        if: steps.cacheAwsLambdaOtelExtensionDistNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd packages/aws-lambda-otel-extension-dist
+          npm update --save-dev --no-save
 
       - name: Build distributables
         run: |
