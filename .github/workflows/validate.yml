@@ -42,7 +42,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: npm-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
+          key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
           restore-keys: |
             node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             node-modules-v16-${{ runner.os }}-refs/heads/main-
@@ -117,7 +117,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: npm-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
+          key: node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
           restore-keys: |
             node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             node-modules-v14-${{ runner.os }}-refs/heads/main-
