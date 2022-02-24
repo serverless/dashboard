@@ -10,7 +10,6 @@
     "essentials": "^1.2.0",
     "fs2": "^0.3.9"
   },
-  "license": "MIT",
   "scripts": {
     "build": "./scripts/build.js",
     "prebuild:prod": "esbuild opt/otel-extension/index.js --bundle --platform=node --target=node12 --minify --outfile=opt/build/index.js && esbuild opt/otel-extension/wrapper.js --bundle --minify --platform=node --target=node12 --outfile=opt/build/wrapper.js",
@@ -18,5 +17,9 @@
     "test": "mocha \"test/unit/**/*.test.js\"",
     "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
     "test:integration": "mocha \"test/integration/**/*.test.js\""
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
 }
