@@ -1,3 +1,4 @@
 /dist
 /test
 /opt/otel-extension/node_modules
+.eslintrc.js
