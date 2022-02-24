@@ -35,7 +35,7 @@ jobs:
           key: npm-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('**package*.json') }}
           restore-keys: |
             npm-v16-${{ runner.os }}-${{ github.ref }}-
-            npm-v16-${{ runner.os }}-refs/heads/main
+            npm-v16-${{ runner.os }}-refs/heads/main-
 
       - name: Retrieve node_modules from cache
         id: cacheNodeModules
@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
@@ -109,7 +109,7 @@ jobs:
           key: npm-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('**package*.json') }}
           restore-keys: |
             npm-v14-${{ runner.os }}-${{ github.ref }}-
-            npm-v14-${{ runner.os }}-refs/heads/main
+            npm-v14-${{ runner.os }}-refs/heads/main-
 
       - name: Retrieve node_modules from cache
         id: cacheNodeModules
@@ -134,7 +134,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-refs/heads/main-

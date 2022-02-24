@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
           restore-keys: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
@@ -105,7 +105,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
           restore-keys: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
 
       - name: Install Node.js and npm
@@ -178,7 +178,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1

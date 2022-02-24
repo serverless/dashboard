@@ -14,28 +14,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Retrieve ~/.npm from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('**package*.json') }}
+          restore-keys: npm-v16-${{ runner.os }}-refs/heads/main-
+
       - name: Retrieve node_modules from cache
         id: cacheNodeModules
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
-          restore-keys: node-modules-v16-${{ runner.os }}-${{ github.ref }}-
-
+          key: node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
+          restore-keys: node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Retrieve packages/aws-lambda-otel-extension/node_modules from cache
         id: cacheAwsLambdaOtelExtensionNodeModules
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+          key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Retrieve packages/aws-lambda-otel-extension/opt/otel-extension/node_modules from cache
         id: cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules
         uses: actions/cache@v2
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          restore-keys: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
+      - name: Retrieve packages/aws-lambda-otel-extension-dist/node_modules from cache
+        id: cacheAwsLambdaOtelExtensionDistNodeModules
+        uses: actions/cache@v2
+        with:
+          path: packages/aws-lambda-otel-extension-dist/node_modules
+          key: packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('packages/aws-lambda-otel-extension-dist/package.json') }}
+          restore-keys: packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -69,4 +82,6 @@ jobs:
           cd packages/aws-lambda-otel-extension
           npm publish
           cd ../aws-lambda-otel-extension-dist
+          rm -rf node_modules/@serverless/aws-lambda-otel-extension
+          ln -s ../../../aws-lambda-otel-extension node_modules/@serverless/aws-lambda-otel-extension
           npm publish
