@@ -75,6 +75,8 @@ jobs:
       - name: Build distributables
         run: |
           cd packages/aws-lambda-otel-extension-dist
+          rm -rf node_modules/@serverless/aws-lambda-otel-extension
+          ln -s ../../../aws-lambda-otel-extension node_modules/@serverless/aws-lambda-otel-extension
           npm run build
           npm run prepare-package-json
 
@@ -88,6 +90,4 @@ jobs:
           cd packages/aws-lambda-otel-extension
           npm publish
           cd ../aws-lambda-otel-extension-dist
-          rm -rf node_modules/@serverless/aws-lambda-otel-extension
-          ln -s ../../../aws-lambda-otel-extension node_modules/@serverless/aws-lambda-otel-extension
           npm publish
