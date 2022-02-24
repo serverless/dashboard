@@ -76,6 +76,7 @@ jobs:
         run: |
           cd packages/aws-lambda-otel-extension
           npm run build
+          npm run prepare-package-json
 
       - name: Publish new version
         # Note: Setting NODE_AUTH_TOKEN as job|workspace wide env var won't work
