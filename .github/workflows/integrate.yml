@@ -130,11 +130,11 @@ jobs:
           npm update --no-save
 
       - name: Unit tests
-        # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
         run: |
+          # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
           export PATH="$PWD/node_modules/.bin:$PATH"
           cd packages/aws-lambda-otel-extension
-          npm test:isolated
+          npm run test:isolated
 
   integrate:
     name: Integrate
