@@ -3,8 +3,10 @@
 const path = require('path');
 const readdir = require('fs2/readdir');
 const AdmZip = require('adm-zip');
+const log = require('log').get('test');
 
 module.exports = async (functionRoot) => {
+  log.info('Start creating zip buffer %s', functionRoot);
   const lambdaFiles = await readdir(functionRoot, { depth: Infinity, type: { file: true } });
   const zip = new AdmZip();
 
@@ -12,5 +14,9 @@ module.exports = async (functionRoot) => {
     zip.addLocalFile(path.resolve(functionRoot, file), path.dirname(file));
   }
 
-  return zip.toBuffer();
+  try {
+    return zip.toBuffer();
+  } finally {
+    log.info('Zip buffer genereated %s', functionRoot);
+  }
 };

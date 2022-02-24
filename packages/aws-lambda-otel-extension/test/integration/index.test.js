@@ -79,12 +79,18 @@ describe('integration', function () {
       await lambda.deleteFunction({ FunctionName: functionName });
     };
 
+    log.info('Create function %s', handlerName);
     await createFunction();
+    log.info('Wait for function to be active %s', handlerName);
     await ensureIsActive();
+    log.info('Invoke function %s', handlerName);
     await invokeFunction();
+    log.info('Invoke function again %s', handlerName);
     await invokeFunction();
+    log.info('Delete function %s', handlerName);
     await deleteFunction();
 
+    log.info('Retrieve list of generated S3 objects %s', handlerName);
     let objects;
     do {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -92,6 +98,7 @@ describe('integration', function () {
         .map((object) => object.Key)
         .filter((key) => key.startsWith(`${functionName}/`));
     } while (!objects.length);
+    log.info('Retrieve body of generated S3 objects %s', handlerName);
     return Promise.all(
       objects.map(async (objectKey) =>
         JSON.parse(
@@ -108,18 +115,27 @@ describe('integration', function () {
     lambda = new Lambda({ region: process.env.AWS_REGION });
     iam = new IAM({ region: process.env.AWS_REGION });
 
-    const createBucket = async () => s3.createBucket({ Bucket: name });
+    const createBucket = async () => {
+      log.info('Creating bucket %s', name);
+      await s3.createBucket({ Bucket: name });
+      log.info('Created bucket %s', name);
+    };
     const createLayer = async () => {
+      log.info('Building layer');
       await buildLayer(layerFilename);
 
+      log.info('Publishing layer to AWS');
       await lambda.publishLayerVersion({
         LayerName: name,
         Content: { ZipFile: await fsp.readFile(layerFilename) },
       });
+      log.info('Resolving layer ARN');
       layerArn = (await lambda.listLayerVersions({ LayerName: name })).LayerVersions.shift()
         .LayerVersionArn;
+      log.info('Layer ready');
     };
     const createRole = async () => {
+      log.info('Creating IAM role and policy');
       [
         {
           Role: { Arn: roleArn },
@@ -165,7 +181,9 @@ describe('integration', function () {
           }),
         }),
       ]);
+      log.info('Attaching IAM policy to role');
       await iam.attachRolePolicy({ RoleName: name, PolicyArn: policyArn });
+      log.info('Attached IAM policy to role');
     };
     [lambdasCodeZipBuffer] = await Promise.all([
       resolveDirZipBuffer(fixturesDirname),
