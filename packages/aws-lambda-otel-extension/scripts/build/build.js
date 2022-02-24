@@ -3,6 +3,7 @@
 const path = require('path');
 const fsp = require('fs').promises;
 const readdir = require('fs2/readdir');
+const rmdir = require('fs2/rmdir');
 const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
 const spawn = require('child-process-ext/spawn');
@@ -19,6 +20,11 @@ module.exports = async () => {
   await Promise.all([
     unlink(distFilename, { loose: true }),
     (async () => {
+      await rmdir(path.resolve(otelExtensionDir, 'node_modules'), {
+        loose: true,
+        recursive: true,
+        force: true,
+      });
       await spawn('npm', ['install'], { cwd: otelExtensionDir, stdio: 'inherit' });
       await unlink(path.resolve(otelExtensionDir, 'package-lock.json'));
       for (const relativeFilename of await readdir(optDir, {
