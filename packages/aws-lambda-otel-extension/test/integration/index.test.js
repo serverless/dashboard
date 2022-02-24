@@ -9,12 +9,12 @@ const { Lambda } = require('@aws-sdk/client-lambda');
 const { IAM } = require('@aws-sdk/client-iam');
 const streamToPromise = require('stream-promise/to-promise');
 const log = require('log').get('test');
-const buildLayer = require('../../scripts/build/build');
+const buildLayer = require('../../scripts/lib/build');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 
 const nameTimeBase = new Date(2022, 1, 17).getTime();
-const layerFilename = buildLayer.distFilename;
+const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 describe('integration', function () {
@@ -110,7 +110,7 @@ describe('integration', function () {
 
     const createBucket = async () => s3.createBucket({ Bucket: name });
     const createLayer = async () => {
-      await buildLayer();
+      await buildLayer(layerFilename);
 
       await lambda.publishLayerVersion({
         LayerName: name,
