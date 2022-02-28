@@ -2,7 +2,7 @@
 title: Concepts
 menuText: Concepts
 description: Overview of concepts used on serevrless console. 
-menuOrder: 2
+menuOrder: 1
 -->
 
 # Concepts 
