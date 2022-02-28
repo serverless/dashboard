@@ -1,6 +1,6 @@
 <!--
-title: Overview
-menuText: Overview
+title: Concepts
+menuText: Concepts
 description: Overview of concepts used on serevrless console. 
 menuOrder: 1
 -->
