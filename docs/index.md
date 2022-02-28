@@ -39,7 +39,10 @@ serverless \
 Login into console and nswer **no** when asked if you want to deploy now. 
 
 ```bash
-
+➜  console-node-http-api serverless \
+    --org=<your-org-name> \
+    --name=console-node-http-api \
+    --template=aws-node-http-api
 
 Creating a new serverless project
 
