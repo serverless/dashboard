@@ -6,15 +6,15 @@ menuOrder: 2
 -->
 
 # Concepts 
-Serverless Console is built on simple abstractions that fit across all types of apps
-- no matter how it’s built or managed. This is built on the Open Telemetry project 
+Serverless Console is built on simple abstractions that fit across all types of 
+apps - no matter how it’s built or managed. This is built on the Open Telemetry project 
 which focuses observability around standardizing the implementation of tracing. 
 Traces occur when something triggers an event in your system, which causes your 
 application to be invoked.  When you developer with Serverless Framework, 
 or include [Open Telemetry](https://opentelemetry.io/) instrumentation we collect 
 and display these traces so you can, chart, debug and alert on them. 
 
-##Tracing
+## Tracing
 All the observability details about an invocation are captured in a trace. 
 All traces have common details for start and end time, metrics, tags, and child 
 spans. This structure allows us to offer rich mapping of relationships between 
