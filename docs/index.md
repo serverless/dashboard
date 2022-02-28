@@ -87,6 +87,6 @@ functions:
 
 
 ```bash
-cd console-express-api
+cd console-node-http-api 
 serverless deploy
 ```
