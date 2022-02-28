@@ -15,7 +15,7 @@ interested in monitoring Serverless architectures.
 
 ## Getting Started
 
-To get started with Serverless Console use version 3.1 or later of the
+To get started with Serverless Console use version 3.5 or later of the
 Serverless Framework. This will automatically configure a lambda extension,
 authentication, and collection. To enable this you’ll need to do the following.
 
@@ -23,21 +23,67 @@ authentication, and collection. To enable this you’ll need to do the following
 
 ```bash
 # install locally in a project
-npm i serverless@pre-3.1
+npm install serverless@3.5
 # or update globally
-npm -g i serverless@pre-3.1
+npm install -g serverless@3.5
 ```
+
+**Get started with our Express JS Example App.**
+```bash
+serverless \
+    --org=<your-org-name> \
+    --name=console-node-http-api \
+    --template=aws-node-http-api
+```
+
+Login into console and nswer **no** when asked if you want to deploy now. 
+
+```bash
+
+
+Creating a new serverless project
+
+
+✔ Project successfully created in console-node-http-api folder
+
+Logging in the Serverless Dashboard via the browser
+If your browser does not open automatically, please open this URL:
+<URL>
+
+✔ You are now logged in the Serverless Dashboard
+
+
+✔ Your project is ready to be deployed to Serverless Dashboard (org: "my-org", app: "cconsole-node-http-api")
+
+? Do you want to deploy now? No
+```
+
 
 **Enable console in your serverless.yaml file.**
 
 ```yaml
-org: serverless-inc
-frameworkVersion: '3.1'
+org: <your-org>
+service: console-node-rest-api-app
 console: true
+dashboard: true 
+frameworkVersion: '3'
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: /
+          method: get
 ```
 
-**Redeploy with Serverless Framework.**
+** Setup your AWS Access Key**
+
+
+**Deploy using Serverless Framework Deploy command in your new project.**
+
 
 ```bash
+cd console-express-api
 serverless deploy
 ```
