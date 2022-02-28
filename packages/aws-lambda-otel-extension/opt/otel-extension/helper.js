@@ -199,6 +199,8 @@ const receiverAddress = () => {
   return process.env.AWS_SAM_LOCAL === 'true' ? LOCAL_DEBUGGING_IP : RECEIVER_NAME;
 };
 
+const SAVE_FILE = '/tmp/sls-save-log.json';
+
 const RECEIVER_PORT = 4243;
 const TIMEOUT_MS = 25; // Maximum time (in milliseconds) that a batch is buffered.
 const MAX_BYTES = 262144; // Maximum size in bytes that the logs are buffered in memory.
@@ -219,6 +221,7 @@ const SUBSCRIPTION_BODY = {
 };
 
 module.exports = {
+  SAVE_FILE,
   logMessage,
   receiverAddress,
   RECEIVER_PORT,

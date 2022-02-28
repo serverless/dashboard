@@ -130,8 +130,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   // Check for express path
   pathData['http.path'] = spans.reduce((finalPath, val) => {
     if (
-      val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
-      val.name === 'middleware - bound '
+      (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
+        val.name === 'middleware - bound ') ||
+      (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
+        /request handler - /i.test(val.name))
     ) {
       return val.attributes['http.route'];
     }
@@ -276,7 +278,10 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
         eventData[context.awsRequestId].eventSource = 'aws.apigateway';
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-        if (/{proxy\+}/.test(event.requestContext.resourcePath)) {
+        if (
+          /{proxy\+}/.test(event.requestContext.resourcePath) ||
+          event.requestContext.resourcePath === '$default'
+        ) {
           // Raw path from the requests instead of proxy
           eventData[context.awsRequestId].httpPath = event.path;
         } else {
@@ -291,8 +296,8 @@ const instrumentations = [
         eventData[context.awsRequestId].eventSource = 'aws.apigateway';
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
         const routeKey = event.requestContext.routeKey;
-        const path = routeKey.split(' ')[1];
-        if (/{proxy\+}/.test(path)) {
+        const path = routeKey.split(' ')[1] || event.requestContext.routeKey;
+        if (/{proxy\+}/.test(path) || path === '$default') {
           // Raw path from the requests instead of proxy
           eventData[context.awsRequestId].httpPath = event.rawPath;
         } else {
