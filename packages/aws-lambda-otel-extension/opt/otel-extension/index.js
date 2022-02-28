@@ -4,6 +4,7 @@
 
 const { unzip: unzipWtithCallback } = require('zlib');
 const { promisify } = require('util');
+const { writeFileSync } = require('fs');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
@@ -15,6 +16,7 @@ const {
   receiverAddress,
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
+  SAVE_FILE,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
@@ -212,6 +214,7 @@ module.exports = (async function main() {
       await uploadLogs(logsQueue);
 
       logMessage('DONE...', JSON.stringify(logsQueue));
+      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
       server.close();
       break;
     } else if (event.eventType === EventType.INVOKE) {
@@ -235,6 +238,7 @@ module.exports = (async function main() {
       if (logLength < logsQueue.length) {
         await uploadLogs(logsQueue);
       }
+      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
     } else {
       throw new Error(`unknown event: ${event.eventType}`);
     }
