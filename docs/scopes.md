@@ -1,4 +1,3 @@
-
 <!--
 title: Scopes
 menuText: Scopes
