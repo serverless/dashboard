@@ -15,68 +15,79 @@ interested in monitoring Serverless architectures.
 
 ## Getting Started
 
-To get started with Serverless Console use version 3.5 or later of the
+To get started with Serverless Console use version 3.7 or later of the
 Serverless Framework. This will automatically configure a lambda extension,
 authentication, and collection. To enable this you’ll need to do the following.
 
 **Upgrade to Serverless Framework**
 
 ```
-npm install -g serverless@3.5
+npm install -g serverless@3.7
 ```
 
-**Get started with our Express JS Example App.**
+**Get started with a simple http app.**
 
 ```text
 serverless \
     --org=<your-org-name> \
     --name=console-node-http-api \
-    --template=aws-node-http-api
+    --template=aws-node-http-api \
+    --console
 ```
 
-**Login into console and answer `no` when asked if you want to deploy now.**
+Login or signup to serverless console. After logging in you may have to 
+cancel the pervious command.
+
+**Change directory to your new project and deploy your app.**
 
 ```text
-Creating a new serverless project
-
-✔ Project successfully created in console-node-http-api folder
-
-Logging in the Serverless Dashboard via the browser
-If your browser does not open automatically, please open this URL:
-<URL>
-
-✔ You are now logged in the Serverless Dashboard
-
-✔ Your project is ready to be deployed to Serverless Dashboard (org: "my-org", app: "cconsole-node-http-api")
-
-? Do you want to deploy now? No
+serverless \
+    --org=<your-org-name> \
+    --name=console-http-api \
+    --template=aws-node-http-api \
+    --console
 ```
-
-**Enable console in your serverless.yml file.**
-
-```yaml
-org: <your-org>
-service: console-node-rest-api-app
-frameworkVersion: '3'
-
-console: true
-
-functions:
-  hello:
-    handler: handler.hello
-    events:
-      - http:
-          path: /
-          method: get
-```
-
-**Setup your AWS Access Key**
 
 
 **Deploy using Serverless Framework Deploy command in your new project.**
 
 
 ```text
-cd console-node-http-api 
+cd console-http-api
 serverless deploy
 ```
+
+**That's it!**
+
+After your app is deployed, hitting the endpoint from the previous command
+will start producing traces in Console. For more details see our [concepts section](concepts.md)
+
+**If you want to explore further**
+
+**Enable serverless console in your serverless.yaml file**
+```yaml
+org: <your-org-name>
+service: <your-service-name>
+console: true
+frameworkVersion: '3'
+```
+
+**Deploy an express.js API**
+```text
+serverless \
+    --org=<your-org-name> \
+    --name=console-http-api \
+    --template=aws-node-express-api \
+    --console
+```
+
+**Deploy a basic chron job**
+```text
+serverless \
+    --org=<your-org-name> \
+    --name=console-http-api \
+    --template=aws-node-scheduled-cron \
+    --console
+```
+
+
