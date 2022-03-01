@@ -19,7 +19,7 @@ To get started with Serverless Console use version 3.5 or later of the
 Serverless Framework. This will automatically configure a lambda extension,
 authentication, and collection. To enable this you’ll need to do the following.
 
-**Upgrade to Serverless Framework
+**Upgrade to Serverless Framework**
 
 ```bash
 # install locally in a project
