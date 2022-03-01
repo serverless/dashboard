@@ -27,7 +27,7 @@ npm install -g serverless@3.5
 
 **Get started with our Express JS Example App.**
 
-```
+```text
 serverless \
     --org=<your-org-name> \
     --name=console-node-http-api \
@@ -36,7 +36,7 @@ serverless \
 
 **Login into console and answer `no` when asked if you want to deploy now.**
 
-```
+```text
 Creating a new serverless project
 
 ✔ Project successfully created in console-node-http-api folder
@@ -76,7 +76,7 @@ functions:
 **Deploy using Serverless Framework Deploy command in your new project.**
 
 
-```
+```text
 cd console-node-http-api 
 serverless deploy
 ```
