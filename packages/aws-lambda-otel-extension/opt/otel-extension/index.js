@@ -29,8 +29,8 @@ function handleShutdown() {
 // Exported for testing convienence
 module.exports = (async function main() {
   const extensionId = await register();
+  const sentRequests = [];
 
-  const sentRequestIds = [];
   const { logsQueue, server } = listen(receiverAddress(), RECEIVER_PORT);
 
   // subscribing listener to the Logs API
@@ -63,7 +63,7 @@ module.exports = (async function main() {
               requestId,
             };
           } catch (error) {
-            console.log('failed to parse line', error);
+            logMessage('failed to parse line', error);
             return log;
           }
         }
@@ -99,7 +99,8 @@ module.exports = (async function main() {
         const report = data['platform.report'];
         const { function: fun, traces } = get(data, 'layer.record') || {};
 
-        if (report && fun && traces) {
+        // report is not required so we can send duration async
+        if (fun && traces) {
           return {
             ...obj,
             ready: {
@@ -130,37 +131,57 @@ module.exports = (async function main() {
     logMessage('NOT READY: ', JSON.stringify(notReady));
 
     logMessage('Grouped: ', JSON.stringify(ready));
-    logMessage('Sent Request Ids: ', JSON.stringify(sentRequestIds));
-    for (const requestId of sentRequestIds) {
-      if (ready[requestId]) delete ready[requestId];
+    logMessage('Sent Requests: ', JSON.stringify(sentRequests));
+    for (const { requestId, trace, report } of sentRequests) {
+      if (ready[requestId] && trace && report) delete ready[requestId];
     }
     const orgId = get(ready[Object.keys(ready)[0]], 'function.record.sls_org_id', 'xxxx');
     logMessage('OrgId: ', orgId);
-    const metricData = createMetricsPayload(ready);
+    const metricData = createMetricsPayload(ready, sentRequests);
     logMessage('Metric Data: ', JSON.stringify(metricData));
 
-    const traces = createTracePayload(ready);
+    const traces = createTracePayload(ready, sentRequests);
     logMessage('Traces Data: ', JSON.stringify(traces));
 
     if (metricData.length) {
       try {
         await reportOtelData.metrics(metricData);
       } catch (error) {
-        console.log('Metric send Error:', error);
+        logMessage('Metric send Error:', error);
       }
     }
     if (traces.length) {
       try {
         await reportOtelData.traces(traces);
       } catch (error) {
-        console.log('Trace send Error:', error);
+        logMessage('Trace send Error:', error);
       }
     }
     // Save request ids so we don't send them twice
-    Object.keys(ready).forEach((id) => sentRequestIds.push(id));
+    const readyKeys = Object.keys(ready);
+    sentRequests.forEach((obj) => {
+      const { requestId } = obj;
+      const found = readyKeys.find((id) => id === requestId);
+      if (found) {
+        obj.trace = !!ready[requestId].function && !!ready[requestId].traces;
+        obj.report = !!ready[requestId].report;
+      }
+    });
+    readyKeys
+      .filter((id) => sentRequests.find(({ requestId }) => id === requestId))
+      .forEach((id) =>
+        sentRequests.push({
+          requestId: id,
+          trace: !!ready[id].function && !!ready[id].traces,
+          report: !!ready[id].report,
+        })
+      );
 
-    // Only remove logs that were marked as ready
-    const incompleteRequestIds = Object.keys(notReady);
+    // Only remove logs that were marked as ready or have not sent a report yet
+    const incompleteRequestIds = [
+      ...Object.keys(notReady),
+      ...Object.keys(ready).filter((key) => !ready[key]['platform.report']),
+    ];
     logList.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {

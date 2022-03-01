@@ -17,6 +17,7 @@ const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // eslint-disable-next-line import/no-unresolved
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 const fetch = require('node-fetch');
+const { logMessage } = require('./helper');
 
 const processData = async (data, { url, s3Key, protobufPath, protobufType }) => {
   if (REPORT_TYPE === 'proto') {
@@ -34,12 +35,12 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
                     resolve(ServiceRequest.encode(datum).finish());
                     // const message = Buffer.from(encoded).toString('base64');
                   } catch (error) {
-                    console.log('Buffer error: ', error);
+                    logMessage('Buffer error: ', error);
                     resolve(null);
                   }
                 });
               } catch (error) {
-                console.log('Could not convert to proto buff', error);
+                logMessage('Could not convert to proto buff: ', error);
                 resolve(null);
               }
             })

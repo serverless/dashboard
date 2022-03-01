@@ -39,7 +39,7 @@ function listen(address, port) {
             );
           }
         } catch (e) {
-          console.log('failed to parse logs');
+          logMessage('failed to parse logs', e);
         }
         response.writeHead(200, {});
         response.end('OK');

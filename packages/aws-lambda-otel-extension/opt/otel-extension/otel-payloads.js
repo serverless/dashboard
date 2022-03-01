@@ -54,24 +54,28 @@ const createMetricAttributes = (fun, report) => {
         boolValue: get(fun, 'record.error'),
       },
     },
-    {
-      key: 'faas.duration',
-      value: {
-        doubleValue: report.record.metrics.durationMs,
-      },
-    },
-    {
-      key: 'faas.billed_duration',
-      value: {
-        intValue: report.record.metrics.billedDurationMs,
-      },
-    },
-    {
-      key: 'faas.max_memory_used_mb',
-      value: {
-        intValue: report.record.metrics.maxMemoryUsedMB,
-      },
-    },
+    ...(report
+      ? [
+          {
+            key: 'faas.duration',
+            value: {
+              doubleValue: report.record.metrics.durationMs,
+            },
+          },
+          {
+            key: 'faas.billed_duration',
+            value: {
+              intValue: report.record.metrics.billedDurationMs,
+            },
+          },
+          {
+            key: 'faas.max_memory_used_mb',
+            value: {
+              intValue: report.record.metrics.maxMemoryUsedMB,
+            },
+          },
+        ]
+      : []),
     ...timeoutObject,
   ];
 
@@ -149,8 +153,9 @@ const createCountMetric = ({ name, unit, asInt, record, attributes }) => ({
   },
 });
 
-const createMetricsPayload = (groupedByRequestId) =>
+const createMetricsPayload = (groupedByRequestId, sentRequests) =>
   Object.keys(groupedByRequestId).map((requestId) => {
+    const sentRequest = sentRequests[requestId];
     const data = groupedByRequestId[requestId];
     const report = data['platform.report'] || {};
     const fun = data.function || {};
@@ -168,6 +173,12 @@ const createMetricsPayload = (groupedByRequestId) =>
 
     const metricAttributes = [
       ...createMetricAttributes(fun, report),
+      {
+        key: 'faas.execution',
+        value: {
+          stringValue: requestId,
+        },
+      },
       ...(statusCode
         ? [
             {
@@ -190,31 +201,43 @@ const createMetricsPayload = (groupedByRequestId) =>
         : []),
     ];
 
-    const metrics = [
-      createHistogramMetric({
-        name: 'faas.duration',
-        unit: '1',
-        count: '1',
-        sum: report.record.metrics.durationMs,
-        record: fun.record,
-        attributes: metricAttributes,
-      }),
-      createHistogramMetric({
-        name: 'faas.memory',
-        unit: '1',
-        count: '1',
-        sum: (report.record.metrics.maxMemoryUsedMB / report.record.metrics.memorySizeMB) * 100,
-        record: fun.record,
-        attributes: metricAttributes,
-      }),
-      createCountMetric({
-        name: 'faas.invoke',
-        unit: '1',
-        asInt: '1',
-        record: fun.record,
-        attributes: metricAttributes,
-      }),
-    ];
+    const metrics = [];
+
+    // We only want to send an invocation once at the same time we send trace data
+    // if we have already sent this data then sendRequest.trace will be marked as true
+    if (!sentRequest || !sentRequest.trace) {
+      metrics.push(
+        createCountMetric({
+          name: 'faas.invoke',
+          unit: '1',
+          asInt: '1',
+          record: fun.record,
+          attributes: metricAttributes,
+        })
+      );
+    }
+
+    // Reports will be sent separately and we only want to send this data once
+    if (report && (!sentRequest || !sentRequest.report)) {
+      metrics.push(
+        createHistogramMetric({
+          name: 'faas.duration',
+          unit: '1',
+          count: '1',
+          sum: report.record.metrics.durationMs,
+          record: fun.record,
+          attributes: metricAttributes,
+        }),
+        createHistogramMetric({
+          name: 'faas.memory',
+          unit: '1',
+          count: '1',
+          sum: (report.record.metrics.maxMemoryUsedMB / report.record.metrics.memorySizeMB) * 100,
+          record: fun.record,
+          attributes: metricAttributes,
+        })
+      );
+    }
 
     return {
       resourceMetrics: [
@@ -235,73 +258,80 @@ const createMetricsPayload = (groupedByRequestId) =>
     };
   });
 
-const createTracePayload = (groupedByRequestId) =>
-  Object.keys(groupedByRequestId).map((requestId) => {
-    const data = groupedByRequestId[requestId];
-    const report = data['platform.report'] || {};
-    const fun = data.function || {};
-    const traces = data.traces || {};
+const createTracePayload = (groupedByRequestId, sentRequests) =>
+  Object.keys(groupedByRequestId)
+    // Check if the trace has already been sent so we don't want to send the same trace again
+    .filter((requestId) => {
+      const sentRequest = sentRequests[requestId];
+      return !(sentRequest && sentRequest.trace);
+    })
+    .map((requestId) => {
+      const data = groupedByRequestId[requestId];
+      const report = data['platform.report'] || {};
+      // We are uploading report data async so we want to ignore traces on reports
+      const fun = data.function || {};
+      const traces = data.traces || {};
 
-    if (!fun.record) {
-      logMessage('Trace fun - ', JSON.stringify(data));
-    }
+      if (!fun.record) {
+        logMessage('Trace fun - ', JSON.stringify(data));
+      }
 
-    if (!traces.record) {
-      logMessage('Trace traces - ', JSON.stringify(data));
-    }
+      if (!traces.record) {
+        logMessage('Trace traces - ', JSON.stringify(data));
+      }
 
-    if (!report.record) {
-      logMessage('Trace Report - ', JSON.stringify(data));
-    }
+      if (!report.record) {
+        logMessage('Trace Report - ', JSON.stringify(data));
+      }
 
-    const metricAttributes = createMetricAttributes(fun, report);
+      const metricAttributes = createMetricAttributes(fun, report);
 
-    traces.record.resourceSpans = [
-      {
-        resource: {
-          attributes: createResourceAttributes(fun),
+      traces.record.resourceSpans = [
+        {
+          resource: {
+            attributes: createResourceAttributes(fun),
+          },
+          instrumentationLibrarySpans: [
+            ...(traces.record.resourceSpans || [])[0].instrumentationLibrarySpans.map(
+              (librarySpans) => {
+                return {
+                  ...librarySpans,
+                  spans: librarySpans.spans.map((span) => {
+                    const existingKeys = Object.keys(span.attributes);
+                    return {
+                      ...span,
+                      attributes: [
+                        ...Object.keys(span.attributes).map((key) => {
+                          const jsType = typeof span.attributes[key];
+
+                          let type = 'stringValue';
+                          let value = `${span.attributes[key]}`;
+
+                          if (jsType === 'number') {
+                            type = 'intValue';
+                            value = span.attributes[key];
+                          }
+
+                          return {
+                            key,
+                            value: {
+                              [type]: value,
+                            },
+                          };
+                        }),
+                        ...metricAttributes.filter(({ key }) => !existingKeys.includes(key)),
+                      ],
+                    };
+                  }),
+                };
+              }
+            ),
+          ],
         },
-        instrumentationLibrarySpans: [
-          ...(traces.record.resourceSpans || [])[0].instrumentationLibrarySpans.map(
-            (librarySpans) => {
-              return {
-                ...librarySpans,
-                spans: librarySpans.spans.map((span) => {
-                  const existingKeys = Object.keys(span.attributes);
-                  return {
-                    ...span,
-                    attributes: [
-                      ...Object.keys(span.attributes).map((key) => {
-                        const jsType = typeof span.attributes[key];
+      ];
 
-                        let type = 'stringValue';
-                        let value = `${span.attributes[key]}`;
-
-                        if (jsType === 'number') {
-                          type = 'intValue';
-                          value = span.attributes[key];
-                        }
-
-                        return {
-                          key,
-                          value: {
-                            [type]: value,
-                          },
-                        };
-                      }),
-                      ...metricAttributes.filter(({ key }) => !existingKeys.includes(key)),
-                    ],
-                  };
-                }),
-              };
-            }
-          ),
-        ],
-      },
-    ];
-
-    return traces.record;
-  });
+      return traces.record;
+    });
 
 module.exports = {
   createTracePayload,
