@@ -19,7 +19,7 @@ To get started with Serverless Console use version 3.7 or later of the
 Serverless Framework. This will automatically configure a lambda extension,
 authentication, and collection. To enable this you’ll need to do the following.
 
-**Upgrade to Serverless Framework**
+**Upgrade or Install Serverless Framework**
 
 ```
 npm install -g serverless@3.7
@@ -35,23 +35,10 @@ serverless \
     --console
 ```
 
-Login or signup to serverless console. After logging in you may have to 
+Signup for Serverless Console. After logging in you may have to 
 cancel the pervious command.
 
 **Change directory to your new project and deploy your app.**
-
-```text
-serverless \
-    --org=<your-org-name> \
-    --name=console-http-api \
-    --template=aws-node-http-api \
-    --console
-```
-
-
-**Deploy using Serverless Framework Deploy command in your new project.**
-
-
 ```text
 cd console-http-api
 serverless deploy
@@ -62,7 +49,7 @@ serverless deploy
 After your app is deployed, hitting the endpoint from the previous command
 will start producing traces in Console. For more details see our [concepts section](concepts.md)
 
-**If you want to explore further**
+Or if you want to explore further, try one of the following.
 
 **Enable serverless console in your serverless.yaml file**
 ```yaml
