@@ -248,9 +248,6 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     },
   });
 
-  // TODO: Replace with process.stdout.write once extension does not depend on requestId being in logs
-  // console.log(logString);
-
   // Reset the exporter so we don't see duplicates
   memoryExporter.reset();
 };
