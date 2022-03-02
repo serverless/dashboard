@@ -35,8 +35,7 @@ serverless \
     --console
 ```
 
-Signup for Serverless Console. After logging in you may have to 
-cancel the pervious command.
+Signup or login to Serverless Console. 
 
 **Change directory to your new project and deploy your app.**
 ```text
