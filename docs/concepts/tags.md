@@ -27,19 +27,10 @@ them without following the Semantic names.
 * **faas.error** - This boolean is set to true if an invocation resulted in an error *TRUE*
 * **faas.event_type** - "This is the event type that this function was invoked with *aws.sqs*
 * **faas.name** - This the name of the single function that was invoked. *console-node-http-api-hello*
+* **faas.error_exception_message** The error message if one is captured.  *Exception occured*
+
 
 * **service.name** This a resource name for the service that your function or contain is running in. *console-node-http-api*
 * **service.namespace** The serverless organization app service name assigned to this code. 
 This can be specified as the service name in the `serverless.yaml` file or will be 
 inherited based in your compute envirionment. *console-node-http-api*
-
-
-
-
-
-|faas.error_exception_stacktrace|The stack trace for the invocation that resulted in an error.|||x|
-|faas.error_exception_message|The error message if an one is captured during an invocation that results in an error.  ||Sorry dude|x|
-|aws.xray.trace_id|Thsi is the x-ray trace id that is assigned to the resource||Root=1-61f800c6-62f31c575c176060231b0311|x|
-|sls.deployment_uid|The serverless cli generated deployment uid||c492b73f-3704-4d5b-839a-d4fbc7adc328|x|
-
-

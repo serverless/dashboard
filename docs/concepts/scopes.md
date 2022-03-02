@@ -11,9 +11,21 @@ them as defined Scopes. Scopes are used to define Metric Views as
 well as enforce a set of requirements on data we receive into our 
 system. We maintain a defined set of scopes for ingestion below.
 
-**All Functions** - This is used for displaying any Lambda function invocation of any kind and has the following required tags.
+**API** - This scope is used for displaying a Trace we recognize an HTTP 
+based API request. This scope requires the following tags.
+    * **http.path** 
+    * **http.method**
+    * **http.status_code** 
 
-**API** - This scope is used for displaying a Trace we recognize an HTTP based API request. It includes details about endpoint, path and other relevant API details. 
+**All Functions** - This is used for displaying any Lambda function 
+invocation. The following tags are required on the trace to qualify
+as a function. 
+    * **faas.error_timeout** 
+    * **faas.coldstart**
+    * **faas.error** 
+    * **faas.event_type** 
+    * **faas.name** 
 
-Details about what is required for each scope is maintained and 
-updated for each release in our [tag definitions](tags.md).
+
+
+More details about tags are maintained in our [tag definition list](tags.md).
