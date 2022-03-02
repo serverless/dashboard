@@ -11,7 +11,7 @@ apps - no matter how it’s built or managed. This is built on the [Open Telemet
 which focuses observability around standardizing the implementation of tracing. 
 Traces occur when something triggers an event in your system, which causes your 
 application to be invoked.  When you develop with Serverless Framework, 
-or include [Open Telemetry](https://opentelemetry.io/) instrumentation we collect 
+or include your own Open Telemetry instrumentation we collect 
 and display these traces so you can, chart, debug and alert on them. 
 
 ## Tracing
@@ -22,31 +22,31 @@ array of child spans. This structure allows us to offer rich mapping of relation
 Sample trace 
 ```text
  
-   id: 4d5a34403976b89eea314d3cc8035c36
-   FAAS Metrics: (Optional)
+id: 4d5a34403976b89eea314d3cc8035c36
+FAAS Metrics: (Optional)
    
-        Memory: 1021 KB
-        Copmute Duration 123ms
+    Memory: 1021 KB
+    Copmute Duration 123ms
  
-   "tags": 
-       {
-           "service.namespace": "my-app",
-           "faas.name": "my-lambda",
-           "cloud.region": "us-east1",
-           "cloud.provider": "aws",
-           "cloud.platform": "lambda",
-           "deployment.environment": "prod",
-           "faas.error_timeout": "false",
-           "faas.coldstart": "false",
-           "faas.error": "true",
-           "faas.error_exception_message": "object expected",
-           "faas.max_memory": "1024",
-           "faas.event_type": "http",
-           "http.path": "/user/create",
-           "http.method": "POST",
-           "http.status_code": "500",
-           "http.domain": "my-app.com"
-       }
+"tags": 
+{
+    "service.namespace": "my-app",
+    "faas.name": "my-lambda",
+    "cloud.region": "us-east1",
+    "cloud.provider": "aws",
+    "cloud.platform": "lambda",
+    "deployment.environment": "prod",
+    "faas.error_timeout": "false",
+    "faas.coldstart": "false",
+    "faas.error": "true",
+    "faas.error_exception_message": "object expected",
+    "faas.max_memory": "1024",
+    "faas.event_type": "http",
+    "http.path": "/user/create",
+    "http.method": "POST",
+    "http.status_code": "500",
+    "http.domain": "my-app.com"
+}
 
 ```
 

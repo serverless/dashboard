@@ -19,7 +19,7 @@ collecting attributes about a Trace . It’s value is always 1,
 but it collects valuable information about errors, status codes, and 
 compute platforms for filtering across various use cases.
 
-**FAAS Duration (Optional)** - This metric is used for collecting 
+**FAAS Compute Duration (Optional)** - This metric is used for collecting 
 details about the total time it took for a given Trace which is 
 used for calculating costs. 
 
