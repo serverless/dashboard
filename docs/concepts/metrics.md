@@ -2,7 +2,7 @@
 title: Metrics
 menuText: Metrics
 description: Metric definitions
-menuOrder: 4
+menuOrder: 5
 -->
 
 ## Metrics & Metric Definitions
