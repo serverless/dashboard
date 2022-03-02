@@ -17,6 +17,8 @@ const {
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
   SAVE_FILE,
+  SENT_FILE,
+  OTEL_SERVER_PORT,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
@@ -36,7 +38,6 @@ if (existsSync(SAVE_FILE)) {
     logMessage('Failed to parse logs queue file');
   }
 }
-const SENT_FILE = '/tmp/sent-requests.json';
 if (existsSync(SENT_FILE)) {
   try {
     sentRequests = JSON.parse(readFileSync(SENT_FILE, { encoding: 'utf-8' }));
@@ -222,7 +223,7 @@ module.exports = (async function main() {
 
   const { server: otelServer } = listen({
     logsQueue,
-    port: 2772,
+    port: OTEL_SERVER_PORT,
     callback: async (...args) => {
       await uploadLogs(...args);
       receivedData = true;

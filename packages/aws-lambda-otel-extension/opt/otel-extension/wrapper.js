@@ -24,7 +24,7 @@ const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
 const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const fetch = require('node-fetch');
-const { logMessage } = require('./helper');
+const { logMessage, OTEL_SERVER_PORT, OTEL_SERVER_HOST } = require('./helper');
 const SlsSpanProcessor = require('./span.processor');
 const { detectEventType } = require('./eventDetection');
 
@@ -234,7 +234,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     })
   ).toString('base64')}`;
 
-  await fetch('http://localhost:2772', {
+  await fetch(`http://${OTEL_SERVER_HOST}:${OTEL_SERVER_PORT}`, {
     method: 'post',
     body: JSON.stringify([
       {
