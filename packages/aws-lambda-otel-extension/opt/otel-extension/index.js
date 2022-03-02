@@ -27,7 +27,15 @@ function handleShutdown() {
 }
 
 let sentRequests = [];
+let logsQueue = [];
 
+if (existsSync(SAVE_FILE)) {
+  try {
+    logsQueue = JSON.parse(readFileSync(SAVE_FILE, { encoding: 'utf-8' }));
+  } catch (error) {
+    logMessage('Failed to parse logs queue file');
+  }
+}
 const SENT_FILE = '/tmp/sent-requests.json';
 if (existsSync(SENT_FILE)) {
   try {
@@ -40,11 +48,7 @@ if (existsSync(SENT_FILE)) {
 // Exported for testing convienence
 module.exports = (async function main() {
   const extensionId = await register();
-
-  const { logsQueue, server } = listen(receiverAddress(), RECEIVER_PORT);
-
-  // subscribing listener to the Logs API
-  await subscribe(extensionId, SUBSCRIPTION_BODY);
+  let receivedData = false;
 
   const groupLogs = async (logList) => {
     logMessage('LOGS: ', JSON.stringify(logList));
@@ -99,7 +103,7 @@ module.exports = (async function main() {
   };
 
   // function for processing collected logs
-  async function uploadLogs(logList) {
+  async function uploadLogs(logList, focusIds) {
     const currentIndex = logList.length;
     const groupedByRequestId = await groupLogs(logList);
 
@@ -136,6 +140,15 @@ module.exports = (async function main() {
         notReady: {},
       }
     );
+
+    if (focusIds.length > 0) {
+      const readyIds = Object.keys(ready);
+      readyIds.forEach((id) => {
+        if (!focusIds.includes(id)) {
+          delete ready[id];
+        }
+      });
+    }
 
     logMessage('READY: ', JSON.stringify(ready));
     logMessage('NOT READY: ', JSON.stringify(notReady));
@@ -204,9 +217,27 @@ module.exports = (async function main() {
         subList.push(...saveList);
       }
     });
-
     logMessage('Remaining logs queue: ', JSON.stringify(logList));
   }
+
+  const { server: otelServer } = listen({
+    logsQueue,
+    port: 2772,
+    callback: async (...args) => {
+      await uploadLogs(...args);
+      receivedData = true;
+    },
+  });
+
+  const { server } = listen({
+    port: RECEIVER_PORT,
+    address: receiverAddress(),
+    logsQueue,
+    callback: uploadLogs,
+  });
+
+  // subscribing listener to the Logs API
+  await subscribe(extensionId, SUBSCRIPTION_BODY);
 
   process.on('SIGINT', async () => {
     await uploadLogs(logsQueue);
@@ -236,42 +267,40 @@ module.exports = (async function main() {
               return;
             }
             await waitRecursive();
+            resolve();
           }, 1000);
         });
       await waitRecursive();
 
       logMessage('AFTER SOME TIME WE WILL UPLOAD...', JSON.stringify(logsQueue));
 
-      await uploadLogs(logsQueue);
+      await uploadLogs(logsQueue, []);
 
       logMessage('DONE...', JSON.stringify(logsQueue));
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
       writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
       server.close();
+      otelServer.close();
       break;
     } else if (event.eventType === EventType.INVOKE) {
-      await uploadLogs(logsQueue); // upload queued logs, during invoke event
-      const logLength = logsQueue.length;
-
-      // Test runtime API
-      // const eventData = await getEventData();
-      // const responseData = await getResponse(eventData.requestId);
-      // logMessage('Runtime event data: ', JSON.stringify(eventData, null, 2));
-      // logMessage('Response data: ', JSON.stringify(responseData, null, 2));
-
-      // Give lambda a little extra time to post some more logs
-      const waitForMe = () =>
+      /* eslint-disable no-loop-func */
+      const waitRecursive = () =>
         new Promise((resolve) => {
-          setTimeout(() => {
+          setTimeout(async () => {
+            logMessage('Checking data received...', receivedData);
+            if (receivedData) {
+              resolve();
+              return;
+            }
+            await waitRecursive();
             resolve();
           }, 50);
         });
-      await waitForMe();
-      if (logLength < logsQueue.length) {
-        await uploadLogs(logsQueue);
-      }
-      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+      /* eslint-enable no-loop-func */
+      await waitRecursive();
       writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
+      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+      receivedData = false; // Reset received event
     } else {
       throw new Error(`unknown event: ${event.eventType}`);
     }

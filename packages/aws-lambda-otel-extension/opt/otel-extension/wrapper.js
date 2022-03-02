@@ -23,6 +23,7 @@ const { NetInstrumentation } = require('@opentelemetry/instrumentation-net');
 const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
 const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
+const fetch = require('node-fetch');
 const { logMessage } = require('./helper');
 const SlsSpanProcessor = require('./span.processor');
 const { detectEventType } = require('./eventDetection');
@@ -45,7 +46,9 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
 
   let pathData;
   let functionData;
+  let executionId;
   if (span) {
+    executionId = span.attributes['faas.execution'];
     functionData = eventData[span.attributes['faas.execution']];
     pathData = {
       'http.path': functionData.httpPath,
@@ -55,6 +58,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     pathData = spans.reduce(
       (obj, val) => {
         if (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda') {
+          executionId = val.attributes['faas.execution'];
           functionData = eventData[val.attributes['faas.execution']];
           return {
             'http.path': eventData[val.attributes['faas.execution']].httpPath,
@@ -216,22 +220,36 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     )
   );
 
+  const logString = `⚡.${gzipSync(
+    JSON.stringify({
+      function: functionData,
+      traces: {
+        resourceSpans: [
+          {
+            resource: tracerProvider.resource.attributes,
+            instrumentationLibrarySpans: data,
+          },
+        ],
+      },
+    })
+  ).toString('base64')}`;
+
+  await fetch('http://localhost:2772', {
+    method: 'post',
+    body: JSON.stringify([
+      {
+        time: new Date().toISOString(),
+        type: 'function',
+        record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
+      },
+    ]),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
   // TODO: Replace with process.stdout.write once extension does not depend on requestId being in logs
-  console.log(
-    `⚡.${gzipSync(
-      JSON.stringify({
-        function: functionData,
-        traces: {
-          resourceSpans: [
-            {
-              resource: tracerProvider.resource.attributes,
-              instrumentationLibrarySpans: data,
-            },
-          ],
-        },
-      })
-    ).toString('base64')}`
-  );
+  // console.log(logString);
 
   // Reset the exporter so we don't see duplicates
   memoryExporter.reset();
