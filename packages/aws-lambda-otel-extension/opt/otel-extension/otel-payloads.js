@@ -54,7 +54,7 @@ const createMetricAttributes = (fun, report) => {
         boolValue: get(fun, 'record.error'),
       },
     },
-    ...(report
+    ...(report.record
       ? [
           {
             key: 'faas.duration',
@@ -155,7 +155,7 @@ const createCountMetric = ({ name, unit, asInt, record, attributes }) => ({
 
 const createMetricsPayload = (groupedByRequestId, sentRequests) =>
   Object.keys(groupedByRequestId).map((requestId) => {
-    const sentRequest = sentRequests[requestId];
+    const sentRequest = sentRequests.find(({ requestId: rId }) => rId === requestId);
     const data = groupedByRequestId[requestId];
     const report = data['platform.report'] || {};
     const fun = data.function || {};
@@ -165,10 +165,6 @@ const createMetricsPayload = (groupedByRequestId, sentRequests) =>
 
     if (!fun.record) {
       logMessage('Metrics fun - ', JSON.stringify(data));
-    }
-
-    if (!report.record) {
-      logMessage('Metrics Report - ', JSON.stringify(data));
     }
 
     const metricAttributes = [
@@ -218,7 +214,7 @@ const createMetricsPayload = (groupedByRequestId, sentRequests) =>
     }
 
     // Reports will be sent separately and we only want to send this data once
-    if (report && (!sentRequest || !sentRequest.report)) {
+    if (report && report.record && (!sentRequest || !sentRequest.report)) {
       metrics.push(
         createHistogramMetric({
           name: 'faas.duration',
@@ -262,7 +258,7 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
   Object.keys(groupedByRequestId)
     // Check if the trace has already been sent so we don't want to send the same trace again
     .filter((requestId) => {
-      const sentRequest = sentRequests[requestId];
+      const sentRequest = sentRequests.find(({ requestId: rId }) => rId === requestId);
       return !(sentRequest && sentRequest.trace);
     })
     .map((requestId) => {

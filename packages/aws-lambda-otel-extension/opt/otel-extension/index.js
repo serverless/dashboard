@@ -4,7 +4,7 @@
 
 const { unzip: unzipWtithCallback } = require('zlib');
 const { promisify } = require('util');
-const { writeFileSync } = require('fs');
+const { writeFileSync, existsSync, readFileSync } = require('fs');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
@@ -26,10 +26,20 @@ function handleShutdown() {
   process.exit(0);
 }
 
+let sentRequests = [];
+
+const SENT_FILE = '/tmp/sent-requests.json';
+if (existsSync(SENT_FILE)) {
+  try {
+    sentRequests = JSON.parse(readFileSync(SENT_FILE, { encoding: 'utf-8' }));
+  } catch (error) {
+    logMessage('Failed to sent request file');
+  }
+}
+
 // Exported for testing convienence
 module.exports = (async function main() {
   const extensionId = await register();
-  const sentRequests = [];
 
   const { logsQueue, server } = listen(receiverAddress(), RECEIVER_PORT);
 
@@ -164,16 +174,16 @@ module.exports = (async function main() {
       const found = readyKeys.find((id) => id === requestId);
       if (found) {
         obj.trace = !!ready[requestId].function && !!ready[requestId].traces;
-        obj.report = !!ready[requestId].report;
+        obj.report = !!ready[requestId]['platform.report'];
       }
     });
     readyKeys
-      .filter((id) => sentRequests.find(({ requestId }) => id === requestId))
+      .filter((id) => !sentRequests.find(({ requestId }) => id === requestId))
       .forEach((id) =>
         sentRequests.push({
           requestId: id,
           trace: !!ready[id].function && !!ready[id].traces,
-          report: !!ready[id].report,
+          report: !!ready[id]['platform.report'],
         })
       );
 
@@ -236,6 +246,7 @@ module.exports = (async function main() {
 
       logMessage('DONE...', JSON.stringify(logsQueue));
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+      writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
       server.close();
       break;
     } else if (event.eventType === EventType.INVOKE) {
@@ -260,6 +271,7 @@ module.exports = (async function main() {
         await uploadLogs(logsQueue);
       }
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+      writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
     } else {
       throw new Error(`unknown event: ${event.eventType}`);
     }

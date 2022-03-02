@@ -15,7 +15,7 @@ const S3_BUCKET = process.env.SLS_OTEL_REPORT_S3_BUCKET;
 const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // aws-sdk is provided in Lambda runtime
 // eslint-disable-next-line import/no-unresolved
-const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
+const s3Client = null; // S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 const fetch = require('node-fetch');
 const { logMessage } = require('./helper');
 
