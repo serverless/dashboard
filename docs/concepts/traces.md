@@ -45,19 +45,18 @@ FAAS Metrics: (Optional)
 ```
 
 ## Child Spans
-In addition to the metric and tag details, a trace contains a 
-collection of child spans. These spans provide more detailed
-specifics about the start adn stop times of events
-instrumented with our Serverless Runtime OTEL collectors. 
+Traces also contain a collection of Child Spans. These spans 
+provide more detailed specifics about the start adn stop times 
+of events instrumented with our Serverless Runtime OTEL collectors. 
 
-These share the same tagging and unique identifiers as a Trace.
+These share the same [tagging](tags.md) and unique identifiers as a Trace
+and allow us to reconstruct the interactions of your application.
 
 
-
-Sample Span 
+Sample Spans
 ```text
 parent-id: 4d5a34403976b89eea314d3cc8035c36
-|------id: b91975df2f5144949ff95613496c97f3
+|------id: 2d95fe3eec77a0098d15a6995943b670
 
  
 "tags": 
@@ -79,6 +78,25 @@ parent-id: 4d5a34403976b89eea314d3cc8035c36
     "http.status_code": "500",
     "http.domain": "my-app.com"
 }
-
+|------id: b91975df2f5144949ff95613496c97f3 
+"tags": 
+{
+    "service.namespace": "my-app",
+    "faas.name": "my-lambda",
+    "cloud.region": "us-east1",
+    "cloud.provider": "aws",
+    "cloud.platform": "lambda",
+    "deployment.environment": "prod",
+    "faas.error_timeout": "false",
+    "faas.coldstart": "false",
+    "faas.error": "true",
+    "faas.error_exception_message": "object expected",
+    "faas.max_memory": "1024",
+    "faas.event_type": "http",
+    "http.path": "/user/create",
+    "http.method": "POST",
+    "http.status_code": "500",
+    "http.domain": "my-app.com"
+}
 ```
 

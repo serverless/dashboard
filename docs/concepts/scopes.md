@@ -18,17 +18,17 @@ and include the following.
 
 **API** - This scope is used for displaying a Trace we recognize an HTTP 
 based API request. This scope requires the following tags.
-    * http.path
-    * http.method
-    * http.status_code
+* http.path
+* http.method
+* http.status_code
 
 **All Functions** - This is used for displaying any Lambda function 
 invocation. The following tags are required on the trace to qualify
 as a function. 
-    * faas.error_timeout
-    * faas.coldstart
-    * faas.error
-    * faas.event_type
-    * faas.name
+* faas.error_timeout
+* faas.coldstart
+* faas.error
+* faas.event_type
+* faas.name
 
 More details about tags are maintained in our [tag definition list](tags.md).
