@@ -2,16 +2,17 @@
 title: Tags
 menuText: Tags
 description: Tag definitions and examples
-menuOrder: 3
+menuOrder: 2
 -->
 
 # Tags & Tag Definitions
 Tagging data on Traces plays an important role in allow you to make sense of
-[Open Telemetry](https://opentelemetry.io/) data. Our [Serverless Runtime](https://github.com/serverless/runtime)
+your data. Our [Serverless Runtime](https://github.com/serverless/runtime)
 instrumentation automatically collects the following tags defined by extending
 the [Open Telemetry semantic tagging conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#common-attributes). 
 These tags are defined for each trace, but our UI provides an easy way to navigate
-them without following the Semantic names. 
+them without following the semantic names. If you already using Open Telemetry
+be sure to see what tags we enforce [scopes](scopes.md) on. 
 
 * **cloud.region** - This is the region the code is deployed to *us-east-1*
 * **cloud.platform** - This is the type of compute target we are executing in. Should be set to *lambda*
