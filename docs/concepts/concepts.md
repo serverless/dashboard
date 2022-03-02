@@ -23,41 +23,39 @@ and is easy to aggregate across many computing platforms and systems.
 
 Sample trace (note this is not an accurate api definition)
 
-```json
-{
-   "id": "fd432523c9a0d72e0b6d4886dd68eed6",
-   "startTimeUnixNano": "1644420233494556000",
-   "endTimeUnixNano": "1644420233494669600",
-   "spans": [] //nested list of span ids, or possibly nested json
-   "tags": [
+```text
+ 
+   FAAS Metrics: 
+   
+   Memory: 1021 KB
+   Duration 123ms
+ 
+   "tags": 
        {
+           "service.namespace": "my-app",
            "faas.name": "my-lambda",
            "cloud.region": "us-east1",
-           "service.namespace": "my-app",
-           "faas.memory_pct": "41.2",
+           "cloud.provider": "aws",
+           "cloud.platform": "lambda",
+           "deployment.environment": "prod",
            "faas.error_timeout": "false",
            "faas.coldstart": "false",
-           "deployment.environment": "prod",
-           "sls.org_uid": "fd4325dee56c1-3b17-4254-82b6-39af3a892ba0",
-           "http.path": "/user/create",
-           "http.method": "POST",
-           "http.status_code": "500",
-           "http.domain": "my-app.com",
-           "faas.duration": "123",
            "faas.error": "true",
            "faas.error_exception_message": "object expected",
            "faas.max_memory": "1024",
            "faas.event_type": "http",
-           "cloud.provider": "aws",
-           "cloud.platform": "lambda"
+           "http.path": "/user/create",
+           "http.method": "POST",
+           "http.status_code": "500",
+           "http.domain": "my-app.com"
        }
-   ]
-   metrics:[
-       { "faas.duration": 123},
-       { "faas.memory_pct": 22}
-   ]
-}
+
 ```
 
 ## Child Spans
-Child spans share the same data structure as above but offer a seperate
+In addition to the metric and tag details, a trace contains a collection of
+child spans. These spans share the same attributes as the trace and if your using
+OTEL instrumentation across your microsovervices you'll be able
+to see how long these span execution took and use them further drill into
+where issues are occuring. 
+
