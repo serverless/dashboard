@@ -16,10 +16,11 @@ and display these traces so you can, chart, debug and alert on them.
 
 ## Tracing
 Within console all the observability details about your apps and services are captured as Traces. 
-All Traces have a unique identifier, some optional metrics and tags, as well as an 
-array of child spans. This structure allows us to offer rich mapping of relationships.
+All Traces have a unique identifier, some optional [metrics](metrics.md) and [tags](tags.md), as well as an 
+array of child spans. This structure allows us to offer rich mapping of relationships and 
+enforce specific [scopes](scopes.md) within the Console UI.
 
-Sample trace 
+Sample Trace 
 ```text
  
 id: 4d5a34403976b89eea314d3cc8035c36
