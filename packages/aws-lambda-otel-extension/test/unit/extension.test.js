@@ -19,6 +19,7 @@ describe('extension', () => {
   });
 
   it('should handle plain success invocation', async () => {
+    process.env.DO_NOT_WAIT = true;
     const emitter = new EventEmitter();
     const { server, listenerEmitter } = getExtensionServerMock(emitter);
 
@@ -93,6 +94,7 @@ describe('extension', () => {
     ]);
 
     await extensionProcess;
+    delete process.env.DO_NOT_WAIT;
     server.close();
     log.debug('report string %s', stdoutData);
     const [[metricsReport], [tracesReport]] = stdoutData

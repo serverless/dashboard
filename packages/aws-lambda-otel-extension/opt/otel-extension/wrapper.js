@@ -234,7 +234,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     })
   ).toString('base64')}`;
 
-  await fetch(`http://${OTEL_SERVER_HOST}:${OTEL_SERVER_PORT}`, {
+  await fetch(`http://${OTEL_SERVER_HOST}:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
     method: 'post',
     body: JSON.stringify([
       {

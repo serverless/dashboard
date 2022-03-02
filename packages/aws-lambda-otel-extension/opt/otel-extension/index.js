@@ -104,7 +104,7 @@ module.exports = (async function main() {
   };
 
   // function for processing collected logs
-  async function uploadLogs(logList, focusIds) {
+  async function uploadLogs(logList, focusIds = []) {
     const currentIndex = logList.length;
     const groupedByRequestId = await groupLogs(logList);
 
@@ -298,7 +298,9 @@ module.exports = (async function main() {
           }, 50);
         });
       /* eslint-enable no-loop-func */
-      await waitRecursive();
+      if (!process.env.DO_NOT_WAIT) {
+        await waitRecursive();
+      }
       writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
       receivedData = false; // Reset received event
