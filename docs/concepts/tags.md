@@ -2,7 +2,7 @@
 title: Tags
 menuText: Tags
 description: Tag definitions and examples
-menuOrder: 2
+menuOrder: 3
 -->
 
 # Tags & Tag Definitions
@@ -19,16 +19,16 @@ be sure to see what tags we enforce [scopes](scopes.md) on.
 
 * **deployment.environment** This is the environment an app is deployed to. It can be defined as ""stage"" in serverlss.yaml file *prod*
 
-* **http.path** - This is the http path with the path that includes path param place holders */test/{id}*
-* **http.method** - This is the http method of the request *GET*
-* **http.status_code** - This will be the http status code set on the response *200*
-
 * **faas.error_timeout** - Set when a timeout of an invocation occurs *TRUE*
 * **faas.coldstart** - Set when a coldstart of a Lambda function occurs. *TRUE* 
 * **faas.error** - This boolean is set to true if an invocation resulted in an error *TRUE*
 * **faas.event_type** - "This is the event type that this function was invoked with *aws.sqs*
 * **faas.name** - This the name of the single function that was invoked. *console-node-http-api-hello*
 * **faas.error_exception_message** The error message if one is captured.  *Exception occured*
+
+* **http.path** - This is the http path with the path that includes path param place holders */test/{id}*
+* **http.method** - This is the http method of the request *GET*
+* **http.status_code** - This will be the http status code set on the response *200*
 
 
 * **service.name** This a resource name for the service that your function or contain is running in. *console-node-http-api*

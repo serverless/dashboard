@@ -2,15 +2,19 @@
 title: Scopes
 menuText: Scopes
 description: Overview of concepts used on serevrless console. 
-menuOrder: 3
+menuOrder: 4
 -->
 
 # Scopes
 To make sense of Traces coming into our system we need to recognize 
-them as defined Scopes. Scopes are used to define patterns in Traces
-we understand so we can ingest and store them for charting and alerting.
-We currently support the following curated views, corresponding to these
-specific scopes. 
+them as somethign we recognize. We call these patterns Scopes. 
+Scopes are defined by a set of tags we recongize being included 
+on the [Trace](trace.md). When we receive Traces that match one of
+our recongized Scopes we ingest it into our system.
+
+
+These scopes are represented in our UI as [Curated Metric Views](../using.md)
+and include the following. 
 
 **API** - This scope is used for displaying a Trace we recognize an HTTP 
 based API request. This scope requires the following tags.
