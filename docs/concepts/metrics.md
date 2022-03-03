@@ -5,8 +5,8 @@ description: Metric definitions
 menuOrder: 5
 -->
 
-## Metrics & Metric Definitions
-Metrics about your Trace are also collrected and stored in
+## Metrics 
+Metrics about your [Trace](trace.md) are also collrected and stored in
 Serverless Console for alerting and charting. These metrics
 are stored individually on each trace as well as sampled for
 storage and alerting purposes.  

@@ -2,10 +2,15 @@
 title: Using Serveless Console
 menuText: Using Serveless Console
 description: A guide to using Serverless Console UI
-menuOrder: 6
+menuOrder: 1
 -->
 
 # Using Console
+
+## Getting Started
+
+## Logging and adding Teammates
+
 
 ## Metric Views 
 Metric views provide curated metric displays created for each of our 
@@ -13,7 +18,7 @@ defined [Scopes](scopes.md). By default these curated views do not
 apply filters, but allow for filterings. Users can apply and save 
 filters to share across their org with other users.
 
-## Explorer 
+## Trace Explorer 
 The explorer allows users to filter and search across all Traces in 
 their organization. This will help you identify specific invocations 
 that are resulting errors, slow, over or under utilizing resources. 
