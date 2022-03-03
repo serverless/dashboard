@@ -46,34 +46,7 @@ serverless deploy
 **That's it!**
 
 After your app is deployed, hitting the endpoint from the previous command
-will start producing traces in Console. For more details see our [concepts section](concepts.md)
-
-Or if you want to explore further, try one of the following.
-
-**Enable serverless console in your serverless.yaml file**
-```yaml
-org: <your-org-name>
-service: <your-service-name>
-console: true
-frameworkVersion: '3'
-```
-
-**Deploy an express.js API**
-```text
-serverless \
-    --org=<your-org-name> \
-    --name=console-http-api \
-    --template=aws-node-express-api \
-    --console
-```
-
-**Deploy a basic chron job**
-```text
-serverless \
-    --org=<your-org-name> \
-    --name=console-http-api \
-    --template=aws-node-scheduled-cron \
-    --console
-```
+will start producing [Traces](traces.md) in Console. For more details see 
+our [concepts section](concepts.md)
 
 
