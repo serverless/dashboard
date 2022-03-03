@@ -1,6 +1,6 @@
 <!--
 title: Trace Explorer
-menuText: Trace Explorer and Trace Details
+menuText: Trace Explorer
 description: A guide to using our metric views and create your own.
 menuOrder: 3
 -->
