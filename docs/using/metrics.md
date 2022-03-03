@@ -1,6 +1,6 @@
 <!--
 title: Metric Views
-menuText: Curated Metric Views
+menuText: Metric Views
 description: A guide to using our metric views and create your own.
 menuOrder: 2
 -->
