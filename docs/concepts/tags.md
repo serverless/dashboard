@@ -14,6 +14,8 @@ These tags are defined for each trace, but our UI provides an easy way to naviga
 them without following the semantic names. If you already using Open Telemetry
 be sure to see what tags we enforce [scopes](scopes.md) on. 
 
+## Tag Definitions ##
+
 * **cloud.region** - This is the region the code is deployed to *us-east-1*
 * **cloud.platform** - This is the type of compute target we are executing in. Should be set to *lambda*
 
@@ -31,7 +33,12 @@ be sure to see what tags we enforce [scopes](scopes.md) on.
 * **http.status_code** - This will be the http status code set on the response *200*
 
 
-* **service.name** This a resource name for the service that your function or contain is running in. *console-node-http-api*
+* **service.name** This a resource name for the service that your function or container 
+is running in. For Serverless Framwork users this will combine
+your Stage, Service Name, and function name. *console-node-http-api*
 * **service.namespace** The serverless organization app service name assigned to this code. 
 This can be specified as the service name in the `serverless.yaml` file or will be 
 inherited based in your compute envirionment. *console-node-http-api*
+
+## Filters ##
+Tags are represented as filters across our [Metrics View](../using/metrics.md) and [Trace Explorer](../using/traces.md).
