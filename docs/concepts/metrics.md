@@ -6,10 +6,11 @@ menuOrder: 5
 -->
 
 ## Metrics 
-Metrics about your [Trace](trace.md) are also collrected and stored in
-Serverless Console for alerting and charting. These metrics
-are stored individually on each trace as well as sampled for
-storage and alerting purposes.  
+Metrics about your [Trace](trace.md) are collected and stored in
+Serverless Console. These metrics are stored individually on each 
+trace as well as aggregated for storage and alerting purposes. 
+The [tags](tags.md) from your trace are also included
+on these metrics for [filtering](../using/metrics.md).
 
 We are expanding the list of metrics and currently support the 
 following metrics for ingestion.

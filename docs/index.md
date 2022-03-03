@@ -7,25 +7,27 @@ menuOrder: 1
 
 # Serverless Console
 
-Serveless Console is the next generation of control plan for Teams building as
-Serverless as Possible. We have a limited number of spots for teams that are
-interested in monitoring Serverless architectures. 
+Serveless Console is the next generation of control plane for Teams building as
+Serverless architecture. We have a limited number of spots for teams that are
+interested in testin our private preview. 
 
-[Request access.](https://www.serverless.com/console ) 
+[Request access now.](https://www.serverless.com/console ) 
 
 ## Getting Started
 
-To get started with Serverless Console use version 3.7 or later of the
-Serverless Framework. This will automatically configure a lambda extension,
-authentication, and collection. To enable this you’ll need to do the following.
+To get started with Serverless Console use version 3.7.1 or later of the
+Serverless Framework. 
 
 **Upgrade or Install Serverless Framework**
 
 ```
-npm install -g serverless@3.7
+npm install -g serverless
 ```
 
-**Get started with a simple http app.**
+From there you can run the Serverless onboarding command below to deploy and
+instrument your first workload. 
+
+**Get started with our simple http api template.**
 
 ```text
 serverless \
@@ -35,7 +37,9 @@ serverless \
     --console
 ```
 
-Signup or login to Serverless Console. 
+You'll need to pick a name for your [orginization](using.md)
+and signup or login to Serverless Console.  (you'll be typing this
+alot so pick something simple.)
 
 **Change directory to your new project and deploy your app.**
 ```text
@@ -47,6 +51,4 @@ serverless deploy
 
 After your app is deployed, hitting the endpoint from the previous command
 will start producing [Traces](traces.md) in Console. For more details see 
-our [concepts section](concepts.md)
-
-
+our [concepts section](concepts.md) or learn about using [Serverles Console](/using/).

@@ -14,13 +14,24 @@ of observability - [logs](logs.md), [metrics](metrics) and [traces](traces.md).
 ## Open Telemetry
 [Open Telemetry](http://opentelemtry.io) is a Cloud Native Compute
 Foundation project that makes Distributed Tracing easy to setup
-and vendor agnostic. We have adopted the best of the Open Telemetry's
-[standards and semantics](tags.md) to build Serverless Console.
+and vendor agnostic. We have adopted the best of the Open Telemetry
+[standards and semantics](tags.md) to build out a Tracing experience
+that's organized and intuitive. 
 
 ## Serverless Runtime
-[Serverless Runtime](http://github.com/serverless/runtime) is our collection 
-of [Open Telemetry](http://opentelemtry.io) collectors we use to automatically
-instrument your application. We package Serverless runtime in Serverless
-Framework, or get see [Serverless Runtime](http://github.com/serverless/runtime)
-for installing your own collectors.
+To make instrumentaiton automatic we're launching a new Open Source
+effort called [Serverless Runtime](http://github.com/serverless/runtime).
 
+Serverless runtim is our collection of [Open Telemetry](http://opentelemtry.io) 
+collectors we use to instrument a variety of computing platforms.  
+
+The fastest way to get started with Serverless Runtime is 
+to use the version packaged in Serverless Framwork by setting the 
+console property in your `serverless.yaml' file. 
+
+```yaml
+org: empty
+console: true
+service: a
+frameworkVersion: '3'
+```
