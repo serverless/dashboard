@@ -11,8 +11,6 @@ Serveless Console is the next generation of control plane for Teams building as
 Serverless architecture. We have a limited number of spots for teams that are
 interested in testin our private preview. 
 
-[Request access now.](https://www.serverless.com/console ) 
-
 ## Getting Started
 
 To get started with Serverless Console use version 3.7.1 or later of the
@@ -64,6 +62,7 @@ serverless \
     --template=aws-node-http-api \
     --console
 ```
+l
 
 **That's it!**
 
