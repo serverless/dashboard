@@ -18,17 +18,17 @@ Serverless Framework.
 
 **Upgrade or Install Serverless Framework**
 
-```
+```text
 npm install -g serverless
 ```
 
 **Login from the CLI to Create your Org**
 
 You'll be promoted to create a user, and orginization. You can read
-more about this in our [User Guide](/using/). (If you have used
+more about this in our [User Guide](./using/). (If you have used
 Serverless Dashboard in the past you can skip this)
 
-```
+```text
 serverless login
 ```
 
@@ -62,7 +62,6 @@ serverless \
     --template=aws-node-http-api \
     --console
 ```
-l
 
 **That's it!**
 
