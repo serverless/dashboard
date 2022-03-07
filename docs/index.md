@@ -22,11 +22,22 @@ Serverless Framework.
 npm install -g serverless
 ```
 
-Configure an existing project with Serevrless by adding `--console`
-flag the serverless command.
+You can configure an existing project with
+Serverless by adding `--console` flag the serverless command.
 
 ```text
 serverless --console
+```
+
+Or get started with on of our templates
+
+```text
+##Express JS API
+serverless \
+    --org=<your-org-name> \
+    --name=console-http-api \
+    --template=aws-node-express-api \
+    --console
 ```
 
 **That's it!**
