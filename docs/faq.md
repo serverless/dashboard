@@ -74,7 +74,7 @@ serverless \
 ##Basic Chron Job
 serverless \
     --org=<your-org-name> \
-    --name=console-http-api \
+    --name=console-chron \
     --template=aws-node-scheduled-cron \
     --console
 ```
