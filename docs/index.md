@@ -52,7 +52,7 @@ serverless config credentials \
 The following onboarding command will clone a repo
 for a simple Node.js API and deploy it to your
 AWS account. This app will be instrumented
-automatically wtih our [Serverless Runtime](/concepts)
+automatically wtih our [Serverless Runtime](./concepts)
 Open Telemetry collector. 
 
 ```text
@@ -67,4 +67,4 @@ serverless \
 
 After your app is deployed, hitting the endpoint from the previous command
 will start producing [Traces](traces.md) in Console. For more details see 
-our [concepts section](concepts.md) or learn about using [Serverles Console](/using/).
+our [concepts section](./concepts) or learn about using [Serverles Console](./using/).
