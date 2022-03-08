@@ -32,7 +32,6 @@ serverless --console
 Or get started with on of our templates
 
 ```text
-##Express JS API
 serverless \
     --org=<your-org-name> \
     --name=console-http-api \
