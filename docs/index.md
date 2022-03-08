@@ -33,10 +33,10 @@ Or get started with on of our templates
 
 ```text
 serverless \
-    --org=<your-org-name> \
-    --name=console-http-api \
-    --template=aws-node-express-api \
-    --console
+  --org=<your-org-name> \
+  --name=console-http-api \
+  --template=aws-node-express-api \
+  --console
 ```
 
 **That's it!**
