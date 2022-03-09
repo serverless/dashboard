@@ -13,19 +13,19 @@ recongize patterns by observing [Traces](traces.md) sent by our
 
 
 To start using the Console to monitor your apps, you'll need to
-signup, and create your own orginization. To do this please ensure
-you have the latest version of [Serverless Framwork](https://github.com/serverless/serverless) 
+signup, and create your own organization. To do this please ensure
+you have the latest version of [Serverless Framework](https://github.com/serverless/serverless) 
 installed (v3.7.3+ required).
 
 ```text
 npm -g install serverless
 ```
 
-## Creating an Orginization 
-If your new to Serveless, you'll need to sign up and create an 
-Orginization (Org) to start using Serverless Console. An Orginization 
+## Creating an Organization 
+If you're new to Serveless, you'll need to sign up and create an 
+Orginization (Org) to start using Serverless Console. An Prganization 
 is treated as a tenant across Serverless products and data is not able to
-be shared across Orginizations. It also will appear in your
+be shared across Organization. It also will appear in your
 URL. 
 
 To start the onboarding process run the following command from a new 
@@ -52,7 +52,7 @@ Creating a new serverless project
 ```
 
 Choose one of the examples and follow the prompts to create
-your user and orginization. We recommend using an org name your 
+your user and organization. We recommend using an org name your 
 team will recognize and is easy to type.
 
 
@@ -74,7 +74,7 @@ serverless config credentials \
 ```
 
 **Start Deploying**
-Once you have setup your orginization and access keys
+Once you have setup your organization and access keys
 you'll be ready to deploy your first app instrumented
 for console. Follow the prompts from the onboarding
 command or change into your project folder and run

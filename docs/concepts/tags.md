@@ -25,7 +25,7 @@ be sure to see what tags we enforce [scopes](scopes.md) on.
 
 **FAAS Tags** - FAAS tags identify details function as a service platforms like AWS Lambda.
 * **faas.error_timeout** - Set when a timeout of an invocation occurs *TRUE*
-* **faas.coldstart** - Set when a coldstart of a Lambda function occurs. *TRUE* 
+* **faas.coldstart** - Set when a cold start of a Lambda function occurs. *TRUE* 
 * **faas.error** - This boolean is set to true if an invocation resulted in an error *TRUE*
 * **faas.event_type** - "This is the event type that this function was invoked with *aws.sqs*
 * **faas.name** - This the name of the single function that was invoked. *console-node-http-api-hello*
