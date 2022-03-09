@@ -47,7 +47,7 @@ FAAS Metrics: (Optional)
 
 ## Child Spans
 Traces also contain a collection of Child Spans. These spans 
-provide more detailed specifics about the start adn stop times 
+provide more detailed specifics about the start and stop times 
 of events instrumented with our Serverless Runtime collectors. 
 
 These share the same [tagging](tags.md) and unique identifiers as a T

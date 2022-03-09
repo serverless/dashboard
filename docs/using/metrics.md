@@ -8,8 +8,8 @@ menuOrder: 2
 
 ## Curated Metric Views 
 Our curated metric views provide you the ability to view
-activity across your enter Orginization at a glance.  These includes views
-are entended to be a starting point based on patterns we 
+activity across your enter organization at a glance.  These include views
+are intended to be a starting point based on patterns we 
 recognize in the [Trace](../concepts/traces.md) data we receive. 
 
 We focus the patterns around you acheive outcomes important to them
@@ -21,7 +21,7 @@ see slow request outliers, filter for status codes, and spot usage
 trends across your endpoints. 
 
 **Functions** - Functions provide a view to see all your 
-instrumented Lambda functions wholistically across your orginization. 
+instrumented Lambda functions holistically across your organization. 
 
 Fore more details about how we recognize these Traces see our 
 [Scopes concept.](../concepts/scopes.md)
@@ -30,11 +30,11 @@ Fore more details about how we recognize these Traces see our
 To further refine our included curated views users can save
 filters to further refine the data they are seeing. To add
 filters click on the configuration icon in the top right and
-select the crtieria you'd like to filter. 
+select the criteria you'd like to filter. 
 
 Each filter option will have a set of values we have received
-as [tags](../concepts/tags.md) when we ingestsed the [Trace](traces.md). 
-Selec the + icon on each filter option you'd like to include, and
+as [tags](../concepts/tags.md) when we ingested the [Trace](traces.md). 
+Select the + icon on each filter option you'd like to include, and
 then Save those values to view the results. 
 
 *Note: Saving filters to the curated views for API and Functions
@@ -45,11 +45,11 @@ temporarily.
 The following filters are shared across all Traces.
 
 * **Service** Service is collected from the *Service.Name* tag
-on each Trace. For Serverless Framwork users this will combine
+on each Trace. For Serverless Framework users this will combine
 your Stage, Service Name, and function name. 
 
 * **Namespace** Service is collected from the *Service.Namespace* tag
-on each Trace. For Serverless Framwork users this will correspond
+on each Trace. For Serverless Framework users this will correspond
 to service specified in your Serverless.yaml file.
 
 * **Environment** Environment is collected from the *deployment.environment* 
@@ -66,14 +66,14 @@ contain the path for the API requested. This is useful for narrowing in
 on usage or error patterns.
 
 * **API Method**  Collected using the *http.method* tag this is will 
-contain the method for the API requested. This is useful for distinquishing
+contain the method for the API requested. This is useful for distinguishing
 between requests across a single endpoint. 
 
 * **API Duration** This is collected as the duration metric and is useful
-for identifying performance outliers across your orginization. 
+for identifying performance outliers across your organization. 
 
-* **API Status Codes**  Collected using the *http.status_code* tag this is will 
-contain the status code returned by the API. This is useful for identifiying
+* **API Status Codes**  Collected using the *http.status_code* tag this will 
+contain the status code returned by the API. This is useful for identifying
 errors.
 
 #### Function Filters ####
@@ -88,11 +88,11 @@ name(s) in the serverless.yaml file.
 *faas.coldstart* tag and allows you to filter on functions that required a cold start.
 
 * **Function Duration** This is collected as the duration metric and is useful
-for identifying performance outliers across your orginization. 
+for identifying performance outliers across your organization. 
 
 
 ### Creating your own views
-If you'd like to save filters with your team, you can custom views.
+If you'd like to save filters with your team, you can create shared custom views.
 
 To do this click the "Create View" button on the Scopes Menu and choose
 a Scope to apply. It's helpful to include a precise name, and description

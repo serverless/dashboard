@@ -7,10 +7,10 @@ menuOrder: 4
 
 # Scopes
 To make sense of Traces coming into our system we need to recognize 
-them as somethign we recognize. We call these patterns Scopes. 
-Scopes are defined by a set of tags we recongize being included 
+them as something we recognize. We call these patterns Scopes. 
+Scopes are defined by a set of tags we recognize being included 
 on the [Trace](traces.md). When we receive Traces that match one of
-our recongized Scopes we ingest it into our system.
+our recognized Scopes we ingest it into our system.
 
 
 These scopes are represented in our UI as [Curated Metric Views](../using/metrics.md)
