@@ -15,7 +15,7 @@ recongize patterns by observing [Traces](traces.md) sent by our
 To start using the Console to monitor your apps, you'll need to
 signup, and create your own orginization. To do this please ensure
 you have the latest version of [Serverless Framwork](https://github.com/serverless/serverless) 
-installed (v3.7.2+ required).
+installed (v3.7.3+ required).
 
 ```text
 npm -g install serverless
