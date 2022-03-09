@@ -10,7 +10,7 @@ menuOrder: 2
 Our curated metric views provide you the ability to view
 activity across your enter Orginization at a glance.  These includes views
 are entended to be a starting point based on patterns we 
-recognize in the [Trace](../concepts/trace.md) data we receive. 
+recognize in the [Trace](../concepts/traces.md) data we receive. 
 
 We focus the patterns around you acheive outcomes important to them
 as use cases.
@@ -33,7 +33,7 @@ filters click on the configuration icon in the top right and
 select the crtieria you'd like to filter. 
 
 Each filter option will have a set of values we have received
-as [tags](tags.md) when we ingestsed the [Trace](trace.md). 
+as [tags](../concepts/tags.md) when we ingestsed the [Trace](traces.md). 
 Selec the + icon on each filter option you'd like to include, and
 then Save those values to view the results. 
 

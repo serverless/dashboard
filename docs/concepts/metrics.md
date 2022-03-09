@@ -6,7 +6,7 @@ menuOrder: 5
 -->
 
 ## Metrics 
-Metrics about your [Trace](trace.md) are collected and stored in
+Metrics about your [Trace](traces.md) are collected and stored in
 Serverless Console. These metrics are stored individually on each 
 trace as well as aggregated for storage and alerting purposes. 
 The [tags](tags.md) from your trace are also included

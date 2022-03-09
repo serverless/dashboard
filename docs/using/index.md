@@ -9,7 +9,7 @@ menuOrder: 1
 Serverless Console provides an easy to use User Interface for 
 monitoring your Serverless architectures. We automatically
 recongize patterns by observing [Traces](traces.md) sent by our
-[Serverless Runtime instrumentation](concepts/index.md).
+[Serverless Runtime instrumentation](../concepts/index.md).
 
 
 To start using the Console to monitor your apps, you'll need to
