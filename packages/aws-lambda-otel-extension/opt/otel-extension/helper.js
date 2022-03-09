@@ -96,9 +96,19 @@ const resourceAttributes = [
     type: 'stringValue',
   },
   {
+    key: 'faas.log_group',
+    source: 'computeCustomLogGroupName',
+    type: 'stringValue',
+  },
+  {
+    key: 'faas.log_stream_name',
+    source: 'computeCustomLogStreamName',
+    type: 'stringValue',
+  },
+  {
     key: 'faas.collector_version',
-    value: 'sls-otel-0.0.2',
-    source: 'sls-otel-0.0.2',
+    value: '@serverless/aws-lambda-otel-extension-0.1.8',
+    source: '@serverless/aws-lambda-otel-extension-0.1.8',
     type: 'stringValue',
   },
 ];
