@@ -200,7 +200,10 @@ const receiverAddress = () => {
 };
 
 const SAVE_FILE = '/tmp/sls-save-log.json';
+const SENT_FILE = '/tmp/sent-requests.json';
 
+const OTEL_SERVER_PORT = 2772;
+const OTEL_SERVER_HOST = 'localhost';
 const RECEIVER_PORT = 4243;
 const TIMEOUT_MS = 25; // Maximum time (in milliseconds) that a batch is buffered.
 const MAX_BYTES = 262144; // Maximum size in bytes that the logs are buffered in memory.
@@ -211,7 +214,7 @@ const SUBSCRIPTION_BODY = {
     protocol: 'HTTP',
     URI: `http://${RECEIVER_NAME}:${RECEIVER_PORT}`,
   },
-  types: ['platform', 'function'],
+  types: ['platform'],
   buffering: {
     timeoutMs: TIMEOUT_MS,
     maxBytes: MAX_BYTES,
@@ -222,6 +225,9 @@ const SUBSCRIPTION_BODY = {
 
 module.exports = {
   SAVE_FILE,
+  SENT_FILE,
+  OTEL_SERVER_PORT,
+  OTEL_SERVER_HOST,
   logMessage,
   receiverAddress,
   RECEIVER_PORT,

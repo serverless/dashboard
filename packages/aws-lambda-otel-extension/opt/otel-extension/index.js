@@ -4,7 +4,7 @@
 
 const { unzip: unzipWtithCallback } = require('zlib');
 const { promisify } = require('util');
-const { writeFileSync } = require('fs');
+const { writeFileSync, existsSync, readFileSync } = require('fs');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
@@ -17,6 +17,8 @@ const {
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
   SAVE_FILE,
+  SENT_FILE,
+  OTEL_SERVER_PORT,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
@@ -26,15 +28,28 @@ function handleShutdown() {
   process.exit(0);
 }
 
+let sentRequests = [];
+let logsQueue = [];
+
+if (existsSync(SAVE_FILE)) {
+  try {
+    logsQueue = JSON.parse(readFileSync(SAVE_FILE, { encoding: 'utf-8' }));
+  } catch (error) {
+    logMessage('Failed to parse logs queue file');
+  }
+}
+if (existsSync(SENT_FILE)) {
+  try {
+    sentRequests = JSON.parse(readFileSync(SENT_FILE, { encoding: 'utf-8' }));
+  } catch (error) {
+    logMessage('Failed to sent request file');
+  }
+}
+
 // Exported for testing convienence
 module.exports = (async function main() {
   const extensionId = await register();
-
-  const sentRequestIds = [];
-  const { logsQueue, server } = listen(receiverAddress(), RECEIVER_PORT);
-
-  // subscribing listener to the Logs API
-  await subscribe(extensionId, SUBSCRIPTION_BODY);
+  let receivedData = false;
 
   const groupLogs = async (logList) => {
     logMessage('LOGS: ', JSON.stringify(logList));
@@ -63,7 +78,7 @@ module.exports = (async function main() {
               requestId,
             };
           } catch (error) {
-            console.log('failed to parse line', error);
+            logMessage('failed to parse line', error);
             return log;
           }
         }
@@ -89,7 +104,7 @@ module.exports = (async function main() {
   };
 
   // function for processing collected logs
-  async function uploadLogs(logList) {
+  async function uploadLogs(logList, focusIds = []) {
     const currentIndex = logList.length;
     const groupedByRequestId = await groupLogs(logList);
 
@@ -99,7 +114,8 @@ module.exports = (async function main() {
         const report = data['platform.report'];
         const { function: fun, traces } = get(data, 'layer.record') || {};
 
-        if (report && fun && traces) {
+        // report is not required so we can send duration async
+        if (fun && traces) {
           return {
             ...obj,
             ready: {
@@ -126,41 +142,70 @@ module.exports = (async function main() {
       }
     );
 
+    if (focusIds.length > 0) {
+      const readyIds = Object.keys(ready);
+      readyIds.forEach((id) => {
+        if (!focusIds.includes(id)) {
+          delete ready[id];
+        }
+      });
+    }
+
     logMessage('READY: ', JSON.stringify(ready));
     logMessage('NOT READY: ', JSON.stringify(notReady));
 
     logMessage('Grouped: ', JSON.stringify(ready));
-    logMessage('Sent Request Ids: ', JSON.stringify(sentRequestIds));
-    for (const requestId of sentRequestIds) {
-      if (ready[requestId]) delete ready[requestId];
+    logMessage('Sent Requests: ', JSON.stringify(sentRequests));
+    for (const { requestId, trace, report } of sentRequests) {
+      if (ready[requestId] && trace && report) delete ready[requestId];
     }
     const orgId = get(ready[Object.keys(ready)[0]], 'function.record.sls_org_id', 'xxxx');
     logMessage('OrgId: ', orgId);
-    const metricData = createMetricsPayload(ready);
+    const metricData = createMetricsPayload(ready, sentRequests);
     logMessage('Metric Data: ', JSON.stringify(metricData));
 
-    const traces = createTracePayload(ready);
+    const traces = createTracePayload(ready, sentRequests);
     logMessage('Traces Data: ', JSON.stringify(traces));
 
     if (metricData.length) {
       try {
         await reportOtelData.metrics(metricData);
       } catch (error) {
-        console.log('Metric send Error:', error);
+        logMessage('Metric send Error:', error);
       }
     }
     if (traces.length) {
       try {
         await reportOtelData.traces(traces);
       } catch (error) {
-        console.log('Trace send Error:', error);
+        logMessage('Trace send Error:', error);
       }
     }
     // Save request ids so we don't send them twice
-    Object.keys(ready).forEach((id) => sentRequestIds.push(id));
+    const readyKeys = Object.keys(ready);
+    sentRequests.forEach((obj) => {
+      const { requestId } = obj;
+      const found = readyKeys.find((id) => id === requestId);
+      if (found) {
+        obj.trace = !!ready[requestId].function && !!ready[requestId].traces;
+        obj.report = !!ready[requestId]['platform.report'];
+      }
+    });
+    readyKeys
+      .filter((id) => !sentRequests.find(({ requestId }) => id === requestId))
+      .forEach((id) =>
+        sentRequests.push({
+          requestId: id,
+          trace: !!ready[id].function && !!ready[id].traces,
+          report: !!ready[id]['platform.report'],
+        })
+      );
 
-    // Only remove logs that were marked as ready
-    const incompleteRequestIds = Object.keys(notReady);
+    // Only remove logs that were marked as ready or have not sent a report yet
+    const incompleteRequestIds = [
+      ...Object.keys(notReady),
+      ...Object.keys(ready).filter((key) => !ready[key]['platform.report']),
+    ];
     logList.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {
@@ -173,9 +218,27 @@ module.exports = (async function main() {
         subList.push(...saveList);
       }
     });
-
     logMessage('Remaining logs queue: ', JSON.stringify(logList));
   }
+
+  const { server: otelServer } = listen({
+    logsQueue,
+    port: OTEL_SERVER_PORT,
+    callback: async (...args) => {
+      await uploadLogs(...args);
+      receivedData = true;
+    },
+  });
+
+  const { server } = listen({
+    port: RECEIVER_PORT,
+    address: receiverAddress(),
+    logsQueue,
+    callback: uploadLogs,
+  });
+
+  // subscribing listener to the Logs API
+  await subscribe(extensionId, SUBSCRIPTION_BODY);
 
   process.on('SIGINT', async () => {
     await uploadLogs(logsQueue);
@@ -205,40 +268,42 @@ module.exports = (async function main() {
               return;
             }
             await waitRecursive();
+            resolve();
           }, 1000);
         });
       await waitRecursive();
 
       logMessage('AFTER SOME TIME WE WILL UPLOAD...', JSON.stringify(logsQueue));
 
-      await uploadLogs(logsQueue);
+      await uploadLogs(logsQueue, []);
 
       logMessage('DONE...', JSON.stringify(logsQueue));
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+      writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
       server.close();
+      otelServer.close();
       break;
     } else if (event.eventType === EventType.INVOKE) {
-      await uploadLogs(logsQueue); // upload queued logs, during invoke event
-      const logLength = logsQueue.length;
-
-      // Test runtime API
-      // const eventData = await getEventData();
-      // const responseData = await getResponse(eventData.requestId);
-      // logMessage('Runtime event data: ', JSON.stringify(eventData, null, 2));
-      // logMessage('Response data: ', JSON.stringify(responseData, null, 2));
-
-      // Give lambda a little extra time to post some more logs
-      const waitForMe = () =>
+      /* eslint-disable no-loop-func */
+      const waitRecursive = () =>
         new Promise((resolve) => {
-          setTimeout(() => {
+          setTimeout(async () => {
+            logMessage('Checking data received...', receivedData);
+            if (receivedData) {
+              resolve();
+              return;
+            }
+            await waitRecursive();
             resolve();
           }, 50);
         });
-      await waitForMe();
-      if (logLength < logsQueue.length) {
-        await uploadLogs(logsQueue);
+      /* eslint-enable no-loop-func */
+      if (!process.env.DO_NOT_WAIT) {
+        await waitRecursive();
       }
+      writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+      receivedData = false; // Reset received event
     } else {
       throw new Error(`unknown event: ${event.eventType}`);
     }
