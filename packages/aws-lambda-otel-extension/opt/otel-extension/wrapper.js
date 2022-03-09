@@ -280,6 +280,7 @@ const instrumentations = [
         computeCustomFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
         computeMemorySize: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
         eventCustomXTraceId: process.env._X_AMZN_TRACE_ID,
+        computeCustomLogGroupName: process.env.AWS_LAMBDA_LOG_GROUP_NAME,
         computeCustomLogStreamName: process.env.AWS_LAMBDA_LOG_STREAM_NAME,
         computeCustomEnvArch: process.arch,
         eventType,
