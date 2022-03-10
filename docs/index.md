@@ -13,7 +13,7 @@ Serverless architecture. Get started today.
 ## Getting Started
 
 The easiest way to get started with Serverless Console is using the latest version
-of Serverless Framework (v3.7.3+ required) and run the following command on an
+of Serverless Framework (v3.7.4+ required) and run the following command on an
 existing framework project.
 
 **Upgrade or Install Serverless Framework**
