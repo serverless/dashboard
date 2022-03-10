@@ -1,6 +1,6 @@
 # ⚡ runtime
 
-Serverless runtim is our collection of [Open Telemetry](http://opentelemtry.io) 
+Serverless runtime is our collection of [Open Telemetry](http://opentelemtry.io) 
 collectors we use to instrument a variety of computing platforms.  
 
 ## Serverless Framwork Integration
@@ -17,7 +17,7 @@ frameworkVersion: '3'
 
 ## Lambda Extension
 You can also add our extension to your Lambda function by doing
-the following.
+the following. Soon you'll be able to.
 
-1. Getting a deployment token
-1. Adding the token and your org details to your Lambda Function
+1. Get and manage console deployment tokens
+1. Adding the token and your org details to your Lambda Layer
