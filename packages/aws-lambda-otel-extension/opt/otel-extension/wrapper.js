@@ -113,7 +113,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     functionData.errorExceptionType = typeof err;
     functionData.errorExceptionMessage = err.message;
     functionData.errorExceptionStacktrace = err.stack;
-  } else if (pathData['http.status_code'] >= 500) {
+  } else if (
+    pathData['http.status_code'] >= 500 &&
+    ['aws.apigateway.http', 'aws.apigatewayv2.http'].includes(functionData.eventType)
+  ) {
     // This happens if we get a 500 status code set explicity within in the app
     functionData.error = true;
     functionData.errorCulprit = 'internal server error';
@@ -167,6 +170,17 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
         const { traceId, spanId } = val.spanContext();
         const startTime = val.startTime || [0, 0];
         const endTime = val.endTime || [0, 0];
+
+        let attributes = val.attributes;
+        if (
+          firstThing.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda'
+        ) {
+          attributes = {
+            ...val.attributes,
+            ...pathData,
+          };
+        }
+
         return {
           traceId,
           spanId,
@@ -180,10 +194,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
           kind: 'SPAN_KIND_SERVER',
           startTimeUnixNano: `${startTime[0] * 1000000000 + startTime[1]}`,
           endTimeUnixNano: `${endTime[0] * 1000000000 + endTime[1]}`,
-          attributes: {
-            ...val.attributes,
-            ...pathData,
-          },
+          attributes,
           status: {},
         };
       })

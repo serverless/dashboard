@@ -33,7 +33,6 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
 
                     const ServiceRequest = root.lookupType(protobufType);
                     resolve(ServiceRequest.encode(datum).finish());
-                    // const message = Buffer.from(encoded).toString('base64');
                   } catch (error) {
                     logMessage('Buffer error: ', error);
                     resolve(null);
