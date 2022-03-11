@@ -153,6 +153,49 @@ const createCountMetric = ({ name, unit, asInt, record, attributes }) => ({
   },
 });
 
+const batchOverflowSpans = (overflow) => {
+  const MAX_SPANS = 100;
+
+  const spanList = [];
+
+  const groupedLibrarySpans = overflow.resourceSpans[0].instrumentationLibrarySpans.reduce(
+    (obj, librarySpans) => {
+      const key = `${librarySpans.instrumentationLibrary.name}-${librarySpans.instrumentationLibrary.version}`;
+      const { spans, ...rest } = librarySpans;
+      obj[key] = { obj: rest, spans };
+
+      return obj;
+    },
+    {}
+  );
+
+  do {
+    const spans = Object.keys(groupedLibrarySpans)
+      .filter((key) => groupedLibrarySpans[key].spans.length > 0)
+      .map((key) => {
+        const librarySpan = groupedLibrarySpans[key];
+        const chunkedSpans = librarySpan.spans.splice(0, MAX_SPANS);
+        return {
+          ...librarySpan.obj,
+          spans: chunkedSpans,
+        };
+      });
+    const record = {
+      resource: overflow.resourceSpans[0].resource,
+      instrumentationLibrarySpans: spans,
+    };
+    spanList.push({
+      resourceSpans: [record],
+    });
+  } while (
+    Object.keys(groupedLibrarySpans).reduce(
+      (sum, key) => groupedLibrarySpans[key].spans.length + sum,
+      0
+    ) > 0
+  );
+  return spanList;
+};
+
 const createMetricsPayload = (groupedByRequestId, sentRequests) =>
   Object.keys(groupedByRequestId).map((requestId) => {
     const sentRequest = sentRequests.find(({ requestId: rId }) => rId === requestId);
@@ -326,8 +369,9 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
         },
       ];
 
-      return traces.record;
-    });
+      return batchOverflowSpans(traces.record);
+    })
+    .reduce((arr, originalList) => [...arr, ...originalList], []);
 
 module.exports = {
   createTracePayload,

@@ -113,7 +113,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     functionData.errorExceptionType = typeof err;
     functionData.errorExceptionMessage = err.message;
     functionData.errorExceptionStacktrace = err.stack;
-  } else if (pathData['http.status_code'] >= 500) {
+  } else if (
+    pathData['http.status_code'] >= 500 &&
+    ['aws.apigateway.http', 'aws.apigatewayv2.http'].includes(functionData.eventType)
+  ) {
     // This happens if we get a 500 status code set explicity within in the app
     functionData.error = true;
     functionData.errorCulprit = 'internal server error';
@@ -169,7 +172,9 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
         const endTime = val.endTime || [0, 0];
 
         let attributes = val.attributes;
-        if (firstThing.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda') {
+        if (
+          firstThing.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda'
+        ) {
           attributes = {
             ...val.attributes,
             ...pathData,
