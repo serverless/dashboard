@@ -204,15 +204,22 @@ module.exports = (async function main() {
     // Only remove logs that were marked as ready or have not sent a report yet
     const incompleteRequestIds = [
       ...Object.keys(notReady),
-      ...Object.keys(ready).filter((key) => !ready[key]['platform.report']),
+      ...sentRequests.filter(({ report }) => !report).map(({ requestId }) => requestId),
     ];
+    logMessage('Incomplete Request Ids: ', JSON.stringify(incompleteRequestIds));
     logList.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {
           if (log.type === 'function') {
-            return incompleteRequestIds.includes(log.record.split('\t')[1]);
+            return (
+              incompleteRequestIds.includes(log.record.split('\t')[1]) ||
+              (focusIds.length > 0 && !focusIds.includes(log.record.split('\t')[1]))
+            );
           }
-          return incompleteRequestIds.includes(log.record.requestId);
+          return (
+            incompleteRequestIds.includes(log.record.requestId) ||
+            (focusIds.length > 0 && !focusIds.includes(log.record.requestId))
+          );
         });
         subList.splice(0);
         subList.push(...saveList);
