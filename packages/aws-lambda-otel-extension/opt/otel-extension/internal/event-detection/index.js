@@ -2,7 +2,7 @@
 
 const alexaSkill = require('./event-types/alexa-skill');
 const apiGateway = require('./event-types/api-gateway');
-const apiGatewayV2 = require('./event-types/apiGatewayV2');
+const apiGatewayV2 = require('./event-types/api-gateway-v2');
 const customAuthorizer = require('./event-types/custom-authorizer');
 const cloudFront = require('./event-types/cloud-front');
 const cloudwatchEvent = require('./event-types/cloud-watch-event');
