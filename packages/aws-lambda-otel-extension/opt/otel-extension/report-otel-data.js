@@ -11,6 +11,7 @@ const EXTRA_REQUEST_HEADERS = process.env.SLS_OTEL_REPORT_REQUEST_HEADERS
   ? Object.fromEntries(new URLSearchParams(process.env.SLS_OTEL_REPORT_REQUEST_HEADERS).entries())
   : {};
 const S3_BUCKET = process.env.SLS_OTEL_REPORT_S3_BUCKET;
+const LOGS_URL = process.env.SLS_OTEL_REPORT_LOGS_URL;
 
 const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // aws-sdk is provided in Lambda runtime
@@ -91,6 +92,36 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
   }
 };
 
+const processLogData = async (data, { url }) => {
+  const headers = {
+    'accept-encoding': 'gzip',
+    'content-type': 'application/json',
+    ...EXTRA_REQUEST_HEADERS,
+  };
+  const options = {
+    method: 'post',
+    body: JSON.stringify(data),
+    headers,
+  };
+  logMessage('Log Post', url, JSON.stringify(options));
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    process._rawDebug(
+      'Ingestion server error',
+      JSON.stringify({
+        request: {
+          url,
+          headers,
+        },
+        response: {
+          status: res.status,
+          text: await res.text(),
+        },
+      })
+    );
+  }
+};
+
 module.exports = {
   metrics: async (data) =>
     processData(data, {
@@ -107,5 +138,9 @@ module.exports = {
       s3Key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/traces/${new Date().toISOString()}`,
       protobufPath: '/proto/trace_service.proto',
       protobufType: 'opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest',
+    }),
+  logs: async (data) =>
+    processLogData(data, {
+      url: LOGS_URL,
     }),
 };

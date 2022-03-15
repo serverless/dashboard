@@ -335,6 +335,23 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
           event.requestContext.timeEpoch;
       }
+
+      await fetch(`http://${OTEL_SERVER_HOST}:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
+        method: 'post',
+        body: JSON.stringify([
+          {
+            time: new Date().toISOString(),
+            type: 'function',
+            record: {
+              recordType: 'eventData',
+              eventData,
+            },
+          },
+        ]),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     },
     responseHook: async (span, { err, res }) => {
       clearTimeout(timeoutHandler);

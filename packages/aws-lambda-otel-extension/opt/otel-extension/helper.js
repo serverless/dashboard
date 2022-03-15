@@ -224,7 +224,7 @@ const SUBSCRIPTION_BODY = {
     protocol: 'HTTP',
     URI: `http://${RECEIVER_NAME}:${RECEIVER_PORT}`,
   },
-  types: ['platform'],
+  types: ['platform', 'function'],
   buffering: {
     timeoutMs: TIMEOUT_MS,
     maxBytes: MAX_BYTES,

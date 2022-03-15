@@ -3,8 +3,9 @@
 const http = require('http');
 const { logMessage, SAVE_FILE } = require('./../helper');
 const { writeFileSync } = require('fs');
+const reportOtelData = require('./../report-otel-data');
 
-function listen({ port, address, logsQueue, callback }) {
+function listen({ port, address, logsQueue, callback, mainEventData }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -12,7 +13,7 @@ function listen({ port, address, logsQueue, callback }) {
       request.on('data', (data) => {
         body += data;
       });
-      request.on('end', () => {
+      request.on('end', async () => {
         try {
           const batch = JSON.parse(body);
           if (address) {
@@ -22,10 +23,22 @@ function listen({ port, address, logsQueue, callback }) {
           }
           if (batch.length > 0) {
             const logBatch = batch.filter((log) => {
+              logMessage('Filters: ', JSON.stringify(log));
               if (log.type === 'platform.report') {
                 return true;
-              } else if (log.type === 'function' && log.record.includes('⚡.')) {
+              } else if (
+                log.type === 'function' &&
+                typeof log.record === 'string' &&
+                log.record.includes('⚡.')
+              ) {
                 return true;
+              } else if (
+                log.type === 'function' &&
+                typeof log.record === 'object' &&
+                log.record.recordType === 'eventData' &&
+                log.record.eventData
+              ) {
+                mainEventData = log.record.eventData;
               }
               return false;
             });
@@ -42,6 +55,14 @@ function listen({ port, address, logsQueue, callback }) {
           if (!address) {
             logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
           }
+          await reportOtelData
+            .logs({
+              mainEventData,
+              batch,
+            })
+            .catch((error) => {
+              logMessage('Failed to send logs', error);
+            });
         } catch (e) {
           logMessage('failed to parse logs', e);
         }
