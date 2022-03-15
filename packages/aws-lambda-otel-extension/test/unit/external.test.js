@@ -11,7 +11,7 @@ const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 
 const port = 9001;
 
-describe('extension', () => {
+describe('external', () => {
   before(() => {
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
@@ -27,7 +27,7 @@ describe('extension', () => {
     let stdoutData = '';
     const extensionProcess = overwriteStdoutWrite(
       (data) => (stdoutData += data),
-      async () => requireUncached(() => require('../../opt/otel-extension'))
+      async () => requireUncached(() => require('../../opt/otel-extension/external'))
     );
 
     await new Promise((resolve) => listenerEmitter.once('listener', resolve));
