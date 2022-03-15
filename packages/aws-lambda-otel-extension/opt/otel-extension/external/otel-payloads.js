@@ -1,7 +1,8 @@
 'use strict';
 
 const get = require('lodash.get');
-const { resourceAttributes, measureAttributes, logMessage } = require('../lib/helper');
+const { logMessage } = require('../lib/helper');
+const { resourceAttributes, measureAttributes } = require('./helper');
 
 const createMetricAttributes = (fun, report) => {
   const timedOut = get(fun.record, 'errorCulprit') === 'timeout';

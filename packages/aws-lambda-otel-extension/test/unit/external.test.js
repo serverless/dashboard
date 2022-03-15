@@ -9,7 +9,7 @@ const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const getExtensionServerMock = require('../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
-const { SAVE_FILE, SENT_FILE } = require('../../opt/otel-extension/lib/helper');
+const { SAVE_FILE, SENT_FILE } = require('../../opt/otel-extension/external/helper');
 
 const port = 9001;
 

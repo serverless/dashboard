@@ -1,7 +1,8 @@
 'use strict';
 
 const http = require('http');
-const { logMessage, SAVE_FILE } = require('../../lib/helper');
+const { logMessage } = require('../../lib/helper');
+const { SAVE_FILE } = require('../helper');
 const { writeFileSync } = require('fs');
 
 function listen({ port, address, logsQueue, callback }) {
