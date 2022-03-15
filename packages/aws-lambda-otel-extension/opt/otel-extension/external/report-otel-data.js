@@ -97,7 +97,7 @@ module.exports = {
       url: METRICS_URL,
       // TODO: Once possible, switch to invocation id
       s3Key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/metrics/${new Date().toISOString()}`,
-      protobufPath: '/proto/metric_service.proto',
+      protobufPath: '/proto/metric-service.proto',
       protobufType: 'opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest',
     }),
   traces: async (data) =>
@@ -105,7 +105,7 @@ module.exports = {
       url: TRACES_URL,
       // TODO: Once possible, switch to invocation id
       s3Key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/traces/${new Date().toISOString()}`,
-      protobufPath: '/proto/trace_service.proto',
+      protobufPath: '/proto/trace-service.proto',
       protobufType: 'opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest',
     }),
 };
