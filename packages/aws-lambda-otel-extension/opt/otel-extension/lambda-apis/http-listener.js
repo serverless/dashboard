@@ -55,14 +55,37 @@ function listen({ port, address, logsQueue, callback, mainEventData }) {
           if (!address) {
             logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
           }
-          await reportOtelData
-            .logs({
-              mainEventData,
-              batch,
-            })
-            .catch((error) => {
-              logMessage('Failed to send logs', error);
-            });
+
+          const reportedLogs = batch.filter((log) => {
+            if (/platform/i.test(log.type)) {
+              return false;
+            } else if (
+              log.type === 'function' &&
+              typeof log.record === 'string' &&
+              log.record.includes('⚡.')
+            ) {
+              return false;
+            } else if (
+              log.type === 'function' &&
+              typeof log.record === 'object' &&
+              log.record.recordType === 'eventData' &&
+              log.record.eventData
+            ) {
+              return false;
+            }
+            return true;
+          });
+
+          if (reportedLogs.length > 0) {
+            await reportOtelData
+              .logs({
+                mainEventData,
+                reportedLogs,
+              })
+              .catch((error) => {
+                logMessage('Failed to send logs', error);
+              });
+          }
         } catch (e) {
           logMessage('failed to parse logs', e);
         }
