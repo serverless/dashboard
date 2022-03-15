@@ -5,7 +5,7 @@ description: A guide to using Serverless Console UI
 menuOrder: 1
 -->
 
-## Getting Started
+# Getting Started
 Serverless Console provides an easy to use User Interface for 
 monitoring your Serverless architectures. We automatically
 recongize patterns by observing [Traces](traces.md) sent by our
