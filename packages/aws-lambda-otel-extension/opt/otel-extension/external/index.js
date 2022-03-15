@@ -19,7 +19,7 @@ const {
   SAVE_FILE,
   SENT_FILE,
   OTEL_SERVER_PORT,
-} = require('./helper');
+} = require('../lib/helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
 const unzip = promisify(unzipWtithCallback);

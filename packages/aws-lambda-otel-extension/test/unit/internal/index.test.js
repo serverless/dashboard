@@ -9,9 +9,9 @@ const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 
-const lambdaFixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
+const lambdaFixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
 
-describe('wrapper', () => {
+describe('internal', () => {
   before(() => {
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_REGION = 'us-east-1';
@@ -59,7 +59,7 @@ describe('wrapper', () => {
       (data) => (stdoutData += data),
       async () =>
         requireUncached(async () => {
-          await require('../../opt/otel-extension/wrapper');
+          await require('../../../opt/otel-extension/internal');
           await new Promise((resolve) => {
             require(path.resolve(lambdaFixturesDirname, 'callback-success.js')).handler(
               {},
