@@ -4,8 +4,14 @@ const http = require('http');
 const { logMessage, SAVE_FILE } = require('./../helper');
 const { writeFileSync } = require('fs');
 const reportOtelData = require('./../report-otel-data');
+const { parseEventData } = require('../otel-payloads');
 
-function listen({ port, address, logsQueue, callback, mainEventData }) {
+// eslint-disable-next-line prefer-const
+let liveLogData = [];
+// eslint-disable-next-line prefer-const
+let mainEventData = {};
+
+function listen({ port, address, logsQueue, callback }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -32,12 +38,7 @@ function listen({ port, address, logsQueue, callback, mainEventData }) {
                 log.record.includes('⚡.')
               ) {
                 return true;
-              } else if (
-                log.type === 'function' &&
-                typeof log.record === 'object' &&
-                log.record.recordType === 'eventData' &&
-                log.record.eventData
-              ) {
+              } else if (log.type === 'function' && (log.record || {}).recordType === 'eventData') {
                 mainEventData = log.record.eventData;
               }
               return false;
@@ -76,11 +77,15 @@ function listen({ port, address, logsQueue, callback, mainEventData }) {
             return true;
           });
 
-          if (reportedLogs.length > 0) {
+          liveLogData.push(...(reportedLogs || []));
+
+          if (liveLogData.length > 0 && Object.keys(mainEventData).length > 0) {
+            const sendData = [...liveLogData];
+            liveLogData = [];
             await reportOtelData
               .logs({
-                mainEventData,
-                reportedLogs,
+                mainEventData: parseEventData(mainEventData),
+                liveLogData: sendData,
               })
               .catch((error) => {
                 logMessage('Failed to send logs', error);

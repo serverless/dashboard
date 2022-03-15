@@ -28,9 +28,6 @@ function handleShutdown() {
   process.exit(0);
 }
 
-// eslint-disable-next-line prefer-const
-let mainEventData = {};
-
 let sentRequests = [];
 let logsQueue = [];
 
@@ -244,7 +241,6 @@ module.exports = (async function main() {
     port: RECEIVER_PORT,
     address: receiverAddress(),
     logsQueue,
-    mainEventData,
     callback: uploadLogs,
   });
 

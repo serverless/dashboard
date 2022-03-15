@@ -117,6 +117,20 @@ const createResourceAttributes = (fun) =>
     }
   });
 
+const parseEventData = (fun) => {
+  const key = Object.keys(fun)[0];
+  const metricsAtt = createMetricAttributes({ record: fun[key] }, {});
+  const resourceAtt = createResourceAttributes({ record: fun[key] });
+
+  return [...resourceAtt, ...metricsAtt].reduce(
+    (obj, attr) => ({
+      ...obj,
+      [attr.key]: Object.values(attr.value)[0],
+    }),
+    {}
+  );
+};
+
 const createHistogramMetric = ({ name, unit, count, sum, record, attributes }) => ({
   name,
   unit,
@@ -374,6 +388,9 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
     .reduce((arr, originalList) => [...arr, ...originalList], []);
 
 module.exports = {
+  createMetricAttributes,
+  createResourceAttributes,
+  parseEventData,
   createTracePayload,
   createMetricsPayload,
 };
