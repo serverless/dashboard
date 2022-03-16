@@ -19,7 +19,7 @@ console: true
 service: myservice
 frameworkVersion: '3'
 ```
-**Note:** The following example will disable the user of 
+**Note:** The following example will disable the use of 
 Serverless Dashboard. 
 
 **What Serverless.yaml fields effect console?**
