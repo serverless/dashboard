@@ -35,20 +35,20 @@ service: my-aws-node-project
 frameworkVersion: '3'
 ```
 
-**Note:** If you are using Serveless Dashboard features be sure to keep
-the dashboard property set to true. This will give you access to existing
-dashboard features like Providers. 
+**Note:** If you are using Serveless Dashboard features be sure to keep the
+dashboard property set to true. This will give you access to existing dashboard
+features like Providers. 
 
 **Setting up a new project from a template**
-To start with a new example project, just run the following where
-you want to create your project.
+To start with a new example project, just run the following where you want to
+create your project.
 
 ```text
 serverless --console
 ```
 
-This will begin an interactive onboarding experience, which creates
-your first Serverless Framwork project.
+This will begin an interactive onboarding experience, which creates your first
+Serverless Framwork project.
 
 ```text
 Creating a new serverless project
@@ -63,6 +63,6 @@ Creating a new serverless project
   Other
 ```
 
-After your app is deployed, hitting the endpoint from the previous command
-will start producing [Traces](./concepts/traces.md) in Console. For more details see 
+After your app is deployed, hitting the endpoint from the previous command will
+start producing [Traces](./concepts/traces.md) in Console. For more details see 
 our [concepts section](./concepts) or learn about using [Serverles Console](./using/).
