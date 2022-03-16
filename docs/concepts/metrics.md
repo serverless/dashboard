@@ -5,19 +5,18 @@ description: Metric definitions
 menuOrder: 5
 -->
 
-## Metrics 
-Metrics about your [Trace](traces.md) are collected and stored in
-Serverless Console. These metrics are stored individually on each 
-trace as well as aggregated for storage and alerting purposes. 
-The [tags](tags.md) from your trace are also included
-on these metrics for [filtering](../using/metrics.md).
+# Metrics 
 
-We are expanding the list of metrics and currently support the 
-following metrics for ingestion.
+Metrics about your [Trace](traces.md) are collected and stored in Serverless
+Console. These metrics are stored individually on each trace as well as
+aggregated for storage and alerting purposes. The [tags](tags.md) from your
+trace are also included on these metrics for [filtering](../using/metrics.md).
 
-**FAAS Compute Duration** - This metric is used for collecting 
-details about the total time it took for a given Trace which is 
-used for calculating costs. 
+We are expanding the list of metrics and currently support the following metrics
+for ingestion.
 
-**FAAS Memory Percent**  - This is the memory percentage 
-used for a function invocation.
+**FAAS Compute Duration** - This metric is used for collecting details about the
+total time it took for a given Trace which is used for calculating costs. 
+
+**FAAS Memory Percent**  - This is the memory percentage used for a function
+invocation.

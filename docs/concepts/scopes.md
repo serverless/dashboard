@@ -6,29 +6,28 @@ menuOrder: 4
 -->
 
 # Scopes
-To make sense of Traces coming into our system we need to recognize 
-them as something we recognize. We call these patterns Scopes. 
-Scopes are defined by a set of tags we recognize being included 
-on the [Trace](traces.md). When we receive Traces that match one of
-our recognized Scopes we ingest it into our system.
+To make sense of Traces coming into our system we need to recognize them as
+something we recognize. We call these patterns Scopes. Scopes are defined by a
+set of tags we recognize being included on the [Trace](traces.md). When we
+receive Traces that match one of our recognized Scopes we ingest it into our
+system.
 
 
 These scopes are represented in our UI as [Curated Metric Views](../using/metrics.md)
 and include the following. 
 
-**API** - This scope is used for displaying a Trace we recognize an HTTP 
-based API request. This scope requires the following tags.
-* http.path
-* http.method
-* http.status_code
+**API** - This scope is used for displaying a Trace we recognize an HTTP based
+API request. This scope requires the following tags.
+- `http.path`
+- `http.method`
+- `http.status_code`
 
-**All Functions** - This is used for displaying any Lambda function 
-invocation. The following tags are required on the trace to qualify
-as a function. 
-* faas.error_timeout
-* faas.coldstart
-* faas.error
-* faas.event_type
-* faas.name
+**All Functions** - This is used for displaying any Lambda function invocation.
+The following tags are required on the trace to qualify as a function. 
+- `faas.error_timeout`
+- `faas.coldstart`
+- `faas.error`
+- `faas.event_type`
+- `faas.name`
 
 More details about tags are maintained in our [tag definition list](tags.md).
