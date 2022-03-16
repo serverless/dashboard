@@ -6,12 +6,12 @@ menuOrder: 1
 -->
 
 # Getting Started
-Welcome to Serveless Console. The next generation monitoring tool 
-for Teams building with Serverless architectures. 
+Welcome to Serveless Console. 
 
-The easiest way to get started with Serverless Console is 
-using the latest version of Serverless Framework 
-(v3.7.5+ required).
+The next generation monitoring tool for Teams 
+building with Serverless architectures. The easiest way 
+to get started with Serverless Console is using the 
+latest version of Serverless Framework (v3.7.5+ required).
 
 **Upgrade or Install Serverless Framework**
 
