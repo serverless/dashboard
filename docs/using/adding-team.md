@@ -2,7 +2,7 @@
 title: Adding team members
 menuText: Adding team members
 description: Add team members to your Serverless Console org
-menuOrder: 6
+menuOrder: 5
 -->
 
 # Adding Team Members
