@@ -180,6 +180,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
         ) {
           attributes = {
             ...val.attributes,
+            'sls.original_properties': Object.keys(val.attributes).join(','),
             // Only add path data if we have an http.path
             ...(!pathData['http.path'] ? {} : pathData),
           };
