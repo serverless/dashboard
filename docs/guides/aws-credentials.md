@@ -8,7 +8,7 @@ menuOrder: 2
 # Setup a local AWS Access Key
 
 If you have not used framework to deploy before, you'll need to configure AWS
-credentials. {ou can follow along with the onboarding prompts or do the
+credentials. You can follow along with the onboarding prompts or do the
 following:
 
 1. [Create an AWS access key](https://www.youtube.com/watch?v=KngM5bfpttA)
