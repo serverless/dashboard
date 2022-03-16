@@ -11,7 +11,7 @@ If you have not used framework to deploy before, you'll need to configure AWS
 credentials. You can follow along with the onboarding prompts or do the
 following:
 
-1. [Create an AWS access key](https://www.youtube.com/watch?v=KngM5bfpttA)
+1. [Create an AWS access key](https://www.serverless.com/framework/docs/providers/aws/guide/credentials#create-an-iam-user-and-access-key)
 (AWS Console Access required).
 2. Configure your Credentials locally.
 
