@@ -1,19 +1,17 @@
 <!--
-title: Overview
-menuText: Overview
+title: Getting Started
+menuText: Getting Started
 description: 
 menuOrder: 1
 -->
 
-# Serverless Console
+# Getting Started
+Welcome to Serveless Console. The next generation monitoring tool 
+for Teams building with Serverless architectures. 
 
-Serveless Console is the next generation monitoring tool for Teams building with
-Serverless architectures. 
-
-## Getting Started
-
-The easiest way to get started with Serverless Console is using the latest version
-of Serverless Framework (v3.7.5+ required).
+The easiest way to get started with Serverless Console is 
+using the latest version of Serverless Framework 
+(v3.7.5+ required).
 
 **Upgrade or Install Serverless Framework**
 
@@ -23,7 +21,6 @@ npm install -g serverless
 
 You can configure an existing project with 
 Serverless by adding `--console` flag the serverless command. 
-
 
 ```text
 serverless --console
