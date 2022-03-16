@@ -29,8 +29,8 @@ This will set the following in your Serverless project.
 ```yaml
 dashboard: true
 console: true
-org: ahevenor
-service: aws-node-project
+org: my-org
+service: my-aws-node-project
 
 frameworkVersion: '3'
 ```
