@@ -18,8 +18,9 @@ org: myorg
 console: true
 service: myservice
 frameworkVersion: '3'
-
 ```
+**Note:** The following example will disable the user of 
+Serverless Dashboard. 
 
 **What Serverless.yaml fields effect console?**
 
@@ -34,6 +35,9 @@ org: myorg
 
 # Console flag (required true)
 console: true
+
+# Dashboard flag (optional - set if you are using serverless dashboard features)
+dashboard: true
 
 # Service name (required)
 service: myservice
@@ -52,6 +56,24 @@ environment filter within Serverless Console.
 ```text
 severless deploy --stage #included as environment
 ```
+
+**How does Serverless Console relate to Serveless Dashboard?**
+
+Serverless Console is a new stand alone product, but can leverage 
+functionality from Serverless Dashboard like parameters, providers
+and secrets. To take advantage of these features be sure to set
+the dashboard flag in your serverless.yaml.
+
+```yaml
+org: myorg
+dashboard: true
+console: true
+service: myservice
+frameworkVersion: '3'
+```
+
+Serverles Console also share your orginization and users from
+Serverless Dashboard and/or Serverless Cloud. 
 
 **What starter apps can I used to get started?**
 
@@ -119,13 +141,6 @@ function and is based on a x86 price of `$0.0000166667` per Gigabyte second. Usi
 our cost figure, along wit our filters allows you to understand your Serveless
 compute costs across AWS accounts in ways it can be hard to accomplish
 otherwise. 
-
-**How does Serverless Console relate to other Serverless offerings?**
-
-Serverless Console is a new stand alone product from Serevless Dashboard
-and Serevless Cloud. That said, a few concepts are shared and your orginization, 
-login details, and users created in Serverless Dashboard will be shared with
-Serverless Console.
 
 **How much does Serverless Console cost?**
 

@@ -1,35 +1,52 @@
 <!--
-title: Using Serveless Console
-menuText: Using Serveless Console
-description: A guide to using Serverless Console UI
+title: Overview
+menuText: Overview
+description: 
 menuOrder: 1
 -->
 
-# Getting Started
-Serverless Console provides an easy to use User Interface for 
-monitoring your Serverless architectures. We automatically
-recongize patterns by observing [Traces](traces.md) sent by our
-[Serverless Runtime instrumentation](../concepts/index.md).
+# Serverless Console
 
+Serveless Console is the next generation monitoring tool for Teams building with
+Serverless architectures. 
 
-To start using the Console to monitor your apps, you'll need to
-signup, and create your own organization. To do this please ensure
-you have the latest version of [Serverless Framework](https://github.com/serverless/serverless) 
-installed (v3.7.5+ required).
+## Getting Started
+
+The easiest way to get started with Serverless Console is using the latest version
+of Serverless Framework (v3.7.5+ required).
+
+**Upgrade or Install Serverless Framework**
 
 ```text
-npm -g install serverless
+npm install -g serverless
 ```
 
-## Creating an Organization 
-If you're new to Serveless, you'll need to sign up and create an 
-Orginization (Org) to start using Serverless Console. An Prganization 
-is treated as a tenant across Serverless products and data is not able to
-be shared across Organization. It also will appear in your
-URL. 
+You can configure an existing project with 
+Serverless by adding `--console` flag the serverless command. 
 
-To start the onboarding process run the following command from a new 
-workspace.
+
+```text
+serverless --console
+```
+
+This will set the following in your Serverless project. 
+
+```yaml
+dashboard: true
+console: true
+org: ahevenor
+service: aws-node-project
+
+frameworkVersion: '3'
+```
+
+**Note:** If you are using Serveless Dashboard features be sure to keep
+the dashboard property set to true. This will give you access to existing
+dashboard features like Providers. 
+
+**Setting up a new project from a template**
+To start with a new example project, just run the following where
+you want to create your project.
 
 ```text
 serverless --console
@@ -51,52 +68,6 @@ Creating a new serverless project
   Other
 ```
 
-Choose one of the examples and follow the prompts to create
-your user and organization. We recommend using an org name your 
-team will recognize and is easy to type.
-
-
-**Setup a local AWS Access Key**
-If you have not used framework to deploy to you'll
-need to configure a Cloud Provider, you can follow along
-with the onboarding prompts or do the following.
-
-
-1. [Create an AWS access key](https://www.youtube.com/watch?v=KngM5bfpttA)
-(AWS Console Access required).
-1. Configure your Credentials locally.
-
-```text
-serverless config credentials \
-  --provider aws \
-  --key AKIAIOSFODNN7EXAMPLE \
-  --secret wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-```
-
-**Start Deploying**
-Once you have setup your organization and access keys
-you'll be ready to deploy your first app instrumented
-for console. Follow the prompts from the onboarding
-command or change into your project folder and run
-the deploy command.
-
-```text
-cd my-project
-serverless deploy
-```
-
-
-## Adding More Team Members
-
-Console currently supports the following basic roles which 
-are shared across your org.
-
-* **Owner** - Owner of the account. Can add other admins and 
-contributors. Only one owner per account can be present.
-* **Admin** - Admins can add other users, deploy apps, and use 
-all of console.
-* **Contributor** - Contributors can use all of console but 
-can not add other users.
-
-*Note: adding users requires a valid Enterprise subscription
-or a Free Trial.*
+After your app is deployed, hitting the endpoint from the previous command
+will start producing [Traces](./concepts/traces.md) in Console. For more details see 
+our [concepts section](./concepts) or learn about using [Serverles Console](./using/).
