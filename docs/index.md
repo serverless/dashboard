@@ -13,8 +13,6 @@ building with Serverless architectures. The easiest way
 to get started with Serverless Console is using the 
 latest version of Serverless Framework (v3.7.5+ required).
 
-**Upgrade or Install Serverless Framework**
-
 ```text
 npm install -g serverless
 ```
