@@ -171,13 +171,17 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
         const startTime = val.startTime || [0, 0];
         const endTime = val.endTime || [0, 0];
 
-        let attributes = val.attributes;
+        let attributes = {
+          ...val.attributes,
+          'sls.original_properties': Object.keys(val.attributes).join(','),
+        };
         if (
           firstThing.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda'
         ) {
           attributes = {
             ...val.attributes,
-            ...pathData,
+            // Only add path data if we have an http.path
+            ...(!pathData['http.path'] ? {} : pathData),
           };
         }
 
@@ -305,15 +309,8 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
         eventData[context.awsRequestId].eventSource = 'aws.apigateway';
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-        if (
-          /{proxy\+}/.test(event.requestContext.resourcePath) ||
-          event.requestContext.resourcePath === '$default'
-        ) {
-          // Raw path from the requests instead of proxy
-          eventData[context.awsRequestId].httpPath = event.path;
-        } else {
-          eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
-        }
+        eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
+        eventData[context.awsRequestId].rawHttpPath = event.path;
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
@@ -324,12 +321,8 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
         const routeKey = event.requestContext.routeKey;
         const path = routeKey.split(' ')[1] || event.requestContext.routeKey;
-        if (/{proxy\+}/.test(path) || path === '$default') {
-          // Raw path from the requests instead of proxy
-          eventData[context.awsRequestId].httpPath = event.rawPath;
-        } else {
-          eventData[context.awsRequestId].httpPath = path;
-        }
+        eventData[context.awsRequestId].httpPath = path;
+        eventData[context.awsRequestId].rawHttpPath = event.rawPath;
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
