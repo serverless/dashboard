@@ -125,6 +125,11 @@ const measureAttributes = [
     type: 'stringValue',
   },
   {
+    key: 'http.raw_path',
+    source: 'rawHttpPath',
+    type: 'stringValue',
+  },
+  {
     key: 'http.domain',
     source: 'eventCustomDomain',
     type: 'stringValue',
