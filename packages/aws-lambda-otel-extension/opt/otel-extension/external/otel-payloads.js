@@ -277,6 +277,19 @@ const createMetricsPayload = (groupedByRequestId, sentRequests) =>
           attributes: metricAttributes,
         })
       );
+
+      if ('initDurationMs' in report.record.metrics) {
+        metrics.push(
+          createHistogramMetric({
+            name: 'faas.coldstart_duration',
+            unit: '1',
+            count: '1',
+            sum: report.record.metrics.initDurationMs,
+            record: fun.record,
+            attributes: metricAttributes,
+          })
+        );
+      }
     }
 
     return {
