@@ -330,7 +330,8 @@ const instrumentations = [
           event.requestContext.timeEpoch;
       }
 
-      await fetch(`http://${OTEL_SERVER_HOST}:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
+      // Send request data to external so that we can attach this data to logs
+      await fetch(`http://localhost:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
         method: 'post',
         body: JSON.stringify([
           {
@@ -339,6 +340,10 @@ const instrumentations = [
             record: {
               recordType: 'eventData',
               eventData,
+              span: {
+                traceId: span.spanContext().traceId,
+                spanId: span.spanContext().spanId,
+              },
             },
           },
         ]),

@@ -5,7 +5,7 @@ const { logMessage } = require('../../lib/helper');
 const { SAVE_FILE } = require('../helper');
 const { writeFileSync } = require('fs');
 const reportOtelData = require('./../report-otel-data');
-const { parseEventData } = require('../otel-payloads');
+const { createLogPayload } = require('../otel-payloads');
 
 // eslint-disable-next-line prefer-const
 let liveLogData = [];
@@ -40,7 +40,7 @@ function listen({ port, address, logsQueue, callback }) {
               ) {
                 return true;
               } else if (log.type === 'function' && (log.record || {}).recordType === 'eventData') {
-                mainEventData = log.record.eventData;
+                mainEventData = log.record;
               }
               return false;
             });
@@ -83,14 +83,9 @@ function listen({ port, address, logsQueue, callback }) {
           if (liveLogData.length > 0 && Object.keys(mainEventData).length > 0) {
             const sendData = [...liveLogData];
             liveLogData = [];
-            await reportOtelData
-              .logs({
-                mainEventData: parseEventData(mainEventData),
-                liveLogData: sendData,
-              })
-              .catch((error) => {
-                logMessage('Failed to send logs', error);
-              });
+            await reportOtelData.logs(createLogPayload(mainEventData, sendData)).catch((error) => {
+              logMessage('Failed to send logs', error);
+            });
           }
         } catch (e) {
           logMessage('failed to parse logs', e);

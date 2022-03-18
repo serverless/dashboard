@@ -118,18 +118,76 @@ const createResourceAttributes = (fun) =>
     }
   });
 
-const parseEventData = (fun) => {
-  const key = Object.keys(fun)[0];
-  const metricsAtt = createMetricAttributes({ record: fun[key] }, {});
-  const resourceAtt = createResourceAttributes({ record: fun[key] });
+const createLogPayload = (fun, logs) => {
+  const spanData = fun.span;
+  const key = Object.keys(fun.eventData)[0];
+  const metricsAtt = createMetricAttributes({ record: fun.eventData[key] }, {})
+    .filter((attr) => {
+      return [
+        'faas.arch',
+        'faas.api_gateway_request_id',
+        'faas.event_source',
+        'faas.api_gateway_app_id',
+      ].includes(attr.key);
+    })
+    .reduce(
+      (obj, attr) => ({
+        ...obj,
+        [attr.key]: Object.values(attr.value)[0],
+      }),
+      {}
+    );
+  const resourceAtt = createResourceAttributes({ record: fun.eventData[key] })
+    .filter((attr) => {
+      return [
+        'faas.id',
+        'faas.name',
+        'cloud.region',
+        'sls.app_uid',
+        'service.namespace',
+        'deployment.environment',
+        'service.name',
+        'telemetry.sdk.language',
+        'telemetry.sdk.name',
+        'telemetry.sdk.version',
+        'cloud.provider',
+        'cloud.account.id',
+        'cloud.platform',
+        'faas.collector_version',
+      ].includes(attr.key);
+    })
+    .reduce(
+      (obj, attr) => ({
+        ...obj,
+        [attr.key]: Object.values(attr.value)[0],
+      }),
+      {}
+    );
 
-  return [...resourceAtt, ...metricsAtt].reduce(
-    (obj, attr) => ({
-      ...obj,
-      [attr.key]: Object.values(attr.value)[0],
-    }),
-    {}
-  );
+  const severityNumberMap = {
+    TRACE: 1,
+    DEBUG: 5,
+    INFO: 9,
+    WARN: 13,
+    ERROR: 17,
+    FATAL: 21,
+  };
+
+  return logs.map((log) => {
+    const split = (log.record || '').split('\t');
+    return {
+      Timestamp: new Date(split[0]).getTime(),
+      Attributes: resourceAtt,
+      Resource: metricsAtt,
+      TraceId: spanData.traceId,
+      SpanId: spanData.spanId,
+      SeverityText: split[2],
+      SeverityNumber: severityNumberMap[split[2]] || severityNumberMap.DEBUG,
+      // OTEL expects a string but this might be a group of logs so
+      // we join with a string so we can easily parse later
+      Body: log.record || '',
+    };
+  });
 };
 
 const createHistogramMetric = ({ name, unit, count, sum, record, attributes }) => ({
@@ -404,7 +462,7 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
 module.exports = {
   createMetricAttributes,
   createResourceAttributes,
-  parseEventData,
+  createLogPayload,
   createTracePayload,
   createMetricsPayload,
 };
