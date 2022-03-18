@@ -43,7 +43,7 @@ describe('integration', function () {
           Runtime: 'nodejs14.x',
           Environment: {
             Variables: {
-              AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension/otel-handler',
+              AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension/internal/exec-wrapper.sh',
               SLS_OTEL_REPORT_TYPE: 'json',
               SLS_OTEL_REPORT_S3_BUCKET: name,
               OTEL_LOG_LEVEL: 'ALL',

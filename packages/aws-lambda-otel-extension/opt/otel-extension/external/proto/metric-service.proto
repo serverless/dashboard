@@ -11,35 +11,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// Yanked from this project - https://github.com/open-telemetry/opentelemetry-proto
 
 syntax = "proto3";
 
-package opentelemetry.proto.collector.trace.v1;
+package opentelemetry.proto.collector.metrics.v1;
 
-import "trace.proto";
+import "metrics.proto";
 
 option java_multiple_files = true;
-option java_package = "io.opentelemetry.proto.collector.trace.v1";
-option java_outer_classname = "TraceServiceProto";
-option go_package = "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1";
+option java_package = "io.opentelemetry.proto.collector.metrics.v1";
+option java_outer_classname = "MetricsServiceProto";
+option go_package = "github.com/open-telemetry/opentelemetry-proto/gen/go/collector/metrics/v1";
 
-// Service that can be used to push spans between one Application instrumented with
-// OpenTelemetry and a collector, or between a collector and a central collector (in this
-// case spans are sent/received to/from multiple Applications).
-service TraceService {
+// Service that can be used to push metrics between one Application
+// instrumented with OpenTelemetry and a collector, or between a collector and a
+// central collector.
+service MetricsService {
   // For performance reasons, it is recommended to keep this RPC
   // alive for the entire life of the application.
-  rpc Export(ExportTraceServiceRequest) returns (ExportTraceServiceResponse) {}
+  rpc Export(ExportMetricsServiceRequest) returns (ExportMetricsServiceResponse) {}
 }
 
-message ExportTraceServiceRequest {
-  // An array of ResourceSpans.
+message ExportMetricsServiceRequest {
+  // An array of ResourceMetrics.
   // For data coming from a single resource this array will typically contain one
   // element. Intermediary nodes (such as OpenTelemetry Collector) that receive
   // data from multiple origins typically batch the data before forwarding further and
   // in that case this array will contain multiple elements.
-  repeated opentelemetry.proto.trace.v1.ResourceSpans resource_spans = 1;
+  repeated opentelemetry.proto.metrics.v1.ResourceMetrics resource_metrics = 1;
 }
 
-message ExportTraceServiceResponse {
+message ExportMetricsServiceResponse {
 }

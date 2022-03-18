@@ -2,20 +2,23 @@
 
 const { expect } = require('chai');
 const { EventEmitter } = require('events');
+const unlink = require('fs2/unlink');
 const evilDns = require('evil-dns');
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const getExtensionServerMock = require('../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
+const { SAVE_FILE, SENT_FILE } = require('../../opt/otel-extension/external/helper');
 
 const port = 9001;
 
-describe('extension', () => {
-  before(() => {
+describe('external', () => {
+  before(async () => {
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
     process.env.SLS_OTEL_REPORT_TYPE = 'json';
+    await Promise.all([unlink(SAVE_FILE, { loose: true }), unlink(SENT_FILE, { loose: true })]);
   });
 
   it('should handle plain success invocation', async () => {
@@ -27,7 +30,7 @@ describe('extension', () => {
     let stdoutData = '';
     const extensionProcess = overwriteStdoutWrite(
       (data) => (stdoutData += data),
-      async () => requireUncached(() => require('../../opt/otel-extension'))
+      async () => requireUncached(() => require('../../opt/otel-extension/external'))
     );
 
     await new Promise((resolve) => listenerEmitter.once('listener', resolve));

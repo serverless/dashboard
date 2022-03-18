@@ -107,8 +107,8 @@ const resourceAttributes = [
   },
   {
     key: 'faas.collector_version',
-    value: '@serverless/aws-lambda-otel-extension-0.1.11',
-    source: '@serverless/aws-lambda-otel-extension-0.1.11',
+    value: '@serverless/aws-lambda-otel-extension-0.2.2',
+    source: '@serverless/aws-lambda-otel-extension-0.2.2',
     type: 'stringValue',
   },
 ];
@@ -122,6 +122,11 @@ const measureAttributes = [
   {
     key: 'http.method',
     source: 'eventCustomHttpMethod',
+    type: 'stringValue',
+  },
+  {
+    key: 'http.raw_path',
+    source: 'rawHttpPath',
     type: 'stringValue',
   },
   {
@@ -191,12 +196,6 @@ const measureAttributes = [
   },
 ];
 
-const logMessage = (...args) => {
-  if (process.env.DEBUG_SLS_OTEL_LAYER) {
-    console.log(...args);
-  }
-};
-
 const EventType = {
   INVOKE: 'INVOKE',
   SHUTDOWN: 'SHUTDOWN',
@@ -212,8 +211,6 @@ const receiverAddress = () => {
 const SAVE_FILE = '/tmp/sls-save-log.json';
 const SENT_FILE = '/tmp/sent-requests.json';
 
-const OTEL_SERVER_PORT = 2772;
-const OTEL_SERVER_HOST = 'localhost';
 const RECEIVER_PORT = 4243;
 const TIMEOUT_MS = 25; // Maximum time (in milliseconds) that a batch is buffered.
 const MAX_BYTES = 262144; // Maximum size in bytes that the logs are buffered in memory.
@@ -236,12 +233,8 @@ const SUBSCRIPTION_BODY = {
 module.exports = {
   SAVE_FILE,
   SENT_FILE,
-  OTEL_SERVER_PORT,
-  OTEL_SERVER_HOST,
-  logMessage,
   receiverAddress,
   RECEIVER_PORT,
-  RECEIVER_NAME,
   SUBSCRIPTION_BODY,
   EventType,
   resourceAttributes,

@@ -10,15 +10,14 @@ const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
 const { listen } = require('./lambda-apis/http-listener');
 const reportOtelData = require('./report-otel-data');
+const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
 const {
   EventType,
-  logMessage,
+  SAVE_FILE,
+  SENT_FILE,
   receiverAddress,
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
-  SAVE_FILE,
-  SENT_FILE,
-  OTEL_SERVER_PORT,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
 
