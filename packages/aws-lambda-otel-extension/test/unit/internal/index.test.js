@@ -23,7 +23,7 @@ describe('internal', () => {
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'callback-success';
     let stdoutData = '';
 
-    let logsQueue = [];
+    const logsQueue = [];
     const server = http.createServer((request, response) => {
       if (request.method === 'POST') {
         let body = '';
@@ -35,19 +35,26 @@ describe('internal', () => {
           response.end('OK');
           server.close();
           const batch = JSON.parse(body);
-          logsQueue = batch;
+          logsQueue.push(...batch);
 
-          expect(logsQueue.length).to.equal(1);
-          const reportLog = logsQueue[0].record.split('\t')[2];
+          if (logsQueue.length === 2) {
+            // Validate eventData record for log metadata
+            const logMetadata = logsQueue[0].record;
+            expect(logMetadata.eventData['123']['telemetry.sdk.language']).to.equal('nodejs');
+            expect(logMetadata.eventData['123']['telemetry.sdk.name']).to.equal('opentelemetry');
+            expect(logMetadata.eventData['123']['faas.name']).to.equal('callback-success');
 
-          const reportCompressed = reportLog.slice(reportLog.indexOf('⚡.') + 2);
-          const report = JSON.parse(String(await unzip(Buffer.from(reportCompressed, 'base64'))));
-          log.debug('result report: %o', report);
-          expect(report.function['telemetry.sdk.language']).to.equal('nodejs');
-          expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');
-          expect(report.function['faas.name']).to.equal('callback-success');
-          expect(report.function.error).to.equal(false);
-          done();
+            // Validate trace record
+            const reportLog = logsQueue[1].record.split('\t')[2];
+            const reportCompressed = reportLog.slice(reportLog.indexOf('⚡.') + 2);
+            const report = JSON.parse(String(await unzip(Buffer.from(reportCompressed, 'base64'))));
+            log.debug('result report: %o', report);
+            expect(report.function['telemetry.sdk.language']).to.equal('nodejs');
+            expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');
+            expect(report.function['faas.name']).to.equal('callback-success');
+            expect(report.function.error).to.equal(false);
+            done();
+          }
         });
       }
     });
@@ -64,6 +71,7 @@ describe('internal', () => {
             require(path.resolve(lambdaFixturesDirname, 'callback-success.js')).handler(
               {},
               {
+                awsRequestId: '123',
                 invokedFunctionArn:
                   'arn:aws:lambda:us-east-1:123456789012:function:callback-success',
                 getRemainingTimeInMillis: () => 3000,
