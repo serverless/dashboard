@@ -20,7 +20,7 @@ const {
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
 } = require('./helper');
-const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
+const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
 const unzip = promisify(unzipWtithCallback);
 
@@ -30,10 +30,12 @@ function handleShutdown() {
 
 let sentRequests = [];
 let logsQueue = [];
-// We need to be able to reassign this variable when a new
-// event comes through
-// eslint-disable-next-line prefer-const
-let mainEventData = {};
+const mainEventData = {
+  data: {},
+};
+const liveLogData = {
+  logs: [],
+};
 
 if (existsSync(SAVE_FILE)) {
   try {
@@ -224,10 +226,22 @@ module.exports = (async function main() {
     logMessage('Remaining logs queue: ', JSON.stringify(logList));
   }
 
+  const postLiveLogs = async () => {
+    if (liveLogData.logs.length > 0 && Object.keys(mainEventData.data).length > 0) {
+      const sendData = [...liveLogData.logs];
+      liveLogData.logs = [];
+      await reportOtelData.logs(createLogPayload(mainEventData.data, sendData)).catch((error) => {
+        logMessage('Failed to send logs', error);
+      });
+    }
+  };
+
   const { server: otelServer } = customListen({
     logsQueue,
     port: OTEL_SERVER_PORT,
     mainEventData,
+    liveLogData,
+    liveLogCallback: postLiveLogs,
     callback: async (...args) => {
       await uploadLogs(...args);
       receivedData = true;
@@ -239,6 +253,8 @@ module.exports = (async function main() {
     address: receiverAddress(),
     mainEventData,
     logsQueue,
+    liveLogData,
+    liveLogCallback: postLiveLogs,
     callback: uploadLogs,
   });
 

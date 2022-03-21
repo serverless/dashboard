@@ -4,10 +4,6 @@ const http = require('http');
 const { logMessage } = require('../../lib/helper');
 const { SAVE_FILE } = require('../helper');
 const { writeFileSync } = require('fs');
-const reportOtelData = require('./../report-otel-data');
-const { createLogPayload } = require('../otel-payloads');
-
-let liveLogData = [];
 
 const meaningfulLog = (log) => {
   if (log.type === 'platform.report') {
@@ -16,7 +12,7 @@ const meaningfulLog = (log) => {
   return false;
 };
 
-function listen({ port, address, logsQueue, mainEventData, callback }) {
+function listen({ port, address, logsQueue, callback, liveLogCallback, liveLogData }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -44,15 +40,9 @@ function listen({ port, address, logsQueue, mainEventData, callback }) {
 
           const reportedLogs = batch.filter((log) => !log.type.startsWith('platform.'));
 
-          liveLogData.push(...(reportedLogs || []));
+          liveLogData.logs.push(...(reportedLogs || []));
 
-          if (liveLogData.length > 0 && Object.keys(mainEventData).length > 0) {
-            const sendData = [...liveLogData];
-            liveLogData = [];
-            await reportOtelData.logs(createLogPayload(mainEventData, sendData)).catch((error) => {
-              logMessage('Failed to send logs', error);
-            });
-          }
+          await liveLogCallback();
         } catch (e) {
           logMessage('failed to parse logs', e);
         }

@@ -7,7 +7,7 @@ const { writeFileSync } = require('fs');
 
 // mainEventData is assigned in this file and then used in the parent file
 // eslint-disable-next-line no-unused-vars
-function customListen({ port, logsQueue, mainEventData, callback }) {
+function customListen({ port, logsQueue, mainEventData, callback, liveLogCallback }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -20,7 +20,7 @@ function customListen({ port, logsQueue, mainEventData, callback }) {
           const data = JSON.parse(body);
           logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(data));
           if (data && data.recordType === 'eventData') {
-            mainEventData = data.record;
+            mainEventData.data = data.record;
           } else if (data && data.recordType === 'telemetryData') {
             logsQueue.push([data]);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
@@ -31,6 +31,7 @@ function customListen({ port, logsQueue, mainEventData, callback }) {
             callback(logsQueue, reportIds);
           }
           logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
+          await liveLogCallback();
         } catch (e) {
           logMessage('failed to parse logs', e);
         }
