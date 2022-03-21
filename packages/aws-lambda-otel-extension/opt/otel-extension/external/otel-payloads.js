@@ -181,10 +181,8 @@ const createLogPayload = (fun, logs) => {
       Resource: metricsAtt,
       TraceId: spanData.traceId,
       SpanId: spanData.spanId,
-      SeverityText: split[2],
-      SeverityNumber: severityNumberMap[split[2]] || severityNumberMap.DEBUG,
-      // OTEL expects a string but this might be a group of logs so
-      // we join with a string so we can easily parse later
+      SeverityText: Object.keys(severityNumberMap).includes(split[2]) ? split[2] : 'INFO',
+      SeverityNumber: severityNumberMap[split[2]] || severityNumberMap.INFO,
       Body: log.record || '',
     };
   });
