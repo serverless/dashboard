@@ -26,7 +26,7 @@ function customListen({ port, logsQueue, mainEventData, callback }) {
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
           }
 
-          if (callback && data) {
+          if (callback && data.recordType === 'telemetryData') {
             const reportIds = [data.record.split('\t')[1]];
             callback(logsQueue, reportIds);
           }
