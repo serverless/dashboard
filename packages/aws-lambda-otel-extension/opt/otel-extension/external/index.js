@@ -230,9 +230,11 @@ module.exports = (async function main() {
     if (liveLogData.logs.length > 0 && Object.keys(mainEventData.data).length > 0) {
       const sendData = [...liveLogData.logs];
       liveLogData.logs = [];
-      await reportOtelData.logs(createLogPayload(mainEventData.data, sendData)).catch((error) => {
+      try {
+        await reportOtelData.logs(createLogPayload(mainEventData.data, sendData));
+      } catch (error) {
         logMessage('Failed to send logs', error);
-      });
+      }
     }
   };
 

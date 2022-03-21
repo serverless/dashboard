@@ -5,13 +5,6 @@ const { logMessage } = require('../../lib/helper');
 const { SAVE_FILE } = require('../helper');
 const { writeFileSync } = require('fs');
 
-const meaningfulLog = (log) => {
-  if (log.type === 'platform.report') {
-    return true;
-  }
-  return false;
-};
-
 function listen({ port, address, logsQueue, callback, liveLogCallback, liveLogData }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
@@ -26,7 +19,7 @@ function listen({ port, address, logsQueue, callback, liveLogCallback, liveLogDa
           logMessage('Current data before write: ', JSON.stringify(logsQueue));
 
           if (batch.length > 0) {
-            const logBatch = batch.filter(meaningfulLog);
+            const logBatch = batch.filter((log) => log.type === 'platform.report');
             logsQueue.push(logBatch);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
 
