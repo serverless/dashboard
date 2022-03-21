@@ -176,7 +176,7 @@ const createLogPayload = (fun, logs) => {
   return logs.map((log) => {
     const split = (log.record || '').split('\t');
     return {
-      Timestamp: new Date(split[0]).getTime(),
+      Timestamp: split[0] ? new Date(split[0]).getTime() : new Date().getTime(),
       Attributes: resourceAtt,
       Resource: metricsAtt,
       TraceId: spanData.traceId,
