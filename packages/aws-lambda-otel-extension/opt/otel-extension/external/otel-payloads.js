@@ -181,8 +181,8 @@ const createLogPayload = (fun, logs) => {
       Resource: metricsAtt,
       TraceId: spanData.traceId,
       SpanId: spanData.spanId,
-      SeverityText: Object.keys(severityNumberMap).includes(split[2]) ? split[2] : 'INFO',
-      SeverityNumber: severityNumberMap[split[2]] || severityNumberMap.INFO,
+      SeverityText: Object.keys(severityNumberMap).includes(split[2]) ? split[2] : undefined,
+      SeverityNumber: severityNumberMap[split[2]],
       Body: log.record || '',
     };
   });
