@@ -121,48 +121,40 @@ const createResourceAttributes = (fun) =>
 const createLogPayload = (fun, logs) => {
   const spanData = fun.span;
   const key = Object.keys(fun.eventData)[0];
-  const metricsAtt = createMetricAttributes({ record: fun.eventData[key] }, {})
-    .filter((attr) => {
-      return [
-        'faas.arch',
-        'faas.api_gateway_request_id',
-        'faas.event_source',
-        'faas.api_gateway_app_id',
-      ].includes(attr.key);
-    })
-    .reduce(
-      (obj, attr) => ({
-        ...obj,
-        [attr.key]: Object.values(attr.value)[0],
-      }),
-      {}
-    );
-  const resourceAtt = createResourceAttributes({ record: fun.eventData[key] })
-    .filter((attr) => {
-      return [
-        'faas.id',
-        'faas.name',
-        'cloud.region',
-        'sls.app_uid',
-        'service.namespace',
-        'deployment.environment',
-        'service.name',
-        'telemetry.sdk.language',
-        'telemetry.sdk.name',
-        'telemetry.sdk.version',
-        'cloud.provider',
-        'cloud.account.id',
-        'cloud.platform',
-        'faas.collector_version',
-      ].includes(attr.key);
-    })
-    .reduce(
-      (obj, attr) => ({
-        ...obj,
-        [attr.key]: Object.values(attr.value)[0],
-      }),
-      {}
-    );
+
+  const metricAttributeNames = new Set([
+    'faas.arch',
+    'faas.api_gateway_request_id',
+    'faas.event_source',
+    'faas.api_gateway_app_id',
+  ]);
+  const metricsAtt = {};
+  for (const attribute of createMetricAttributes({ record: fun.eventData[key] }, {})) {
+    if (!metricAttributeNames.has(attribute.key)) continue;
+    metricsAtt[attribute.key] = attribute.value;
+  }
+
+  const resourceAttributeNames = new Set([
+    'faas.id',
+    'faas.name',
+    'cloud.region',
+    'sls.app_uid',
+    'service.namespace',
+    'deployment.environment',
+    'service.name',
+    'telemetry.sdk.language',
+    'telemetry.sdk.name',
+    'telemetry.sdk.version',
+    'cloud.provider',
+    'cloud.account.id',
+    'cloud.platform',
+    'faas.collector_version',
+  ]);
+  const resourceAtt = {};
+  for (const attribute of createResourceAttributes({ record: fun.eventData[key] }, {})) {
+    if (!resourceAttributeNames.has(attribute.key)) continue;
+    resourceAtt[attribute.key] = attribute.value;
+  }
 
   const severityNumberMap = {
     TRACE: 1,
