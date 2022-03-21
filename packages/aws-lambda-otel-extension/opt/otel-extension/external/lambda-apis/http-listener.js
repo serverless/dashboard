@@ -8,24 +8,15 @@ const reportOtelData = require('./../report-otel-data');
 const { createLogPayload } = require('../otel-payloads');
 
 let liveLogData = [];
-let mainEventData = {};
 
 const meaningfulLog = (log) => {
   if (log.type === 'platform.report') {
     return true;
-  } else if (
-    log.type === 'function' &&
-    typeof log.record === 'string' &&
-    log.record.includes('⚡.')
-  ) {
-    return true;
-  } else if (log.type === 'function' && (log.record || {}).recordType === 'eventData') {
-    mainEventData = log.record;
   }
   return false;
 };
 
-function listen({ port, address, logsQueue, callback }) {
+function listen({ port, address, logsQueue, mainEventData, callback }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -36,11 +27,8 @@ function listen({ port, address, logsQueue, callback }) {
       request.on('end', async () => {
         try {
           const batch = JSON.parse(body);
-          if (address) {
-            logMessage('Current data before write: ', JSON.stringify(logsQueue));
-          } else {
-            logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(batch));
-          }
+          logMessage('Current data before write: ', JSON.stringify(logsQueue));
+
           if (batch.length > 0) {
             const logBatch = batch.filter(meaningfulLog);
             logsQueue.push(logBatch);
@@ -53,13 +41,8 @@ function listen({ port, address, logsQueue, callback }) {
               callback(logsQueue, reportIds);
             }
           }
-          if (!address) {
-            logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
-          }
 
-          const reportedLogs = batch.filter(
-            (log) => !meaningfulLog(log) && !log.type.startsWith('platform.')
-          );
+          const reportedLogs = batch.filter((log) => !log.type.startsWith('platform.'));
 
           liveLogData.push(...(reportedLogs || []));
 

@@ -35,8 +35,8 @@ describe('internal', () => {
           response.writeHead(200, {});
           response.end('OK');
           server.close();
-          const batch = JSON.parse(body);
-          logsQueue.push(...batch);
+          const data = JSON.parse(body);
+          logsQueue.push(data);
 
           if (logsQueue.length > 1) {
             // Validate eventData record for log metadata

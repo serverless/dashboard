@@ -252,13 +252,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
 
   await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
     method: 'post',
-    body: JSON.stringify([
-      {
-        time: new Date().toISOString(),
-        type: 'function',
-        record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
-      },
-    ]),
+    body: JSON.stringify({
+      recordType: 'telemetryData',
+      record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
+    }),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -333,20 +330,16 @@ const instrumentations = [
       // Send request data to external so that we can attach this data to logs
       await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
         method: 'post',
-        body: JSON.stringify([
-          {
-            time: new Date().toISOString(),
-            type: 'function',
-            record: {
-              recordType: 'eventData',
-              eventData,
-              span: {
-                traceId: span.spanContext().traceId,
-                spanId: span.spanContext().spanId,
-              },
+        body: JSON.stringify({
+          recordType: 'eventData',
+          record: {
+            eventData,
+            span: {
+              traceId: span.spanContext().traceId,
+              spanId: span.spanContext().spanId,
             },
           },
-        ]),
+        }),
         headers: {
           'Content-Type': 'application/json',
         },

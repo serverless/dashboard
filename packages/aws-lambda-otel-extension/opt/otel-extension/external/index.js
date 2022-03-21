@@ -9,6 +9,7 @@ const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
 const { listen } = require('./lambda-apis/http-listener');
+const { customListen } = require('./custom-http-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
 const {
@@ -29,6 +30,10 @@ function handleShutdown() {
 
 let sentRequests = [];
 let logsQueue = [];
+// We need to be able to reassign this variable when a new
+// event comes through
+// eslint-disable-next-line prefer-const
+let mainEventData = {};
 
 if (existsSync(SAVE_FILE)) {
   try {
@@ -53,18 +58,10 @@ module.exports = (async function main() {
   const groupLogs = async (logList) => {
     logMessage('LOGS: ', JSON.stringify(logList));
     const combinedLogs = logList.reduce((arr, logs) => [...arr, ...logs], []);
-    const filteredItems = combinedLogs.filter((log) => {
-      if (log.type === 'platform.report') {
-        return true;
-      } else if (log.type === 'function' && log.record.includes('⚡.')) {
-        return true;
-      }
-      return false;
-    });
 
     const items = await Promise.all(
-      filteredItems.map(async (log) => {
-        if (log.type === 'function') {
+      combinedLogs.map(async (log) => {
+        if (log.recordType === 'telemetryData') {
           try {
             const reportCompressed = log.record.slice(log.record.indexOf('⚡.') + 2).trim();
             const raw = (await unzip(Buffer.from(reportCompressed, 'base64'))).toString();
@@ -209,7 +206,7 @@ module.exports = (async function main() {
     logList.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {
-          if (log.type === 'function') {
+          if (log.recordType === 'telemetryData') {
             return (
               incompleteRequestIds.includes(log.record.split('\t')[1]) ||
               (focusIds.length > 0 && !focusIds.includes(log.record.split('\t')[1]))
@@ -227,9 +224,10 @@ module.exports = (async function main() {
     logMessage('Remaining logs queue: ', JSON.stringify(logList));
   }
 
-  const { server: otelServer } = listen({
+  const { server: otelServer } = customListen({
     logsQueue,
     port: OTEL_SERVER_PORT,
+    mainEventData,
     callback: async (...args) => {
       await uploadLogs(...args);
       receivedData = true;
@@ -239,6 +237,7 @@ module.exports = (async function main() {
   const { server } = listen({
     port: RECEIVER_PORT,
     address: receiverAddress(),
+    mainEventData,
     logsQueue,
     callback: uploadLogs,
   });
