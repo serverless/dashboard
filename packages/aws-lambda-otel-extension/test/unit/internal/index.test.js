@@ -37,7 +37,7 @@ describe('internal', () => {
           const batch = JSON.parse(body);
           logsQueue.push(...batch);
 
-          if (logsQueue.length === 2) {
+          if (logsQueue.length > 1) {
             // Validate eventData record for log metadata
             const logMetadata = logsQueue[0].record;
             expect(logMetadata.eventData['123']['telemetry.sdk.language']).to.equal('nodejs');

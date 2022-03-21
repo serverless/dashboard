@@ -460,8 +460,6 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
     .reduce((arr, originalList) => [...arr, ...originalList], []);
 
 module.exports = {
-  createMetricAttributes,
-  createResourceAttributes,
   createLogPayload,
   createTracePayload,
   createMetricsPayload,

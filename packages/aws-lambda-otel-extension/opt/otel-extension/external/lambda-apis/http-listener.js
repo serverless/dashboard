@@ -7,9 +7,7 @@ const { writeFileSync } = require('fs');
 const reportOtelData = require('./../report-otel-data');
 const { createLogPayload } = require('../otel-payloads');
 
-// eslint-disable-next-line prefer-const
 let liveLogData = [];
-// eslint-disable-next-line prefer-const
 let mainEventData = {};
 
 function listen({ port, address, logsQueue, callback }) {
@@ -59,7 +57,7 @@ function listen({ port, address, logsQueue, callback }) {
           }
 
           const reportedLogs = batch.filter((log) => {
-            if (/platform/i.test(log.type)) {
+            if (log.type.startsWith('platform.')) {
               return false;
             } else if (
               log.type === 'function' &&
