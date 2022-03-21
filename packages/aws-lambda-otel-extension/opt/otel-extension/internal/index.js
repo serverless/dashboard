@@ -250,7 +250,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     })
   ).toString('base64')}`;
 
-  await fetch(`http://localhost:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
+  await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
     method: 'post',
     body: JSON.stringify([
       {
@@ -331,7 +331,7 @@ const instrumentations = [
       }
 
       // Send request data to external so that we can attach this data to logs
-      await fetch(`http://localhost:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
+      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
         method: 'post',
         body: JSON.stringify([
           {

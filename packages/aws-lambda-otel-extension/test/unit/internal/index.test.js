@@ -8,6 +8,7 @@ const unzip = promisify(require('zlib').unzip);
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
+const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
 
 const lambdaFixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
 
@@ -59,8 +60,7 @@ describe('internal', () => {
       }
     });
 
-    process.env.MOCK_PORT = 4123;
-    server.listen(process.env.MOCK_PORT);
+    server.listen(OTEL_SERVER_PORT);
 
     overwriteStdoutWrite(
       (data) => (stdoutData += data),

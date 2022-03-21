@@ -10,6 +10,21 @@ const { createLogPayload } = require('../otel-payloads');
 let liveLogData = [];
 let mainEventData = {};
 
+const meaningfulLog = (log) => {
+  if (log.type === 'platform.report') {
+    return true;
+  } else if (
+    log.type === 'function' &&
+    typeof log.record === 'string' &&
+    log.record.includes('⚡.')
+  ) {
+    return true;
+  } else if (log.type === 'function' && (log.record || {}).recordType === 'eventData') {
+    mainEventData = log.record;
+  }
+  return false;
+};
+
 function listen({ port, address, logsQueue, callback }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
@@ -27,21 +42,7 @@ function listen({ port, address, logsQueue, callback }) {
             logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(batch));
           }
           if (batch.length > 0) {
-            const logBatch = batch.filter((log) => {
-              logMessage('Filters: ', JSON.stringify(log));
-              if (log.type === 'platform.report') {
-                return true;
-              } else if (
-                log.type === 'function' &&
-                typeof log.record === 'string' &&
-                log.record.includes('⚡.')
-              ) {
-                return true;
-              } else if (log.type === 'function' && (log.record || {}).recordType === 'eventData') {
-                mainEventData = log.record;
-              }
-              return false;
-            });
+            const logBatch = batch.filter(meaningfulLog);
             logsQueue.push(logBatch);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
 
@@ -56,25 +57,9 @@ function listen({ port, address, logsQueue, callback }) {
             logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
           }
 
-          const reportedLogs = batch.filter((log) => {
-            if (log.type.startsWith('platform.')) {
-              return false;
-            } else if (
-              log.type === 'function' &&
-              typeof log.record === 'string' &&
-              log.record.includes('⚡.')
-            ) {
-              return false;
-            } else if (
-              log.type === 'function' &&
-              typeof log.record === 'object' &&
-              log.record.recordType === 'eventData' &&
-              log.record.eventData
-            ) {
-              return false;
-            }
-            return true;
-          });
+          const reportedLogs = batch.filter(
+            (log) => !meaningfulLog(log) && !log.type.startsWith('platform.')
+          );
 
           liveLogData.push(...(reportedLogs || []));
 
