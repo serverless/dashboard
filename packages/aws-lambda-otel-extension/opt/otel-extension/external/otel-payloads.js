@@ -164,6 +164,7 @@ const createLogPayload = (fun, logs) => {
     ERROR: 17,
     FATAL: 21,
   };
+  const severityLevelNames = new Set(Object.keys(severityNumberMap));
 
   return logs.map((log) => {
     const split = (log.record || '').split('\t');
@@ -173,7 +174,7 @@ const createLogPayload = (fun, logs) => {
       Resource: metricsAtt,
       TraceId: spanData.traceId,
       SpanId: spanData.spanId,
-      SeverityText: Object.keys(severityNumberMap).includes(split[2]) ? split[2] : undefined,
+      SeverityText: severityLevelNames.has(split[2]) ? split[2] : undefined,
       SeverityNumber: severityNumberMap[split[2]],
       Body: log.record || '',
     };
