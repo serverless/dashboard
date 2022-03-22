@@ -85,7 +85,7 @@ module.exports = (emitter) => {
         request.on('data', (data) => (body += data));
         request.on('end', () => {
           const data = JSON.parse(body);
-          expect(data.types).to.deep.equal(['platform']);
+          expect(data.types).to.deep.equal(['platform', 'function']);
           expect(data.destination).to.have.property('URI');
           logsUrl = data.destination.URI;
           const statusCode = 200;

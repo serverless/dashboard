@@ -250,15 +250,12 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     })
   ).toString('base64')}`;
 
-  await fetch(`http://localhost:${process.env.MOCK_PORT || OTEL_SERVER_PORT}`, {
+  await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
     method: 'post',
-    body: JSON.stringify([
-      {
-        time: new Date().toISOString(),
-        type: 'function',
-        record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
-      },
-    ]),
+    body: JSON.stringify({
+      recordType: 'telemetryData',
+      record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
+    }),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -329,6 +326,24 @@ const instrumentations = [
         eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
           event.requestContext.timeEpoch;
       }
+
+      // Send request data to external so that we can attach this data to logs
+      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+        method: 'post',
+        body: JSON.stringify({
+          recordType: 'eventData',
+          record: {
+            eventData,
+            span: {
+              traceId: span.spanContext().traceId,
+              spanId: span.spanContext().spanId,
+            },
+          },
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     },
     responseHook: async (span, { err, res }) => {
       clearTimeout(timeoutHandler);

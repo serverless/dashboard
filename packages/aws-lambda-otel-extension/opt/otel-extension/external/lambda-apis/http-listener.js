@@ -5,7 +5,7 @@ const { logMessage } = require('../../lib/helper');
 const { SAVE_FILE } = require('../helper');
 const { writeFileSync } = require('fs');
 
-function listen({ port, address, logsQueue, callback }) {
+function listen({ port, address, logsQueue, callback, liveLogCallback, liveLogData }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -13,23 +13,13 @@ function listen({ port, address, logsQueue, callback }) {
       request.on('data', (data) => {
         body += data;
       });
-      request.on('end', () => {
+      request.on('end', async () => {
         try {
           const batch = JSON.parse(body);
-          if (address) {
-            logMessage('Current data before write: ', JSON.stringify(logsQueue));
-          } else {
-            logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(batch));
-          }
+          logMessage('Current data before write: ', JSON.stringify(logsQueue));
+
           if (batch.length > 0) {
-            const logBatch = batch.filter((log) => {
-              if (log.type === 'platform.report') {
-                return true;
-              } else if (log.type === 'function' && log.record.includes('⚡.')) {
-                return true;
-              }
-              return false;
-            });
+            const logBatch = batch.filter((log) => log.type === 'platform.report');
             logsQueue.push(logBatch);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
 
@@ -40,9 +30,12 @@ function listen({ port, address, logsQueue, callback }) {
               callback(logsQueue, reportIds);
             }
           }
-          if (!address) {
-            logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
-          }
+
+          const reportedLogs = batch.filter((log) => !log.type.startsWith('platform.'));
+
+          liveLogData.logs.push(...(reportedLogs || []));
+
+          await liveLogCallback();
         } catch (e) {
           logMessage('failed to parse logs', e);
         }

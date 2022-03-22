@@ -9,6 +9,7 @@ const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
 const { listen } = require('./lambda-apis/http-listener');
+const initializeTelemetryListener = require('./initialize-telemetry-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
 const {
@@ -19,7 +20,7 @@ const {
   RECEIVER_PORT,
   SUBSCRIPTION_BODY,
 } = require('./helper');
-const { createMetricsPayload, createTracePayload } = require('./otel-payloads');
+const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
 const unzip = promisify(unzipWtithCallback);
 
@@ -29,6 +30,12 @@ function handleShutdown() {
 
 let sentRequests = [];
 let logsQueue = [];
+const mainEventData = {
+  data: {},
+};
+const liveLogData = {
+  logs: [],
+};
 
 if (existsSync(SAVE_FILE)) {
   try {
@@ -53,18 +60,10 @@ module.exports = (async function main() {
   const groupLogs = async (logList) => {
     logMessage('LOGS: ', JSON.stringify(logList));
     const combinedLogs = logList.reduce((arr, logs) => [...arr, ...logs], []);
-    const filteredItems = combinedLogs.filter((log) => {
-      if (log.type === 'platform.report') {
-        return true;
-      } else if (log.type === 'function' && log.record.includes('⚡.')) {
-        return true;
-      }
-      return false;
-    });
 
     const items = await Promise.all(
-      filteredItems.map(async (log) => {
-        if (log.type === 'function') {
+      combinedLogs.map(async (log) => {
+        if (log.recordType === 'telemetryData') {
           try {
             const reportCompressed = log.record.slice(log.record.indexOf('⚡.') + 2).trim();
             const raw = (await unzip(Buffer.from(reportCompressed, 'base64'))).toString();
@@ -209,7 +208,7 @@ module.exports = (async function main() {
     logList.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {
-          if (log.type === 'function') {
+          if (log.recordType === 'telemetryData') {
             return (
               incompleteRequestIds.includes(log.record.split('\t')[1]) ||
               (focusIds.length > 0 && !focusIds.includes(log.record.split('\t')[1]))
@@ -227,9 +226,24 @@ module.exports = (async function main() {
     logMessage('Remaining logs queue: ', JSON.stringify(logList));
   }
 
-  const { server: otelServer } = listen({
+  const postLiveLogs = async () => {
+    if (liveLogData.logs.length > 0 && Object.keys(mainEventData.data).length > 0) {
+      const sendData = [...liveLogData.logs];
+      liveLogData.logs = [];
+      try {
+        await reportOtelData.logs(createLogPayload(mainEventData.data, sendData));
+      } catch (error) {
+        logMessage('Failed to send logs', error);
+      }
+    }
+  };
+
+  const { server: otelServer } = initializeTelemetryListener({
     logsQueue,
     port: OTEL_SERVER_PORT,
+    mainEventData,
+    liveLogData,
+    liveLogCallback: postLiveLogs,
     callback: async (...args) => {
       await uploadLogs(...args);
       receivedData = true;
@@ -239,7 +253,10 @@ module.exports = (async function main() {
   const { server } = listen({
     port: RECEIVER_PORT,
     address: receiverAddress(),
+    mainEventData,
     logsQueue,
+    liveLogData,
+    liveLogCallback: postLiveLogs,
     callback: uploadLogs,
   });
 

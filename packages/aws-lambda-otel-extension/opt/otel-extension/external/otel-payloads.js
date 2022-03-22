@@ -118,6 +118,69 @@ const createResourceAttributes = (fun) =>
     }
   });
 
+const createLogPayload = (fun, logs) => {
+  const spanData = fun.span;
+  const key = Object.keys(fun.eventData)[0];
+
+  const metricAttributeNames = new Set([
+    'faas.arch',
+    'faas.api_gateway_request_id',
+    'faas.event_source',
+    'faas.api_gateway_app_id',
+  ]);
+  const metricsAtt = {};
+  for (const attribute of createMetricAttributes({ record: fun.eventData[key] }, {})) {
+    if (!metricAttributeNames.has(attribute.key)) continue;
+    metricsAtt[attribute.key] = attribute.value;
+  }
+
+  const resourceAttributeNames = new Set([
+    'faas.id',
+    'faas.name',
+    'cloud.region',
+    'sls.app_uid',
+    'service.namespace',
+    'deployment.environment',
+    'service.name',
+    'telemetry.sdk.language',
+    'telemetry.sdk.name',
+    'telemetry.sdk.version',
+    'cloud.provider',
+    'cloud.account.id',
+    'cloud.platform',
+    'faas.collector_version',
+  ]);
+  const resourceAtt = {};
+  for (const attribute of createResourceAttributes({ record: fun.eventData[key] }, {})) {
+    if (!resourceAttributeNames.has(attribute.key)) continue;
+    resourceAtt[attribute.key] = attribute.value;
+  }
+
+  const severityNumberMap = {
+    TRACE: 1,
+    DEBUG: 5,
+    INFO: 9,
+    WARN: 13,
+    ERROR: 17,
+    FATAL: 21,
+  };
+  const severityLevelNames = new Set(Object.keys(severityNumberMap));
+
+  return logs.map((log) => {
+    const split = (log.record || '').split('\t');
+    return {
+      Timestamp: split[0] ? new Date(split[0]).getTime() : new Date().getTime(),
+      Attributes: resourceAtt,
+      Resource: metricsAtt,
+      TraceId: spanData.traceId,
+      SpanId: spanData.spanId,
+      SeverityText: severityLevelNames.has(split[2]) ? split[2] : undefined,
+      SeverityNumber: severityNumberMap[split[2]],
+      Body: log.record || '',
+    };
+  });
+};
+
 const createHistogramMetric = ({ name, unit, count, sum, record, attributes }) => ({
   name,
   unit,
@@ -388,6 +451,7 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
     .reduce((arr, originalList) => [...arr, ...originalList], []);
 
 module.exports = {
+  createLogPayload,
   createTracePayload,
   createMetricsPayload,
 };
