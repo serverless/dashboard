@@ -20,6 +20,7 @@ describe('external', () => {
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
     process.env.SLS_OTEL_REPORT_TYPE = 'json';
+    process.env.SLS_TEST_PRINT_LOG_EVENT = true;
     await Promise.all([unlink(SAVE_FILE, { loose: true }), unlink(SENT_FILE, { loose: true })]);
   });
 
@@ -63,6 +64,29 @@ describe('external', () => {
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
       body: JSON.stringify({
+        recordType: 'eventData',
+        record: {
+          eventData: {
+            'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0': {
+              functionName: 'testFunction',
+              computeCustomEnvArch: 'x86',
+              computeRegion: 'us-east-1',
+              eventCustomApiId: 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0',
+            },
+          },
+          span: {
+            traceId: 'trace-123',
+            spanId: 'span-123',
+          },
+        },
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+      method: 'post',
+      body: JSON.stringify({
         recordType: 'telemetryData',
         record:
           '2022-02-14T13:01:30.307Z\tbf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0\tINFO\t⚡.H4sIAAAAAAAAA+1VXW/bNhT9K4Owx0omqW8VARa0HhAsCwrbKwoUhXFFXqVaJdIjKc9Zkf8+UnJsx3WxPOxpGPx27+HRued++GvQDJLbVsmg+hoY1NuWYyShx6AKLBobKotdiDuL0jhUaAbO0Zjglct22KPVD5ERX6IO5P0A9/6ZVAJ//xaxJ1UblIfEN6AtajOKCWhEIuryvFODiDZabVuB2iXgT3MMd2AbpfspvO6grwUcshrvJ67BhAiuFs/XAJiXFTgij4J+vL1ezZcrl3BiPCTatCKoaHEM4A75YKHuDhbOtqBn3ptZ3cqZd+bkPVd9D1I8wfQgbdvjrJUCd9Ho4Bly3bXyMusP32NwLzeDxTeDsaq/1r4Q0LJyblWTW9XBnKosWUwpyUieltXTXFT/YNIedvcSR/diFpf68pSbSpgaGk0So2miIppEtIjoeVU/7yW8v9CqPfBX7JV+WLZ/eWLKCpfBrZvDieDDSgPHG9+IhVL2ioYZI5AyyEOaQ55mjFJOiqxmRcJYIiAWr9+Bdu+vWJ3HApuSZhwha5LXS+g3HYorcq7yVt0vrUbo904xwtiMsBlNZh/3ej9BWfAkiUmDSZM0aQkEayLijIjSaYjFOedcbq81/+zYdlnyVNPqYeP45dB1z4pc4B+Da85YZd0UNW9SFjYNScOkiUlYpJyHBRR1TYHlgCf6b8wb1YmlBW2DyuoBn/G+VT208vsfXLluzjfKq5wgxhOtxh7TLEmKJM6Kgia5eyzF83hJWEpdXGvlNr+Bzrhvf7Z248TYwcly61QxQh7dGfEtNP6IaTRq0ByXG5Au8PEY+f/E/QdPnOt9K40by96ZDv4O3La1Brfth/5fzvtp2Jfw07OOzc7wofM9PPh+dItEzF8jJ8AcPmUPlyTNKcckY0DdbGOJKU+LTKRJztIySak3yT8bsaKJgYumrktWCEj8eXpR+760o7XLd9d3619u7t6ul/PF+/kiOFmy32S7uwOp/LidbluW0oz4Jd8v3QXcuH15SeIRB9bqtnbnYFyycXCmWZjMeOFJGd/5mfp3/4WmZQDOlRuPif+UJpiuRmTGs7HmJ3djCrmSHh8/jb/HvwF/juUcEwkAAA==',
@@ -72,6 +96,11 @@ describe('external', () => {
       },
     });
     emitter.emit('logs', [
+      {
+        time: '2022-02-14T15:31:26.713Z',
+        type: 'function',
+        record: '2022-02-14T13:01:30.307Z\tbf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0\tINFO\tHi mom',
+      },
       {
         time: '2022-02-14T15:31:26.713Z',
         type: 'platform.runtimeDone',
@@ -108,7 +137,7 @@ describe('external', () => {
     server.close();
 
     log.debug('report string %s', stdoutData);
-    const [[metricsReport], [tracesReport]] = stdoutData
+    const [[metricsReport], [tracesReport], [logReport]] = stdoutData
       .split('\n')
       .filter(Boolean)
       .map((string) => JSON.parse(string));
@@ -121,5 +150,11 @@ describe('external', () => {
       tracesReport.resourceSpans[0].resource.attributes
     );
     expect(resourceSpans['faas.name']).to.equal('test-otel-extension-success');
+
+    expect(logReport.Body).to.equal(
+      '2022-02-14T13:01:30.307Z\tbf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0\tINFO\tHi mom'
+    );
+    expect(logReport.Attributes['faas.name']).to.equal('testFunction');
+    expect(logReport.Resource['faas.arch']).to.equal('x86');
   });
 });

@@ -93,32 +93,36 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
 };
 
 const processLogData = async (data, { url }) => {
-  const headers = {
-    'accept-encoding': 'gzip',
-    'content-type': 'application/json',
-    ...EXTRA_REQUEST_HEADERS,
-  };
-  const options = {
-    method: 'post',
-    body: JSON.stringify(data),
-    headers,
-  };
-  logMessage('Log Post', url, JSON.stringify(options));
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    process._rawDebug(
-      'Ingestion server error',
-      JSON.stringify({
-        request: {
-          url,
-          headers,
-        },
-        response: {
-          status: res.status,
-          text: await res.text(),
-        },
-      })
-    );
+  if (url) {
+    const headers = {
+      'accept-encoding': 'gzip',
+      'content-type': 'application/json',
+      ...EXTRA_REQUEST_HEADERS,
+    };
+    const options = {
+      method: 'post',
+      body: JSON.stringify(data),
+      headers,
+    };
+    logMessage('Log Post', url, JSON.stringify(options));
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      process._rawDebug(
+        'Ingestion server error',
+        JSON.stringify({
+          request: {
+            url,
+            headers,
+          },
+          response: {
+            status: res.status,
+            text: await res.text(),
+          },
+        })
+      );
+    }
+  } else if (process.env.SLS_TEST_PRINT_LOG_EVENT) {
+    console.log(REPORT_TYPE === 'json' ? JSON.stringify(data) : data);
   }
 };
 
