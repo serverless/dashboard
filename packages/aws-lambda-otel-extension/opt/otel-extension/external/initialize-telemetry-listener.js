@@ -5,9 +5,13 @@ const { logMessage } = require('../lib/helper');
 const { SAVE_FILE } = require('./helper');
 const { writeFileSync } = require('fs');
 
-// mainEventData is assigned in this file and then used in the parent file
-// eslint-disable-next-line no-unused-vars
-function customListen({ port, logsQueue, mainEventData, callback, liveLogCallback }) {
+function initializeTelemetryListener({
+  port,
+  logsQueue,
+  mainEventData,
+  callback,
+  liveLogCallback,
+}) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
     if (request.method === 'POST') {
@@ -48,6 +52,4 @@ function customListen({ port, logsQueue, mainEventData, callback, liveLogCallbac
   return { logsQueue, server };
 }
 
-module.exports = {
-  customListen,
-};
+module.exports = initializeTelemetryListener;

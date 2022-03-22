@@ -9,7 +9,7 @@ const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
 const { listen } = require('./lambda-apis/http-listener');
-const { customListen } = require('./custom-http-listener');
+const initializeTelemetryListener = require('./initialize-telemetry-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
 const {
@@ -238,7 +238,7 @@ module.exports = (async function main() {
     }
   };
 
-  const { server: otelServer } = customListen({
+  const { server: otelServer } = initializeTelemetryListener({
     logsQueue,
     port: OTEL_SERVER_PORT,
     mainEventData,
