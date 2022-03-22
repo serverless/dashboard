@@ -107,8 +107,8 @@ const resourceAttributes = [
   },
   {
     key: 'faas.collector_version',
-    value: '@serverless/aws-lambda-otel-extension-0.2.3',
-    source: '@serverless/aws-lambda-otel-extension-0.2.3',
+    value: '@serverless/aws-lambda-otel-extension-0.2.4',
+    source: '@serverless/aws-lambda-otel-extension-0.2.4',
     type: 'stringValue',
   },
 ];

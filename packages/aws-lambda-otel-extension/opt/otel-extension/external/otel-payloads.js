@@ -131,7 +131,7 @@ const createLogPayload = (fun, logs) => {
   const metricsAtt = {};
   for (const attribute of createMetricAttributes({ record: fun.eventData[key] }, {})) {
     if (!metricAttributeNames.has(attribute.key)) continue;
-    metricsAtt[attribute.key] = attribute.value;
+    metricsAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
 
   const resourceAttributeNames = new Set([
@@ -153,7 +153,7 @@ const createLogPayload = (fun, logs) => {
   const resourceAtt = {};
   for (const attribute of createResourceAttributes({ record: fun.eventData[key] }, {})) {
     if (!resourceAttributeNames.has(attribute.key)) continue;
-    resourceAtt[attribute.key] = attribute.value;
+    resourceAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
 
   const severityNumberMap = {
