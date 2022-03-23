@@ -11,7 +11,7 @@ Welcome to Serveless Console.
 The next generation monitoring tool for Teams 
 building with Serverless architectures. The easiest way 
 to get started with Serverless Console is using the 
-latest version of Serverless Framework (v3.7.6+ required).
+latest version of Serverless Framework (v3.8+ required).
 **Note:** Only Node.js is supported at this time. 
 
 ```text
@@ -38,32 +38,16 @@ frameworkVersion: '3'
 
 **Note:** If you are using Serveless Dashboard features be sure to keep the
 dashboard property set to true. This will give you access to existing dashboard
-features like Providers. 
+features like Providers, Parameters and Secrets. 
 
-**Setting up a new project from a template**
-To start with a new example project, just run the following where you want to
-create your project.
+**Invoke your function, and login to Serverless Console**
+Once you have deployed your function, do the following to start using Serveless Console.
 
-```text
-serverless --console
-```
+1. Login to [Serverless Console](https://console.serverless.com) 
+1. Invoke your function, or hit you API Endpoint
 
-This will begin an interactive onboarding experience, which creates your first
-Serverless Framwork project.
+It may take a second for the first data point to show up,
+but will speed up considerably from there. Each time you invoke
+one of your instrumented functions, we receive [Traces](./concepts/traces.md) in Console. 
 
-```text
-Creating a new serverless project
-
-? What do you want to make? (Use arrow keys)
-❯ AWS - Node.js - Starter
-  AWS - Node.js - HTTP API
-  AWS - Node.js - Scheduled Task
-  AWS - Node.js - SQS Worker
-  AWS - Node.js - Express API
-  AWS - Node.js - Express API with DynamoDB
-  Other
-```
-
-After your app is deployed, hitting the endpoint from the previous command will
-start producing [Traces](./concepts/traces.md) in Console. For more details see 
-our [concepts section](./concepts) or learn about using [Serverles Console](./using/).
+For more details see our [concepts section](./concepts) or learn about using [Serverles Console](./using/).
