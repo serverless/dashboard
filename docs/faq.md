@@ -99,6 +99,11 @@ serverless \
     --console
 ```
 
+**I am not seeing all my details from API-Gateway?**
+At this time some details from API gateway are not collected. This means
+some errors are not recorded in a Trace. We recommend using a framework
+like Express to assist with capturing a errors.
+
 **What languages and runtimes are supported?**
 
 Currently Serverless Console only supports Node.js on AWS Lambda.
@@ -107,9 +112,9 @@ Currently Serverless Console only supports Node.js on AWS Lambda.
 
 Trouble shooting and finding API errors is a valuable way to use Serveless
 Console. To identify API Errors, select the HTTP status codes and filter for
-500 or other status codes you are interested in visualizing. We recommend [saving a custom view](using/metrics.md)
-of your non 200 status code across in your production envorionments across your
-org. 
+500 or other status codes you are interested in visualizing. We recommend 
+[saving a custom view](using/metrics.md)of your non 200 status code across 
+in your production envorionments across your org. 
 
 You can use this view to quickly identify anomolies, and then locate the
 underlying [Trace](using/traces.md) that caused the problem.
