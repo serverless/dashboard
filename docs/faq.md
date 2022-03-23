@@ -102,7 +102,7 @@ serverless \
 **I am not seeing all my details from API-Gateway?**
 At this time some details from API gateway are not collected. This means
 some errors are not recorded in a Trace. We recommend using a framework
-like Express to assist with capturing a errors.
+like [Express](../guide/esbuild.md) to assist with capturing a errors.
 
 **What languages and runtimes are supported?**
 
@@ -155,9 +155,3 @@ anouncing final pricing after our private preview is over.
 We store a limited set of specified [metrics](concepts/metrics.md) and [tags](/concepts/tags.md)
 in our systems for up to 30 days. While this does include meta data about your
 systems limited sensitive information is included.
-
-**How secure is Serverless Console?**
-
-Serverless Console is architected with Tenant isolation, and no trust models in
-mind. We collect very limited data with potential for PII or other sensitive
-information and plan to get SOX compliance for our General Availability. 
