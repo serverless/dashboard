@@ -34,8 +34,12 @@ org: myorg
 # Console flag (required true)
 console: true
 
-# Dashboard flag (optional - set if you are using serverless dashboard features)
-dashboard: true
+# App is an optional property that will allow you to use dashboard properties
+app: my-app
+
+# dashboard disable monitporing allows you to use dashboard features without sending monitoring data to dashboard
+dashboard:
+  disableMonitoring: true
 
 # Service name (required)
 service: myservice
@@ -60,12 +64,12 @@ severless deploy --stage #included as environment
 
 Serverless Console is a new stand alone product, but can leverage functionality
 from Serverless Dashboard like parameters, providers and secrets. To take
-advantage of these features be sure to set the dashboard flag in your
+advantage of these features be sure to set the app property in your
 serverless.yaml.
 
 ```yaml
 org: myorg
-dashboard: true
+app: my-app
 console: true
 service: myservice
 frameworkVersion: '3'
