@@ -177,6 +177,7 @@ const createLogPayload = (fun, logs) => {
       SeverityText: severityLevelNames.has(split[2]) ? split[2] : undefined,
       SeverityNumber: severityNumberMap[split[2]],
       Body: log.record || '',
+      order: process.hrtime.bigint().toString(),
     };
   });
 };
