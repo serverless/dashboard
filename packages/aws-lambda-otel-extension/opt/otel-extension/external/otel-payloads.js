@@ -168,6 +168,11 @@ const createLogPayload = (fun, logs) => {
 
   return logs.map((log) => {
     const split = (log.record || '').split('\t');
+    let body = log.record || '';
+    // check for larger than 3 parts and if (3) is severity text
+    if (split.length > 3 && severityLevelNames.has(split[2])) {
+      body = split.slice(3).join('\t');
+    }
     return {
       Timestamp: split[0] ? new Date(split[0]).getTime() : new Date().getTime(),
       Attributes: resourceAtt,
@@ -176,7 +181,7 @@ const createLogPayload = (fun, logs) => {
       SpanId: spanData.spanId,
       SeverityText: severityLevelNames.has(split[2]) ? split[2] : undefined,
       SeverityNumber: severityNumberMap[split[2]],
-      Body: log.record || '',
+      Body: body,
     };
   });
 };
