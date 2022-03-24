@@ -151,9 +151,7 @@ describe('external', () => {
     );
     expect(resourceSpans['faas.name']).to.equal('test-otel-extension-success');
 
-    expect(logReport.Body).to.equal(
-      '2022-02-14T13:01:30.307Z\tbf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0\tINFO\tHi mom'
-    );
+    expect(logReport.Body).to.equal('Hi mom');
     expect(logReport.Attributes['faas.name']).to.equal('testFunction');
     expect(logReport.Resource['faas.arch']).to.equal('x86');
   });
