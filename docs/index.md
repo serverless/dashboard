@@ -28,16 +28,16 @@ serverless --console
 This will set the following in your Serverless project. 
 
 ```yaml
-dashboard: true
 console: true
 org: my-org
+app: my-app
 service: my-aws-node-project
 
 frameworkVersion: '3'
 ```
 
 **Note:** If you are using Serveless Dashboard features be sure to keep the
-dashboard property set to true. This will give you access to existing dashboard
+app property set. This will give you access to existing dashboard
 features like Providers, Parameters and Secrets. 
 
 **Invoke your function, and login to Serverless Console**
