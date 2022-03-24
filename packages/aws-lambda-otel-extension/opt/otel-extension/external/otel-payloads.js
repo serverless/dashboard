@@ -169,7 +169,7 @@ const createLogPayload = (fun, logs) => {
   return logs.map((log) => {
     const split = (log.record || '').split('\t');
     return {
-      Timestamp: split[0] ? new Date(split[0]).getTime() : new Date().getTime(),
+      Timestamp: new Date(log.time).getTime(),
       Attributes: resourceAtt,
       Resource: metricsAtt,
       TraceId: spanData.traceId,
@@ -177,6 +177,7 @@ const createLogPayload = (fun, logs) => {
       SeverityText: severityLevelNames.has(split[2]) ? split[2] : undefined,
       SeverityNumber: severityNumberMap[split[2]],
       Body: log.record || '',
+      ProcessingOrderId: process.hrtime.bigint().toString(),
     };
   });
 };

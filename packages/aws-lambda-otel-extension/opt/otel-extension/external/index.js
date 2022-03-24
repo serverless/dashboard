@@ -253,7 +253,6 @@ module.exports = (async function main() {
   const { server } = listen({
     port: RECEIVER_PORT,
     address: receiverAddress(),
-    mainEventData,
     logsQueue,
     liveLogData,
     liveLogCallback: postLiveLogs,
