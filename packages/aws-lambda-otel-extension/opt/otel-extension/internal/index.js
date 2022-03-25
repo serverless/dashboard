@@ -321,8 +321,8 @@ const instrumentations = [
         eventData[context.awsRequestId].eventSource = 'aws.apigateway';
         eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
         const routeKey = event.requestContext.routeKey;
-        const path = routeKey.split(' ')[1] || event.requestContext.routeKey;
-        eventData[context.awsRequestId].httpPath = path;
+        eventData[context.awsRequestId].httpPath =
+          routeKey.split(' ')[1] || event.requestContext.routeKey;
         eventData[context.awsRequestId].rawHttpPath = event.rawPath;
         eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
         eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
