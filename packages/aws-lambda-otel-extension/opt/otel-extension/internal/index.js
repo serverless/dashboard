@@ -1,5 +1,7 @@
 'use strict';
 
+if (!process.env._HANDLER.includes('.')) return; // Bad handler, let error naturally surface
+
 const { gzipSync } = require('zlib');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
