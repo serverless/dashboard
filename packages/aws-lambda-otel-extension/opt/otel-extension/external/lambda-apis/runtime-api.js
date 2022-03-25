@@ -24,6 +24,22 @@ async function getEventData() {
   };
 }
 
+async function getRuntimeEventData() {
+  const res = await fetch(`${baseUrl}/invocation/next`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    console.error('next failed', await res.text());
+    return null;
+  }
+
+  return res;
+}
+
 async function getResponse(requestId) {
   const res = await fetch(`${baseUrl}/invocation/${requestId}/response`, {
     method: 'POST',
@@ -44,4 +60,5 @@ async function getResponse(requestId) {
 module.exports = {
   getEventData,
   getResponse,
+  getRuntimeEventData,
 };

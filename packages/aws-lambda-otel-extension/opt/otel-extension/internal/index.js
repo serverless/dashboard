@@ -22,6 +22,7 @@ const { MySQLInstrumentation } = require('@opentelemetry/instrumentation-mysql')
 const { NetInstrumentation } = require('@opentelemetry/instrumentation-net');
 const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
 const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
+const { FastifyInstrumentation } = require('@opentelemetry/instrumentation-fastify');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const fetch = require('node-fetch');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
@@ -363,6 +364,7 @@ const instrumentations = [
   new NetInstrumentation(),
   new PgInstrumentation(),
   new RedisInstrumentation(),
+  new FastifyInstrumentation(),
 ];
 
 // Register instrumentations synchronously to ensure code is patched even before provider is ready.
