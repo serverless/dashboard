@@ -24,7 +24,9 @@ function initializeTelemetryListener({
           const data = JSON.parse(body);
           logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(data));
           if (data && data.recordType === 'eventData') {
-            mainEventData.data = data.record;
+            mainEventData.data = {
+              [Object.keys(data.record.eventData)[0]]: data.record,
+            };
           } else if (data && data.recordType === 'telemetryData') {
             logsQueue.push([data]);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));

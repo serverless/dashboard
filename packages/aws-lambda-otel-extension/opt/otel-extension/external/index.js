@@ -9,6 +9,7 @@ const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
 const { subscribe } = require('./lambda-apis/logs-api');
 const { listen } = require('./lambda-apis/http-listener');
+const { getRuntimeEventData } = require('./lambda-apis/runtime-api');
 const initializeTelemetryListener = require('./initialize-telemetry-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
@@ -56,6 +57,7 @@ if (existsSync(SENT_FILE)) {
 module.exports = (async function main() {
   const extensionId = await register();
   let receivedData = false;
+  let currentRequestId;
 
   const groupLogs = async (logList) => {
     logMessage('LOGS: ', JSON.stringify(logList));
@@ -227,11 +229,25 @@ module.exports = (async function main() {
   }
 
   const postLiveLogs = async () => {
-    if (liveLogData.logs.length > 0 && Object.keys(mainEventData.data).length > 0) {
+    // Check that we have logs in the queue
+    // Check that we have a currentRequestId identified
+    // Check that we have event data associated with the currentRequestId
+    logMessage(
+      'Post Live Log Check',
+      liveLogData.logs.length,
+      currentRequestId,
+      JSON.stringify(mainEventData.data)
+    );
+    if (
+      liveLogData.logs.length > 0 &&
+      currentRequestId &&
+      Object.keys(mainEventData.data).length > 0 &&
+      Object.keys(mainEventData.data[currentRequestId] || {}).length > 0
+    ) {
       const sendData = [...liveLogData.logs];
       liveLogData.logs = [];
       try {
-        await reportOtelData.logs(createLogPayload(mainEventData.data, sendData));
+        await reportOtelData.logs(createLogPayload(mainEventData.data[currentRequestId], sendData));
       } catch (error) {
         logMessage('Failed to send logs', error);
       }
@@ -276,6 +292,10 @@ module.exports = (async function main() {
   while (true) {
     logMessage('Waiting for next event');
     const event = await next(extensionId);
+    const eventData = await getRuntimeEventData();
+    if (eventData) {
+      currentRequestId = eventData.headers.get('Lambda-Runtime-Aws-Request-Id');
+    }
     logMessage('Processing event: ', event.eventType);
     if (event.eventType === EventType.SHUTDOWN) {
       const initialQueueLength = logsQueue.length;
