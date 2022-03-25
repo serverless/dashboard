@@ -72,6 +72,7 @@ describe('internal', () => {
               {},
               {
                 awsRequestId: '123',
+                functionName: 'callback-success',
                 invokedFunctionArn:
                   'arn:aws:lambda:us-east-1:123456789012:function:callback-success',
                 getRemainingTimeInMillis: () => 3000,
