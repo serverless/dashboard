@@ -38,7 +38,7 @@ describe('external', () => {
     );
 
     await new Promise((resolve) => listenerEmitter.once('listener', resolve));
-    emitter.emit('event', { eventType: 'INVOKE' });
+    emitter.emit('event', { eventType: 'INVOKE', requestId });
 
     emitter.emit('logs', [
       {
@@ -61,7 +61,7 @@ describe('external', () => {
     ]);
     // Emit init logs
     await new Promise((resolve) => listenerEmitter.once('listener', resolve));
-    emitter.emit('event', { eventType: 'SHUTDOWN' });
+    emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
       body: JSON.stringify({
