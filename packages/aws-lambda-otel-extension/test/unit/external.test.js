@@ -137,10 +137,12 @@ describe('external', () => {
     server.close();
 
     log.debug('report string %s', stdoutData);
-    const [[metricsReport], [tracesReport], [logReport]] = stdoutData
+    const reportData = stdoutData
       .split('\n')
       .filter(Boolean)
       .map((string) => JSON.parse(string));
+    log.debug('report data %o', reportData);
+    const [[metricsReport], [tracesReport], [logReport]] = reportData;
 
     const resourceMetrics = normalizeOtelAttributes(
       metricsReport.resourceMetrics[0].resource.attributes
