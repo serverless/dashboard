@@ -1,6 +1,6 @@
 'use strict';
 
-if (!process.env._HANDLER.includes('.')) return; // Bad handler, let error naturally surface
+if (!require('./prepare-wrapper')()) return; // Bad handler, let error naturally surface
 
 const { gzipSync } = require('zlib');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
@@ -10,7 +10,6 @@ const { detectResources, envDetector, processDetector } = require('@opentelemetr
 const { AwsInstrumentation } = require('@opentelemetry/instrumentation-aws-sdk');
 const { getEnv } = require('@opentelemetry/core');
 const { awsLambdaDetector } = require('@opentelemetry/resource-detector-aws');
-const { AwsLambdaInstrumentation } = require('@opentelemetry/instrumentation-aws-lambda');
 const { DnsInstrumentation } = require('@opentelemetry/instrumentation-dns');
 const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
 const { GraphQLInstrumentation } = require('@opentelemetry/instrumentation-graphql');
@@ -25,6 +24,7 @@ const { NetInstrumentation } = require('@opentelemetry/instrumentation-net');
 const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
 const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
 const { FastifyInstrumentation } = require('@opentelemetry/instrumentation-fastify');
+const AwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const fetch = require('node-fetch');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');

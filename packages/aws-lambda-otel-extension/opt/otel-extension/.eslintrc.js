@@ -16,4 +16,10 @@ module.exports = {
     ],
     'no-console': 'off',
   },
+  overrides: [
+    {
+      files: ['internal/prepare-wrapper.js'],
+      parserOptions: { ecmaVersion: 2020 },
+    },
+  ],
 };
