@@ -4,11 +4,11 @@
     "@opentelemetry/core": "^1.0.1",
     "@opentelemetry/instrumentation": "^0.27.0",
     "@opentelemetry/instrumentation-aws-lambda": "^0.28.1",
-    "@opentelemetry/instrumentation-aws-sdk": "^0.5.0",
+    "@opentelemetry/instrumentation-aws-sdk": "^0.5.1",
     "@opentelemetry/instrumentation-dns": "^0.27.1",
     "@opentelemetry/instrumentation-express": "^0.27.1",
     "@opentelemetry/instrumentation-fastify": "^0.26.0",
-    "@opentelemetry/instrumentation-graphql": "^0.27.3",
+    "@opentelemetry/instrumentation-graphql": "^0.27.4",
     "@opentelemetry/instrumentation-grpc": "^0.27.0",
     "@opentelemetry/instrumentation-hapi": "^0.27.1",
     "@opentelemetry/instrumentation-http": "^0.27.0",
@@ -25,7 +25,7 @@
     "@opentelemetry/sdk-trace-node": "^1.0.1",
     "lodash.clone": "^4.5.0",
     "lodash.get": "^4.4.2",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "protobufjs": "^6.11.2",
     "uuid": "^8.3.2"
   }
