@@ -68,7 +68,7 @@ describe('internal', () => {
         requireUncached(async () => {
           await require('../../../opt/otel-extension/internal');
           await new Promise((resolve) => {
-            require(path.resolve(lambdaFixturesDirname, 'callback-success.js')).handler(
+            require('../../../opt/otel-extension/internal/wrapper').handler(
               {},
               {
                 awsRequestId: '123',
