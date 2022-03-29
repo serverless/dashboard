@@ -195,25 +195,27 @@ describe('integration', function () {
     ]);
   });
 
-  describe('callback-success', () => {
-    let reports;
-    before(async () => {
-      reports = await processFunction('callback-success');
-      log.debug('resolved reports %o', reports);
+  for (const functionName of ['callback-success', 'esbuild-esm-callback-success']) {
+    describe(functionName, () => {
+      let reports;
+      before(async () => {
+        reports = await processFunction(functionName);
+        log.debug('resolved reports %o', reports);
+      });
+      it('test', () => {
+        const metricsReport = reports.find((reportArr) => !!('resourceMetrics' in reportArr[0]))[0];
+        const tracesReport = reports.find((reportArr) => !!('resourceSpans' in reportArr[0]))[0];
+        const resourceMetrics = normalizeOtelAttributes(
+          metricsReport.resourceMetrics[0].resource.attributes
+        );
+        expect(resourceMetrics['faas.name']).to.equal(`${name}-${functionName}`);
+        const resourceSpans = normalizeOtelAttributes(
+          tracesReport.resourceSpans[0].resource.attributes
+        );
+        expect(resourceSpans['faas.name']).to.equal(`${name}-${functionName}`);
+      });
     });
-    it('test', () => {
-      const metricsReport = reports.find((reportArr) => !!('resourceMetrics' in reportArr[0]))[0];
-      const tracesReport = reports.find((reportArr) => !!('resourceSpans' in reportArr[0]))[0];
-      const resourceMetrics = normalizeOtelAttributes(
-        metricsReport.resourceMetrics[0].resource.attributes
-      );
-      expect(resourceMetrics['faas.name']).to.equal(`${name}-callback-success`);
-      const resourceSpans = normalizeOtelAttributes(
-        tracesReport.resourceSpans[0].resource.attributes
-      );
-      expect(resourceSpans['faas.name']).to.equal(`${name}-callback-success`);
-    });
-  });
+  }
 
   after(async () => {
     const deleteBucket = async () => {

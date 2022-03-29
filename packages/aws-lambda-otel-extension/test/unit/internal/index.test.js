@@ -94,6 +94,17 @@ describe('internal', () => {
     process.env.AWS_REGION = 'us-east-1';
     process.env.LAMBDA_TASK_ROOT = lambdaFixturesDirname;
   });
+  afterEach(() => {
+    delete process.env._HANDLER;
+    delete process.env.AWS_LAMBDA_FUNCTION_NAME;
+    delete globalThis[
+      Object.getOwnPropertySymbols(globalThis).find((symbol) =>
+        symbol.description.includes('opentelemetry')
+      )
+    ];
+  });
 
   it('should handle plain success invocation', async () => handleSuccess('callback-success'));
+  it('should handle esbuild ESM bundle result', async () =>
+    handleSuccess('esbuild-esm-callback-success'));
 });
