@@ -8,8 +8,7 @@ const http = require('http');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 
-module.exports = (emitter, options) => {
-  const fixedRequestId = (options || {}).requestId;
+module.exports = (emitter) => {
   const lambdaExtensionIdentifier = uuidv4();
 
   let logsUrl;
@@ -58,29 +57,7 @@ module.exports = (emitter, options) => {
           response.writeHead(statusCode, headers);
           response.end(responseBodyString);
         });
-      } else if (request.url.endsWith('/invocation/next') && request.method === 'GET') {
-        request.on('data', () => {});
-        request.on('end', () => {
-          const statusCode = 200;
-          const responseBody = { event: true };
-          const responseBodyString = JSON.stringify(responseBody);
-          const headers = {
-            'content-type': 'application/json',
-            'Lambda-Runtime-Aws-Request-Id': fixedRequestId,
-            'date': 'Mon, 14 Feb 2022 15:29:54 GMT',
-            'connection': 'close',
-            'content-length': Buffer.byteLength(responseBodyString),
-          };
-
-          log.get('response')('%d %o %o', statusCode, headers, responseBody);
-          response.writeHead(statusCode, headers);
-          response.end(responseBodyString);
-          /* log.get('invokeListener')('emit');
-          listenerEmitter.emit('invokeListener');
-          emitter.once('invocation', (data) => {
-          }); */
-        });
-      } else if (request.url.endsWith('/event/next') && request.method === 'GET') {
+      } else if (request.url.endsWith('/next') && request.method === 'GET') {
         expect(request.headers['lambda-extension-identifier']).to.equal(lambdaExtensionIdentifier);
         request.on('data', () => {});
         request.on('end', () => {
