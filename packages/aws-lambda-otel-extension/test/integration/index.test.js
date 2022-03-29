@@ -29,8 +29,11 @@ describe('integration', function () {
   let lambdasCodeZipBuffer;
   let roleArn;
 
-  const processFunction = async (handlerName) => {
-    const functionName = `${name}-${handlerName}`;
+  const processFunction = async (handlerModuleName) => {
+    const functionBasename = handlerModuleName.includes(path.sep)
+      ? path.dirname(handlerModuleName)
+      : handlerModuleName;
+    const functionName = `${name}-${functionBasename}`;
     const createFunction = async () => {
       try {
         await lambda.createFunction({
@@ -38,7 +41,7 @@ describe('integration', function () {
             ZipFile: lambdasCodeZipBuffer,
           },
           FunctionName: functionName,
-          Handler: `${handlerName}.handler`,
+          Handler: `${handlerModuleName}.handler`,
           Role: roleArn,
           Runtime: 'nodejs14.x',
           Environment: {
@@ -80,27 +83,27 @@ describe('integration', function () {
       await lambda.deleteFunction({ FunctionName: functionName });
     };
 
-    log.info('Create function %s', handlerName);
+    log.info('Create function %s', functionBasename);
     await createFunction();
-    log.info('Wait for function to be active %s', handlerName);
+    log.info('Wait for function to be active %s', functionBasename);
     await ensureIsActive();
-    log.info('Invoke function %s', handlerName);
+    log.info('Invoke function %s', functionBasename);
     await invokeFunction();
 
     let objects;
     do {
-      log.info('Invoke function again %s', handlerName);
+      log.info('Invoke function again %s', functionBasename);
       await invokeFunction();
       await wait(1000);
-      log.info('Retrieve list of generated S3 objects %s', handlerName);
+      log.info('Retrieve list of generated S3 objects %s', functionBasename);
       objects = ((await s3.listObjectsV2({ Bucket: name })).Contents || [])
         .map((object) => object.Key)
         .filter((key) => key.startsWith(`${functionName}/`));
     } while (!objects.length);
 
-    log.info('Delete function %s', handlerName);
+    log.info('Delete function %s', functionBasename);
     await deleteFunction();
-    log.info('Retrieve body of generated S3 objects %s', handlerName);
+    log.info('Retrieve body of generated S3 objects %s', functionBasename);
     return Promise.all(
       objects.map(async (objectKey) =>
         JSON.parse(
@@ -195,11 +198,18 @@ describe('integration', function () {
     ]);
   });
 
-  for (const functionName of ['callback-success', 'esbuild-esm-callback-success']) {
-    describe(functionName, () => {
+  for (const handlerModuleName of [
+    'callback-success',
+    'esbuild-esm-callback-success',
+    'esm-callback-success/index',
+  ]) {
+    const functionBasename = handlerModuleName.includes(path.sep)
+      ? path.dirname(handlerModuleName)
+      : handlerModuleName;
+    describe(functionBasename, () => {
       let reports;
       before(async () => {
-        reports = await processFunction(functionName);
+        reports = await processFunction(handlerModuleName);
         log.debug('resolved reports %o', reports);
       });
       it('test', () => {
@@ -208,11 +218,11 @@ describe('integration', function () {
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );
-        expect(resourceMetrics['faas.name']).to.equal(`${name}-${functionName}`);
+        expect(resourceMetrics['faas.name']).to.equal(`${name}-${functionBasename}`);
         const resourceSpans = normalizeOtelAttributes(
           tracesReport.resourceSpans[0].resource.attributes
         );
-        expect(resourceSpans['faas.name']).to.equal(`${name}-${functionName}`);
+        expect(resourceSpans['faas.name']).to.equal(`${name}-${functionBasename}`);
       });
     });
   }

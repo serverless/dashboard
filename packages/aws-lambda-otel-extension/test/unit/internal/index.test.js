@@ -10,10 +10,13 @@ const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
 
-const lambdaFixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
+const fixturesDirname = path.resolve(__dirname, '../../fixtures');
 
-const handleSuccess = async (functionName) => {
-  process.env._HANDLER = `${functionName}.handler`;
+const handleSuccess = async (handlerModuleName) => {
+  process.env._HANDLER = `${handlerModuleName}.handler`;
+  const functionName = handlerModuleName.includes(path.sep)
+    ? path.dirname(handlerModuleName)
+    : handlerModuleName;
   process.env.AWS_LAMBDA_FUNCTION_NAME = functionName;
   let stdoutData = '';
 
@@ -96,7 +99,8 @@ describe('internal', () => {
   before(() => {
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_REGION = 'us-east-1';
-    process.env.LAMBDA_TASK_ROOT = lambdaFixturesDirname;
+    process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');
+    process.env.LAMBDA_RUNTIME_DIR = path.resolve(fixturesDirname, 'runtime');
   });
   afterEach(() => {
     delete process.env._HANDLER;
@@ -111,4 +115,5 @@ describe('internal', () => {
   it('should handle plain success invocation', async () => handleSuccess('callback-success'));
   it('should handle esbuild ESM bundle result', async () =>
     handleSuccess('esbuild-esm-callback-success'));
+  it('should handle ESM module', async () => handleSuccess('esm-callback-success/index'));
 });
