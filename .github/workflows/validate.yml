@@ -8,6 +8,7 @@ on:
 
 env:
   FORCE_COLOR: 1
+  FORMAT_INSPECT_DEPTH: 20
 
 jobs:
   linuxNode16:
