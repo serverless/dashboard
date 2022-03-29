@@ -19,50 +19,60 @@ describe('internal', () => {
     process.env.LAMBDA_TASK_ROOT = lambdaFixturesDirname;
   });
 
-  it('should handle plain success invocation', (done) => {
+  it('should handle plain success invocation', async () => {
     process.env._HANDLER = 'callback-success.handler';
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'callback-success';
     let stdoutData = '';
 
     const logsQueue = [];
-    const server = http.createServer((request, response) => {
-      if (request.method === 'POST') {
-        let body = '';
-        request.on('data', (data) => {
-          body += data;
-        });
-        request.on('end', async () => {
-          response.writeHead(200, {});
-          response.end('OK');
-          server.close();
-          const data = JSON.parse(body);
-          logsQueue.push(data);
+    let server;
+    const deferredResultProcessing = new Promise((resolve) => {
+      server = http.createServer((request, response) => {
+        if (request.method === 'POST') {
+          let body = '';
+          request.on('data', (data) => {
+            body += data;
+          });
+          request.on('end', () => {
+            resolve(
+              (async () => {
+                response.writeHead(200, {});
+                response.end('OK');
+                server.close();
+                const data = JSON.parse(body);
+                logsQueue.push(data);
 
-          if (logsQueue.length > 1) {
-            // Validate eventData record for log metadata
-            const logMetadata = logsQueue[0].record;
-            expect(logMetadata.eventData['123']['telemetry.sdk.language']).to.equal('nodejs');
-            expect(logMetadata.eventData['123']['telemetry.sdk.name']).to.equal('opentelemetry');
-            expect(logMetadata.eventData['123']['faas.name']).to.equal('callback-success');
+                if (logsQueue.length > 1) {
+                  // Validate eventData record for log metadata
+                  const logMetadata = logsQueue[0].record;
+                  expect(logMetadata.eventData['123']['telemetry.sdk.language']).to.equal('nodejs');
+                  expect(logMetadata.eventData['123']['telemetry.sdk.name']).to.equal(
+                    'opentelemetry'
+                  );
+                  expect(logMetadata.eventData['123']['faas.name']).to.equal('callback-success');
 
-            // Validate trace record
-            const reportLog = logsQueue[1].record.split('\t')[2];
-            const reportCompressed = reportLog.slice(reportLog.indexOf('⚡.') + 2);
-            const report = JSON.parse(String(await unzip(Buffer.from(reportCompressed, 'base64'))));
-            log.debug('result report: %o', report);
-            expect(report.function['telemetry.sdk.language']).to.equal('nodejs');
-            expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');
-            expect(report.function['faas.name']).to.equal('callback-success');
-            expect(report.function.error).to.equal(false);
-            done();
-          }
-        });
-      }
+                  // Validate trace record
+                  const reportLog = logsQueue[1].record.split('\t')[2];
+                  const reportCompressed = reportLog.slice(reportLog.indexOf('⚡.') + 2);
+                  const report = JSON.parse(
+                    String(await unzip(Buffer.from(reportCompressed, 'base64')))
+                  );
+                  log.debug('result report: %o', report);
+                  expect(report.function['telemetry.sdk.language']).to.equal('nodejs');
+                  expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');
+                  expect(report.function['faas.name']).to.equal('callback-success');
+                  expect(report.function.error).to.equal(false);
+                }
+              })()
+            );
+          });
+        }
+      });
     });
 
     server.listen(OTEL_SERVER_PORT);
 
-    overwriteStdoutWrite(
+    await overwriteStdoutWrite(
       (data) => (stdoutData += data),
       async () =>
         requireUncached(async () => {
@@ -82,5 +92,7 @@ describe('internal', () => {
           });
         })
     );
+
+    await deferredResultProcessing;
   });
 });
