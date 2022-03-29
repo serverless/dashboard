@@ -65,27 +65,31 @@ const handleSuccess = async (functionName) => {
 
   server.listen(OTEL_SERVER_PORT);
 
-  await overwriteStdoutWrite(
-    (data) => (stdoutData += data),
-    async () =>
-      requireUncached(async () => {
-        await require('../../../opt/otel-extension/internal');
-        await new Promise((resolve) => {
-          require('../../../opt/otel-extension/internal/wrapper').handler(
-            {},
-            {
-              awsRequestId: '123',
-              functionName,
-              invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
-              getRemainingTimeInMillis: () => 3000,
-            },
-            resolve
-          );
-        });
-      })
-  );
+  try {
+    await overwriteStdoutWrite(
+      (data) => (stdoutData += data),
+      async () =>
+        requireUncached(async () => {
+          await require('../../../opt/otel-extension/internal');
+          await new Promise((resolve) => {
+            require('../../../opt/otel-extension/internal/wrapper').handler(
+              {},
+              {
+                awsRequestId: '123',
+                functionName,
+                invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
+                getRemainingTimeInMillis: () => 3000,
+              },
+              resolve
+            );
+          });
+        })
+    );
 
-  await deferredResultProcessing;
+    await deferredResultProcessing;
+  } finally {
+    server.close();
+  }
 };
 
 describe('internal', () => {
