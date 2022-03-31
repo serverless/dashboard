@@ -263,6 +263,9 @@ module.exports = (async function main() {
       await uploadLogs(...args);
       receivedData = true;
     },
+    requestResponseCallback: async (data) => {
+      await reportOtelData.requestResponse(data);
+    },
   });
 
   const { server } = listen({

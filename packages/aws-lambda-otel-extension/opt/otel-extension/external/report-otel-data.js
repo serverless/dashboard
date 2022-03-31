@@ -12,6 +12,7 @@ const EXTRA_REQUEST_HEADERS = process.env.SLS_OTEL_REPORT_REQUEST_HEADERS
   : {};
 const S3_BUCKET = process.env.SLS_OTEL_REPORT_S3_BUCKET;
 const LOGS_URL = process.env.SLS_OTEL_REPORT_LOGS_URL;
+const REQUEST_RESPONSE_URL = process.env.SLS_OTEL_REPORT_REQUEST_RESPONSE_URL;
 
 const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // aws-sdk is provided in Lambda runtime
@@ -126,6 +127,38 @@ const processLogData = async (data, { url }) => {
   }
 };
 
+const processRequestResponseEventData = async (data, { url }) => {
+  if (url) {
+    const headers = {
+      'accept-encoding': 'gzip',
+      'content-type': 'application/json',
+      ...EXTRA_REQUEST_HEADERS,
+    };
+    const options = {
+      method: 'post',
+      body: JSON.stringify(data),
+      headers,
+    };
+
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      process._rawDebug(
+        'Ingestion server error',
+        JSON.stringify({
+          request: {
+            url,
+            headers,
+          },
+          response: {
+            status: res.status,
+            text: await res.text(),
+          },
+        })
+      );
+    }
+  }
+};
+
 module.exports = {
   metrics: async (data) =>
     processData(data, {
@@ -146,5 +179,9 @@ module.exports = {
   logs: async (data) =>
     processLogData(data, {
       url: LOGS_URL,
+    }),
+  requestResponse: async (data) =>
+    processRequestResponseEventData(data, {
+      url: REQUEST_RESPONSE_URL,
     }),
 };

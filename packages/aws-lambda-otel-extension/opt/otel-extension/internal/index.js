@@ -73,6 +73,23 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     );
   }
 
+  // Send Lambda Response Payload to external
+  await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+    method: 'post',
+    body: JSON.stringify({
+      recordType: 'requestResponseEventData',
+      record: {
+        responseData: res,
+        errorData: err,
+        executionId,
+        isTimeout,
+      },
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
   const { startTime: st, endTime: et } = spans.reduce(
     (obj, val) => {
       if (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda') {
@@ -341,6 +358,21 @@ const instrumentations = [
               traceId: span.spanContext().traceId,
               spanId: span.spanContext().spanId,
             },
+          },
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Send Lambda Event Payload to external
+      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+        method: 'post',
+        body: JSON.stringify({
+          recordType: 'requestResponseEventData',
+          record: {
+            requestData: event,
+            executionId: context.awsRequestId,
           },
         }),
         headers: {

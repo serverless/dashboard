@@ -11,6 +11,7 @@ function initializeTelemetryListener({
   mainEventData,
   callback,
   liveLogCallback,
+  requestResponseCallback,
 }) {
   // init HTTP server for the Logs API subscription
   const server = http.createServer((request, response) => {
@@ -30,6 +31,8 @@ function initializeTelemetryListener({
           } else if (data && data.recordType === 'telemetryData') {
             logsQueue.push([data]);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+          } else if (data && data.recordType === 'requestResponseEventData') {
+            await requestResponseCallback(data);
           }
 
           if (callback && data.recordType === 'telemetryData') {
