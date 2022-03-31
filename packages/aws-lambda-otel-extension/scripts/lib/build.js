@@ -12,19 +12,21 @@ const rootDir = path.resolve(__dirname, '../../');
 const optDir = path.resolve(rootDir, 'opt');
 const otelExtensionDir = path.resolve(optDir, 'otel-extension');
 
-module.exports = async (distFilename) => {
+module.exports = async (distFilename, options = {}) => {
   const zip = new AdmZip();
   await Promise.all([
     unlink(distFilename, { loose: true }),
     mkdir(path.dirname(distFilename), { intermediate: true, silent: true }),
     (async () => {
-      await rmdir(path.resolve(otelExtensionDir, 'node_modules'), {
-        loose: true,
-        recursive: true,
-        force: true,
-      });
-      await spawn('npm', ['install'], { cwd: otelExtensionDir, stdio: 'inherit' });
-      await unlink(path.resolve(otelExtensionDir, 'package-lock.json'));
+      if (!options.shouldSkipNpmInstall) {
+        await rmdir(path.resolve(otelExtensionDir, 'node_modules'), {
+          loose: true,
+          recursive: true,
+          force: true,
+        });
+        await spawn('npm', ['install'], { cwd: otelExtensionDir, stdio: 'inherit' });
+        await unlink(path.resolve(otelExtensionDir, 'package-lock.json'));
+      }
       for (const relativeFilename of await readdir(optDir, {
         depth: Infinity,
         type: { file: true },
