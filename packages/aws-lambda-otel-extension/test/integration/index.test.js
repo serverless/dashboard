@@ -29,44 +29,17 @@ describe('integration', function () {
   let lambdasCodeZipBuffer;
   let roleArn;
 
+  const handlerModuleNames = [
+    'callback-success',
+    'esbuild-esm-callback-success',
+    'esm-callback-success/index',
+  ];
+
   const processFunction = async (handlerModuleName) => {
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
     const functionName = `${name}-${functionBasename}`;
-    const createFunction = async () => {
-      try {
-        await lambda.createFunction({
-          Code: {
-            ZipFile: lambdasCodeZipBuffer,
-          },
-          FunctionName: functionName,
-          Handler: `${handlerModuleName}.handler`,
-          Role: roleArn,
-          Runtime: 'nodejs14.x',
-          Environment: {
-            Variables: {
-              AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension/internal/exec-wrapper.sh',
-              SLS_OTEL_REPORT_TYPE: 'json',
-              SLS_OTEL_REPORT_S3_BUCKET: name,
-              OTEL_LOG_LEVEL: 'ALL',
-              DEBUG_SLS_OTEL_LAYER: '1',
-            },
-          },
-          Layers: [layerArn],
-        });
-      } catch (error) {
-        if (
-          error.message.includes('The role defined for the function cannot be assumed by Lambda') ||
-          error.message.includes('because the KMS key is invalid for CreateGrant')
-        ) {
-          // Occassional race condition issue on AWS side, retry
-          await createFunction();
-          return;
-        }
-        throw error;
-      }
-    };
     const ensureIsActive = async () => {
       const {
         Configuration: { State: state },
@@ -83,9 +56,7 @@ describe('integration', function () {
       await lambda.deleteFunction({ FunctionName: functionName });
     };
 
-    log.info('Create function %s', functionBasename);
-    await createFunction();
-    log.info('Wait for function to be active %s', functionBasename);
+    log.info('Ensure function is active %s', functionBasename);
     await ensureIsActive();
     log.info('Invoke function %s', functionBasename);
     await invokeFunction();
@@ -190,19 +161,62 @@ describe('integration', function () {
       await iam.attachRolePolicy({ RoleName: name, PolicyArn: policyArn });
       log.info('Attached IAM policy to role');
     };
+
+    const createFunctions = async () => {
+      await Promise.all(
+        handlerModuleNames.map(async function self(handlerModuleName) {
+          const functionBasename = handlerModuleName.includes(path.sep)
+            ? path.dirname(handlerModuleName)
+            : handlerModuleName;
+          const functionName = `${name}-${functionBasename}`;
+          log.info('Create function %s', functionBasename);
+          try {
+            await lambda.createFunction({
+              Code: {
+                ZipFile: lambdasCodeZipBuffer,
+              },
+              FunctionName: functionName,
+              Handler: `${handlerModuleName}.handler`,
+              Role: roleArn,
+              Runtime: 'nodejs14.x',
+              Environment: {
+                Variables: {
+                  AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension/internal/exec-wrapper.sh',
+                  SLS_OTEL_REPORT_TYPE: 'json',
+                  SLS_OTEL_REPORT_S3_BUCKET: name,
+                  OTEL_LOG_LEVEL: 'ALL',
+                  DEBUG_SLS_OTEL_LAYER: '1',
+                },
+              },
+              Layers: [layerArn],
+            });
+          } catch (error) {
+            if (
+              error.message.includes(
+                'The role defined for the function cannot be assumed by Lambda'
+              ) ||
+              error.message.includes('because the KMS key is invalid for CreateGrant')
+            ) {
+              // Occassional race condition issue on AWS side, retry
+              await self();
+              return;
+            }
+            throw error;
+          }
+        })
+      );
+    };
+
     [lambdasCodeZipBuffer] = await Promise.all([
       resolveDirZipBuffer(fixturesDirname),
       createBucket(),
       createLayer(),
       createRole(),
     ]);
+    await createFunctions();
   });
 
-  for (const handlerModuleName of [
-    'callback-success',
-    'esbuild-esm-callback-success',
-    'esm-callback-success/index',
-  ]) {
+  for (const handlerModuleName of handlerModuleNames) {
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
