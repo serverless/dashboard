@@ -30,13 +30,12 @@ This will set the following in your Serverless project.
 ```yaml
 console: true
 org: my-org
-app: my-app
 service: my-aws-node-project
 
 frameworkVersion: '3'
 ```
 
-**Note:** If you are using Serveless Dashboard features be sure to keep the
+**Note:** If you are using Serveless Dashboard features be sure to keep an
 app property set. This will give you access to existing dashboard
 features like Providers, Parameters and Secrets. 
 
