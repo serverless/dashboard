@@ -97,15 +97,17 @@ describe('integration', function () {
       log.info('Created bucket %s', name);
     };
     const createLayer = async () => {
-      log.info('Building layer');
-      await buildLayer(layerFilename, {
-        shouldSkipNpmInstall: process.env.TEST_SKIP_LAYER_NPM_INSTALL,
-      });
+      if (!process.env.TEST_LAYER_FILENAME) {
+        log.info('Building layer');
+        await buildLayer(layerFilename, {
+          shouldSkipNpmInstall: process.env.TEST_SKIP_LAYER_NPM_INSTALL,
+        });
+      }
 
-      log.info('Publishing layer to AWS');
+      log.info('Publishing layer (%s) to AWS', process.env.TEST_LAYER_FILENAME || layerFilename);
       await lambda.publishLayerVersion({
         LayerName: name,
-        Content: { ZipFile: await fsp.readFile(layerFilename) },
+        Content: { ZipFile: await fsp.readFile(process.env.TEST_LAYER_FILENAME || layerFilename) },
       });
       log.info('Resolving layer ARN');
       layerArn = (await lambda.listLayerVersions({ LayerName: name })).LayerVersions.shift()
