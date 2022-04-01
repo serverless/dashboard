@@ -239,30 +239,34 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     )
   );
 
-  const logString = `⚡.${gzipSync(
-    JSON.stringify({
-      function: functionData,
-      traces: {
-        resourceSpans: [
-          {
-            resource: tracerProvider.resource.attributes,
-            instrumentationLibrarySpans: data,
-          },
-        ],
-      },
-    })
-  ).toString('base64')}`;
-
-  await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-    method: 'post',
-    body: JSON.stringify({
-      recordType: 'telemetryData',
-      record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
-    }),
-    headers: {
-      'Content-Type': 'application/json',
+  const telemetryDataPayload = {
+    function: functionData,
+    traces: {
+      resourceSpans: [
+        {
+          resource: tracerProvider.resource.attributes,
+          instrumentationLibrarySpans: data,
+        },
+      ],
     },
-  });
+  };
+  if (process.env.TEST_DRY_LOG) {
+    process._rawDebug(
+      `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
+    );
+  } else {
+    const logString = `⚡.${gzipSync(JSON.stringify(telemetryDataPayload)).toString('base64')}`;
+    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+      method: 'post',
+      body: JSON.stringify({
+        recordType: 'telemetryData',
+        record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 
   // Reset the exporter so we don't see duplicates
   memoryExporter.reset();
@@ -330,23 +334,30 @@ const instrumentations = [
           event.requestContext.timeEpoch;
       }
 
-      // Send request data to external so that we can attach this data to logs
-      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-        method: 'post',
-        body: JSON.stringify({
-          recordType: 'eventData',
-          record: {
-            eventData,
-            span: {
-              traceId: span.spanContext().traceId,
-              spanId: span.spanContext().spanId,
-            },
+      const eventDataPayload = {
+        recordType: 'eventData',
+        record: {
+          eventData,
+          span: {
+            traceId: span.spanContext().traceId,
+            spanId: span.spanContext().spanId,
           },
-        }),
-        headers: {
-          'Content-Type': 'application/json',
         },
-      });
+      };
+      if (process.env.TEST_DRY_LOG) {
+        process._rawDebug(
+          `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
+        );
+      } else {
+        // Send request data to external so that we can attach this data to logs
+        await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+          method: 'post',
+          body: JSON.stringify(eventDataPayload),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
     },
     responseHook: async (span, { err, res }) => {
       clearTimeout(timeoutHandler);
