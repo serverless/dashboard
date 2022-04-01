@@ -9,6 +9,7 @@ const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
+const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependencies');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
 
@@ -97,6 +98,7 @@ const handleSuccess = async (handlerModuleName) => {
 
 describe('internal', () => {
   before(() => {
+    ensureNpmDependencies('opt/otel-extension');
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_REGION = 'us-east-1';
     process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');

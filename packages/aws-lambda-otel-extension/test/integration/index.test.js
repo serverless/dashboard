@@ -99,9 +99,7 @@ describe('integration', function () {
     const createLayer = async () => {
       if (!process.env.TEST_LAYER_FILENAME) {
         log.info('Building layer');
-        await buildLayer(layerFilename, {
-          shouldSkipNpmInstall: process.env.TEST_SKIP_LAYER_NPM_INSTALL,
-        });
+        await buildLayer(layerFilename);
       }
 
       log.info('Publishing layer (%s) to AWS', process.env.TEST_LAYER_FILENAME || layerFilename);
