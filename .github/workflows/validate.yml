@@ -65,15 +65,15 @@ jobs:
           restore-keys: |
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve packages/aws-lambda-otel-extension-dist/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionDistNodeModules
+      - name: Retrieve packages/aws-lambda-otel-extension/test/fixtures/lambdas from cache
+        id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension-dist/node_modules
-          key: packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension-dist/package.json') }}
+          path: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
           restore-keys: |
-            packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
-            packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-refs/heads/main-
+            packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+            packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -94,11 +94,11 @@ jobs:
         run: |
           cd packages/aws-lambda-otel-extension/opt/otel-extension
           npm update --no-save
-      - name: Install packages/aws-lambda-otel-extension-dist dependencies
-        if: steps.cacheAwsLambdaOtelExtensionDistNodeModules.outputs.cache-hit != 'true'
+      - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
+        if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension-dist
-          npm update --save-dev --no-save
+          cd packages/aws-lambda-otel-extension/test/fixtures/lambdas
+          npm update --no-save
 
       - name: Validate Prettier formatting
         run: npm run prettier-check:updated
@@ -152,7 +152,15 @@ jobs:
           restore-keys: |
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-refs/heads/main-
-
+      - name: Retrieve packages/aws-lambda-otel-extension/test/fixtures/lambdas from cache
+        id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
+        uses: actions/cache@v2
+        with:
+          path: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
+          restore-keys: |
+            packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
+            packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-refs/heads/main-
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -172,6 +180,11 @@ jobs:
         if: steps.cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules.outputs.cache-hit != 'true'
         run: |
           cd packages/aws-lambda-otel-extension/opt/otel-extension
+          npm update --no-save
+      - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
+        if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd packages/aws-lambda-otel-extension/test/fixtures/lambdas
           npm update --no-save
 
       - name: Unit tests
