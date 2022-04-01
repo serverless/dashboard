@@ -203,6 +203,12 @@ jobs:
         with:
           path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
           key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
+      - name: Retrieve packages/aws-lambda-otel-extension/test/fixtures/lambdas from cache
+        id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
+        uses: actions/cache@v2
+        with:
+          path: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
