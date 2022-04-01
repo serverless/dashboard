@@ -1,7 +1,5 @@
 'use strict';
 
-if (!require('./prepare-wrapper')()) return; // Bad handler, let error naturally surface
-
 const { gzipSync } = require('zlib');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
@@ -408,3 +406,5 @@ async function initializeProvider() {
 }
 
 module.exports = initializeProvider();
+
+require('./prepare-wrapper')();
