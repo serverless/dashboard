@@ -11,7 +11,8 @@
     "semver": "^7.3.5"
   },
   "devDependencies": {
-    "deasync": "^0.1.24"
+    "deasync": "^0.1.24",
+    "type": "^2.6.0"
   },
   "scripts": {
     "build": "./scripts/build.js",

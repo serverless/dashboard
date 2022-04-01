@@ -5,6 +5,7 @@ const http = require('http');
 const path = require('path');
 const { promisify } = require('util');
 const unzip = promisify(require('zlib').unzip);
+const isThenable = require('type/thenable/is');
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
@@ -72,8 +73,7 @@ const handleSuccess = async (handlerModuleName) => {
     await requireUncached(async () => {
       await require('../../../opt/otel-extension/internal');
       await new Promise((resolve, reject) => {
-        const keepAliveTimeout = setTimeout(() => {}, 2147483647);
-        require('../../../opt/otel-extension/internal/wrapper').handler(
+        const maybeThenable = require('../../../opt/otel-extension/internal/wrapper').handler(
           {},
           {
             awsRequestId: '123',
@@ -82,11 +82,11 @@ const handleSuccess = async (handlerModuleName) => {
             getRemainingTimeInMillis: () => 3000,
           },
           (error, result) => {
-            clearTimeout(keepAliveTimeout);
             if (error) reject(error);
             else resolve(result);
           }
         );
+        if (isThenable(maybeThenable)) resolve(maybeThenable);
       });
     });
 
