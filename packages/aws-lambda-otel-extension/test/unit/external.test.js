@@ -12,11 +12,13 @@ const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const { SAVE_FILE, SENT_FILE } = require('../../opt/otel-extension/external/helper');
 const { default: fetch } = require('node-fetch');
 const { OTEL_SERVER_PORT } = require('../../opt/otel-extension/lib/helper');
+const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 
 const port = 9001;
 
 describe('external', () => {
   before(async () => {
+    ensureNpmDependencies('opt/otel-extension');
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
     process.env.SLS_OTEL_REPORT_TYPE = 'json';
