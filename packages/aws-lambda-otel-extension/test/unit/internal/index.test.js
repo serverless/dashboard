@@ -31,15 +31,15 @@ const handleSuccess = async (handlerModuleName) => {
           body += data;
         });
         request.on('end', () => {
-          resolve(
-            (async () => {
-              response.writeHead(200, {});
-              response.end('OK');
-              server.close();
-              const data = JSON.parse(body);
-              logsQueue.push(data);
+          response.writeHead(200, {});
+          response.end('OK');
+          const data = JSON.parse(body);
+          logsQueue.push(data);
 
-              if (logsQueue.length > 1) {
+          if (logsQueue.length > 1) {
+            server.close();
+            resolve(
+              (async () => {
                 log.debug('logs: %o', logsQueue);
                 // Validate eventData record for log metadata
                 const logMetadata = logsQueue[0].record;
@@ -60,9 +60,9 @@ const handleSuccess = async (handlerModuleName) => {
                 expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');
                 expect(report.function['faas.name']).to.equal(functionName);
                 expect(report.function.error).to.equal(false);
-              }
-            })()
-          );
+              })()
+            );
+          }
         });
       }
     });
