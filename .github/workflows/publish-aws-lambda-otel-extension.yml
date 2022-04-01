@@ -67,12 +67,21 @@ jobs:
           node-version: 16.x
           registry-url: https://registry.npmjs.org
 
+      - name: Install main project dependencies
+        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
+        run: |
+          npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionNodeModules.outputs.cache-hit != 'true'
         run: |
           cd packages/aws-lambda-otel-extension
           npm update --no-save
           npm update --save-dev --no-save
+      - name: Install packages/aws-lambda-otel-extension/opt/otel-extension dependencies
+        if: steps.cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd packages/aws-lambda-otel-extension/opt/otel-extension
+          npm update --no-save
       - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
         if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
         run: |
