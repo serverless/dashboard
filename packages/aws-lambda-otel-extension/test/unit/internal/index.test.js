@@ -40,6 +40,7 @@ const handleSuccess = async (handlerModuleName) => {
               logsQueue.push(data);
 
               if (logsQueue.length > 1) {
+                log.debug('logs: %o', logsQueue);
                 // Validate eventData record for log metadata
                 const logMetadata = logsQueue[0].record;
                 expect(logMetadata.eventData['123']['telemetry.sdk.language']).to.equal('nodejs');
@@ -54,7 +55,7 @@ const handleSuccess = async (handlerModuleName) => {
                 const report = JSON.parse(
                   String(await unzip(Buffer.from(reportCompressed, 'base64')))
                 );
-                log.debug('result report: %o', report);
+                log.debug('report: %o', report);
                 expect(report.function['telemetry.sdk.language']).to.equal('nodejs');
                 expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');
                 expect(report.function['faas.name']).to.equal(functionName);
