@@ -200,7 +200,7 @@ describe('integration', function () {
               error.message.includes('because the KMS key is invalid for CreateGrant')
             ) {
               // Occassional race condition issue on AWS side, retry
-              await self();
+              await self(handlerModuleName);
               return;
             }
             throw error;
