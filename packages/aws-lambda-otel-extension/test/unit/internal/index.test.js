@@ -7,7 +7,6 @@ const { promisify } = require('util');
 const unzip = promisify(require('zlib').unzip);
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
-const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
 const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependencies');
 
@@ -19,7 +18,6 @@ const handleSuccess = async (handlerModuleName) => {
     ? path.dirname(handlerModuleName)
     : handlerModuleName;
   process.env.AWS_LAMBDA_FUNCTION_NAME = functionName;
-  let stdoutData = '';
 
   const logsQueue = [];
   let server;
@@ -71,27 +69,28 @@ const handleSuccess = async (handlerModuleName) => {
   server.listen(OTEL_SERVER_PORT);
 
   try {
-    await overwriteStdoutWrite(
-      (data) => (stdoutData += data),
-      async () =>
-        requireUncached(async () => {
-          await require('../../../opt/otel-extension/internal');
-          await new Promise((resolve) => {
-            require('../../../opt/otel-extension/internal/wrapper').handler(
-              {},
-              {
-                awsRequestId: '123',
-                functionName,
-                invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
-                getRemainingTimeInMillis: () => 3000,
-              },
-              resolve
-            );
-          });
-        })
-    );
+    await requireUncached(async () => {
+      await require('../../../opt/otel-extension/internal');
+      await new Promise((resolve, reject) => {
+        const keepAliveTimeout = setTimeout(() => {}, 2147483647);
+        require('../../../opt/otel-extension/internal/wrapper').handler(
+          {},
+          {
+            awsRequestId: '123',
+            functionName,
+            invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
+            getRemainingTimeInMillis: () => 3000,
+          },
+          (error, result) => {
+            clearTimeout(keepAliveTimeout);
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+      });
+    });
 
-    await deferredResultProcessing;
+    return await deferredResultProcessing;
   } finally {
     server.close();
   }
