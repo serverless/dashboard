@@ -238,6 +238,12 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   );
 
   const telemetryDataPayload = {
+    responseEventPayload: {
+      responseData: res,
+      errorData: err,
+      executionId,
+      isTimeout,
+    },
     function: functionData,
     traces: {
       resourceSpans: [
@@ -265,23 +271,6 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       },
     });
   }
-
-  // Send Lambda Response Payload to external
-  await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-    method: 'post',
-    body: JSON.stringify({
-      recordType: 'requestResponseEventData',
-      record: {
-        responseData: res,
-        errorData: err,
-        executionId,
-        isTimeout,
-      },
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
 
   // Reset the exporter so we don't see duplicates
   memoryExporter.reset();
@@ -357,23 +346,10 @@ const instrumentations = [
             traceId: span.spanContext().traceId,
             spanId: span.spanContext().spanId,
           },
+          requestEventPayload: { requestData: event, executionId: context.awsRequestId },
         },
       };
 
-      // Send Lambda Event Payload to external
-      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-        method: 'post',
-        body: JSON.stringify({
-          recordType: 'requestResponseEventData',
-          record: {
-            requestData: event,
-            executionId: context.awsRequestId,
-          },
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
       if (process.env.TEST_DRY_LOG) {
         process._rawDebug(
           `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
