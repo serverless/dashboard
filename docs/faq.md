@@ -160,7 +160,7 @@ We store a limited set of specified [metrics](concepts/metrics.md) and [tags](/c
 in our systems for up to 30 days. While this does include meta data about your
 systems limited sensitive information is included.
 
-Logs are stored for 24 hours before being deleted. 
+Logs are stored for 7 days before being deleted. 
 
 **How can I disable log collection?** 
 Log collection can be disabled for each service by setting
