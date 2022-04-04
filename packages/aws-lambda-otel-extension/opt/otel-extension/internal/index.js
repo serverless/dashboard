@@ -352,7 +352,7 @@ const instrumentations = [
       const eventDataPayload = {
         recordType: 'eventData',
         record: {
-          eventData,
+          eventData: { [context.awsRequestId]: eventData[context.awsRequestId] },
           span: {
             traceId: span.spanContext().traceId,
             spanId: span.spanContext().spanId,
