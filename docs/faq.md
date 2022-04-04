@@ -135,8 +135,8 @@ for Durations higher than those metrics will lead you to your slowest requests.
 **Should I use Serverless Console to monitor my produciton evironment?**
 
 Go for it! We hope you can find errors, and slowness faster with Serverless
-Console, that saidw we know we are lacking key production readiness features
-like alerting and logs that are needed before Console should be your only tool. 
+Console, that said we know we are lacking key production readiness features
+like alerting that are needed before Console should be your only tool. 
 
 
 **How can I use console to analyze and predict costs?**
@@ -159,3 +159,17 @@ anouncing final pricing after our private preview is over.
 We store a limited set of specified [metrics](concepts/metrics.md) and [tags](/concepts/tags.md)
 in our systems for up to 30 days. While this does include meta data about your
 systems limited sensitive information is included.
+
+Logs are stored for 24 hours before being deleted. 
+
+**How can I disable log collection?** 
+Log collection can be disabled for each service by setting
+the following property.
+
+```yaml
+org: myorg
+console: 
+    disableLogsCollection: true
+service: myservice
+frameworkVersion: '3'
+```
