@@ -33,6 +33,7 @@
     "node-fetch": "^2.6.7",
     "prettier": "^2.5.1",
     "process-utils": "^4.0.0",
+    "standard-version": "^9.3.2",
     "stream-promise": "^3.2.0",
     "timers-ext": "^0.1.7",
     "uuid": "^8.3.2"
