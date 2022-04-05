@@ -29,6 +29,7 @@ function handleShutdown() {
 }
 
 let sentRequests = [];
+const sentResponseEvents = [];
 let logsQueue = [];
 const mainEventData = {
   data: {},
@@ -107,11 +108,17 @@ module.exports = (async function main() {
     const currentIndex = logList.length;
     const groupedByRequestId = await groupLogs(logList);
 
-    const { ready, notReady } = Object.keys(groupedByRequestId).reduce(
+    const { ready, notReady, responseEvents } = Object.keys(groupedByRequestId).reduce(
       (obj, id) => {
         const data = groupedByRequestId[id];
         const report = data['platform.report'];
-        const { function: fun, traces } = get(data, 'layer.record') || {};
+        const { function: fun, traces, responseEventPayload } = get(data, 'layer.record') || {};
+
+        let updatedResponseEvents = obj.responseEvents;
+
+        if (responseEventPayload) {
+          updatedResponseEvents = { ...updatedResponseEvents, [id]: responseEventPayload };
+        }
 
         // report is not required so we can send duration async
         if (fun && traces) {
@@ -125,6 +132,7 @@ module.exports = (async function main() {
                 'traces': { record: traces },
               },
             },
+            responseEvents: updatedResponseEvents,
           };
         }
         return {
@@ -133,11 +141,13 @@ module.exports = (async function main() {
             ...obj.notReady,
             [id]: data,
           },
+          responseEvents: updatedResponseEvents,
         };
       },
       {
         ready: {},
         notReady: {},
+        responseEvents: {},
       }
     );
 
@@ -178,6 +188,21 @@ module.exports = (async function main() {
         await reportOtelData.traces(traces);
       } catch (error) {
         logMessage('Trace send Error:', error);
+      }
+    }
+
+    const responseEventKeys = Object.keys(responseEvents);
+
+    if (responseEventKeys && responseEventKeys.length > 0) {
+      for (const responseEvent of Object.values(responseEvents)) {
+        try {
+          if (!sentResponseEvents.includes(responseEvent.executionId)) {
+            await reportOtelData.requestResponse(responseEvent);
+            sentResponseEvents.push(responseEvent.executionId);
+          }
+        } catch (error) {
+          logMessage('Response data send Error:', error);
+        }
       }
     }
     // Save request ids so we don't send them twice
@@ -262,6 +287,9 @@ module.exports = (async function main() {
     callback: async (...args) => {
       await uploadLogs(...args);
       receivedData = true;
+    },
+    requestResponseCallback: async (data) => {
+      await reportOtelData.requestResponse(data);
     },
   });
 

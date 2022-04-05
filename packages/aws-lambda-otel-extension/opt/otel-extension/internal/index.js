@@ -238,6 +238,13 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   );
 
   const telemetryDataPayload = {
+    responseEventPayload: {
+      responseData: res,
+      errorData: err,
+      executionId,
+      isTimeout,
+      traceId: span ? span.spanContext().traceId : null,
+    },
     function: functionData,
     traces: {
       resourceSpans: [
@@ -340,8 +347,14 @@ const instrumentations = [
             traceId: span.spanContext().traceId,
             spanId: span.spanContext().spanId,
           },
+          requestEventPayload: {
+            traceId: span.spanContext().traceId,
+            requestData: event,
+            executionId: context.awsRequestId,
+          },
         },
       };
+
       if (process.env.TEST_DRY_LOG) {
         process._rawDebug(
           `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
