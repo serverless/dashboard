@@ -10,6 +10,10 @@ jobs:
   publishNewVersion:
     name: Publish new version
     runs-on: ubuntu-latest
+    env:
+      # It'll work with secrets.GITHUB_TOKEN (which is provided by GitHub unconditionally)
+      # Still then release author would be "github-actions". It's better if it's dedicated repo bot
+      GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -112,3 +116,10 @@ jobs:
           npm publish
           cd ../aws-lambda-otel-extension-dist
           npm publish
+
+      - name: Publish release notes
+        run: |
+          cd packages/aws-lambda-otel-extension
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "/" "\n"))
+          TAG=${TEMP_ARRAY[@]: -1}
+          npx github-release-from-cc-changelog $TAG
