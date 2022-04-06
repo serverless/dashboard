@@ -391,11 +391,6 @@ const instrumentations = [
   new FastifyInstrumentation(),
 ];
 
-// Register instrumentations synchronously to ensure code is patched even before provider is ready.
-registerInstrumentations({
-  instrumentations,
-});
-
 async function initializeProvider() {
   const resource = await detectResources({
     detectors: [awsLambdaDetector, envDetector, processDetector],
