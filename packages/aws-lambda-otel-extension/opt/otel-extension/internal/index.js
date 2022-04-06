@@ -141,6 +141,8 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
         val.name === 'middleware - bound ') ||
       (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
+        /request handler - /i.test(val.name)) ||
+      (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-fastify' &&
         /request handler - /i.test(val.name))
     ) {
       return val.attributes['http.route'];
