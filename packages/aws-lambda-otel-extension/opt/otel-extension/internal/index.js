@@ -403,8 +403,7 @@ async function initializeProvider() {
   spanProcessor = new SlsSpanProcessor(memoryExporter);
   tracerProvider.addSpanProcessor(spanProcessor);
 
-  const sdkRegistrationConfig = {};
-  tracerProvider.register(sdkRegistrationConfig);
+  tracerProvider.register();
 
   // Re-register instrumentation with initialized provider. Patched code will see the update.
   registerInstrumentations({
