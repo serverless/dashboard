@@ -6,6 +6,7 @@ const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
 const mkdir = require('fs2/mkdir');
 const ensureNpmDependencies = require('./ensure-npm-dependencies');
+const { version } = require('../../package');
 
 const rootDir = path.resolve(__dirname, '../../');
 const optDir = path.resolve(rootDir, 'opt');
@@ -25,5 +26,6 @@ module.exports = async (distFilename) => {
       }
     })(),
   ]);
+  zip.addFile('otel-extension/version.json', Buffer.from(JSON.stringify(version), 'utf8'));
   zip.writeZip(distFilename);
 };
