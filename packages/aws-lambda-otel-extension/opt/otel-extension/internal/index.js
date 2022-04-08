@@ -1,6 +1,5 @@
 'use strict';
 
-const { gzipSync } = require('zlib');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
@@ -242,21 +241,25 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   );
 
   const telemetryDataPayload = {
-    responseEventPayload: {
-      responseData: res,
-      errorData: err,
-      executionId,
-      isTimeout,
-      traceId: span ? span.spanContext().traceId : null,
-    },
-    function: functionData,
-    traces: {
-      resourceSpans: [
-        {
-          resource: tracerProvider.resource.attributes,
-          instrumentationLibrarySpans: data,
-        },
-      ],
+    recordType: 'telemetryData',
+    requestId: executionId,
+    record: {
+      responseEventPayload: {
+        responseData: res,
+        errorData: err,
+        executionId,
+        isTimeout,
+        traceId: span ? span.spanContext().traceId : null,
+      },
+      function: functionData,
+      traces: {
+        resourceSpans: [
+          {
+            resource: tracerProvider.resource.attributes,
+            instrumentationLibrarySpans: data,
+          },
+        ],
+      },
     },
   };
   if (process.env.TEST_DRY_LOG) {
@@ -264,13 +267,9 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
     );
   } else {
-    const logString = `⚡.${gzipSync(JSON.stringify(telemetryDataPayload)).toString('base64')}`;
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
-      body: JSON.stringify({
-        recordType: 'telemetryData',
-        record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
-      }),
+      body: JSON.stringify(telemetryDataPayload),
       headers: {
         'Content-Type': 'application/json',
       },
