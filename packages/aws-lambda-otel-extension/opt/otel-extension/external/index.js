@@ -2,8 +2,6 @@
 
 'use strict';
 
-const { unzip: unzipWtithCallback } = require('zlib');
-const { promisify } = require('util');
 const { writeFileSync, existsSync, readFileSync } = require('fs');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
@@ -21,8 +19,6 @@ const {
   SUBSCRIPTION_BODY,
 } = require('./helper');
 const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
-
-const unzip = promisify(unzipWtithCallback);
 
 function handleShutdown() {
   process.exit(0);
@@ -67,15 +63,9 @@ module.exports = (async function main() {
       combinedLogs.map(async (log) => {
         if (log.recordType === 'telemetryData') {
           try {
-            const reportCompressed = log.record.slice(log.record.indexOf('⚡.') + 2).trim();
-            const raw = (await unzip(Buffer.from(reportCompressed, 'base64'))).toString();
-            const parsed = JSON.parse(raw);
-            const requestId = log.record.split('\t')[1];
             return {
               ...log,
-              record: parsed,
               origin: 'sls-layer',
-              requestId,
             };
           } catch (error) {
             logMessage('failed to parse line', error);
@@ -236,8 +226,8 @@ module.exports = (async function main() {
         const saveList = subList.filter((log) => {
           if (log.recordType === 'telemetryData') {
             return (
-              incompleteRequestIds.includes(log.record.split('\t')[1]) ||
-              (focusIds.length > 0 && !focusIds.includes(log.record.split('\t')[1]))
+              incompleteRequestIds.includes(log.requestId) ||
+              (focusIds.length > 0 && !focusIds.includes(log.requestId))
             );
           }
           return (
