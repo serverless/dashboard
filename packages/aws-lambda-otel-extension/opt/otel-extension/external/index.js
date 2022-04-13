@@ -276,9 +276,9 @@ module.exports = (async function main() {
     liveLogCallback: postLiveLogs,
     callback: async (...args) => {
       await uploadLogs(...args);
+      receivedData = true;
     },
     requestResponseCallback: async (data) => {
-      receivedData = true;
       await reportOtelData.requestResponse(data);
     },
   });
