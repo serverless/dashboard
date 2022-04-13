@@ -36,7 +36,7 @@ function initializeTelemetryListener({
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
           }
 
-          if (callback && data.recordType === 'telemetryData') {
+          if (callback && data.recordType === 'telemetryData' && typeof data.record === 'string') {
             const reportIds = [data.record.split('\t')[1]];
             callback(logsQueue, reportIds);
           }
