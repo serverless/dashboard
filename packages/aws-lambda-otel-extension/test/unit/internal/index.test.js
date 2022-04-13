@@ -3,8 +3,6 @@
 const { expect } = require('chai');
 const http = require('http');
 const path = require('path');
-const { promisify } = require('util');
-const unzip = promisify(require('zlib').unzip);
 const isThenable = require('type/thenable/is');
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
@@ -49,11 +47,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
                 expect(logMetadata.eventData['123']['faas.name']).to.equal(functionName);
 
                 // Validate trace record
-                const reportLog = logsQueue[1].record.split('\t')[2];
-                const reportCompressed = reportLog.slice(reportLog.indexOf('⚡.') + 2);
-                const report = JSON.parse(
-                  String(await unzip(Buffer.from(reportCompressed, 'base64')))
-                );
+                const report = logsQueue[1].record;
                 log.debug('report: %o', report);
                 expect(report.function['telemetry.sdk.language']).to.equal('nodejs');
                 expect(report.function['telemetry.sdk.name']).to.equal('opentelemetry');

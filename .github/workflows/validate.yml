@@ -12,7 +12,7 @@ env:
 
 jobs:
   linuxNode16:
-    name: '[Linux] Node.js v16: Lint, Formatting, & Unit Tests'
+    name: '[Linux] Node.js v16: Lint, Formatting, Eventual Commitlint, Eventual Changelog & Unit Tests'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -104,6 +104,17 @@ jobs:
         run: npm run prettier-check:updated
       - name: Validate ESLint rules
         run: npm run lint:updated
+      - name: Validate packages/aws-lambda-otel-extension commit messages
+        if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
+        run: ./scripts/commitlint.js packages/aws-lambda-otel-extension main..HEAD
+      - name: Validate changelog (if new version)
+        run: |
+          cd packages/aws-lambda-otel-extension
+          NEW_VERSION=`git diff -U0 main package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          if [ -n "$NEW_VERSION" ];
+          then
+            npx dump-release-notes-from-cc-changelog $NEW_VERSION
+          fi
       - name: Unit tests
         run: |
           cd packages/aws-lambda-otel-extension

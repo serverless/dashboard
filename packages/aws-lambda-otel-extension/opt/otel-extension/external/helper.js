@@ -1,5 +1,15 @@
 'use strict';
 
+const extensionVersion = (() => {
+  try {
+    require.resolve('../version');
+  } catch {
+    return require('../../../package.json').version;
+  }
+  // eslint-disable-next-line import/no-unresolved
+  return require('../version');
+})();
+
 const resourceAttributes = [
   {
     key: 'faas.id',
@@ -107,8 +117,8 @@ const resourceAttributes = [
   },
   {
     key: 'faas.collector_version',
-    value: '@serverless/aws-lambda-otel-extension-0.2.10',
-    source: '@serverless/aws-lambda-otel-extension-0.2.10',
+    value: `@serverless/aws-lambda-otel-extension@${extensionVersion}`,
+    source: `@serverless/aws-lambda-otel-extension@${extensionVersion}`,
     type: 'stringValue',
   },
 ];

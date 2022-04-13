@@ -91,7 +91,91 @@ describe('external', () => {
       method: 'post',
       body: JSON.stringify({
         recordType: 'telemetryData',
-        record: `2022-02-14T13:01:30.307Z\t${requestId}\tINFO\t⚡.H4sIAAAAAAAAA+1VXW/bNhT9K4Owx0omqW8VARa0HhAsCwrbKwoUhXFFXqVaJdIjKc9Zkf8+UnJsx3WxPOxpGPx27+HRued++GvQDJLbVsmg+hoY1NuWYyShx6AKLBobKotdiDuL0jhUaAbO0Zjglct22KPVD5ERX6IO5P0A9/6ZVAJ//xaxJ1UblIfEN6AtajOKCWhEIuryvFODiDZabVuB2iXgT3MMd2AbpfspvO6grwUcshrvJ67BhAiuFs/XAJiXFTgij4J+vL1ezZcrl3BiPCTatCKoaHEM4A75YKHuDhbOtqBn3ptZ3cqZd+bkPVd9D1I8wfQgbdvjrJUCd9Ho4Bly3bXyMusP32NwLzeDxTeDsaq/1r4Q0LJyblWTW9XBnKosWUwpyUieltXTXFT/YNIedvcSR/diFpf68pSbSpgaGk0So2miIppEtIjoeVU/7yW8v9CqPfBX7JV+WLZ/eWLKCpfBrZvDieDDSgPHG9+IhVL2ioYZI5AyyEOaQ55mjFJOiqxmRcJYIiAWr9+Bdu+vWJ3HApuSZhwha5LXS+g3HYorcq7yVt0vrUbo904xwtiMsBlNZh/3ej9BWfAkiUmDSZM0aQkEayLijIjSaYjFOedcbq81/+zYdlnyVNPqYeP45dB1z4pc4B+Da85YZd0UNW9SFjYNScOkiUlYpJyHBRR1TYHlgCf6b8wb1YmlBW2DyuoBn/G+VT208vsfXLluzjfKq5wgxhOtxh7TLEmKJM6Kgia5eyzF83hJWEpdXGvlNr+Bzrhvf7Z248TYwcly61QxQh7dGfEtNP6IaTRq0ByXG5Au8PEY+f/E/QdPnOt9K40by96ZDv4O3La1Brfth/5fzvtp2Jfw07OOzc7wofM9PPh+dItEzF8jJ8AcPmUPlyTNKcckY0DdbGOJKU+LTKRJztIySak3yT8bsaKJgYumrktWCEj8eXpR+760o7XLd9d3619u7t6ul/PF+/kiOFmy32S7uwOp/LidbluW0oz4Jd8v3QXcuH15SeIRB9bqtnbnYFyycXCmWZjMeOFJGd/5mfp3/4WmZQDOlRuPif+UJpiuRmTGs7HmJ3djCrmSHh8/jb/HvwF/juUcEwkAAA==`,
+        requestId,
+        record: {
+          function: {
+            'service.name': 'test-otel-extension-success',
+            'telemetry.sdk.language': 'nodejs',
+            'telemetry.sdk.name': 'opentelemetry',
+            'telemetry.sdk.version': '1.0.1',
+            'cloud.provider': 'aws',
+            'cloud.platform': 'aws_lambda',
+            'cloud.region': 'us-east-1',
+            'faas.name': 'test-otel-extension-success',
+            'faas.version': '$LATEST',
+            'process.pid': 18,
+            'process.executable.name': '/var/lang/bin/node',
+            'process.command': '/var/runtime/index.js',
+            'process.command_line': '/var/lang/bin/node /var/runtime/index.js',
+            'computeCustomArn':
+              'arn:aws:lambda:us-east-1:992311060759:function:test-otel-extension-success',
+            'functionName': 'test-otel-extension-success',
+            'computeRegion': 'us-east-1',
+            'computeRuntime': 'aws.lambda.nodejs.14.18.1',
+            'computeCustomFunctionVersion': '$LATEST',
+            'computeMemorySize': '128',
+            'eventCustomXTraceId':
+              'Root=1-620a52a7-17a756211c086b284224da3d;Parent=2b73def916cea6f4;Sampled=0',
+            'computeCustomLogStreamName': '2022/02/14/[$LATEST]a98c4430fe4f4f59a0eb0d360d96213d',
+            'computeCustomEnvArch': 'x64',
+            'eventType': null,
+            'eventCustomRequestId': 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0',
+            'computeIsColdStart': true,
+            'eventCustomDomain': null,
+            'eventCustomRequestTimeEpoch': null,
+            'startTime': 1644843688147,
+            'endTime': 1644843690251,
+            'error': false,
+            'httpStatusCode': 200,
+          },
+          traces: {
+            resourceSpans: [
+              {
+                resource: {
+                  'service.name': 'test-otel-extension-success',
+                  'telemetry.sdk.language': 'nodejs',
+                  'telemetry.sdk.name': 'opentelemetry',
+                  'telemetry.sdk.version': '1.0.1',
+                  'cloud.provider': 'aws',
+                  'cloud.platform': 'aws_lambda',
+                  'cloud.region': 'us-east-1',
+                  'faas.name': 'test-otel-extension-success',
+                  'faas.version': '$LATEST',
+                  'process.pid': 18,
+                  'process.executable.name': '/var/lang/bin/node',
+                  'process.command': '/var/runtime/index.js',
+                  'process.command_line': '/var/lang/bin/node /var/runtime/index.js',
+                },
+                instrumentationLibrarySpans: [
+                  {
+                    instrumentationLibrary: {
+                      name: '@opentelemetry/instrumentation-aws-lambda',
+                      version: '0.28.1',
+                    },
+                    spans: [
+                      {
+                        traceId: '571ce462a1147e9e5c586d547259451e',
+                        spanId: 'df3acdfbb928da48',
+                        name: 'test-otel-extension-success',
+                        kind: 'SPAN_KIND_SERVER',
+                        startTimeUnixNano: '1644843688147651600',
+                        endTimeUnixNano: '1644843690251790300',
+                        attributes: {
+                          'faas.execution': 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0',
+                          'faas.id':
+                            'arn:aws:lambda:us-east-1:992311060759:function:test-otel-extension-success',
+                          'cloud.account.id': '992311060759',
+                          'http.status_code': 200,
+                        },
+                        status: {},
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
       }),
       headers: {
         'Content-Type': 'application/json',

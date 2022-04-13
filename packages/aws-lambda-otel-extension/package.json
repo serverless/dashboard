@@ -1,7 +1,7 @@
 {
   "name": "@serverless/aws-lambda-otel-extension",
   "repository": "serverless/runtime",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "author": "Serverless, Inc.",
   "dependencies": {
     "adm-zip": "^0.5.9",
@@ -14,8 +14,35 @@
     "deasync": "^0.1.24",
     "type": "^2.6.0"
   },
+  "standard-version": {
+    "tagPrefix": "@serverless/aws-lambda-otel-extension@",
+    "path": ".",
+    "skip": {
+      "commit": true,
+      "tag": true
+    },
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "perf",
+        "section": "Performance Improvements"
+      },
+      {
+        "type": "refactor",
+        "section": "Maintenance Improvements"
+      }
+    ]
+  },
   "scripts": {
     "build": "./scripts/build.js",
+    "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "test": "mocha \"test/unit/**/*.test.js\"",
     "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
     "test:integration": "mocha \"test/integration/**/*.test.js\""

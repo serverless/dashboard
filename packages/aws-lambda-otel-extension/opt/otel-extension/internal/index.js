@@ -1,6 +1,5 @@
 'use strict';
 
-const { gzipSync } = require('zlib');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
@@ -32,9 +31,11 @@ const { detectEventType } = require('./event-detection');
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
 
-let tracerProvider;
-let memoryExporter;
-let spanProcessor;
+const tracerProvider = new NodeTracerProvider();
+const memoryExporter = new InMemorySpanExporter();
+const spanProcessor = new SlsSpanProcessor(memoryExporter);
+tracerProvider.addSpanProcessor(spanProcessor);
+tracerProvider.register();
 
 const eventData = {};
 let timeoutHandler;
@@ -141,6 +142,8 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
         val.name === 'middleware - bound ') ||
       (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-express' &&
+        /request handler - /i.test(val.name)) ||
+      (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-fastify' &&
         /request handler - /i.test(val.name))
     ) {
       return val.attributes['http.route'];
@@ -238,21 +241,26 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   );
 
   const telemetryDataPayload = {
-    responseEventPayload: {
-      responseData: res,
-      errorData: err,
-      executionId,
-      isTimeout,
-      traceId: span ? span.spanContext().traceId : null,
-    },
-    function: functionData,
-    traces: {
-      resourceSpans: [
-        {
-          resource: tracerProvider.resource.attributes,
-          instrumentationLibrarySpans: data,
-        },
-      ],
+    recordType: 'telemetryData',
+    requestId: executionId,
+    record: {
+      responseEventPayload: {
+        responseData: res,
+        errorData: err,
+        executionId,
+        isTimeout,
+        traceId: span ? span.spanContext().traceId : null,
+        spanId: span ? span.spanContext().spanId : null,
+      },
+      function: functionData,
+      traces: {
+        resourceSpans: [
+          {
+            resource: tracerProvider.resource.attributes,
+            instrumentationLibrarySpans: data,
+          },
+        ],
+      },
     },
   };
   if (process.env.TEST_DRY_LOG) {
@@ -260,13 +268,9 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
     );
   } else {
-    const logString = `⚡.${gzipSync(JSON.stringify(telemetryDataPayload)).toString('base64')}`;
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
-      body: JSON.stringify({
-        recordType: 'telemetryData',
-        record: `${new Date().toISOString()}\t${executionId}\t${logString}`,
-      }),
+      body: JSON.stringify(telemetryDataPayload),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -285,139 +289,118 @@ const handleTimeouts = (remainingTime) => {
   }, timeoutTime).unref();
 };
 
-const instrumentations = [
-  new AwsInstrumentation({
-    suppressInternalInstrumentation: true,
-  }),
-  new AwsLambdaInstrumentation({
-    disableAwsContextPropagation: true,
-    requestHook: async (span, { event, context }) => {
-      handleTimeouts(context.getRemainingTimeInMillis());
-
-      const eventType = detectEventType(event);
-
-      eventData[context.awsRequestId] = {
-        ...tracerProvider.resource.attributes,
-        computeCustomArn: context.invokedFunctionArn,
-        functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
-        computeRegion: process.env.AWS_REGION,
-        computeRuntime: `aws.lambda.nodejs.${process.versions.node}`,
-        computeCustomFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
-        computeMemorySize: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
-        eventCustomXTraceId: process.env._X_AMZN_TRACE_ID,
-        computeCustomLogGroupName: process.env.AWS_LAMBDA_LOG_GROUP_NAME,
-        computeCustomLogStreamName: process.env.AWS_LAMBDA_LOG_STREAM_NAME,
-        computeCustomEnvArch: process.arch,
-        eventType,
-        eventCustomRequestId: context.awsRequestId,
-        computeIsColdStart: ++transactionCount === 1,
-        eventCustomDomain: null,
-        eventCustomRequestTimeEpoch: null,
-      };
-
-      if (eventType === 'aws.apigateway.http') {
-        eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
-        eventData[context.awsRequestId].eventSource = 'aws.apigateway';
-        eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-        eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
-        eventData[context.awsRequestId].rawHttpPath = event.path;
-        eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
-        eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
-        eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
-          event.requestContext.requestTimeEpoch;
-      } else if (eventType === 'aws.apigatewayv2.http') {
-        eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
-        eventData[context.awsRequestId].eventSource = 'aws.apigateway';
-        eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-        const routeKey = event.requestContext.routeKey;
-        eventData[context.awsRequestId].httpPath =
-          routeKey.split(' ')[1] || event.requestContext.routeKey;
-        eventData[context.awsRequestId].rawHttpPath = event.rawPath;
-        eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
-        eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
-        eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
-          event.requestContext.timeEpoch;
-      }
-
-      const eventDataPayload = {
-        recordType: 'eventData',
-        record: {
-          eventData: { [context.awsRequestId]: eventData[context.awsRequestId] },
-          span: {
-            traceId: span.spanContext().traceId,
-            spanId: span.spanContext().spanId,
-          },
-          requestEventPayload: {
-            traceId: span.spanContext().traceId,
-            requestData: event,
-            executionId: context.awsRequestId,
-          },
-        },
-      };
-
-      if (process.env.TEST_DRY_LOG) {
-        process._rawDebug(
-          `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
-        );
-      } else {
-        // Send request data to external so that we can attach this data to logs
-        await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-          method: 'post',
-          body: JSON.stringify(eventDataPayload),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      }
-    },
-    responseHook: async (span, { err, res }) => {
-      clearTimeout(timeoutHandler);
-      await responseHandler(span, { err, res });
-    },
-  }),
-  new DnsInstrumentation(),
-  new ExpressInstrumentation(),
-  new GraphQLInstrumentation(),
-  new GrpcInstrumentation(),
-  new HapiInstrumentation(),
-  new HttpInstrumentation(),
-  new IORedisInstrumentation(),
-  new KoaInstrumentation(),
-  new MongoDBInstrumentation(),
-  new MySQLInstrumentation(),
-  new NetInstrumentation(),
-  new PgInstrumentation(),
-  new RedisInstrumentation(),
-  new FastifyInstrumentation(),
-];
-
-// Register instrumentations synchronously to ensure code is patched even before provider is ready.
 registerInstrumentations({
-  instrumentations,
+  tracerProvider,
+  instrumentations: [
+    new AwsInstrumentation({
+      suppressInternalInstrumentation: true,
+    }),
+    new AwsLambdaInstrumentation({
+      disableAwsContextPropagation: true,
+      requestHook: async (span, { event, context }) => {
+        handleTimeouts(context.getRemainingTimeInMillis());
+
+        const eventType = detectEventType(event);
+
+        eventData[context.awsRequestId] = {
+          ...tracerProvider.resource.attributes,
+          computeCustomArn: context.invokedFunctionArn,
+          functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+          computeRegion: process.env.AWS_REGION,
+          computeRuntime: `aws.lambda.nodejs.${process.versions.node}`,
+          computeCustomFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+          computeMemorySize: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
+          eventCustomXTraceId: process.env._X_AMZN_TRACE_ID,
+          computeCustomLogGroupName: process.env.AWS_LAMBDA_LOG_GROUP_NAME,
+          computeCustomLogStreamName: process.env.AWS_LAMBDA_LOG_STREAM_NAME,
+          computeCustomEnvArch: process.arch,
+          eventType,
+          eventCustomRequestId: context.awsRequestId,
+          computeIsColdStart: ++transactionCount === 1,
+          eventCustomDomain: null,
+          eventCustomRequestTimeEpoch: null,
+        };
+
+        if (eventType === 'aws.apigateway.http') {
+          eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
+          eventData[context.awsRequestId].eventSource = 'aws.apigateway';
+          eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
+          eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
+          eventData[context.awsRequestId].rawHttpPath = event.path;
+          eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
+          eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
+          eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
+            event.requestContext.requestTimeEpoch;
+        } else if (eventType === 'aws.apigatewayv2.http') {
+          eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
+          eventData[context.awsRequestId].eventSource = 'aws.apigateway';
+          eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
+          const routeKey = event.requestContext.routeKey;
+          eventData[context.awsRequestId].httpPath =
+            routeKey.split(' ')[1] || event.requestContext.routeKey;
+          eventData[context.awsRequestId].rawHttpPath = event.rawPath;
+          eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
+          eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
+          eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
+            event.requestContext.timeEpoch;
+        }
+
+        const eventDataPayload = {
+          recordType: 'eventData',
+          record: {
+            eventData: { [context.awsRequestId]: eventData[context.awsRequestId] },
+            span: {
+              traceId: span.spanContext().traceId,
+              spanId: span.spanContext().spanId,
+            },
+            requestEventPayload: {
+              traceId: span.spanContext().traceId,
+              spanId: span.spanContext().spanId,
+              requestData: event,
+              executionId: context.awsRequestId,
+            },
+          },
+        };
+
+        if (process.env.TEST_DRY_LOG) {
+          process._rawDebug(
+            `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
+          );
+        } else {
+          // Send request data to external so that we can attach this data to logs
+          await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+            method: 'post',
+            body: JSON.stringify(eventDataPayload),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+      },
+      responseHook: async (span, { err, res }) => {
+        clearTimeout(timeoutHandler);
+        await responseHandler(span, { err, res });
+      },
+    }),
+    new DnsInstrumentation(),
+    new ExpressInstrumentation(),
+    new GraphQLInstrumentation(),
+    new GrpcInstrumentation(),
+    new HapiInstrumentation(),
+    new HttpInstrumentation(),
+    new IORedisInstrumentation(),
+    new KoaInstrumentation(),
+    new MongoDBInstrumentation(),
+    new MySQLInstrumentation(),
+    new NetInstrumentation(),
+    new PgInstrumentation(),
+    new RedisInstrumentation(),
+    new FastifyInstrumentation(),
+  ],
 });
 
-async function initializeProvider() {
-  const resource = await detectResources({
-    detectors: [awsLambdaDetector, envDetector, processDetector],
-  });
-
-  tracerProvider = new NodeTracerProvider({
-    resource,
-  });
-  memoryExporter = new InMemorySpanExporter();
-  spanProcessor = new SlsSpanProcessor(memoryExporter);
-  tracerProvider.addSpanProcessor(spanProcessor);
-
-  const sdkRegistrationConfig = {};
-  tracerProvider.register(sdkRegistrationConfig);
-
-  // Re-register instrumentation with initialized provider. Patched code will see the update.
-  registerInstrumentations({
-    instrumentations,
-    tracerProvider,
-  });
-}
-
-module.exports = initializeProvider();
+module.exports = detectResources({
+  detectors: [awsLambdaDetector, envDetector, processDetector],
+}).then((resource) => (tracerProvider.resource = tracerProvider.resource.merge(resource)));
 
 require('./prepare-wrapper')();

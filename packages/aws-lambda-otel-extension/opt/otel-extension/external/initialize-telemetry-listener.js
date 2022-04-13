@@ -37,7 +37,7 @@ function initializeTelemetryListener({
           }
 
           if (callback && data.recordType === 'telemetryData') {
-            const reportIds = [data.record.split('\t')[1]];
+            const reportIds = [data.requestId];
             callback(logsQueue, reportIds);
           }
           logMessage('FROM CUSTOM HTTP SERVER: ', JSON.stringify(logsQueue));
