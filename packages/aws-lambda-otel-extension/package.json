@@ -1,7 +1,7 @@
 {
   "name": "@serverless/aws-lambda-otel-extension",
   "repository": "serverless/runtime",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "author": "Serverless, Inc.",
   "dependencies": {
     "adm-zip": "^0.5.9",
