@@ -250,6 +250,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
         executionId,
         isTimeout,
         traceId: span ? span.spanContext().traceId : null,
+        spanId: span ? span.spanContext().spanId : null,
       },
       function: functionData,
       traces: {
@@ -354,6 +355,7 @@ registerInstrumentations({
             },
             requestEventPayload: {
               traceId: span.spanContext().traceId,
+              spanId: span.spanContext().spanId,
               requestData: event,
               executionId: context.awsRequestId,
             },
