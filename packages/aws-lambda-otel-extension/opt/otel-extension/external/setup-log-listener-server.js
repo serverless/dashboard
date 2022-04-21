@@ -2,16 +2,12 @@
 
 const http = require('http');
 
-const fetch = require('node-fetch');
 const { logMessage } = require('../lib/helper');
 const { SAVE_FILE } = require('./helper');
 const { writeFileSync } = require('fs');
 
-const baseUrl = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-08-15/logs`;
-
 module.exports = async ({
   extensionIdentifier,
-  subscriptionBody,
   port,
   address,
   logsQueue,
@@ -57,27 +53,51 @@ module.exports = async ({
     .listen(port, address);
 
   // Subscribe to logs
-
-  const res = await fetch(baseUrl, {
-    method: 'put',
-    body: JSON.stringify(subscriptionBody),
-    headers: {
-      'Content-Type': 'application/json',
-      'Lambda-Extension-Identifier': extensionIdentifier,
-    },
-  });
-
-  switch (res.status) {
-    case 200:
-      break;
-    case 202:
-      console.warn(
-        'WARNING!!! Logs API is not supported! Is this extension running in a local sandbox?'
+  try {
+    await new Promise((resolve, reject) => {
+      const putData = JSON.stringify({
+        destination: { protocol: 'HTTP', URI: `http://${address}:${port}` },
+        types: ['platform', 'function'],
+        buffering: { timeoutMs: 25, maxBytes: 262144, maxItems: 1000 },
+        schemaVersion: '2021-03-18',
+      });
+      const request = http.request(
+        `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-08-15/logs`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Lambda-Extension-Identifier': extensionIdentifier,
+            'Content-Length': Buffer.byteLength(putData),
+          },
+        },
+        (response) => {
+          response.setEncoding('utf8');
+          let result = '';
+          response.on('data', (chunk) => {
+            result += String(chunk);
+          });
+          response.on('end', () => {
+            if (response.statusCode === 200) {
+              resolve();
+            } else {
+              // TODO: Report propery extension crash
+              reject(
+                new Error(
+                  `Unexpecxted logs subscribe response status code: ${response.statusCode}, text: ${result}`
+                )
+              );
+            }
+          });
+        }
       );
-      break;
-    default:
-      console.error('logs subscription failed: ', await res.text());
-      break;
+      request.on('error', reject);
+      request.write(putData);
+      request.end();
+    });
+  } catch (error) {
+    server.close();
+    throw error;
   }
 
   return server;
