@@ -120,6 +120,5 @@ jobs:
       - name: Publish release notes
         run: |
           cd packages/aws-lambda-otel-extension
-          TEMP_ARRAY=($(echo $GITHUB_REF | tr "/" "\n"))
-          TAG=${TEMP_ARRAY[@]: -1}
+          TAG=${GITHUB_REF:10}
           npx github-release-from-cc-changelog $TAG
