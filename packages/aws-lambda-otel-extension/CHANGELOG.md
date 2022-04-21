@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.19](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.18...@serverless/aws-lambda-otel-extension@0.2.19) (2022-04-21)
+
+### Features
+
+- Suport `userSettings.disableLogsMonitoring` ([54d1fa9](https://github.com/serverless/runtime/commit/54d1fa996e82566fd505d9e1975d9c641651d147))
+- Support `userSettings.disableRequestResponseMonitoring` ([b7998b4](https://github.com/serverless/runtime/commit/b7998b42843e02e1fb76faf60a73e127c86bdb7d))
+
+### Maintenance Improvements
+
+- Centralize log listener server handling ([39fb512](https://github.com/serverless/runtime/commit/39fb51297105f8c3c491b41f151e592169601fb1))
+- Centralize log listener server host and port configuration ([1c38e2d](https://github.com/serverless/runtime/commit/1c38e2d6a1a8b5dd3bc5ddef1f5bc24f8cc0e230))
+- Centralize subscription configuration ([c6ffbc8](https://github.com/serverless/runtime/commit/c6ffbc8f61b2ebebceb35f4a576900ee27b3274a))
+- Improve handling of dead paths ([9336587](https://github.com/serverless/runtime/commit/933658710e2dc814f0b2f2c1221c8044e924b132))
+- Remove obsolete error handling ([7310032](https://github.com/serverless/runtime/commit/7310032176d1e9ddd17bde9378ea260844f6b044))
+- Remove obsolete handling from telemetry server ([247dec6](https://github.com/serverless/runtime/commit/247dec6665597b7f6d56fa8454c18a32352d5458))
+- Reorder initial setup ([7f9e364](https://github.com/serverless/runtime/commit/7f9e364d23ab7cf0341aa2e9e7e255f398cb2fa7))
+
 ### [0.2.18](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.12...@serverless/aws-lambda-otel-extension@0.2.18) (2022-04-13)
 
 ### Bug Fixes
