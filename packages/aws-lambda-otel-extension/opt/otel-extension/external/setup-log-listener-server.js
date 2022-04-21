@@ -3,6 +3,7 @@
 const http = require('http');
 const { writeFileSync } = require('fs');
 const { logMessage } = require('../lib/helper');
+const userSettings = require('../lib/user-settings');
 const { SAVE_FILE } = require('./helper');
 
 const host = 'sandbox';
@@ -55,6 +56,8 @@ module.exports = async ({
   // Subscribe to logs
   try {
     await new Promise((resolve, reject) => {
+      const eventTypes = ['platform'];
+      if (!userSettings.disableLogsMonitoring) eventTypes.push('function');
       const putData = JSON.stringify({
         destination: { protocol: 'HTTP', URI: `http://${host}:${port}` },
         types: ['platform', 'function'],
