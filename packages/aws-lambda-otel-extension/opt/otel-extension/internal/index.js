@@ -27,6 +27,7 @@ const fetch = require('node-fetch');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
+const userSettings = require('../lib/user-settings');
 
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
@@ -244,14 +245,6 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     recordType: 'telemetryData',
     requestId: executionId,
     record: {
-      responseEventPayload: {
-        responseData: res,
-        errorData: err,
-        executionId,
-        isTimeout,
-        traceId: span ? span.spanContext().traceId : null,
-        spanId: span ? span.spanContext().spanId : null,
-      },
       function: functionData,
       traces: {
         resourceSpans: [
@@ -263,6 +256,18 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       },
     },
   };
+
+  if (!userSettings.disableRequestResponseMonitoring) {
+    telemetryDataPayload.record.responseEventPayload = {
+      responseData: res,
+      errorData: err,
+      executionId,
+      isTimeout,
+      traceId: span ? span.spanContext().traceId : null,
+      spanId: span ? span.spanContext().spanId : null,
+    };
+  }
+
   if (process.env.TEST_DRY_LOG) {
     process._rawDebug(
       `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
@@ -353,14 +358,16 @@ registerInstrumentations({
               traceId: span.spanContext().traceId,
               spanId: span.spanContext().spanId,
             },
-            requestEventPayload: {
-              traceId: span.spanContext().traceId,
-              spanId: span.spanContext().spanId,
-              requestData: event,
-              executionId: context.awsRequestId,
-            },
           },
         };
+        if (!userSettings.disableRequestResponseMonitoring) {
+          eventDataPayload.record.requestEventPayload = {
+            traceId: span.spanContext().traceId,
+            spanId: span.spanContext().spanId,
+            requestData: event,
+            executionId: context.awsRequestId,
+          };
+        }
 
         if (process.env.TEST_DRY_LOG) {
           process._rawDebug(

@@ -82,6 +82,7 @@ What data is monitored and collected during invocation can be fine tuned with se
 Following configuration properties are supported:
 
 - `disableLogsMonitoring`: Do not collect and monitor regular function logs
+- `disableRequestResponseMonitoring` - Do not propagate request (event payload) and lambda response values
 
 ### Tests
 
