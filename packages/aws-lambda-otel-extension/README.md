@@ -75,6 +75,14 @@ Just _metrics_ and _traces_ are logged by default. To also log reports of _lambd
 
 Payloads, by default are serialized into Protocol buffer format, but the format can be changed to JSON by setting `SLS_OTEL_REPORT_TYPE` environment variable to `json`
 
+##### Monitoring configuration
+
+What data is monitored and collected during invocation can be fine tuned with setting transported via `SLS_OTEL_USER_SETTINGS` environement variable. Value is expected to be serialized JSON object.
+
+Following configuration properties are supported:
+
+- `disableLogsMonitoring`: Do not collect and monitor regular function logs
+
 ### Tests
 
 #### Unit tests
