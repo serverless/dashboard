@@ -1,10 +1,9 @@
 'use strict';
 
 const http = require('http');
-
+const { writeFileSync } = require('fs');
 const { logMessage } = require('../lib/helper');
 const { SAVE_FILE } = require('./helper');
-const { writeFileSync } = require('fs');
 
 const host = 'sandbox';
 const port = 4243;
