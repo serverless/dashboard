@@ -211,23 +211,12 @@ const EventType = {
   SHUTDOWN: 'SHUTDOWN',
 };
 
-const LOCAL_DEBUGGING_IP = '0.0.0.0';
-const RECEIVER_NAME = 'sandbox';
-
-const receiverAddress = () => {
-  return process.env.AWS_SAM_LOCAL === 'true' ? LOCAL_DEBUGGING_IP : RECEIVER_NAME;
-};
-
 const SAVE_FILE = '/tmp/sls-save-log.json';
 const SENT_FILE = '/tmp/sent-requests.json';
-
-const RECEIVER_PORT = 4243;
 
 module.exports = {
   SAVE_FILE,
   SENT_FILE,
-  receiverAddress,
-  RECEIVER_PORT,
   EventType,
   resourceAttributes,
   measureAttributes,

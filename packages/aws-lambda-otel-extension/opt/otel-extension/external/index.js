@@ -9,7 +9,7 @@ const setupLogListenerServer = require('./setup-log-listener-server');
 const initializeTelemetryListener = require('./initialize-telemetry-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
-const { EventType, SAVE_FILE, SENT_FILE, receiverAddress, RECEIVER_PORT } = require('./helper');
+const { EventType, SAVE_FILE, SENT_FILE } = require('./helper');
 const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
 function handleShutdown() {
@@ -286,8 +286,6 @@ module.exports = (async function main() {
 
   const server = await setupLogListenerServer({
     extensionIdentifier: extensionId,
-    port: RECEIVER_PORT,
-    address: receiverAddress(),
     logsQueue,
     liveLogData,
     liveLogCallback: postLiveLogs,
