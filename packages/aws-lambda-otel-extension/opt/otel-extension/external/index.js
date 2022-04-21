@@ -273,7 +273,6 @@ module.exports = (async function main() {
     logsQueue,
     port: OTEL_SERVER_PORT,
     mainEventData,
-    liveLogData,
     liveLogCallback: postLiveLogs,
     callback: async (...args) => {
       await uploadLogs(...args);
