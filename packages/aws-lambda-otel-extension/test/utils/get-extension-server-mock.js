@@ -88,6 +88,7 @@ module.exports = (emitter) => {
           expect(data.types).to.deep.equal(['platform', 'function']);
           expect(data.destination).to.have.property('URI');
           logsUrl = data.destination.URI;
+          log.debug('Logs server url %s', logsUrl);
           const statusCode = 200;
           const responseBody = 'OK';
           const headers = {
