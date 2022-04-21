@@ -27,34 +27,31 @@ module.exports = async ({
       request.on('data', (data) => {
         body += data;
       });
-      request.on('end', async () => {
-        try {
-          const batch = JSON.parse(body);
-          logMessage('Current data before write: ', JSON.stringify(logsQueue));
+      request.on('end', () => {
+        const batch = JSON.parse(body);
+        logMessage('Current data before write: ', JSON.stringify(logsQueue));
 
-          if (batch.length > 0) {
-            const logBatch = batch.filter((log) => log.type === 'platform.report');
-            logsQueue.push(logBatch);
-            writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
+        if (batch.length > 0) {
+          const logBatch = batch.filter((log) => log.type === 'platform.report');
+          logsQueue.push(logBatch);
+          writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
 
-            if (callback && logBatch.length > 0) {
-              const reportIds = logBatch.map(
-                (log) => log.record.requestId || log.record.split('\t')[1]
-              );
-              callback(logsQueue, reportIds);
-            }
+          if (callback && logBatch.length > 0) {
+            const reportIds = logBatch.map(
+              (log) => log.record.requestId || log.record.split('\t')[1]
+            );
+            callback(logsQueue, reportIds);
           }
-
-          const reportedLogs = batch.filter((log) => !log.type.startsWith('platform.'));
-
-          liveLogData.logs.push(...(reportedLogs || []));
-
-          await liveLogCallback();
-        } catch (e) {
-          logMessage('failed to parse logs', e);
         }
+
+        const reportedLogs = batch.filter((log) => !log.type.startsWith('platform.'));
+
+        liveLogData.logs.push(...(reportedLogs || []));
+
         response.writeHead(200, {});
         response.end('OK');
+
+        liveLogCallback();
       });
     })
     .listen(port, address);
