@@ -222,30 +222,12 @@ const SAVE_FILE = '/tmp/sls-save-log.json';
 const SENT_FILE = '/tmp/sent-requests.json';
 
 const RECEIVER_PORT = 4243;
-const TIMEOUT_MS = 25; // Maximum time (in milliseconds) that a batch is buffered.
-const MAX_BYTES = 262144; // Maximum size in bytes that the logs are buffered in memory.
-const MAX_ITEMS = 1000; // Maximum number of events that are buffered in memory.
-
-const SUBSCRIPTION_BODY = {
-  destination: {
-    protocol: 'HTTP',
-    URI: `http://${RECEIVER_NAME}:${RECEIVER_PORT}`,
-  },
-  types: ['platform', 'function'],
-  buffering: {
-    timeoutMs: TIMEOUT_MS,
-    maxBytes: MAX_BYTES,
-    maxItems: MAX_ITEMS,
-  },
-  schemaVersion: '2021-03-18',
-};
 
 module.exports = {
   SAVE_FILE,
   SENT_FILE,
   receiverAddress,
   RECEIVER_PORT,
-  SUBSCRIPTION_BODY,
   EventType,
   resourceAttributes,
   measureAttributes,
