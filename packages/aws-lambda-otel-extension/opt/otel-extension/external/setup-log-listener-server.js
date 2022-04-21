@@ -6,10 +6,11 @@ const { logMessage } = require('../lib/helper');
 const { SAVE_FILE } = require('./helper');
 const { writeFileSync } = require('fs');
 
+const host = 'sandbox';
+const port = 4243;
+
 module.exports = async ({
   extensionIdentifier,
-  port,
-  address,
   logsQueue,
   liveLogCallback,
   liveLogData,
@@ -50,13 +51,13 @@ module.exports = async ({
         liveLogCallback();
       });
     })
-    .listen(port, address);
+    .listen(port, host);
 
   // Subscribe to logs
   try {
     await new Promise((resolve, reject) => {
       const putData = JSON.stringify({
-        destination: { protocol: 'HTTP', URI: `http://${address}:${port}` },
+        destination: { protocol: 'HTTP', URI: `http://${host}:${port}` },
         types: ['platform', 'function'],
         buffering: { timeoutMs: 25, maxBytes: 262144, maxItems: 1000 },
         schemaVersion: '2021-03-18',
