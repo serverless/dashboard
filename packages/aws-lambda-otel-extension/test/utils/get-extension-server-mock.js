@@ -100,8 +100,7 @@ module.exports = (emitter) => {
           log.get('response')('%d %o %s', statusCode, headers, responseBody);
           response.writeHead(statusCode, headers);
           response.end(responseBody);
-          sendLogs(
-            { 'Content-Type': 'application/json' },
+          sendLogs({ 'Content-Type': 'application/json' }, [
             {
               time: new Date().toISOString(),
               type: 'platform.logsSubscription',
@@ -110,8 +109,8 @@ module.exports = (emitter) => {
                 state: 'Subscribed',
                 types: data.types,
               },
-            }
-          ).then((res) => res.text());
+            },
+          ]).then((res) => res.text());
         });
       } else {
         throw new Error('Unrecognized request');
