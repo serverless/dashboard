@@ -5,8 +5,7 @@
 const { writeFileSync, existsSync, readFileSync } = require('fs');
 const get = require('lodash.get');
 const { register, next } = require('./lambda-apis/extensions-api');
-const { subscribe } = require('./lambda-apis/logs-api');
-const { listen } = require('./lambda-apis/http-listener');
+const setupLogListenerServer = require('./setup-log-listener-server');
 const initializeTelemetryListener = require('./initialize-telemetry-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
@@ -292,7 +291,9 @@ module.exports = (async function main() {
     },
   });
 
-  const { server } = listen({
+  const server = await setupLogListenerServer({
+    extensionIdentifier: extensionId,
+    subscriptionBody: SUBSCRIPTION_BODY,
     port: RECEIVER_PORT,
     address: receiverAddress(),
     logsQueue,
@@ -300,9 +301,6 @@ module.exports = (async function main() {
     liveLogCallback: postLiveLogs,
     callback: uploadLogs,
   });
-
-  // subscribing listener to the Logs API
-  await subscribe(extensionId, SUBSCRIPTION_BODY);
 
   // execute extensions logic
   // eslint-disable-next-line no-constant-condition
