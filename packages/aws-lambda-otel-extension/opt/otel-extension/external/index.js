@@ -268,6 +268,15 @@ module.exports = (async function main() {
     }
   };
 
+  process.on('SIGINT', async () => {
+    await uploadLogs(logsQueue);
+    handleShutdown('SIGINT');
+  });
+  process.on('SIGTERM', async () => {
+    await uploadLogs(logsQueue);
+    handleShutdown('SIGINT');
+  });
+
   const { server: otelServer } = initializeTelemetryListener({
     logsQueue,
     port: OTEL_SERVER_PORT,
@@ -294,15 +303,6 @@ module.exports = (async function main() {
 
   // subscribing listener to the Logs API
   await subscribe(extensionId, SUBSCRIPTION_BODY);
-
-  process.on('SIGINT', async () => {
-    await uploadLogs(logsQueue);
-    handleShutdown('SIGINT');
-  });
-  process.on('SIGTERM', async () => {
-    await uploadLogs(logsQueue);
-    handleShutdown('SIGINT');
-  });
 
   // execute extensions logic
   // eslint-disable-next-line no-constant-condition
