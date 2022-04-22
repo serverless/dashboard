@@ -58,6 +58,7 @@ Configure following environment variables with designated server urls:
 - `SLS_OTEL_REPORT_METRICS_URL` (to obtain [traces](https://opentelemetry.io/docs/concepts/data-sources/#traces))
 - `SLS_OTEL_REPORT_TRACES_URL` (to obtain [metrics](https://opentelemetry.io/docs/concepts/data-sources/#metrics))
 - `SLS_OTEL_REPORT_LOGS_URL` (to obtain [logs](https://opentelemetry.io/docs/concepts/data-sources/#logs))
+- `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` (to obtain req/res sent to and from the lambda function)
 
 Additionally, through `SLS_OTEL_REPORT_REQUEST_HEADERS` environment variable, extra request headers can be configured, that will be sent with every request to each of the configured urls
 
