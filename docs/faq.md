@@ -162,14 +162,17 @@ systems limited sensitive information is included.
 
 Logs are stored for 7 days before being deleted. 
 
-**How can I disable log collection?** 
-Log collection can be disabled for each service by setting
-the following property.
+**How can I disable log and event data collection?** 
+Log and event data can contain sensitive information. 
+To disable log, and/or request response data collection 
+set the following properties.
 
 ```yaml
 org: myorg
 console: 
     disableLogsCollection: true
+    disableRequestResponseCollection: true
 service: myservice
 frameworkVersion: '3'
 ```
+
