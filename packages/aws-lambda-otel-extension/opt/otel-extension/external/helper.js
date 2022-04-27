@@ -1,4 +1,5 @@
 'use strict';
+const isObject = require('lodash.isobject');
 
 const extensionVersion = (() => {
   try {
@@ -9,6 +10,33 @@ const extensionVersion = (() => {
   // eslint-disable-next-line import/no-unresolved
   return require('../version');
 })();
+
+const isJson = (data) => {
+  try {
+    JSON.parse(data);
+    return true;
+  } catch (error) {
+    return null;
+  }
+};
+const stripResponseBlobData = (data) => {
+  const raw = data.responseData;
+
+  if (!isObject(raw)) {
+    delete data.responseData;
+    return data;
+  }
+  if (typeof raw.body !== 'string') return data;
+  if (!isJson(raw.body)) {
+    delete raw.body;
+    data.isBodyExcluded = true;
+    return {
+      ...data,
+      responseData: JSON.stringify(raw),
+    };
+  }
+  return data;
+};
 
 const resourceAttributes = [
   {
@@ -220,4 +248,5 @@ module.exports = {
   EventType,
   resourceAttributes,
   measureAttributes,
+  stripResponseBlobData,
 };
