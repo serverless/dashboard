@@ -62,6 +62,34 @@ Configure following environment variables with designated server urls:
 
 Additionally, through `SLS_OTEL_REPORT_REQUEST_HEADERS` environment variable, extra request headers can be configured, that will be sent with every request to each of the configured urls
 
+It is important to note that lambda response data sent to `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` will ignore any non JSON objects in either a simple response or a HTTP response payload.
+
+For example, the following will be sent to the `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` without any modifications 👇
+
+```json
+{ "message": "lambda response" }
+```
+
+```json
+{ "statusCode": 200, "body": "{\"message\": \"lambda response\"}" }
+```
+
+The following responses will be modified when sent to the `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` endpoint 👇
+
+_Simple non JSON object responses will be ignored_
+
+| Input             | Output    |
+| ----------------- | --------- |
+| "Lambda response" | _Ignored_ |
+| true              | _Ignored_ |
+| 12                | _Ignored_ |
+
+_HTTP Responses with a non JSON body will be ignored_
+
+| Input                                              | Output                  |
+| -------------------------------------------------- | ----------------------- |
+| `{ "statusCode": 200, "body": "lambda response" }` | `{ "statusCode": 200 }` |
+
 ###### S3 bucket
 
 Configure `SLS_OTEL_REPORT_S3_BUCKET` with bucket name (and ensure that Lambda has needed rights to write to the bucket)

@@ -9,7 +9,7 @@ const setupLogListenerServer = require('./setup-log-listener-server');
 const initializeTelemetryListener = require('./initialize-telemetry-listener');
 const reportOtelData = require('./report-otel-data');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
-const { EventType, SAVE_FILE, SENT_FILE } = require('./helper');
+const { EventType, SAVE_FILE, SENT_FILE, stripResponseBlobData } = require('./helper');
 const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
 function handleShutdown() {
@@ -179,7 +179,8 @@ module.exports = (async function main() {
       for (const responseEvent of Object.values(responseEvents)) {
         try {
           if (!sentResponseEvents.includes(responseEvent.executionId)) {
-            await reportOtelData.requestResponse(responseEvent);
+            // Strip response blob data before sending it to the req/res endpoint
+            await reportOtelData.requestResponse(stripResponseBlobData(responseEvent));
             sentResponseEvents.push(responseEvent.executionId);
           }
         } catch (error) {
