@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.21](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.20...@serverless/aws-lambda-otel-extension@0.2.21) (2022-04-29)
+
+### Features
+
+- Avoid sending binary response data ([dbb3711](https://github.com/serverless/runtime/commit/dbb3711b696a77290f93a36f1f2f2e190067c36a))
+
 ### [0.2.20](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.19...@serverless/aws-lambda-otel-extension@0.2.20) (2022-04-26)
 
 ### Bug Fixes
