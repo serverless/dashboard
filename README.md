@@ -13,10 +13,10 @@ console property in your `serverless.yaml' file.
 org: empty
 console: true
 service: a
-frameworkVersion: '3'
+frameworkVersion: "3"
 ```
 
-## [Lambda Extension](./packages/aws-lambda-otel-extension/)
+## [Lambda Extension](./node/packages/aws-lambda-otel-extension/)
 
 You can also add our extension to your Lambda function by doing
 the following. Soon you'll be able to.

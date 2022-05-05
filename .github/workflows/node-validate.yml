@@ -1,10 +1,11 @@
 # PR's only
 
-name: Validate
+name: "Node: Validate"
 
 on:
   pull_request:
     branches: [main]
+    paths: ["node/**"]
 
 env:
   FORCE_COLOR: 1
@@ -12,7 +13,7 @@ env:
 
 jobs:
   linuxNode16:
-    name: '[Linux] Node.js v16: Lint, Formatting, Eventual Commitlint, Eventual Changelog & Unit Tests'
+    name: "[Linux] Node.js v16: Lint, Formatting, Eventual Commitlint, Eventual Changelog & Unit Tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -33,7 +34,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.npm
-          key: npm-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('**package*.json') }}
+          key: npm-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/**package*.json') }}
           restore-keys: |
             npm-v16-${{ runner.os }}-${{ github.ref }}-
             npm-v16-${{ runner.os }}-refs/heads/main-
@@ -42,8 +43,8 @@ jobs:
         id: cacheNodeModules
         uses: actions/cache@v2
         with:
-          path: node_modules
-          key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
+          path: node/node_modules
+          key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/package.json') }}
           restore-keys: |
             node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             node-modules-v16-${{ runner.os }}-refs/heads/main-
@@ -51,8 +52,8 @@ jobs:
         id: cacheAwsLambdaOtelExtensionNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          path: node/packages/aws-lambda-otel-extension/node_modules
+          key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
@@ -60,8 +61,8 @@ jobs:
         id: cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
+          path: node/packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
@@ -69,8 +70,8 @@ jobs:
         id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
-          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
+          path: node/packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-
@@ -82,34 +83,41 @@ jobs:
       - name: Install main project dependencies
         if: steps.cacheNodeModules.outputs.cache-hit != 'true'
         run: |
+          cd node
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension
+          cd node/packages/aws-lambda-otel-extension
           npm update --no-save
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/opt/otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension/opt/otel-extension
+          cd node/packages/aws-lambda-otel-extension/opt/otel-extension
           npm update --no-save
       - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
         if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension/test/fixtures/lambdas
+          cd node/packages/aws-lambda-otel-extension/test/fixtures/lambdas
           npm update --no-save
 
       - name: Validate Prettier formatting
-        run: npm run prettier-check:updated
+        run: |
+          cd node
+          npm run prettier-check:updated
       - name: Validate ESLint rules
-        run: npm run lint:updated
+        run: |
+          cd node
+          npm run lint:updated
       - name: Validate packages/aws-lambda-otel-extension commit messages
         if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
-        run: ./scripts/commitlint.js packages/aws-lambda-otel-extension main..HEAD
+        run: |
+          cd node
+          ./scripts/commitlint.js packages/aws-lambda-otel-extension main..HEAD
       - name: Validate changelog (if new version)
         run: |
-          cd packages/aws-lambda-otel-extension
+          cd node/packages/aws-lambda-otel-extension
           NEW_VERSION=`git diff -U0 main package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
           if [ -n "$NEW_VERSION" ];
           then
@@ -117,11 +125,11 @@ jobs:
           fi
       - name: Unit tests
         run: |
-          cd packages/aws-lambda-otel-extension
+          cd node/packages/aws-lambda-otel-extension
           npm test
 
   linuxNode14:
-    name: '[Linux] Node.js v14: Isolated unit Tests'
+    name: "[Linux] Node.js v14: Isolated unit Tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -131,7 +139,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.npm
-          key: npm-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('**package*.json') }}
+          key: npm-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/**package*.json') }}
           restore-keys: |
             npm-v14-${{ runner.os }}-${{ github.ref }}-
             npm-v14-${{ runner.os }}-refs/heads/main-
@@ -140,8 +148,8 @@ jobs:
         id: cacheNodeModules
         uses: actions/cache@v2
         with:
-          path: node_modules
-          key: node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
+          path: node/node_modules
+          key: node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/package.json') }}
           restore-keys: |
             node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             node-modules-v14-${{ runner.os }}-refs/heads/main-
@@ -149,8 +157,8 @@ jobs:
         id: cacheAwsLambdaOtelExtensionNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/package.json') }}
+          path: node/packages/aws-lambda-otel-extension/node_modules
+          key: packages/aws-lambda-otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/node-modules-v14-${{ runner.os }}-refs/heads/main-
@@ -158,8 +166,8 @@ jobs:
         id: cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
-          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
+          path: node/packages/aws-lambda-otel-extension/opt/otel-extension/node_modules
+          key: packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/opt/otel-extension/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/opt/otel-extension/node-modules-v14-${{ runner.os }}-refs/heads/main-
@@ -167,8 +175,8 @@ jobs:
         id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
         uses: actions/cache@v2
         with:
-          path: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
-          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
+          path: node/packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
           restore-keys: |
             packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-refs/heads/main-
@@ -180,27 +188,28 @@ jobs:
       - name: Install main project dependencies
         if: steps.cacheNodeModules.outputs.cache-hit != 'true'
         run: |
+          cd node
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension
+          cd node/packages/aws-lambda-otel-extension
           npm update --no-save
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/opt/otel-extension dependencies
         if: steps.cacheAwsLambdaOtelExtensionOptOtelExtensionNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension/opt/otel-extension
+          cd node/packages/aws-lambda-otel-extension/opt/otel-extension
           npm update --no-save
       - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
         if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd packages/aws-lambda-otel-extension/test/fixtures/lambdas
+          cd node/packages/aws-lambda-otel-extension/test/fixtures/lambdas
           npm update --no-save
 
       - name: Unit tests
         run: |
           # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
-          export PATH="$PWD/node_modules/.bin:$PATH"
-          cd packages/aws-lambda-otel-extension
+          export PATH="$PWD/node/node_modules/.bin:$PATH"
+          cd node/packages/aws-lambda-otel-extension
           npm run test:isolated
