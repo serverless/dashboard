@@ -88,7 +88,7 @@ module.exports = () => {
   }
 
   process.env._ORIGIN_HANDLER = process.env._HANDLER;
-  process.env._HANDLER = '/opt/internal/wrapper.handler';
+  process.env._HANDLER = '/opt/otel-extension/internal/wrapper.handler';
 
   return true;
 };
