@@ -50,10 +50,20 @@ describe('integration', function () {
       if (state !== 'Active') await ensureIsActive();
     };
     const invokeFunction = async () => {
-      await awsRequest(Lambda, 'invoke', {
+      const result = await awsRequest(Lambda, 'invoke', {
         FunctionName: functionName,
         Payload: Buffer.from(JSON.stringify(payload), 'utf8'),
       });
+      try {
+        const responsePayload = JSON.parse(Buffer.from(result.Payload));
+        log.debug('invoke payload %O', responsePayload);
+        log.debug('invoke parsed payload %O', JSON.parse(responsePayload.body));
+      } catch {
+        /* ignore */
+      }
+      if (result.FunctionError) {
+        throw new Error(`Invocation errored: ${result.FunctionError}`);
+      }
     };
     const deleteFunction = async () => {
       await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionName });
