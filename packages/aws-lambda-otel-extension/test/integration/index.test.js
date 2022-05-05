@@ -19,6 +19,7 @@ const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies
 const nameTimeBase = new Date(2022, 1, 17).getTime();
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
+const hasFailed = require('@serverless/test/has-failed');
 
 const awsClientParams = { region: process.env.AWS_REGION };
 const awsRequest = (client, method, args) =>
@@ -333,7 +334,8 @@ describe('integration', function () {
     });
   });
 
-  after(async () => {
+  after(async function () {
+    if (hasFailed(this.test.parent)) return; // Avoid cleanup
     const deleteBucket = async () => {
       const objects = (
         (await awsRequest(S3, 'listObjectsV2', { Bucket: basename })).Contents || []
