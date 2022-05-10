@@ -309,7 +309,7 @@ const createMetricsPayload = (groupedByRequestId, sentRequests) =>
 
     // We only want to send an invocation once at the same time we send trace data
     // if we have already sent this data then sendRequest.trace will be marked as true
-    if (!sentRequest || !sentRequest.trace) {
+    if (!sentRequest || !sentRequest.isTraceSent) {
       metrics.push(
         createCountMetric({
           name: 'faas.invoke',
@@ -322,7 +322,7 @@ const createMetricsPayload = (groupedByRequestId, sentRequests) =>
     }
 
     // Reports will be sent separately and we only want to send this data once
-    if (report && report.record && (!sentRequest || !sentRequest.report)) {
+    if (report && report.record && (!sentRequest || !sentRequest.isReportSent)) {
       metrics.push(
         createHistogramMetric({
           name: 'faas.duration',
@@ -380,7 +380,7 @@ const createTracePayload = (groupedByRequestId, sentRequests) =>
     // Check if the trace has already been sent so we don't want to send the same trace again
     .filter((requestId) => {
       const sentRequest = sentRequests.find(({ requestId: rId }) => rId === requestId);
-      return !(sentRequest && sentRequest.trace);
+      return !(sentRequest && sentRequest.isTraceSent);
     })
     .map((requestId) => {
       const data = groupedByRequestId[requestId];

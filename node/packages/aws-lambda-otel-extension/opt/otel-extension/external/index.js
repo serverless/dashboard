@@ -106,8 +106,8 @@ module.exports = (async function main() {
     logMessage('NOT READY: ', JSON.stringify(notReady));
 
     logMessage('Sent Requests: ', JSON.stringify(sentRequests));
-    for (const { requestId, trace, report } of sentRequests) {
-      if (ready[requestId] && trace && report) delete ready[requestId];
+    for (const { requestId, isTraceSent, isReportSent } of sentRequests) {
+      if (ready[requestId] && isTraceSent && isReportSent) delete ready[requestId];
     }
     const orgId = get(ready[Object.keys(ready)[0]], 'function.record.sls_org_id', 'xxxx');
     logMessage('OrgId: ', orgId);
@@ -150,8 +150,8 @@ module.exports = (async function main() {
       const { requestId } = obj;
       const found = readyKeys.find((id) => id === requestId);
       if (found) {
-        obj.trace = !!ready[requestId].function && !!ready[requestId].traces;
-        obj.report = !!ready[requestId]['platform.report'];
+        obj.isTraceSent = !!ready[requestId].function && !!ready[requestId].traces;
+        obj.isReportSent = !!ready[requestId]['platform.report'];
       }
     });
     readyKeys
@@ -159,8 +159,8 @@ module.exports = (async function main() {
       .forEach((id) =>
         sentRequests.push({
           requestId: id,
-          trace: !!ready[id].function && !!ready[id].traces,
-          report: !!ready[id]['platform.report'],
+          isTraceSent: !!ready[id].function && !!ready[id].traces,
+          isReportSent: !!ready[id]['platform.report'],
         })
       );
 
