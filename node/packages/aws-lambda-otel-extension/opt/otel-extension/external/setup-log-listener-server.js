@@ -33,7 +33,7 @@ module.exports = async ({
           logsQueue.push(logBatch);
           writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
 
-          if (callback && logBatch.length > 0) {
+          if (logBatch.length > 0) {
             const reportIds = logBatch.map(
               (log) => log.record.requestId || log.record.split('\t')[1]
             );
