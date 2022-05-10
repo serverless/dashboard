@@ -132,21 +132,18 @@ module.exports = (async function main() {
       }
     }
 
-    const responseEventKeys = Object.keys(responseEvents);
-
-    if (responseEventKeys && responseEventKeys.length > 0) {
-      for (const responseEvent of Object.values(responseEvents)) {
+    for (const responseEvent of Object.values(responseEvents)) {
+      if (!sentResponseEvents.includes(responseEvent.executionId)) {
         try {
-          if (!sentResponseEvents.includes(responseEvent.executionId)) {
-            // Strip response blob data before sending it to the req/res endpoint
-            await reportOtelData.requestResponse(stripResponseBlobData(responseEvent));
-            sentResponseEvents.push(responseEvent.executionId);
-          }
+          // Strip response blob data before sending it to the req/res endpoint
+          await reportOtelData.requestResponse(stripResponseBlobData(responseEvent));
+          sentResponseEvents.push(responseEvent.executionId);
         } catch (error) {
           logMessage('Response data send Error:', error);
         }
       }
     }
+
     // Save request ids so we don't send them twice
     const readyKeys = Object.keys(ready);
     sentRequests.forEach((obj) => {
