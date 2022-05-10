@@ -34,9 +34,6 @@ function initializeTelemetryListener({
           } else if (data && data.recordType === 'telemetryData') {
             logsQueue.push([data]);
             writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
-          }
-
-          if (callback && data.recordType === 'telemetryData') {
             const reportIds = [data.requestId];
             callback(logsQueue, reportIds);
           }
