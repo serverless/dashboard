@@ -81,48 +81,24 @@ module.exports = (async function main() {
     const currentIndex = reportLists.length;
     const groupedByRequestId = await groupReports(reportLists);
 
-    const { ready, notReady, responseEvents } = Object.keys(groupedByRequestId).reduce(
-      (obj, id) => {
-        const data = groupedByRequestId[id];
-        const report = data['platform.report'];
-        const { function: fun, traces, responseEventPayload } = get(data, 'layer.record') || {};
-
-        let updatedResponseEvents = obj.responseEvents;
-
-        if (responseEventPayload) {
-          updatedResponseEvents = { ...updatedResponseEvents, [id]: responseEventPayload };
-        }
-
+    const ready = {};
+    const notReady = {};
+    const responseEvents = {};
+    for (const [requestId, data] of Object.entries(groupedByRequestId)) {
+      const report = data['platform.report'];
+      const { function: fun, traces, responseEventPayload } = get(data.layer, 'record') || {};
+      if (responseEventPayload) responseEvents[requestId] = responseEventPayload;
+      if (fun && traces) {
         // report is not required so we can send duration async
-        if (fun && traces) {
-          return {
-            ...obj,
-            ready: {
-              ...obj.ready,
-              [id]: {
-                'platform.report': report,
-                'function': { record: fun },
-                'traces': { record: traces },
-              },
-            },
-            responseEvents: updatedResponseEvents,
-          };
-        }
-        return {
-          ...obj,
-          notReady: {
-            ...obj.notReady,
-            [id]: data,
-          },
-          responseEvents: updatedResponseEvents,
+        ready[requestId] = {
+          'platform.report': report,
+          'function': { record: fun },
+          'traces': { record: traces },
         };
-      },
-      {
-        ready: {},
-        notReady: {},
-        responseEvents: {},
+        continue;
       }
-    );
+      notReady[requestId] = data;
+    }
 
     if (focusIds.length > 0) {
       const readyIds = Object.keys(ready);
