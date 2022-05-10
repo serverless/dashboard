@@ -53,7 +53,11 @@ module.exports = (async function main() {
     const result = {};
     for (const reportList of reportLists) {
       for (const reportData of reportList) {
+        // Two kind of events land here
+        // 1. telemetryData as send form lambda by internal instrumentation on lambda response
+        // 2. "platform.report" event as coming directly from AWS Lambda API
         if (reportData.recordType !== 'telemetryData') {
+          // "platform.report" event
           reportData.requestId = reportData.record.requestId;
         }
 
@@ -64,6 +68,7 @@ module.exports = (async function main() {
           reportData.origin = 'sls-layer';
           result[requestId].layer = reportData;
         } else {
+          // "platform.report" event
           result[requestId][reportData.type] = reportData;
         }
       }
