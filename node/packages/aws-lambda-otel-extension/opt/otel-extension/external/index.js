@@ -79,6 +79,7 @@ module.exports = (async function main() {
   // function for processing collected logs
   async function sendReports(reportLists, focusIds = []) {
     const currentIndex = reportLists.length;
+    const focusIdsSet = new Set(focusIds);
     const groupedByRequestId = await groupReports(reportLists);
 
     const ready = {};
@@ -89,6 +90,7 @@ module.exports = (async function main() {
       const { function: fun, traces, responseEventPayload } = get(data.layer, 'record') || {};
       if (responseEventPayload) responseEvents[requestId] = responseEventPayload;
       if (fun && traces) {
+        if (focusIdsSet.size && !focusIdsSet.has(requestId)) continue;
         // report is not required so we can send duration async
         ready[requestId] = {
           'platform.report': report,
@@ -98,15 +100,6 @@ module.exports = (async function main() {
         continue;
       }
       notReady[requestId] = data;
-    }
-
-    if (focusIds.length > 0) {
-      const readyIds = Object.keys(ready);
-      readyIds.forEach((id) => {
-        if (!focusIds.includes(id)) {
-          delete ready[id];
-        }
-      });
     }
 
     logMessage('READY: ', JSON.stringify(ready));
@@ -187,12 +180,12 @@ module.exports = (async function main() {
           if (log.recordType === 'telemetryData') {
             return (
               incompleteRequestIds.includes(log.requestId) ||
-              (focusIds.length > 0 && !focusIds.includes(log.requestId))
+              (focusIdsSet.size && !focusIdsSet.has(log.requestId))
             );
           }
           return (
             incompleteRequestIds.includes(log.record.requestId) ||
-            (focusIds.length > 0 && !focusIds.includes(log.record.requestId))
+            (focusIdsSet.size && !focusIdsSet.has(log.record.requestId))
           );
         });
         subList.splice(0);
