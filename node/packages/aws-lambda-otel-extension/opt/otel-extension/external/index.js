@@ -47,9 +47,9 @@ module.exports = (async function main() {
   let receivedData = false;
   let currentRequestId;
 
-  const groupLogs = async (logList) => {
-    logMessage('LOGS: ', JSON.stringify(logList));
-    const combinedLogs = logList.reduce((arr, logs) => [...arr, ...logs], []);
+  const groupLogs = async (reportLists) => {
+    logMessage('LOGS: ', JSON.stringify(reportLists));
+    const combinedLogs = reportLists.reduce((arr, logs) => [...arr, ...logs], []);
 
     const items = await Promise.all(
       combinedLogs.map(async (log) => {
@@ -86,9 +86,9 @@ module.exports = (async function main() {
   };
 
   // function for processing collected logs
-  async function sendReports(logList, focusIds = []) {
-    const currentIndex = logList.length;
-    const groupedByRequestId = await groupLogs(logList);
+  async function sendReports(reportLists, focusIds = []) {
+    const currentIndex = reportLists.length;
+    const groupedByRequestId = await groupLogs(reportLists);
 
     const { ready, notReady, responseEvents } = Object.keys(groupedByRequestId).reduce(
       (obj, id) => {
@@ -214,7 +214,7 @@ module.exports = (async function main() {
       ...sentRequests.filter(({ report }) => !report).map(({ requestId }) => requestId),
     ];
     logMessage('Incomplete Request Ids: ', JSON.stringify(incompleteRequestIds));
-    logList.forEach((subList, index) => {
+    reportLists.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {
           if (log.recordType === 'telemetryData') {
@@ -232,7 +232,7 @@ module.exports = (async function main() {
         subList.push(...saveList);
       }
     });
-    logMessage('Remaining logs queue: ', JSON.stringify(logList));
+    logMessage('Remaining logs queue: ', JSON.stringify(reportLists));
   }
 
   const sendFunctionLogs = async () => {
