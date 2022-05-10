@@ -47,7 +47,7 @@ module.exports = (async function main() {
   let receivedData = false;
   let currentRequestId;
 
-  const groupLogs = async (reportLists) => {
+  const groupReports = async (reportLists) => {
     logMessage('LOGS: ', JSON.stringify(reportLists));
     const combinedLogs = reportLists.reduce((arr, logs) => [...arr, ...logs], []);
 
@@ -88,7 +88,7 @@ module.exports = (async function main() {
   // function for processing collected logs
   async function sendReports(reportLists, focusIds = []) {
     const currentIndex = reportLists.length;
-    const groupedByRequestId = await groupLogs(reportLists);
+    const groupedByRequestId = await groupReports(reportLists);
 
     const { ready, notReady, responseEvents } = Object.keys(groupedByRequestId).reduce(
       (obj, id) => {
