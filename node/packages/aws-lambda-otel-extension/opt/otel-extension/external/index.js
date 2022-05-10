@@ -145,24 +145,22 @@ module.exports = (async function main() {
     }
 
     // Save request ids so we don't send them twice
-    const readyKeys = Object.keys(ready);
-    sentRequests.forEach((obj) => {
-      const { requestId } = obj;
-      const found = readyKeys.find((id) => id === requestId);
-      if (found) {
-        obj.isTraceSent = !!ready[requestId].function && !!ready[requestId].traces;
-        obj.isReportSent = !!ready[requestId]['platform.report'];
-      }
-    });
-    readyKeys
-      .filter((id) => !sentRequests.find(({ requestId }) => id === requestId))
-      .forEach((id) =>
-        sentRequests.push({
-          requestId: id,
-          isTraceSent: !!ready[id].function && !!ready[id].traces,
-          isReportSent: !!ready[id]['platform.report'],
-        })
-      );
+    const justSentRequestIds = new Set(Object.keys(ready));
+    for (const sentRequest of sentRequests) {
+      const { requestId } = sentRequest;
+      if (!justSentRequestIds.has(requestId)) continue;
+      sentRequest.isTraceSent = Boolean(ready[requestId].function && ready[requestId].traces);
+      sentRequest.isReportSent = Boolean(ready[requestId]['platform.report']);
+    }
+    const sentRequestIds = new Set(sentRequests.map(({ requestId }) => requestId));
+    for (const requestId of justSentRequestIds) {
+      if (sentRequestIds.has(requestId)) continue;
+      sentRequests.push({
+        requestId,
+        isTraceSent: Boolean(ready[requestId].function && ready[requestId].traces),
+        isReportSent: Boolean(ready[requestId]['platform.report']),
+      });
+    }
 
     // Only remove logs that were marked as ready or have not sent a report yet
     const incompleteRequestIds = [
