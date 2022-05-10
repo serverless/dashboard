@@ -49,40 +49,26 @@ module.exports = (async function main() {
 
   const groupReports = async (reportLists) => {
     logMessage('LOGS: ', JSON.stringify(reportLists));
-    const combinedLogs = reportLists.reduce((arr, logs) => [...arr, ...logs], []);
 
-    const items = await Promise.all(
-      combinedLogs.map(async (log) => {
-        if (log.recordType === 'telemetryData') {
-          try {
-            return {
-              ...log,
-              origin: 'sls-layer',
-            };
-          } catch (error) {
-            logMessage('failed to parse line', error);
-            return log;
-          }
+    const result = {};
+    for (const reportList of reportLists) {
+      for (const reportData of reportList) {
+        if (reportData.recordType !== 'telemetryData') {
+          reportData.requestId = reportData.record.requestId;
         }
-        return {
-          ...log,
-          requestId: log.record.requestId,
-        };
-      })
-    );
 
-    return items.reduce((obj, item) => {
-      if (!obj[item.requestId]) {
-        obj[item.requestId] = {};
+        const { requestId } = reportData;
+        if (!result[requestId]) result[requestId] = {};
+
+        if (reportData.recordType === 'telemetryData') {
+          reportData.origin = 'sls-layer';
+          result[requestId].layer = reportData;
+        } else {
+          result[requestId][reportData.type] = reportData;
+        }
       }
-      return {
-        ...obj,
-        [item.requestId]: {
-          ...obj[item.requestId],
-          [item.origin === 'sls-layer' ? 'layer' : item.type]: item,
-        },
-      };
-    }, {});
+    }
+    return result;
   };
 
   // function for processing collected logs
