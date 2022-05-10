@@ -105,7 +105,6 @@ module.exports = (async function main() {
     logMessage('READY: ', JSON.stringify(ready));
     logMessage('NOT READY: ', JSON.stringify(notReady));
 
-    logMessage('Grouped: ', JSON.stringify(ready));
     logMessage('Sent Requests: ', JSON.stringify(sentRequests));
     for (const { requestId, trace, report } of sentRequests) {
       if (ready[requestId] && trace && report) delete ready[requestId];
