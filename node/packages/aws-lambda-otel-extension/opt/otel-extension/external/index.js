@@ -86,7 +86,7 @@ module.exports = (async function main() {
   };
 
   // function for processing collected logs
-  async function uploadLogs(logList, focusIds = []) {
+  async function sendReports(logList, focusIds = []) {
     const currentIndex = logList.length;
     const groupedByRequestId = await groupLogs(logList);
 
@@ -235,7 +235,7 @@ module.exports = (async function main() {
     logMessage('Remaining logs queue: ', JSON.stringify(logList));
   }
 
-  const postLiveLogs = async () => {
+  const sendFunctionLogs = async () => {
     // Check that we have logs in the queue
     // Check that we have a currentRequestId identified
     // Check that we have event data associated with the currentRequestId
@@ -262,11 +262,11 @@ module.exports = (async function main() {
   };
 
   process.on('SIGINT', async () => {
-    await uploadLogs(logsQueue);
+    await sendReports(logsQueue);
     handleShutdown('SIGINT');
   });
   process.on('SIGTERM', async () => {
-    await uploadLogs(logsQueue);
+    await sendReports(logsQueue);
     handleShutdown('SIGINT');
   });
 
@@ -274,9 +274,9 @@ module.exports = (async function main() {
     logsQueue,
     port: OTEL_SERVER_PORT,
     mainEventData,
-    liveLogCallback: postLiveLogs,
+    liveLogCallback: sendFunctionLogs,
     callback: async (...args) => {
-      await uploadLogs(...args);
+      await sendReports(...args);
       receivedData = true;
     },
     requestResponseCallback: async (data) => {
@@ -288,8 +288,8 @@ module.exports = (async function main() {
     extensionIdentifier: extensionId,
     logsQueue,
     liveLogData,
-    liveLogCallback: postLiveLogs,
-    callback: uploadLogs,
+    liveLogCallback: sendFunctionLogs,
+    callback: sendReports,
   });
 
   // execute extensions logic
@@ -321,7 +321,7 @@ module.exports = (async function main() {
 
       logMessage('AFTER SOME TIME WE WILL UPLOAD...', JSON.stringify(logsQueue));
 
-      await uploadLogs(logsQueue, []);
+      await sendReports(logsQueue, []);
 
       logMessage('DONE...', JSON.stringify(logsQueue));
       writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
