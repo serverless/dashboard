@@ -78,7 +78,6 @@ module.exports = (async function main() {
 
   // function for processing collected logs
   async function sendReports(reportLists, focusIds = []) {
-    const currentIndex = reportLists.length;
     const focusIdsSet = new Set(focusIds);
     const groupedByRequestId = await groupReports(reportLists);
 
@@ -168,23 +167,16 @@ module.exports = (async function main() {
       ...sentRequests.filter(({ report }) => !report).map(({ requestId }) => requestId),
     ]);
     logMessage('Incomplete Request Ids: ', JSON.stringify(Array.from(incompleteRequestIds)));
-    reportLists.forEach((subList, index) => {
-      if (index < currentIndex) {
-        const saveList = subList.filter((log) => {
-          if (log.recordType === 'telemetryData') {
-            return (
-              incompleteRequestIds.has(log.requestId) ||
-              (focusIdsSet.size && !focusIdsSet.has(log.requestId))
-            );
-          }
-          return (
-            incompleteRequestIds.has(log.record.requestId) ||
-            (focusIdsSet.size && !focusIdsSet.has(log.record.requestId))
-          );
-        });
-        subList.splice(0);
-        subList.push(...saveList);
-      }
+
+    reportLists.forEach((subList) => {
+      const saveList = subList.filter((log) => {
+        return (
+          incompleteRequestIds.has(log.requestId) ||
+          (focusIdsSet.size && !focusIdsSet.has(log.requestId))
+        );
+      });
+      subList.splice(0);
+      subList.push(...saveList);
     });
     logMessage('Remaining logs queue: ', JSON.stringify(reportLists));
   }
