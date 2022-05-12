@@ -163,22 +163,22 @@ module.exports = (async function main() {
     }
 
     // Only remove logs that were marked as ready or have not sent a report yet
-    const incompleteRequestIds = [
+    const incompleteRequestIds = new Set([
       ...Object.keys(notReady),
       ...sentRequests.filter(({ report }) => !report).map(({ requestId }) => requestId),
-    ];
-    logMessage('Incomplete Request Ids: ', JSON.stringify(incompleteRequestIds));
+    ]);
+    logMessage('Incomplete Request Ids: ', JSON.stringify(Array.from(incompleteRequestIds)));
     reportLists.forEach((subList, index) => {
       if (index < currentIndex) {
         const saveList = subList.filter((log) => {
           if (log.recordType === 'telemetryData') {
             return (
-              incompleteRequestIds.includes(log.requestId) ||
+              incompleteRequestIds.has(log.requestId) ||
               (focusIdsSet.size && !focusIdsSet.has(log.requestId))
             );
           }
           return (
-            incompleteRequestIds.includes(log.record.requestId) ||
+            incompleteRequestIds.has(log.record.requestId) ||
             (focusIdsSet.size && !focusIdsSet.has(log.record.requestId))
           );
         });
