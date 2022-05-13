@@ -2,7 +2,7 @@
 title: Using with esbuild
 menuText: Using with esbuild
 description: Configure esbuild with Serverless Framework for us with Serverless Console
-menuOrder: 3
+menuOrder: 5
 -->
 
 # Using With esbuild

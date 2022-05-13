@@ -2,7 +2,7 @@
 title: Setup AWS Access Keys
 menuText: Setup AWS Access Keys
 description: A guide to setting up local AWS Access Keys
-menuOrder: 3
+menuOrder: 4
 -->
 
 # Setup a local AWS Access Key
