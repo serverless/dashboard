@@ -40,7 +40,7 @@ Serverless Console has two user roles. An org owner, and contributor.
 
 Only org owners can add other users and access payment information. 
 
-**What is an Org Token? How do I configure automated deployments in a CI/CD system? Who can configure CI/CD systems.**
+**What is an Org Token? How do I configure automated deployments in a CI/CD system?**
 
 An org token is a token that organization owners can use to configure an automated deployment system. To configure deployment in these system, do the following.
 
