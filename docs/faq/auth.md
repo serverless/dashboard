@@ -27,7 +27,7 @@ Yes, org names can be changed from the settings section of Console. Keep in mind
 
 **If I setup an organization in Serverless before, will it work with console?**
 
-Yes, you will automatically start using an existing organization if you have already set one up in Servrless Dashboard or Serverless Cloud. 
+Yes, you will automatically start using an existing organization if you have already set one up in Servrless Dashboard. 
 
 **I joined an organization in Serverless, will it be there in Serverless Console**
 Yes, any organizations you are a member of in Serverless Dashboard will be automatically added to your Serverless Console. 
