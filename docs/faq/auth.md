@@ -19,7 +19,7 @@ npm -g install serverless
 
 **What’s an organization? Where did my organization name come from?**
 
-An organization is a unique tenant within the Serverless suite of products (including Serverless Dashboard, Serverless Cloud, and Serverless Console). This name must be unique, and we randomly assign you a combination of words as your organization name if you're using Console for the first time. 
+An organization is a unique tenant within the Serverless suite of products (including Serverless Dashboard, Serverless Cloud, and Serverless Console). This name must be unique, and we randomly assign a combination of words as your organization name if you're using Console for the first time. 
 
 **Can I change my org name?**
 
