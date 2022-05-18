@@ -110,7 +110,11 @@ module.exports = (emitter) => {
                 types: data.types,
               },
             },
-          ]).then((res) => res.text());
+          ])
+            .then((res) => res.text())
+            .then(() => {
+              listenerEmitter.emit('logsSubscription');
+            });
         });
       } else {
         throw new Error('Unrecognized request');
