@@ -310,8 +310,8 @@ describe('integration', function () {
         log.debug('resolved reports %o', reports);
       });
       it('test', () => {
-        const metricsReport = reports.find((reportArr) => !!('resourceMetrics' in reportArr[0]))[0];
-        const tracesReport = reports.find((reportArr) => !!('resourceSpans' in reportArr[0]))[0];
+        const metricsReport = reports.find((report) => report[0].resourceMetrics)[0];
+        const tracesReport = reports.find((report) => report[0].resourceSpans)[0];
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );
