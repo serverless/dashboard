@@ -61,7 +61,7 @@ module.exports = (emitter) => {
         expect(request.headers['lambda-extension-identifier']).to.equal(lambdaExtensionIdentifier);
         request.on('data', () => {});
         request.on('end', () => {
-          log.get('listener')('emit');
+          log.get('listener')('emit next ready');
           listenerEmitter.emit('listener');
           emitter.once('event', (data) => {
             const statusCode = 200;
@@ -113,6 +113,7 @@ module.exports = (emitter) => {
           ])
             .then((res) => res.text())
             .then(() => {
+              log.get('listener')('emit logs subscription ready');
               listenerEmitter.emit('logsSubscription');
             });
         });

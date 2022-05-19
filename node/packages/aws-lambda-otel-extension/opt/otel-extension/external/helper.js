@@ -234,18 +234,7 @@ const measureAttributes = [
   },
 ];
 
-const EventType = {
-  INVOKE: 'INVOKE',
-  SHUTDOWN: 'SHUTDOWN',
-};
-
-const SAVE_FILE = '/tmp/sls-save-log.json';
-const SENT_FILE = '/tmp/sent-requests.json';
-
 module.exports = {
-  SAVE_FILE,
-  SENT_FILE,
-  EventType,
   resourceAttributes,
   measureAttributes,
   stripResponseBlobData,
