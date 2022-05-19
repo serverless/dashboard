@@ -1,93 +1,12 @@
 'use strict';
 
-const get = require('lodash.get');
-const { logMessage } = require('../lib/helper');
 const { resourceAttributes, measureAttributes } = require('./helper');
 
 const createMetricAttributes = (fun, report) => {
-  const timedOut = get(fun.record, 'errorCulprit') === 'timeout';
-  const timeoutObject = [
-    {
-      key: 'faas.error_timeout',
-      value: {
-        boolValue: !!timedOut,
-      },
-    },
-  ];
-
-  const metricAttributes = [
-    ...measureAttributes.map(({ key, value, source, type }) => {
-      switch (type) {
-        case 'intValue': {
-          const intValue = value || get(fun.record, source, 0);
-          return {
-            key,
-            value: {
-              [type]: intValue,
-            },
-          };
-        }
-        case 'boolValue': {
-          const boolValue = value || get(fun.record, source, false);
-          return {
-            key,
-            value: {
-              [type]: boolValue,
-            },
-          };
-        }
-        case 'stringValue':
-        default: {
-          const recordValue = value || get(fun.record, source);
-          const finalValue = recordValue === undefined ? null : recordValue;
-          return {
-            key,
-            value: {
-              [type]: `${finalValue}`,
-            },
-          };
-        }
-      }
-    }),
-    {
-      key: 'faas.error',
-      value: {
-        boolValue: get(fun, 'record.error'),
-      },
-    },
-    ...(report.record
-      ? [
-          {
-            key: 'faas.duration',
-            value: {
-              doubleValue: report.record.metrics.durationMs,
-            },
-          },
-          {
-            key: 'faas.billed_duration',
-            value: {
-              intValue: report.record.metrics.billedDurationMs,
-            },
-          },
-          {
-            key: 'faas.max_memory_used_mb',
-            value: {
-              intValue: report.record.metrics.maxMemoryUsedMB,
-            },
-          },
-        ]
-      : []),
-    ...timeoutObject,
-  ];
-
-  return metricAttributes;
-};
-
-const createResourceAttributes = (fun) =>
-  resourceAttributes.map(({ key, value, source, type }) => {
+  const metricAttributes = measureAttributes.map(({ key, value, source, type }) => {
     switch (type) {
       case 'intValue': {
-        const intValue = value || get(fun.record, source, 0);
+        const intValue = value || fun[source] || 0;
         return {
           key,
           value: {
@@ -96,7 +15,7 @@ const createResourceAttributes = (fun) =>
         };
       }
       case 'boolValue': {
-        const boolValue = value || get(fun.record, source, false);
+        const boolValue = value || fun[source] || false;
         return {
           key,
           value: {
@@ -106,7 +25,81 @@ const createResourceAttributes = (fun) =>
       }
       case 'stringValue':
       default: {
-        const recordValue = value || get(fun.record, source);
+        const recordValue = value || fun[source];
+        const finalValue = recordValue === undefined ? null : recordValue;
+        return {
+          key,
+          value: {
+            [type]: String(finalValue),
+          },
+        };
+      }
+    }
+  });
+
+  metricAttributes.push({
+    key: 'faas.error',
+    value: {
+      boolValue: fun.error,
+    },
+  });
+  if (report) {
+    metricAttributes.push(
+      {
+        key: 'faas.duration',
+        value: {
+          doubleValue: report.record.metrics.durationMs,
+        },
+      },
+      {
+        key: 'faas.billed_duration',
+        value: {
+          intValue: report.record.metrics.billedDurationMs,
+        },
+      },
+      {
+        key: 'faas.max_memory_used_mb',
+        value: {
+          intValue: report.record.metrics.maxMemoryUsedMB,
+        },
+      }
+    );
+  }
+
+  metricAttributes.push({
+    key: 'faas.error_timeout',
+    value: {
+      boolValue: fun.errorCulprit === 'timeout',
+    },
+  });
+
+  return metricAttributes;
+};
+
+const createResourceAttributes = (fun) =>
+  resourceAttributes.map(({ key, value, source, type }) => {
+    switch (type) {
+      case 'intValue': {
+        const intValue = value || fun[source] || 0;
+        return {
+          key,
+          value: {
+            [type]: intValue,
+          },
+        };
+      }
+      case 'boolValue': {
+        const boolValue = value || fun[source] || false;
+        return {
+          key,
+          value: {
+            [type]: boolValue,
+          },
+        };
+      }
+      case 'stringValue':
+      default: {
+        const recordValue = value || fun[source];
         const finalValue = recordValue === undefined ? null : recordValue;
         return {
           key,
@@ -118,9 +111,9 @@ const createResourceAttributes = (fun) =>
     }
   });
 
-const createLogPayload = (fun, logs) => {
-  const spanData = fun.span;
-  const key = Object.keys(fun.eventData)[0];
+const createLogPayload = (eventData, logs) => {
+  const spanData = eventData.span;
+  const key = Object.keys(eventData.eventData)[0];
 
   const metricAttributeNames = new Set([
     'faas.arch',
@@ -129,7 +122,7 @@ const createLogPayload = (fun, logs) => {
     'faas.api_gateway_app_id',
   ]);
   const metricsAtt = {};
-  for (const attribute of createMetricAttributes({ record: fun.eventData[key] }, {})) {
+  for (const attribute of createMetricAttributes(eventData.eventData[key])) {
     if (!metricAttributeNames.has(attribute.key)) continue;
     metricsAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
@@ -151,7 +144,7 @@ const createLogPayload = (fun, logs) => {
     'faas.collector_version',
   ]);
   const resourceAtt = {};
-  for (const attribute of createResourceAttributes({ record: fun.eventData[key] }, {})) {
+  for (const attribute of createResourceAttributes(eventData.eventData[key])) {
     if (!resourceAttributeNames.has(attribute.key)) continue;
     resourceAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
@@ -218,12 +211,12 @@ const createCountMetric = ({ name, unit, asInt, record, attributes }) => ({
   },
 });
 
-const batchOverflowSpans = (overflow) => {
+const batchOverflowSpans = (traces) => {
   const MAX_SPANS = 100;
 
   const spanList = [];
 
-  const groupedLibrarySpans = overflow.resourceSpans[0].instrumentationLibrarySpans.reduce(
+  const groupedLibrarySpans = traces.resourceSpans[0].instrumentationLibrarySpans.reduce(
     (obj, librarySpans) => {
       const key = `${librarySpans.instrumentationLibrary.name}-${librarySpans.instrumentationLibrary.version}`;
       const { spans, ...rest } = librarySpans;
@@ -246,7 +239,7 @@ const batchOverflowSpans = (overflow) => {
         };
       });
     const record = {
-      resource: overflow.resourceSpans[0].resource,
+      resource: traces.resourceSpans[0].resource,
       instrumentationLibrarySpans: spans,
     };
     spanList.push({
@@ -261,102 +254,82 @@ const batchOverflowSpans = (overflow) => {
   return spanList;
 };
 
-const createMetricsPayload = (groupedByRequestId, sentRequests) =>
-  Object.keys(groupedByRequestId).map((requestId) => {
-    const sentRequest = sentRequests.find(({ requestId: rId }) => rId === requestId);
-    const data = groupedByRequestId[requestId];
-    const report = data['platform.report'] || {};
-    const fun = data.function || {};
-
-    const path = get(fun.record, 'httpPath');
-    const statusCode = get(fun.record, 'httpStatusCode');
-
-    if (!fun.record) {
-      logMessage('Metrics fun - ', JSON.stringify(data));
-    }
-
-    const metricAttributes = [
-      ...createMetricAttributes(fun, report),
-      {
-        key: 'faas.execution',
-        value: {
-          stringValue: requestId,
-        },
+const createMetricsPayload = (requestId, fun, report = null) => {
+  const metricAttributes = createMetricAttributes(fun, report);
+  metricAttributes.push({
+    key: 'faas.execution',
+    value: {
+      stringValue: requestId,
+    },
+  });
+  if (fun.httpStatusCode) {
+    metricAttributes.push({
+      key: 'http.status_code',
+      value: {
+        intValue: fun.httpStatusCode,
       },
-      ...(statusCode
-        ? [
-            {
-              key: 'http.status_code',
-              value: {
-                intValue: statusCode,
-              },
-            },
-          ]
-        : []),
-      ...(path
-        ? [
-            {
-              key: 'http.path',
-              value: {
-                stringValue: `${path}`,
-              },
-            },
-          ]
-        : []),
-    ];
+    });
+  }
+  if (fun.httpPath) {
+    metricAttributes.push({
+      key: 'http.path',
+      value: {
+        stringValue: fun.httpPath,
+      },
+    });
+  }
 
-    const metrics = [];
+  const metrics = [];
 
-    // We only want to send an invocation once at the same time we send trace data
-    // if we have already sent this data then sendRequest.trace will be marked as true
-    if (!sentRequest || !sentRequest.isTraceSent) {
-      metrics.push(
-        createCountMetric({
-          name: 'faas.invoke',
-          unit: '1',
-          asInt: '1',
-          record: fun.record,
-          attributes: metricAttributes,
-        })
-      );
-    }
-
+  // We only want to send an invocation once at the same time we send trace data
+  // if we have already sent this data then sendRequest.trace will be marked as true
+  if (!report) {
+    metrics.push(
+      createCountMetric({
+        name: 'faas.invoke',
+        unit: '1',
+        asInt: '1',
+        record: fun,
+        attributes: metricAttributes,
+      })
+    );
+  } else {
     // Reports will be sent separately and we only want to send this data once
-    if (report && report.record && (!sentRequest || !sentRequest.isReportSent)) {
+    metrics.push(
+      createHistogramMetric({
+        name: 'faas.duration',
+        unit: '1',
+        count: '1',
+        sum: report.record.metrics.durationMs,
+        record: fun,
+        attributes: metricAttributes,
+      }),
+      createHistogramMetric({
+        name: 'faas.memory',
+        unit: '1',
+        count: '1',
+        sum: (report.record.metrics.maxMemoryUsedMB / report.record.metrics.memorySizeMB) * 100,
+        record: fun,
+        attributes: metricAttributes,
+      })
+    );
+
+    if (report.record.metrics.initDurationMs) {
       metrics.push(
         createHistogramMetric({
-          name: 'faas.duration',
+          name: 'faas.coldstart_duration',
           unit: '1',
           count: '1',
-          sum: report.record.metrics.durationMs,
-          record: fun.record,
-          attributes: metricAttributes,
-        }),
-        createHistogramMetric({
-          name: 'faas.memory',
-          unit: '1',
-          count: '1',
-          sum: (report.record.metrics.maxMemoryUsedMB / report.record.metrics.memorySizeMB) * 100,
-          record: fun.record,
+          sum: report.record.metrics.initDurationMs,
+          record: fun,
           attributes: metricAttributes,
         })
       );
-
-      if ('initDurationMs' in report.record.metrics) {
-        metrics.push(
-          createHistogramMetric({
-            name: 'faas.coldstart_duration',
-            unit: '1',
-            count: '1',
-            sum: report.record.metrics.initDurationMs,
-            record: fun.record,
-            attributes: metricAttributes,
-          })
-        );
-      }
     }
+  }
 
-    return {
+  return [
+    {
       resourceMetrics: [
         {
           resource: {
@@ -372,84 +345,57 @@ const createMetricsPayload = (groupedByRequestId, sentRequests) =>
           ],
         },
       ],
-    };
-  });
+    },
+  ];
+};
 
-const createTracePayload = (groupedByRequestId, sentRequests) =>
-  Object.keys(groupedByRequestId)
-    // Check if the trace has already been sent so we don't want to send the same trace again
-    .filter((requestId) => {
-      const sentRequest = sentRequests.find(({ requestId: rId }) => rId === requestId);
-      return !(sentRequest && sentRequest.isTraceSent);
-    })
-    .map((requestId) => {
-      const data = groupedByRequestId[requestId];
-      const report = data['platform.report'] || {};
-      // We are uploading report data async so we want to ignore traces on reports
-      const fun = data.function || {};
-      const traces = data.traces || {};
+const createTracePayload = (requestId, fun, traces) => {
+  const metricAttributes = createMetricAttributes(fun);
 
-      if (!fun.record) {
-        logMessage('Trace fun - ', JSON.stringify(data));
-      }
+  traces.resourceSpans = [
+    {
+      resource: {
+        attributes: createResourceAttributes(fun),
+      },
+      instrumentationLibrarySpans: [
+        ...(traces.resourceSpans || [])[0].instrumentationLibrarySpans.map((librarySpans) => {
+          return {
+            ...librarySpans,
+            spans: librarySpans.spans.map((span) => {
+              const existingKeys = Object.keys(span.attributes);
+              return {
+                ...span,
+                attributes: [
+                  ...Object.keys(span.attributes).map((key) => {
+                    const jsType = typeof span.attributes[key];
 
-      if (!traces.record) {
-        logMessage('Trace traces - ', JSON.stringify(data));
-      }
+                    let type = 'stringValue';
+                    let value = `${span.attributes[key]}`;
 
-      if (!report.record) {
-        logMessage('Trace Report - ', JSON.stringify(data));
-      }
+                    if (jsType === 'number') {
+                      type = 'intValue';
+                      value = span.attributes[key];
+                    }
 
-      const metricAttributes = createMetricAttributes(fun, report);
-
-      traces.record.resourceSpans = [
-        {
-          resource: {
-            attributes: createResourceAttributes(fun),
-          },
-          instrumentationLibrarySpans: [
-            ...(traces.record.resourceSpans || [])[0].instrumentationLibrarySpans.map(
-              (librarySpans) => {
-                return {
-                  ...librarySpans,
-                  spans: librarySpans.spans.map((span) => {
-                    const existingKeys = Object.keys(span.attributes);
                     return {
-                      ...span,
-                      attributes: [
-                        ...Object.keys(span.attributes).map((key) => {
-                          const jsType = typeof span.attributes[key];
-
-                          let type = 'stringValue';
-                          let value = `${span.attributes[key]}`;
-
-                          if (jsType === 'number') {
-                            type = 'intValue';
-                            value = span.attributes[key];
-                          }
-
-                          return {
-                            key,
-                            value: {
-                              [type]: value,
-                            },
-                          };
-                        }),
-                        ...metricAttributes.filter(({ key }) => !existingKeys.includes(key)),
-                      ],
+                      key,
+                      value: {
+                        [type]: value,
+                      },
                     };
                   }),
-                };
-              }
-            ),
-          ],
-        },
-      ];
+                  ...metricAttributes.filter(({ key }) => !existingKeys.includes(key)),
+                ],
+              };
+            }),
+          };
+        }),
+      ],
+    },
+  ];
 
-      return batchOverflowSpans(traces.record);
-    })
-    .reduce((arr, originalList) => [...arr, ...originalList], []);
+  return batchOverflowSpans(traces);
+};
 
 module.exports = {
   createLogPayload,

@@ -2,14 +2,12 @@
 
 const { expect } = require('chai');
 const { EventEmitter } = require('events');
-const unlink = require('fs2/unlink');
 const evilDns = require('evil-dns');
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
 const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const getExtensionServerMock = require('../../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../../utils/normalize-otel-attributes');
-const { SAVE_FILE, SENT_FILE } = require('../../../opt/otel-extension/external/helper');
 const { default: fetch } = require('node-fetch');
 const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
 const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependencies');
@@ -22,13 +20,12 @@ describe('external', () => {
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
     process.env.SLS_OTEL_REPORT_TYPE = 'json';
-    process.env.SLS_TEST_PRINT_LOG_EVENT = true;
-    await Promise.all([unlink(SAVE_FILE, { loose: true }), unlink(SENT_FILE, { loose: true })]);
+    process.env.SLS_TEST_PRINT_LOG_EVENT = '1';
+    process.env.SLS_TEST_RUN = '1';
   });
 
   it('should handle plain success invocation', async () => {
     const requestId = 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0';
-    process.env.DO_NOT_WAIT = true;
     const emitter = new EventEmitter();
     const { server, listenerEmitter } = getExtensionServerMock(emitter, { requestId });
 
@@ -38,8 +35,10 @@ describe('external', () => {
       (data) => (stdoutData += data),
       async () => requireUncached(() => require('../../../opt/otel-extension/external'))
     );
-
-    await new Promise((resolve) => listenerEmitter.once('listener', resolve));
+    await Promise.all([
+      new Promise((resolve) => listenerEmitter.once('listener', resolve)),
+      new Promise((resolve) => listenerEmitter.once('logsSubscription', resolve)),
+    ]);
     emitter.emit('event', { eventType: 'INVOKE', requestId });
 
     emitter.emit('logs', [
@@ -62,8 +61,6 @@ describe('external', () => {
       },
     ]);
     // Emit init logs
-    await new Promise((resolve) => listenerEmitter.once('listener', resolve));
-    emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
       body: JSON.stringify({
@@ -87,6 +84,7 @@ describe('external', () => {
         'Content-Type': 'application/json',
       },
     });
+
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
       body: JSON.stringify({
@@ -202,6 +200,10 @@ describe('external', () => {
           requestId,
         },
       },
+    ]);
+    await new Promise((resolve) => listenerEmitter.once('listener', resolve));
+    emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
+    emitter.emit('logs', [
       {
         time: '2022-02-14T15:31:26.742Z',
         type: 'platform.report',
@@ -219,7 +221,6 @@ describe('external', () => {
     ]);
 
     await extensionProcess;
-    delete process.env.DO_NOT_WAIT;
     server.close();
 
     log.debug('report string %s', stdoutData);

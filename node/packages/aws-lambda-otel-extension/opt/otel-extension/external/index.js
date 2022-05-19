@@ -2,302 +2,313 @@
 
 'use strict';
 
-const { writeFileSync, existsSync, readFileSync } = require('fs');
-const get = require('lodash.get');
-const { register, next } = require('./lambda-apis/extensions-api');
-const setupLogListenerServer = require('./setup-log-listener-server');
-const initializeTelemetryListener = require('./initialize-telemetry-listener');
-const reportOtelData = require('./report-otel-data');
-const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
-const { EventType, SAVE_FILE, SENT_FILE, stripResponseBlobData } = require('./helper');
-const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
+module.exports = (async () => {
+  const fs = require('fs');
+  const http = require('http');
+  const path = require('path');
+  const os = require('os');
+  const { EventEmitter } = require('events');
 
-function handleShutdown() {
-  process.exit(0);
-}
+  const baseUrl = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-01-01/extension`;
 
-let sentRequests = [];
-const sentResponseEvents = [];
-let logsQueue = [];
-const mainEventData = {
-  data: {},
-};
-const liveLogData = {
-  logs: [],
-};
+  const runtimeEventEmitter = new EventEmitter();
+  const servers = new Set();
 
-if (existsSync(SAVE_FILE)) {
-  try {
-    logsQueue = JSON.parse(readFileSync(SAVE_FILE, { encoding: 'utf-8' }));
-  } catch (error) {
-    logMessage('Failed to parse logs queue file');
-  }
-}
-if (existsSync(SENT_FILE)) {
-  try {
-    sentRequests = JSON.parse(readFileSync(SENT_FILE, { encoding: 'utf-8' }));
-  } catch (error) {
-    logMessage('Failed to sent request file');
-  }
-}
+  const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
+  const userSettings = require('../lib/user-settings');
+  const { stripResponseBlobData } = require('./helper');
+  const reportOtelData = require('./report-otel-data');
+  const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
-// Exported for testing convienence
-module.exports = (async function main() {
-  const extensionId = await register();
-  let receivedData = false;
-  let currentRequestId;
-
-  const groupReports = async (reportLists) => {
-    logMessage('LOGS: ', JSON.stringify(reportLists));
-
-    const result = {};
-    for (const reportList of reportLists) {
-      for (const reportData of reportList) {
-        // Two kind of events land here
-        // 1. telemetryData as send form lambda by internal instrumentation on lambda response
-        // 2. "platform.report" event as coming directly from AWS Lambda API
-        if (reportData.recordType !== 'telemetryData') {
-          // "platform.report" event
-          reportData.requestId = reportData.record.requestId;
-        }
-
-        const { requestId } = reportData;
-        if (!result[requestId]) result[requestId] = {};
-
-        if (reportData.recordType === 'telemetryData') {
-          reportData.origin = 'sls-layer';
-          result[requestId].layer = reportData;
-        } else {
-          // "platform.report" event
-          result[requestId][reportData.type] = reportData;
-        }
-      }
-    }
-    return result;
-  };
-
-  // function for processing collected logs
-  async function sendReports(reportLists, focusIds = []) {
-    const focusIdsSet = new Set(focusIds);
-    const groupedByRequestId = await groupReports(reportLists);
-
-    const ready = {};
-    const notReady = {};
-    const responseEvents = {};
-    for (const [requestId, data] of Object.entries(groupedByRequestId)) {
-      const report = data['platform.report'];
-      const { function: fun, traces, responseEventPayload } = get(data.layer, 'record') || {};
-      if (responseEventPayload) responseEvents[requestId] = responseEventPayload;
-      if (fun && traces) {
-        if (focusIdsSet.size && !focusIdsSet.has(requestId)) continue;
-        // report is not required so we can send duration async
-        ready[requestId] = {
-          'platform.report': report,
-          'function': { record: fun },
-          'traces': { record: traces },
-        };
-        continue;
-      }
-      notReady[requestId] = data;
-    }
-
-    logMessage('READY: ', JSON.stringify(ready));
-    logMessage('NOT READY: ', JSON.stringify(notReady));
-
-    logMessage('Sent Requests: ', JSON.stringify(sentRequests));
-    for (const { requestId, isTraceSent, isReportSent } of sentRequests) {
-      if (ready[requestId] && isTraceSent && isReportSent) delete ready[requestId];
-    }
-    const orgId = get(ready[Object.keys(ready)[0]], 'function.record.sls_org_id', 'xxxx');
-    logMessage('OrgId: ', orgId);
-    const metricData = createMetricsPayload(ready, sentRequests);
-    logMessage('Metric Data: ', JSON.stringify(metricData));
-
-    const traces = createTracePayload(ready, sentRequests);
-    logMessage('Traces Data: ', JSON.stringify(traces));
-
-    if (metricData.length) {
-      try {
-        await reportOtelData.metrics(metricData);
-      } catch (error) {
-        logMessage('Metric send Error:', error);
-      }
-    }
-    if (traces.length) {
-      try {
-        await reportOtelData.traces(traces);
-      } catch (error) {
-        logMessage('Trace send Error:', error);
-      }
-    }
-
-    for (const responseEvent of Object.values(responseEvents)) {
-      if (!sentResponseEvents.includes(responseEvent.executionId)) {
-        try {
-          // Strip response blob data before sending it to the req/res endpoint
-          await reportOtelData.requestResponse(stripResponseBlobData(responseEvent));
-          sentResponseEvents.push(responseEvent.executionId);
-        } catch (error) {
-          logMessage('Response data send Error:', error);
-        }
-      }
-    }
-
-    // Save request ids so we don't send them twice
-    const justSentRequestIds = new Set(Object.keys(ready));
-    for (const sentRequest of sentRequests) {
-      const { requestId } = sentRequest;
-      if (!justSentRequestIds.has(requestId)) continue;
-      sentRequest.isTraceSent = Boolean(ready[requestId].function && ready[requestId].traces);
-      sentRequest.isReportSent = Boolean(ready[requestId]['platform.report']);
-    }
-    const sentRequestIds = new Set(sentRequests.map(({ requestId }) => requestId));
-    for (const requestId of justSentRequestIds) {
-      if (sentRequestIds.has(requestId)) continue;
-      sentRequests.push({
-        requestId,
-        isTraceSent: Boolean(ready[requestId].function && ready[requestId].traces),
-        isReportSent: Boolean(ready[requestId]['platform.report']),
-      });
-    }
-
-    // Only remove logs that were marked as ready or have not sent a report yet
-    const incompleteRequestIds = new Set([
-      ...Object.keys(notReady),
-      ...sentRequests.filter(({ report }) => !report).map(({ requestId }) => requestId),
-    ]);
-    logMessage('Incomplete Request Ids: ', JSON.stringify(Array.from(incompleteRequestIds)));
-
-    reportLists.forEach((subList) => {
-      const saveList = subList.filter((log) => {
-        return (
-          incompleteRequestIds.has(log.requestId) ||
-          (focusIdsSet.size && !focusIdsSet.has(log.requestId))
-        );
-      });
-      subList.splice(0);
-      subList.push(...saveList);
+  let reportRequestIdTracker = 0;
+  const pendingReports = new Set();
+  const sendReport = (method, payload) => {
+    const startTime = Date.now();
+    const requestId = ++reportRequestIdTracker;
+    logMessage(`[${requestId}] send "${method}"`);
+    const promise = reportOtelData[method](payload);
+    pendingReports.add(promise);
+    promise.finally(() => {
+      logMessage(`[${requestId}] "${method}" sent in`, Date.now() - startTime);
+      pendingReports.delete(promise);
     });
-    logMessage('Remaining logs queue: ', JSON.stringify(reportLists));
-  }
-
-  const sendFunctionLogs = async () => {
-    // Check that we have logs in the queue
-    // Check that we have a currentRequestId identified
-    // Check that we have event data associated with the currentRequestId
-    logMessage(
-      'Post Live Log Check',
-      liveLogData.logs.length,
-      currentRequestId,
-      JSON.stringify(mainEventData.data)
-    );
-    if (
-      liveLogData.logs.length > 0 &&
-      currentRequestId &&
-      Object.keys(mainEventData.data).length > 0 &&
-      Object.keys(mainEventData.data[currentRequestId] || {}).length > 0
-    ) {
-      const sendData = [...liveLogData.logs];
-      liveLogData.logs = [];
-      try {
-        await reportOtelData.logs(createLogPayload(mainEventData.data[currentRequestId], sendData));
-      } catch (error) {
-        logMessage('Failed to send logs', error);
-      }
-    }
   };
 
-  process.on('SIGINT', async () => {
-    await sendReports(logsQueue);
-    handleShutdown('SIGINT');
-  });
-  process.on('SIGTERM', async () => {
-    await sendReports(logsQueue);
-    handleShutdown('SIGINT');
-  });
+  // Rotate current request data
+  // Each new "platform.start" or invoke event resets the object
+  const getCurrentRequestData = (() => {
+    let current;
+    return (uniqueEventName) => {
+      if (!current) current = { logsQueue: [] };
+      if (!uniqueEventName) return current;
+      if (current[uniqueEventName]) current = { logsQueue: [] };
+      current[uniqueEventName] = true;
+      return current;
+    };
+  })();
 
-  const { server: otelServer } = initializeTelemetryListener({
-    logsQueue,
-    port: OTEL_SERVER_PORT,
-    mainEventData,
-    liveLogCallback: sendFunctionLogs,
-    callback: async (...args) => {
-      await sendReports(...args);
-      receivedData = true;
-    },
-    requestResponseCallback: async (data) => {
-      await reportOtelData.requestResponse(data);
-    },
-  });
+  let lastTelemetryData;
 
-  const server = await setupLogListenerServer({
-    extensionIdentifier: extensionId,
-    logsQueue,
-    liveLogData,
-    liveLogCallback: sendFunctionLogs,
-    callback: sendReports,
-  });
+  let ongoingInvocationDeferred;
+  const tmpStorageFile = path.resolve(os.tmpdir(), 'sls-otel-extension-storage');
 
-  // execute extensions logic
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    logMessage('Waiting for next event');
-    const event = await next(extensionId);
-    if (event && event.requestId) {
-      currentRequestId = event.requestId;
-    }
-    logMessage('Processing event: ', event.eventType);
-    if (event.eventType === EventType.SHUTDOWN) {
-      const initialQueueLength = logsQueue.length;
+  const monitorLogs = async (extensionIndentifier) => {
+    let resolveOngoingInvocationDeferred;
+    const closeOngoingInvocation = () => {
+      if (resolveOngoingInvocationDeferred) resolveOngoingInvocationDeferred();
+      ongoingInvocationDeferred = resolveOngoingInvocationDeferred = null;
+    };
 
-      // Wait until last logs are send to our server
-      const waitRecursive = () =>
-        new Promise((resolve) => {
-          setTimeout(async () => {
-            logMessage('Checking log length...', initialQueueLength, logsQueue.length);
-            if (initialQueueLength < logsQueue.length) {
-              resolve();
+    // Setup a logs listener server
+    servers.add(
+      http
+        .createServer((request, response) => {
+          if (request.method !== 'POST') throw new Error('Unexpected request method');
+
+          let body = '';
+          request.on('data', (data) => {
+            body += data;
+          });
+          request.on('end', () => {
+            response.writeHead(200, {});
+            response.end('OK');
+            const data = JSON.parse(body);
+            const functionLogEvents = data.filter((event) => event.type === 'function');
+            if (functionLogEvents.length) {
+              const currentRequestData = getCurrentRequestData();
+              if (!currentRequestData.eventData) {
+                currentRequestData.logsQueue.push(...functionLogEvents);
+              } else {
+                sendReport(
+                  'logs',
+                  createLogPayload(currentRequestData.eventData, functionLogEvents)
+                );
+              }
+            }
+
+            for (const event of data) {
+              switch (event.type) {
+                case 'platform.start':
+                  getCurrentRequestData('start');
+                  // eslint-disable-next-line no-loop-func
+                  ongoingInvocationDeferred = new Promise((resolve) => {
+                    resolveOngoingInvocationDeferred = resolve;
+                  });
+                  break;
+                case 'platform.runtimeDone':
+                  runtimeEventEmitter.emit('runtimeDone');
+                  if (event.record.status === 'success') continue;
+                  // In case of invocation failure extension will be shutdown before generating report
+                  if (lastTelemetryData) {
+                    fs.writeFileSync(tmpStorageFile, JSON.stringify(lastTelemetryData));
+                  }
+                  closeOngoingInvocation();
+                  break;
+                case 'platform.report':
+                  if (!lastTelemetryData) {
+                    try {
+                      lastTelemetryData = JSON.parse(fs.readFileSync(tmpStorageFile), 'utf-8');
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                  if (lastTelemetryData) {
+                    sendReport(
+                      'metrics',
+                      createMetricsPayload(
+                        event.record.requestId,
+                        lastTelemetryData.record.function,
+                        event
+                      )
+                    );
+                  }
+                  closeOngoingInvocation();
+                  break;
+                default:
+              }
+            }
+          });
+        })
+        .listen(4243, 'sandbox')
+    );
+
+    // Subscribe to logs.
+    // If extension is being reinitialized in the same container, then in most cases we're already
+    // subscribed. There's just a case of reinitialization after crash during lambda initialization,
+    // where we can observe that subscription is not active. For that reason we subscribe
+    // unconditionaly in all cases (it's not harmful if subscription is active)
+    await new Promise((resolve, reject) => {
+      const eventTypes = ['platform'];
+      if (!userSettings.disableLogsMonitoring) eventTypes.push('function');
+      const putData = JSON.stringify({
+        destination: { protocol: 'HTTP', URI: 'http://sandbox:4243' },
+        types: eventTypes,
+        buffering: { timeoutMs: 25, maxBytes: 262144, maxItems: 1000 },
+        schemaVersion: '2021-03-18',
+      });
+      const request = http.request(
+        `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-08-15/logs`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Lambda-Extension-Identifier': extensionIndentifier,
+            'Content-Length': Buffer.byteLength(putData),
+          },
+        },
+        (response) => {
+          if (response.statusCode === 200) {
+            resolve();
+          } else {
+            reject(
+              new Error(`Unexpected logs subscribe response status code: ${response.statusCode}`)
+            );
+          }
+        }
+      );
+      request.on('error', reject);
+      request.write(putData);
+      request.end();
+    });
+  };
+
+  const monitorEvents = async (extensionIndentifier) => {
+    const waitUntilAllReportsAreSent = () => Promise.all(Array.from(pendingReports));
+    // Events lifecycle handler
+    const waitForEvent = async () => {
+      const event = await new Promise((resolve, reject) => {
+        const request = http.request(
+          `${baseUrl}/event/next`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Lambda-Extension-Identifier': extensionIndentifier,
+            },
+          },
+          (response) => {
+            if (response.statusCode !== 200) {
+              reject(new Error(`Unexpected register response status code: ${response.statusCode}`));
               return;
             }
-            await waitRecursive();
-            resolve();
-          }, 1000);
-        });
-      await waitRecursive();
-
-      logMessage('AFTER SOME TIME WE WILL UPLOAD...', JSON.stringify(logsQueue));
-
-      await sendReports(logsQueue, []);
-
-      logMessage('DONE...', JSON.stringify(logsQueue));
-      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
-      writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
-      server.close();
-      otelServer.close();
-      break;
-    } else if (event.eventType === EventType.INVOKE) {
-      /* eslint-disable no-loop-func */
-      const waitRecursive = () =>
-        new Promise((resolve) => {
-          setTimeout(async () => {
-            logMessage('Checking data received...', receivedData);
-            if (receivedData) {
-              resolve();
-              return;
-            }
-            await waitRecursive();
-            resolve();
-          }, 50);
-        });
-      /* eslint-enable no-loop-func */
-      if (!process.env.DO_NOT_WAIT) {
-        await waitRecursive();
+            response.setEncoding('utf8');
+            let result = '';
+            response.on('data', (chunk) => {
+              result += String(chunk);
+            });
+            response.on('end', () => {
+              resolve(JSON.parse(result));
+            });
+          }
+        );
+        request.on('error', reject);
+        request.end();
+      });
+      switch (event.eventType) {
+        case 'SHUTDOWN':
+          await Promise.resolve(ongoingInvocationDeferred).then(waitUntilAllReportsAreSent);
+          break;
+        case 'INVOKE':
+          getCurrentRequestData('invoke');
+          await new Promise((resolve) => {
+            runtimeEventEmitter.once('runtimeDone', resolve);
+          })
+            .then(waitUntilAllReportsAreSent)
+            .then(waitForEvent);
+          break;
+        default:
+          throw new Error(`unknown event: ${event.eventType}`);
       }
-      writeFileSync(SENT_FILE, JSON.stringify(sentRequests));
-      writeFileSync(SAVE_FILE, JSON.stringify(logsQueue));
-      receivedData = false; // Reset received event
-    } else {
-      throw new Error(`unknown event: ${event.eventType}`);
-    }
-  }
-})();
+    };
+    await waitForEvent();
+  };
+
+  const monitorInternalTelemetry = () => {
+    servers.add(
+      http
+        .createServer((request, response) => {
+          if (request.method !== 'POST') throw new Error('Unexpected request method');
+          let body = '';
+          request.on('data', (data) => {
+            body += data;
+          });
+          request.on('end', async () => {
+            const data = JSON.parse(body);
+            logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(data));
+            switch (data.recordType) {
+              case 'eventData':
+                {
+                  if (data.record.requestEventPayload) {
+                    sendReport('requestResponse', data.record.requestEventPayload);
+                  }
+                  const currentRequestData = getCurrentRequestData('request');
+                  currentRequestData.eventData = data.record;
+                  if (currentRequestData.logsQueue.length) {
+                    sendReport('logs', createLogPayload(data.record, currentRequestData.logsQueue));
+                  }
+                }
+                break;
+              case 'telemetryData':
+                lastTelemetryData = data;
+                if (data.record.responseEventPayload) {
+                  sendReport(
+                    'requestResponse',
+                    stripResponseBlobData(data.record.responseEventPayload)
+                  );
+                }
+                sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
+                sendReport(
+                  'traces',
+                  createTracePayload(data.requestId, data.record.function, data.record.traces)
+                );
+                break;
+              default:
+                throw new Error('Unrecognized event data');
+            }
+            response.writeHead(200, '');
+            response.end('OK');
+          });
+        })
+        .listen(OTEL_SERVER_PORT)
+    );
+  };
+
+  // Register extension
+  await new Promise((resolve, reject) => {
+    const postData = JSON.stringify({ events: ['INVOKE', 'SHUTDOWN'] });
+    const request = http.request(
+      `${baseUrl}/register`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Lambda-Extension-Name': 'otel-extension',
+          'Content-Length': Buffer.byteLength(postData),
+        },
+      },
+      (response) => {
+        if (response.statusCode !== 200) {
+          reject(new Error(`Unexpected register response status code: ${response.statusCode}`));
+          return;
+        }
+
+        const extensionIdentifier = response.headers['lambda-extension-identifier'];
+        monitorInternalTelemetry();
+        resolve(
+          Promise.all([monitorEvents(extensionIdentifier), monitorLogs(extensionIdentifier)])
+        );
+      }
+    );
+    request.on('error', reject);
+    request.write(postData);
+    request.end();
+  });
+
+  for (const server of servers) server.close();
+  if (!process.env.SLS_TEST_RUN) process.exit();
+})().catch((error) => {
+  // Ensure to crash extension process on unhandled rejection
+  process.nextTick(() => {
+    throw error;
+  });
+});
