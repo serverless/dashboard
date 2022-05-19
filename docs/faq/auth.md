@@ -1,11 +1,11 @@
 <!--
-title: Authentication FAQ
+title: FAQ
 menuText: FAQ
 description: Frequently Asked Questions about Serverless Console Authentication
 menuOrder: 8
 -->
 
-# Authentication FAQ
+# FAQ
 **I am not able to deploy or login to console from the CLI, how do I fix this?**
 
 You need to be on version 3.18+ to login and deploy. To check the version of your framework run.
