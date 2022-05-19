@@ -1,6 +1,6 @@
 <!--
 title: Authentication FAQ
-menuText: Authentication FAQ
+menuText: FAQ
 description: Frequently Asked Questions about Serverless Console Authentication
 menuOrder: 8
 -->
