@@ -39,7 +39,8 @@ describe('integration', function () {
     'esm-callback-success/index',
   ];
 
-  const processFunction = async (handlerModuleName, payload = { foo: 'bar' }) => {
+  const processFunction = async (handlerModuleName, options = {}) => {
+    const payload = options.payload || { foo: 'bar' };
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
@@ -267,50 +268,52 @@ describe('integration', function () {
     const handlerModuleName = 'express-app';
     before(async () => {
       reports = await processFunction(handlerModuleName, {
-        version: '2.0',
-        routeKey: '$default',
-        rawPath: '/',
-        rawQueryString: '',
-        headers: {
-          'accept':
-            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'accept-encoding': 'gzip, deflate, br',
-          'accept-language': 'en-US,pl;q=0.7,en;q=0.3',
-          'content-length': '0',
-          'host': '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
-          'sec-fetch-dest': 'document',
-          'sec-fetch-mode': 'navigate',
-          'sec-fetch-site': 'none',
-          'sec-fetch-user': '?1',
-          'sec-gpc': '1',
-          'upgrade-insecure-requests': '1',
-          'user-agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
-          'x-amzn-trace-id': 'Root=1-624605c4-7fcc8fe9188a3cb762dcd189',
-          'x-forwarded-for': '80.55.87.22',
-          'x-forwarded-port': '443',
-          'x-forwarded-proto': 'https',
-        },
-        requestContext: {
-          accountId: '992311060759',
-          apiId: '1hqnqp4a70',
-          domainName: '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
-          domainPrefix: '1hqnqp4a70',
-          http: {
-            method: 'GET',
-            path: '/',
-            protocol: 'HTTP/1.1',
-            sourceIp: '80.55.87.22',
-            userAgent:
-              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
-          },
-          requestId: 'P3XWwjfgIAMEVFw=',
+        payload: {
+          version: '2.0',
           routeKey: '$default',
-          stage: '$default',
-          time: '31/Mar/2022:19:49:24 +0000',
-          timeEpoch: 1648756164620,
+          rawPath: '/',
+          rawQueryString: '',
+          headers: {
+            'accept':
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'en-US,pl;q=0.7,en;q=0.3',
+            'content-length': '0',
+            'host': '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'none',
+            'sec-fetch-user': '?1',
+            'sec-gpc': '1',
+            'upgrade-insecure-requests': '1',
+            'user-agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
+            'x-amzn-trace-id': 'Root=1-624605c4-7fcc8fe9188a3cb762dcd189',
+            'x-forwarded-for': '80.55.87.22',
+            'x-forwarded-port': '443',
+            'x-forwarded-proto': 'https',
+          },
+          requestContext: {
+            accountId: '992311060759',
+            apiId: '1hqnqp4a70',
+            domainName: '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
+            domainPrefix: '1hqnqp4a70',
+            http: {
+              method: 'GET',
+              path: '/',
+              protocol: 'HTTP/1.1',
+              sourceIp: '80.55.87.22',
+              userAgent:
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
+            },
+            requestId: 'P3XWwjfgIAMEVFw=',
+            routeKey: '$default',
+            stage: '$default',
+            time: '31/Mar/2022:19:49:24 +0000',
+            timeEpoch: 1648756164620,
+          },
+          isBase64Encoded: false,
         },
-        isBase64Encoded: false,
       });
       log.debug('resolved reports %o', reports);
     });
