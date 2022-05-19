@@ -95,6 +95,16 @@ describe('integration', function () {
         },
       },
     ],
+    [
+      'error-timeout',
+      {
+        invocationOptions: { isFailure: true },
+        test: ({ instrumentationSpans }) => {
+          const { attributes } =
+            instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
+          expect(attributes['faas.error_exception_type']).to.equal('TimeoutError');
+        },
+      },
     ],
   ]);
 
@@ -123,6 +133,7 @@ describe('integration', function () {
         /* ignore */
       }
       if (result.FunctionError) {
+        if (options.isFailure) return;
         throw new Error(`Invocation errored: ${result.FunctionError}`);
       }
     };
