@@ -11,7 +11,7 @@ Welcome to Serverless Console.
 The next-generation monitoring tool for Teams 
 building with Serverless architectures. The easiest way 
 to get started with Serverless Console is using the 
-latest version of Serverless Framework (v3.15.2+ required).
+latest version of Serverless Framework (v3.18+ required).
 **Note:** Only Node.js is supported at this time. 
 
 ```text

@@ -12,7 +12,10 @@ You need to be on version 3.18+ to login and deploy. To check the version of you
 
 ```text
 serverless –version
+```
+
 To upgrade to the latest version run.
+
 ```text
 npm -g install serverless
 ```
