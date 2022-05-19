@@ -88,15 +88,13 @@ describe('integration', function () {
             isBase64Encoded: false,
           },
         },
-        test: ({ tracesReport }) => {
-          const expressSpans = tracesReport.resourceSpans[0].instrumentationLibrarySpans.find(
-            ({ instrumentationLibrary: { name } }) =>
-              name === '@opentelemetry/instrumentation-express'
-          );
-
-          expect(expressSpans.spans.length).to.be.at.least(4);
+        test: ({ instrumentationSpans }) => {
+          expect(
+            instrumentationSpans['@opentelemetry/instrumentation-express'].length
+          ).to.be.at.least(4);
         },
       },
+    ],
     ],
   ]);
 
@@ -321,7 +319,26 @@ describe('integration', function () {
         );
         expect(resourceSpans['faas.name']).to.equal(`${basename}-${functionBasename}`);
 
-        if (test) test({ metricsReport, tracesReport, resourceMetrics, resourceSpans });
+        const instrumentationSpans = {};
+        for (const {
+          instrumentationLibrary: { name },
+          spans,
+        } of tracesReport.resourceSpans[0].instrumentationLibrarySpans) {
+          instrumentationSpans[name] = spans.map((span) => ({
+            ...span,
+            attributes: normalizeOtelAttributes(span.attributes),
+          }));
+        }
+        log.debug('instrumentationSpans %o', instrumentationSpans);
+        if (test) {
+          test({
+            metricsReport,
+            tracesReport,
+            resourceMetrics,
+            resourceSpans,
+            instrumentationSpans,
+          });
+        }
       });
     });
   }
