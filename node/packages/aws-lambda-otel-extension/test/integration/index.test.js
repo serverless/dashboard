@@ -33,11 +33,72 @@ describe('integration', function () {
   let lambdasCodeZipBuffer;
   let roleArn;
 
-  const basicHandlerModuleNames = [
-    'callback-success',
-    'esbuild-esm-callback-success',
-    'esm-callback-success/index',
-  ];
+  const functionsConfig = new Map([
+    ['callback-success', true],
+    ['esbuild-esm-callback-success', true],
+    ['esm-callback-success/index', true],
+    [
+      'express-app',
+      {
+        invocationOptions: {
+          payload: {
+            version: '2.0',
+            routeKey: '$default',
+            rawPath: '/',
+            rawQueryString: '',
+            headers: {
+              'accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+              'accept-encoding': 'gzip, deflate, br',
+              'accept-language': 'en-US,pl;q=0.7,en;q=0.3',
+              'content-length': '0',
+              'host': '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
+              'sec-fetch-dest': 'document',
+              'sec-fetch-mode': 'navigate',
+              'sec-fetch-site': 'none',
+              'sec-fetch-user': '?1',
+              'sec-gpc': '1',
+              'upgrade-insecure-requests': '1',
+              'user-agent':
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
+              'x-amzn-trace-id': 'Root=1-624605c4-7fcc8fe9188a3cb762dcd189',
+              'x-forwarded-for': '80.55.87.22',
+              'x-forwarded-port': '443',
+              'x-forwarded-proto': 'https',
+            },
+            requestContext: {
+              accountId: '992311060759',
+              apiId: '1hqnqp4a70',
+              domainName: '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
+              domainPrefix: '1hqnqp4a70',
+              http: {
+                method: 'GET',
+                path: '/',
+                protocol: 'HTTP/1.1',
+                sourceIp: '80.55.87.22',
+                userAgent:
+                  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
+              },
+              requestId: 'P3XWwjfgIAMEVFw=',
+              routeKey: '$default',
+              stage: '$default',
+              time: '31/Mar/2022:19:49:24 +0000',
+              timeEpoch: 1648756164620,
+            },
+            isBase64Encoded: false,
+          },
+        },
+        test: ({ tracesReport }) => {
+          const expressSpans = tracesReport.resourceSpans[0].instrumentationLibrarySpans.find(
+            ({ instrumentationLibrary: { name } }) =>
+              name === '@opentelemetry/instrumentation-express'
+          );
+
+          expect(expressSpans.spans.length).to.be.at.least(4);
+        },
+      },
+    ],
+  ]);
 
   const processFunction = async (handlerModuleName, options = {}) => {
     const payload = options.payload || { foo: 'bar' };
@@ -186,7 +247,7 @@ describe('integration', function () {
 
     const createFunctions = async () => {
       await Promise.all(
-        [...basicHandlerModuleNames, 'express-app'].map(async function self(handlerModuleName) {
+        Array.from(functionsConfig.keys()).map(async function self(handlerModuleName) {
           const functionBasename = handlerModuleName.includes(path.sep)
             ? path.dirname(handlerModuleName)
             : handlerModuleName;
@@ -238,14 +299,14 @@ describe('integration', function () {
     await createFunctions();
   });
 
-  for (const handlerModuleName of basicHandlerModuleNames) {
+  for (const [handlerModuleName, { invocationOptions, test }] of functionsConfig) {
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
     describe(functionBasename, () => {
       let reports;
       before(async () => {
-        reports = await processFunction(handlerModuleName);
+        reports = await processFunction(handlerModuleName, invocationOptions);
         log.debug('resolved reports %o', reports);
       });
       it('test', () => {
@@ -259,83 +320,11 @@ describe('integration', function () {
           tracesReport.resourceSpans[0].resource.attributes
         );
         expect(resourceSpans['faas.name']).to.equal(`${basename}-${functionBasename}`);
+
+        if (test) test({ metricsReport, tracesReport, resourceMetrics, resourceSpans });
       });
     });
   }
-
-  describe('express-app', () => {
-    let reports;
-    const handlerModuleName = 'express-app';
-    before(async () => {
-      reports = await processFunction(handlerModuleName, {
-        payload: {
-          version: '2.0',
-          routeKey: '$default',
-          rawPath: '/',
-          rawQueryString: '',
-          headers: {
-            'accept':
-              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'en-US,pl;q=0.7,en;q=0.3',
-            'content-length': '0',
-            'host': '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'sec-gpc': '1',
-            'upgrade-insecure-requests': '1',
-            'user-agent':
-              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
-            'x-amzn-trace-id': 'Root=1-624605c4-7fcc8fe9188a3cb762dcd189',
-            'x-forwarded-for': '80.55.87.22',
-            'x-forwarded-port': '443',
-            'x-forwarded-proto': 'https',
-          },
-          requestContext: {
-            accountId: '992311060759',
-            apiId: '1hqnqp4a70',
-            domainName: '1hqnqp4a70.execute-api.us-east-1.amazonaws.com',
-            domainPrefix: '1hqnqp4a70',
-            http: {
-              method: 'GET',
-              path: '/',
-              protocol: 'HTTP/1.1',
-              sourceIp: '80.55.87.22',
-              userAgent:
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:98.0) Gecko/20100101 Firefox/98.0',
-            },
-            requestId: 'P3XWwjfgIAMEVFw=',
-            routeKey: '$default',
-            stage: '$default',
-            time: '31/Mar/2022:19:49:24 +0000',
-            timeEpoch: 1648756164620,
-          },
-          isBase64Encoded: false,
-        },
-      });
-      log.debug('resolved reports %o', reports);
-    });
-    it('test', () => {
-      const metricsReport = reports.find((reportArr) => !!('resourceMetrics' in reportArr[0]))[0];
-      const tracesReport = reports.find((reportArr) => !!('resourceSpans' in reportArr[0]))[0];
-      const resourceMetrics = normalizeOtelAttributes(
-        metricsReport.resourceMetrics[0].resource.attributes
-      );
-      expect(resourceMetrics['faas.name']).to.equal(`${basename}-${handlerModuleName}`);
-      const resourceSpans = normalizeOtelAttributes(
-        tracesReport.resourceSpans[0].resource.attributes
-      );
-      expect(resourceSpans['faas.name']).to.equal(`${basename}-${handlerModuleName}`);
-
-      const expressSpans = tracesReport.resourceSpans[0].instrumentationLibrarySpans.find(
-        ({ instrumentationLibrary: { name } }) => name === '@opentelemetry/instrumentation-express'
-      );
-
-      expect(expressSpans.spans.length).to.be.at.least(4);
-    });
-  });
 
   after(async function () {
     if (hasFailed(this.test.parent)) return; // Avoid cleanup
