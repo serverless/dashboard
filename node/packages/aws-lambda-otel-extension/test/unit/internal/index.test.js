@@ -6,10 +6,11 @@ const path = require('path');
 const isThenable = require('type/thenable/is');
 const log = require('log').get('test');
 const requireUncached = require('ncjsm/require-uncached');
-const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
 const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependencies');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
+
+const OTEL_SERVER_PORT = 2772;
 
 const handleSuccess = async (handlerModuleName, payload = {}) => {
   process.env._HANDLER = `${handlerModuleName}.handler`;

@@ -14,7 +14,7 @@ module.exports = (async () => {
   const runtimeEventEmitter = new EventEmitter();
   const servers = new Set();
 
-  const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
+  const { logMessage } = require('../lib/helper');
   const userSettings = require('./user-settings');
   const { stripResponseBlobData } = require('./helper');
   const reportOtelData = require('./report-otel-data');
@@ -224,6 +224,7 @@ module.exports = (async () => {
   };
 
   const monitorInternalTelemetry = () => {
+    const OTEL_SERVER_PORT = 2772;
     servers.add(
       http
         .createServer((request, response) => {

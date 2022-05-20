@@ -9,9 +9,9 @@ const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const getExtensionServerMock = require('../../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../../utils/normalize-otel-attributes');
 const { default: fetch } = require('node-fetch');
-const { OTEL_SERVER_PORT } = require('../../../opt/otel-extension/lib/helper');
 const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependencies');
 
+const OTEL_SERVER_PORT = 2772;
 const port = 9001;
 
 describe('external', () => {
