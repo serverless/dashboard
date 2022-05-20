@@ -18,7 +18,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['internal/prepare-wrapper.js'],
+      files: ['prepare-wrapper.js'],
       parserOptions: { ecmaVersion: 2020 },
     },
   ],

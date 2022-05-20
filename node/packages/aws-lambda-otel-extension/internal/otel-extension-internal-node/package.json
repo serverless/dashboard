@@ -25,9 +25,6 @@
     "@opentelemetry/sdk-trace-node": "^1.0.1",
     "lodash.clone": "^4.5.0",
     "lodash.get": "^4.4.2",
-    "lodash.isobject": "^3.0.2",
-    "node-fetch": "^2.6.7",
-    "protobufjs": "^6.11.2",
-    "uuid": "^8.3.2"
+    "node-fetch": "^2.6.7"
   }
 }

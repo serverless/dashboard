@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const { stripResponseBlobData } = require('../../../opt/otel-extension/external/helper');
+const { stripResponseBlobData } = require('../../../external/otel-extension-external/helper');
 
 describe('external helper', () => {
   describe('stripResponseBlobData', () => {

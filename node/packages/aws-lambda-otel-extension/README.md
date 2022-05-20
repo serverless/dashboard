@@ -25,7 +25,9 @@ _Note: pre-build layer artifacts are published with `@serverless/aws-lambda-otel
 
 ```sh
 # Ensure layer dependencies are installed
-cd opt/otel-extension
+cd opt/external/otel-extension-external
+npm install
+cd opt/internal/otel-extension-internal-node
 npm install
 
 # Build artifact
@@ -43,7 +45,7 @@ Publish layer artifact to your AWS account
 
 Ensure that layer version ARN is listed in Lambda layers.
 
-Ensure that internal extension of a layer is pre-loaded by configuring `AWS_LAMBDA_EXEC_WRAPPER` environment variable with `/opt/otel-extension/internal/exec-wrapper.sh`
+Ensure that internal extension of a layer is pre-loaded by configuring `AWS_LAMBDA_EXEC_WRAPPER` environment variable with `/opt/otel-extension-internal-node/exec-wrapper.sh`
 
 ##### Configure destination endpoints of telemetry payloads
 
