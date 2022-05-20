@@ -4,6 +4,6 @@
 
 require('essentials');
 
-const path = require('path');
+const argv = require('yargs-parser')(process.argv.slice(2), { coerce: { mode: Number } });
 
-require('./lib/build')(path.resolve(__dirname, '../dist/extension.zip'));
+require('./lib/build')(argv._[0], argv);
