@@ -1,5 +1,6 @@
 'use strict';
-const isObject = require('lodash.isobject');
+
+const isObject = (value) => value && typeof value === 'object';
 
 const extensionVersion = (() => {
   try {

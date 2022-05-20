@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "lodash.isobject": "^3.0.2",
     "node-fetch": "^2.6.7",
     "protobufjs": "^6.11.2"
   }
