@@ -15,7 +15,7 @@ module.exports = (async () => {
   const servers = new Set();
 
   const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
-  const userSettings = require('../lib/user-settings');
+  const userSettings = require('./user-settings');
   const { stripResponseBlobData } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
