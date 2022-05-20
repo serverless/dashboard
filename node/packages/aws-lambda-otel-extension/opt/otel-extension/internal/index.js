@@ -27,7 +27,7 @@ const fetch = require('node-fetch');
 const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
-const userSettings = require('../lib/user-settings');
+const userSettings = require('./user-settings');
 
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
