@@ -45,7 +45,7 @@ Runtime agnostic version (of just external layer) can be built as following
 
 ```sh
 # Ensure layer dependencies are installed
-cd oexternal/otel-extension-external
+cd external/otel-extension-external
 npm install
 
 # Build artifact
