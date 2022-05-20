@@ -3,11 +3,13 @@
 const { expect } = require('chai');
 
 const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependencies');
-const { detectEventType } = require('../../../opt/otel-extension/internal/event-detection');
+const {
+  detectEventType,
+} = require('../../../internal/otel-extension-internal-node/event-detection');
 
 describe('detectEventType', () => {
   before(() => {
-    ensureNpmDependencies('opt/otel-extension');
+    ensureNpmDependencies('internal/otel-extension-internal-node');
   });
 
   it('should return alexa skill', () => {

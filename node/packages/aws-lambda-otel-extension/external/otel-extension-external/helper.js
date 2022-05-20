@@ -3,12 +3,12 @@ const isObject = require('lodash.isobject');
 
 const extensionVersion = (() => {
   try {
-    require.resolve('../version');
+    require.resolve('./version');
   } catch {
-    return require('../../../package.json').version;
+    return require('../../package.json').version;
   }
   // eslint-disable-next-line import/no-unresolved
-  return require('../version');
+  return require('./version');
 })();
 
 const isJson = (data) => {

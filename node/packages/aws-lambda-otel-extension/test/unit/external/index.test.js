@@ -16,7 +16,7 @@ const port = 9001;
 
 describe('external', () => {
   before(async () => {
-    ensureNpmDependencies('opt/otel-extension');
+    ensureNpmDependencies('external/otel-extension-external');
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
     process.env.SLS_OTEL_REPORT_TYPE = 'json';
@@ -33,7 +33,7 @@ describe('external', () => {
     let stdoutData = '';
     const extensionProcess = overwriteStdoutWrite(
       (data) => (stdoutData += data),
-      async () => requireUncached(() => require('../../../opt/otel-extension/external'))
+      async () => requireUncached(() => require('../../../external/otel-extension-external'))
     );
     await Promise.all([
       new Promise((resolve) => listenerEmitter.once('listener', resolve)),

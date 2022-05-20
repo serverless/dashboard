@@ -68,21 +68,22 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
 
   try {
     await requireUncached(async () => {
-      await require('../../../opt/otel-extension/internal');
+      await require('../../../internal/otel-extension-internal-node');
       await new Promise((resolve, reject) => {
-        const maybeThenable = require('../../../opt/otel-extension/internal/wrapper').handler(
-          payload,
-          {
-            awsRequestId: '123',
-            functionName,
-            invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
-            getRemainingTimeInMillis: () => 3000,
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
+        const maybeThenable =
+          require('../../../internal/otel-extension-internal-node/wrapper').handler(
+            payload,
+            {
+              awsRequestId: '123',
+              functionName,
+              invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
+              getRemainingTimeInMillis: () => 3000,
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
         if (isThenable(maybeThenable)) resolve(maybeThenable);
       });
     });
@@ -95,7 +96,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
 
 describe('internal', () => {
   before(() => {
-    ensureNpmDependencies('opt/otel-extension');
+    ensureNpmDependencies('internal/otel-extension-internal-node');
     ensureNpmDependencies('test/fixtures/lambdas');
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_REGION = 'us-east-1';
