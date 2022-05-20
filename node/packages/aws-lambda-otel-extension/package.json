@@ -41,7 +41,8 @@
     ]
   },
   "scripts": {
-    "build": "./scripts/build.js",
+    "build": "./scripts/build.js dist/extension.zip",
+    "build:external": "./scripts/build.js dist/extension-external.zip --mode=2",
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "test": "mocha \"test/unit/**/*.test.js\"",
     "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",

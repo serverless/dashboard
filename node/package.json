@@ -42,7 +42,8 @@
     "standard-version": "^9.3.2",
     "stream-promise": "^3.2.0",
     "timers-ext": "^0.1.7",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "yargs-parser": "^21.0.1"
   },
   "scripts": {
     "lint": "eslint .",

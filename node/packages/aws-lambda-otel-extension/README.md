@@ -21,6 +21,8 @@ _TODO: This section will be completed in the near future_
 
 #### 1. Build layer artifact
 
+##### 1.2 Node.js runtime version
+
 _Note: pre-build layer artifacts are published with `@serverless/aws-lambda-otel-extension-dist` package, and instead of building it manually (as documented below) it is advised to rely on them instead._
 
 ```sh
@@ -36,6 +38,22 @@ npm run build
 ```
 
 Artifact is generated into `dist/extension.zip` file
+
+##### 1.3 Runtime agnostic version
+
+Runtime agnostic version (of just external layer) can be built as following
+
+```sh
+# Ensure layer dependencies are installed
+cd opt/external/otel-extension-external
+npm install
+
+# Build artifact
+cd ../../
+npm run build:external
+```
+
+Artifact is generated into `dist/extension-external.zip` file
 
 #### 2. Publish layer
 

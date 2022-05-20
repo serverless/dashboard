@@ -1,0 +1,6 @@
+#!/opt/otel-extension-external/node
+
+'use strict';
+
+// eslint-disable-next-line import/no-unresolved
+require('../otel-extension-external');
