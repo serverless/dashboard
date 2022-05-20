@@ -6,9 +6,6 @@ const logMessage = (...args) => {
   }
 };
 
-const OTEL_SERVER_PORT = 2772;
-
 module.exports = {
-  OTEL_SERVER_PORT,
   logMessage,
 };

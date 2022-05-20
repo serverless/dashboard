@@ -24,11 +24,12 @@ const { FastifyInstrumentation } = require('@opentelemetry/instrumentation-fasti
 const AwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const fetch = require('node-fetch');
-const { logMessage, OTEL_SERVER_PORT } = require('../lib/helper');
+const { logMessage } = require('../lib/helper');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
 const userSettings = require('./user-settings');
 
+const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
 
