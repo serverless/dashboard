@@ -19,7 +19,7 @@ const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // eslint-disable-next-line import/no-unresolved
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 const fetch = require('node-fetch');
-const { logMessage } = require('../lib/helper');
+const { logMessage } = require('./helper');
 
 const processData = async (data, { url, s3Key, protobufPath, protobufType }) => {
   if (REPORT_TYPE === 'proto') {

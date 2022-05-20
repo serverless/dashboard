@@ -14,9 +14,8 @@ module.exports = (async () => {
   const runtimeEventEmitter = new EventEmitter();
   const servers = new Set();
 
-  const { logMessage } = require('../lib/helper');
   const userSettings = require('./user-settings');
-  const { stripResponseBlobData } = require('./helper');
+  const { stripResponseBlobData, logMessage } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
