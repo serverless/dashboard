@@ -42,7 +42,7 @@ features like Providers, Parameters and Secrets.
 **Invoke your function, and login to Serverless Console**
 Once you have deployed your function, do the following to start using Serverless Console.
 
-1. Login to [Serverless Console](https://console.serverless.com) 
+1. Login to [Serverless Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link) 
 1. Invoke your function, or hit your API Endpoint
 
 It may take a second for the first data point to show up,
