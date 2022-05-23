@@ -5,7 +5,7 @@
   "author": "Serverless, Inc.",
   "dependencies": {
     "adm-zip": "^0.5.9",
-    "esbuild": "^0.14.37",
+    "esbuild": "^0.14.39",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9",
     "semver": "^7.3.7"
