@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.21...@serverless/aws-lambda-otel-extension@0.3.0) (2022-05-23)
+
+### ⚠ BREAKING CHANGES
+
+- Path to exec wrapper has changed from `/opt/otel-extension/internal/exec-wrapper.sh` to `/opt/otel-extension-internal-node/exec-wrapper.sh`. Change should be reflected when configuring `AWS_LAMBDA_EXEC_WRAPPER` environment variable for lambda
+
+### Features
+
+- Build script for runtime agnostic version of external extension ([e9fb48c](https://github.com/serverless/runtime/commit/e9fb48c0a75a058f6edac85033f8a8406fb1054a))
+- Split internal and external extension into independent extensions ([13a7a72](https://github.com/serverless/runtime/commit/13a7a72a01c43d79176ef0f34b54fca64aba9651))
+
+### Bug Fixes
+
+- Fix handling of JSON type payloads ([5ba0175](https://github.com/serverless/runtime/commit/5ba0175b04a01311e9283c8d0b5a470a5b0d6347))
+
+### Maintenance Improvements
+
+- Rewrite external extension ([73cfc5c](https://github.com/serverless/runtime/commit/73cfc5c9c979f2d7b089f5fb3deca39ab1f52086))
+- Drop `node-fetch` dependency in external extension ([cca15ed](https://github.com/serverless/runtime/commit/cca15ed850123ee2d7130bb7eb03d0de97ce8a52))
+- Provide separate `userSettings` source for both extensions ([5a6909d](https://github.com/serverless/runtime/commit/5a6909dceabb7f73f15fb5055476e5b9d6f141dd))
+- Remove `lodash.isobject` dependency ([4773a7c](https://github.com/serverless/runtime/commit/4773a7cf52b0684fc8db100b0b1321444539c612))
+- Remove `OTEL_SERVER_PORT` definition from common scope ([fe443a7](https://github.com/serverless/runtime/commit/fe443a7fd5060b6182de5797aece98ba4d45aaac))
+- Remove common `logMessage` ([a620a06](https://github.com/serverless/runtime/commit/a620a065e2c20d7a996ce0c64093686fea4c8c05))
+
 ### [0.2.21](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.20...@serverless/aws-lambda-otel-extension@0.2.21) (2022-04-29)
 
 ### Features
