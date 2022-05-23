@@ -39,13 +39,6 @@ jobs:
           path: node/packages/aws-lambda-otel-extension/node_modules
           key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
           restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve packages/aws-lambda-otel-extension/test/fixtures/lambdas from cache
-        id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension/test/fixtures/lambdas/node_modules
-          key: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/test/fixtures/lambdas/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Retrieve packages/aws-lambda-otel-extension-dist/node_modules from cache
         id: cacheAwsLambdaOtelExtensionDistNodeModules
         uses: actions/cache@v2
@@ -83,11 +76,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node
           npm install
-      - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
-        if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
-        run: |
-          cd node/packages/aws-lambda-otel-extension/test/fixtures/lambdas
-          npm update --no-save
       - name: Install packages/aws-lambda-otel-extension-dist dependencies
         if: steps.cacheAwsLambdaOtelExtensionDistNodeModules.outputs.cache-hit != 'true'
         run: |
