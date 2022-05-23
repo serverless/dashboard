@@ -224,20 +224,6 @@ jobs:
         with:
           path: node/packages/aws-lambda-otel-extension/node_modules
           key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
-      - name: Retrieve packages/aws-lambda-otel-extension/external/otel-extension-external/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension/external/otel-extension-external/node_modules
-          key: packages/aws-lambda-otel-extension/external/otel-extension-external/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/external/otel-extension-external/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/external/otel-extension-external/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
-      - name: Retrieve packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionInternalOtelExtensionIntrernalNodeNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node_modules
-          key: packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
       - name: Retrieve packages/aws-lambda-otel-extension/test/fixtures/lambdas from cache
         id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
         uses: actions/cache@v2
@@ -250,8 +236,17 @@ jobs:
         with:
           node-version: 16.x
 
-      # Note: No need to install dependencies as we have retrieved cached `node_modules` for very
-      #       same `package.json` as stored with previous job
+      # Note: No need to install dependencies for main packgages as we have retrieved cached
+      #       `node_modules` for very  same `package.json` as stored with previous job
+
+      - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
+        run: |
+          cd node/packages/aws-lambda-otel-extension/external/otel-extension-external
+          npm install
+      - name: Install packages/aws-lambda-otel-extension/internal/otel-extension-internal-node dependencies
+        run: |
+          cd node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node
+          npm install
 
       - name: Integration tests
         run: |
