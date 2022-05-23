@@ -1,6 +1,7 @@
 'use strict';
 
-const fetch = require('node-fetch');
+const createHttpRequest = require('http').request;
+const createHttpsRequest = require('https').request;
 const { logMessage } = require('./helper');
 
 const reportModes = new Set(['json', 'proto']);
@@ -53,33 +54,52 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
   if (url) {
     await Promise.all(
       data.map(async (datum) => {
+        const body = REPORT_TYPE === 'proto' ? datum : JSON.stringify(datum);
         const headers = {
           'accept-encoding': 'gzip',
           'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
+          'Content-Length': Buffer.byteLength(body),
           ...EXTRA_REQUEST_HEADERS,
         };
-        if (REPORT_TYPE !== 'proto') datum = JSON.stringify(datum);
-        const options = {
-          method: 'post',
-          body: datum,
-          headers,
-        };
-        const res = await fetch(url, options);
-        if (!res.ok) {
-          process._rawDebug(
-            'Ingestion server error',
-            JSON.stringify({
-              request: {
-                url,
-                headers,
-              },
-              response: {
-                status: res.status,
-                text: await res.text(),
-              },
-            })
+        await new Promise((resolve, reject) => {
+          const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+          const request = createRequest(
+            url,
+            {
+              method: 'post',
+              headers,
+            },
+            (response) => {
+              if (response.statusCode === 200) {
+                resolve();
+                return;
+              }
+              let responseText = '';
+              response.on('data', (chunk) => {
+                responseText += String(chunk);
+              });
+              response.on('end', () => {
+                process._rawDebug(
+                  'Ingestion server error',
+                  JSON.stringify({
+                    request: {
+                      url,
+                      headers,
+                    },
+                    response: {
+                      status: response.status,
+                      text: responseText,
+                    },
+                  })
+                );
+                resolve();
+              });
+            }
           );
-        }
+          request.on('error', reject);
+          request.write(body);
+          request.end();
+        });
       })
     );
   } else if (s3Client && s3Key) {
@@ -97,33 +117,52 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
 
 const processLogData = async (data, { url }) => {
   if (url) {
+    const body = JSON.stringify(data);
     const headers = {
       'accept-encoding': 'gzip',
       'content-type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
       ...EXTRA_REQUEST_HEADERS,
     };
-    const options = {
-      method: 'post',
-      body: JSON.stringify(data),
-      headers,
-    };
-    logMessage('Log Post', url, JSON.stringify(options));
-    const res = await fetch(url, options);
-    if (!res.ok) {
-      process._rawDebug(
-        'Ingestion server error',
-        JSON.stringify({
-          request: {
-            url,
-            headers,
-          },
-          response: {
-            status: res.status,
-            text: await res.text(),
-          },
-        })
+    await new Promise((resolve, reject) => {
+      const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+      const request = createRequest(
+        url,
+        {
+          method: 'post',
+          headers,
+        },
+        (response) => {
+          if (response.statusCode === 200) {
+            resolve();
+            return;
+          }
+          let responseText = '';
+          response.on('data', (chunk) => {
+            responseText += String(chunk);
+          });
+          response.on('end', () => {
+            process._rawDebug(
+              'Ingestion server error',
+              JSON.stringify({
+                request: {
+                  url,
+                  headers,
+                },
+                response: {
+                  status: response.status,
+                  text: responseText,
+                },
+              })
+            );
+            resolve();
+          });
+        }
       );
-    }
+      request.on('error', reject);
+      request.write(body);
+      request.end();
+    });
   } else if (process.env.SLS_TEST_PRINT_LOG_EVENT) {
     console.log(REPORT_TYPE === 'json' ? JSON.stringify(data) : data);
   }
@@ -131,33 +170,52 @@ const processLogData = async (data, { url }) => {
 
 const processRequestResponseEventData = async (data, { url }) => {
   if (url) {
+    const body = JSON.stringify(data);
     const headers = {
       'accept-encoding': 'gzip',
       'content-type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
       ...EXTRA_REQUEST_HEADERS,
     };
-    const options = {
-      method: 'post',
-      body: JSON.stringify(data),
-      headers,
-    };
-
-    const res = await fetch(url, options);
-    if (!res.ok) {
-      process._rawDebug(
-        'Ingestion server error',
-        JSON.stringify({
-          request: {
-            url,
-            headers,
-          },
-          response: {
-            status: res.status,
-            text: await res.text(),
-          },
-        })
+    await new Promise((resolve, reject) => {
+      const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+      const request = createRequest(
+        url,
+        {
+          method: 'post',
+          headers,
+        },
+        (response) => {
+          if (response.statusCode === 200) {
+            resolve();
+            return;
+          }
+          let responseText = '';
+          response.on('data', (chunk) => {
+            responseText += String(chunk);
+          });
+          response.on('end', () => {
+            process._rawDebug(
+              'Ingestion server error',
+              JSON.stringify({
+                request: {
+                  url,
+                  headers,
+                },
+                response: {
+                  status: response.status,
+                  text: responseText,
+                },
+              })
+            );
+            resolve();
+          });
+        }
       );
-    }
+      request.on('error', reject);
+      request.write(body);
+      request.end();
+    });
   }
 };
 
