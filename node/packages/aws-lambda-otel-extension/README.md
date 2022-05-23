@@ -29,7 +29,7 @@ _Note: pre-build layer artifacts are published with `@serverless/aws-lambda-otel
 # Ensure layer dependencies are installed
 cd external/otel-extension-external
 npm install
-cd internal/otel-extension-internal-node
+cd ../../internal/otel-extension-internal-node
 npm install
 
 # Build artifact
