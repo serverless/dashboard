@@ -1,5 +1,8 @@
 'use strict';
 
+const fetch = require('node-fetch');
+const { logMessage } = require('./helper');
+
 const reportModes = new Set(['json', 'proto']);
 const REPORT_TYPE = reportModes.has(process.env.SLS_OTEL_REPORT_TYPE)
   ? process.env.SLS_OTEL_REPORT_TYPE
@@ -18,8 +21,6 @@ const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // aws-sdk is provided in Lambda runtime
 // eslint-disable-next-line import/no-unresolved
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
-const fetch = require('node-fetch');
-const { logMessage } = require('./helper');
 
 const processData = async (data, { url, s3Key, protobufPath, protobufType }) => {
   if (REPORT_TYPE === 'proto') {
