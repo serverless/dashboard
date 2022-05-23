@@ -39,20 +39,6 @@ jobs:
           path: node/packages/aws-lambda-otel-extension/node_modules
           key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
           restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve packages/aws-lambda-otel-extension/external/otel-extension-external/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension/external/otel-extension-external/node_modules
-          key: packages/aws-lambda-otel-extension/external/otel-extension-external/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/external/otel-extension-external/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/external/otel-extension-external/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionInternalOtelExtensionIntrernalNodeNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node_modules
-          key: packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension/internal/otel-extension-internal-node/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Retrieve packages/aws-lambda-otel-extension/test/fixtures/lambdas from cache
         id: cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules
         uses: actions/cache@v2
@@ -90,15 +76,13 @@ jobs:
           npm update --no-save
           npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
-        if: steps.cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/aws-lambda-otel-extension/external/otel-extension-external
-          npm update --no-save
+          npm install
       - name: Install packages/aws-lambda-otel-extension/internal/otel-extension-internal-node dependencies
-        if: steps.cacheAwsLambdaOtelExtensionInternalOtelExtensionInternalNodeNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node
-          npm update --no-save
+          npm install
       - name: Install packages/aws-lambda-otel-extension/test/fixtures/lambdas dependencies
         if: steps.cacheAwsLambdaOtelExtensionTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
         run: |
