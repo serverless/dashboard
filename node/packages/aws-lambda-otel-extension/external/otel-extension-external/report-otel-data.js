@@ -58,6 +58,7 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
           'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
           ...EXTRA_REQUEST_HEADERS,
         };
+        if (REPORT_TYPE !== 'proto') datum = JSON.stringify(datum);
         const options = {
           method: 'post',
           body: datum,
