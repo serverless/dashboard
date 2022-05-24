@@ -24,18 +24,11 @@ module.exports = (async () => {
   const reportOtelData = require('./report-otel-data');
   const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
-  let reportRequestIdTracker = 0;
   const pendingReports = new Set();
   const sendReport = (method, payload) => {
-    const startTime = Date.now();
-    const requestId = ++reportRequestIdTracker;
-    debugLog(`[${requestId}] send "${method}"`);
     const promise = reportOtelData[method](payload);
     pendingReports.add(promise);
-    promise.finally(() => {
-      debugLog(`[${requestId}] "${method}" sent in`, Date.now() - startTime);
-      pendingReports.delete(promise);
-    });
+    promise.finally(() => pendingReports.delete(promise));
   };
 
   // Rotate current request data
