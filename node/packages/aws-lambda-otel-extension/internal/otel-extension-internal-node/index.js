@@ -1,5 +1,7 @@
 'use strict';
 
+const processStartTime = process.hrtime.bigint();
+
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
@@ -392,7 +394,7 @@ registerInstrumentations({
       },
       responseHook: async (span, { err, res }) => {
         clearTimeout(timeoutHandler);
-        await responseHandler(span, { err, res });
+        await (EvalError.$serverlessResponseHandlerPromise = responseHandler(span, { err, res }));
       },
     }),
     new DnsInstrumentation(),
@@ -416,4 +418,13 @@ module.exports = detectResources({
   detectors: [awsLambdaDetector, envDetector, processDetector],
 }).then((resource) => (tracerProvider.resource = tracerProvider.resource.merge(resource)));
 
-require('./prepare-wrapper')();
+const { handlerLoadDuration } = require('./prepare-wrapper')();
+
+if (process.env.DEBUG_SLS_OTEL_LAYER) {
+  process._rawDebug(
+    'Extension duration: internal initialization:',
+    `${Math.round(
+      Number(process.hrtime.bigint() - processStartTime - handlerLoadDuration) / 1000000
+    )}ms`
+  );
+}

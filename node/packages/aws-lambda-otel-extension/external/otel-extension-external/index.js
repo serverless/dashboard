@@ -2,6 +2,11 @@
 
 'use strict';
 
+const processStartTime = process.hrtime.bigint();
+let isInitializing = true;
+let invocationStartTime;
+let shutdownStartTime;
+
 module.exports = (async () => {
   const fs = require('fs');
   const http = require('http');
@@ -95,6 +100,7 @@ module.exports = (async () => {
                   });
                   break;
                 case 'platform.runtimeDone':
+                  invocationStartTime = process.hrtime.bigint();
                   runtimeEventEmitter.emit('runtimeDone');
                   if (event.record.status === 'success') continue;
                   // In case of invocation failure extension will be shutdown before generating report
@@ -176,6 +182,20 @@ module.exports = (async () => {
     // Events lifecycle handler
     const waitForEvent = async () => {
       const event = await new Promise((resolve, reject) => {
+        if (isInitializing) {
+          isInitializing = false;
+          if (process.env.DEBUG_SLS_OTEL_LAYER) {
+            process._rawDebug(
+              'Extension duration: external initialization:',
+              `${Math.round(Number(process.hrtime.bigint() - processStartTime) / 1000000)}ms`
+            );
+          }
+        } else if (process.env.DEBUG_SLS_OTEL_LAYER) {
+          process._rawDebug(
+            'Extension duration: external invocation:',
+            `${Math.round(Number(process.hrtime.bigint() - invocationStartTime) / 1000000)}ms`
+          );
+        }
         const request = http.request(
           `${baseUrl}/event/next`,
           {
@@ -205,6 +225,7 @@ module.exports = (async () => {
       });
       switch (event.eventType) {
         case 'SHUTDOWN':
+          shutdownStartTime = process.hrtime.bigint();
           await Promise.resolve(ongoingInvocationDeferred).then(waitUntilAllReportsAreSent);
           break;
         case 'INVOKE':
@@ -305,6 +326,12 @@ module.exports = (async () => {
   });
 
   for (const server of servers) server.close();
+  if (process.env.DEBUG_SLS_OTEL_LAYER) {
+    process._rawDebug(
+      'Extension duration: external shutdown:',
+      `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
+    );
+  }
   if (!process.env.SLS_TEST_RUN) process.exit();
 })().catch((error) => {
   // Ensure to crash extension process on unhandled rejection

@@ -1,8 +1,9 @@
 'use strict';
 
 module.exports = () => {
+  const result = { handlerLoadDuration: 0n };
   if (!process.env._HANDLER.includes('.') || process.env._HANDLER.includes('..')) {
-    return; // Bad handler, let error naturally surface
+    return result; // Bad handler, let error naturally surface
   }
 
   const path = require('path');
@@ -36,6 +37,7 @@ module.exports = () => {
   };
 
   let hasInitializationFailed = false;
+  const startTime = process.hrtime.bigint();
   const handlerModule = (() => {
     try {
       if (importEsm) {
@@ -69,6 +71,7 @@ module.exports = () => {
       return null;
     }
   })();
+  result.handlerLoadDuration = process.hrtime.bigint() - startTime;
 
   if (!hasInitializationFailed) {
     const handlerPropertyPathTokens = handlerBasename
@@ -76,17 +79,19 @@ module.exports = () => {
       .split('.');
     const handlerFunctionName = handlerPropertyPathTokens.pop();
     let handlerContext = handlerModule;
-    if (handlerContext == null) return;
+    if (handlerContext == null) return result;
     while (handlerPropertyPathTokens.length) {
       handlerContext = handlerContext[handlerPropertyPathTokens.shift()];
-      if (handlerContext == null) return;
+      if (handlerContext == null) return result;
     }
     const handlerFunction = handlerContext[handlerFunctionName];
-    if (typeof handlerFunction !== 'function') return;
+    if (typeof handlerFunction !== 'function') return result;
 
     EvalError.$serverlessHandlerFunction = handlerFunction;
   }
 
   process.env._ORIGIN_HANDLER = process.env._HANDLER;
   process.env._HANDLER = '/opt/otel-extension-internal-node/wrapper.handler';
+
+  return result;
 };
