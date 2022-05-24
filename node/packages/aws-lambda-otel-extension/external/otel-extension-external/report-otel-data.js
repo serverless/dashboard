@@ -18,7 +18,7 @@ const S3_BUCKET = process.env.SLS_OTEL_REPORT_S3_BUCKET;
 const LOGS_URL = process.env.SLS_OTEL_REPORT_LOGS_URL;
 const REQUEST_RESPONSE_URL = process.env.SLS_OTEL_REPORT_REQUEST_RESPONSE_URL;
 
-const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
+const protobufLoad = REPORT_TYPE === 'proto' ? require('protobufjs').load : null;
 // aws-sdk is provided in Lambda runtime
 // eslint-disable-next-line import/no-unresolved
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
@@ -27,31 +27,13 @@ let httpRequestIdTracker = 0;
 const processData = async (jsonData, { url, s3Key, protobufPath, protobufType }) => {
   const requestData =
     REPORT_TYPE === 'proto'
-      ? (
-          await Promise.all(
-            jsonData.map(
-              async (datum) =>
-                new Promise((resolve) => {
-                  try {
-                    protobuf.load(`${__dirname}${protobufPath}`, (err, root) => {
-                      try {
-                        if (err) throw err;
-
-                        const ServiceRequest = root.lookupType(protobufType);
-                        resolve(ServiceRequest.encode(datum).finish());
-                      } catch (error) {
-                        debugLog('Buffer error: ', error);
-                        resolve(null);
-                      }
-                    });
-                  } catch (error) {
-                    debugLog('Could not convert to proto buff: ', error);
-                    resolve(null);
-                  }
-                })
-            )
-          )
-        ).filter(Boolean)
+      ? await Promise.all(
+          jsonData.map(async (datum) => {
+            const root = await protobufLoad(`${__dirname}${protobufPath}`);
+            const ServiceRequest = root.lookupType(protobufType);
+            return ServiceRequest.encode(datum).finish();
+          })
+        )
       : jsonData;
 
   if (url) {
