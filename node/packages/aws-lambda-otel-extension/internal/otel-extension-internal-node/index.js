@@ -82,11 +82,11 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   const { startTime: st, endTime: et } = spans.reduce(
     (obj, val) => {
       if (val.instrumentationLibrary.name === '@opentelemetry/instrumentation-aws-lambda') {
-        const startTime = val.startTime || [0, 0];
-        const endTime = val.endTime || [0, 0];
+        const spanStartTime = val.startTime || [0, 0];
+        const spanEndTime = val.endTime || [0, 0];
         return {
-          startTime: new Date((startTime[0] * 1000000000 + startTime[1]) / 1000000),
-          endTime: new Date((endTime[0] * 1000000000 + endTime[1]) / 1000000),
+          startTime: new Date((spanStartTime[0] * 1000000000 + spanStartTime[1]) / 1000000),
+          endTime: new Date((spanEndTime[0] * 1000000000 + spanEndTime[1]) / 1000000),
         };
       }
       return obj;
@@ -179,8 +179,8 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     const spanObj = spanList
       .map((val) => {
         const { traceId, spanId } = val.spanContext();
-        const startTime = val.startTime || [0, 0];
-        const endTime = val.endTime || [0, 0];
+        const spanStartTime = val.startTime || [0, 0];
+        const spanEndTime = val.endTime || [0, 0];
 
         let attributes = {
           ...val.attributes,
@@ -208,8 +208,8 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
               ? `request handler - ${pathData['http.path']}`
               : val.name,
           kind: 'SPAN_KIND_SERVER',
-          startTimeUnixNano: `${startTime[0] * 1000000000 + startTime[1]}`,
-          endTimeUnixNano: `${endTime[0] * 1000000000 + endTime[1]}`,
+          startTimeUnixNano: `${spanStartTime[0] * 1000000000 + spanStartTime[1]}`,
+          endTimeUnixNano: `${spanEndTime[0] * 1000000000 + spanEndTime[1]}`,
           attributes,
           status: {},
         };
