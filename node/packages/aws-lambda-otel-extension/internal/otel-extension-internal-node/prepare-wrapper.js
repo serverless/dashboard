@@ -2,7 +2,7 @@
 
 module.exports = () => {
   if (!process.env._HANDLER.includes('.') || process.env._HANDLER.includes('..')) {
-    return false; // Bad handler, let error naturally surface
+    return; // Bad handler, let error naturally surface
   }
 
   const path = require('path');
@@ -76,19 +76,17 @@ module.exports = () => {
       .split('.');
     const handlerFunctionName = handlerPropertyPathTokens.pop();
     let handlerContext = handlerModule;
-    if (handlerContext == null) return false;
+    if (handlerContext == null) return;
     while (handlerPropertyPathTokens.length) {
       handlerContext = handlerContext[handlerPropertyPathTokens.shift()];
-      if (handlerContext == null) return false;
+      if (handlerContext == null) return;
     }
     const handlerFunction = handlerContext[handlerFunctionName];
-    if (typeof handlerFunction !== 'function') return false;
+    if (typeof handlerFunction !== 'function') return;
 
     EvalError.$serverlessHandlerFunction = handlerFunction;
   }
 
   process.env._ORIGIN_HANDLER = process.env._HANDLER;
   process.env._HANDLER = '/opt/otel-extension-internal-node/wrapper.handler';
-
-  return true;
 };
