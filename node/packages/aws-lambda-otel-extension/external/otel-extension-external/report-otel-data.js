@@ -23,37 +23,39 @@ const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // eslint-disable-next-line import/no-unresolved
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 
-const processData = async (data, { url, s3Key, protobufPath, protobufType }) => {
-  if (REPORT_TYPE === 'proto') {
-    data = (
-      await Promise.all(
-        data.map(
-          async (datum) =>
-            new Promise((resolve) => {
-              try {
-                protobuf.load(`${__dirname}${protobufPath}`, (err, root) => {
+const processData = async (jsonData, { url, s3Key, protobufPath, protobufType }) => {
+  const requestData =
+    REPORT_TYPE === 'proto'
+      ? (
+          await Promise.all(
+            jsonData.map(
+              async (datum) =>
+                new Promise((resolve) => {
                   try {
-                    if (err) throw err;
+                    protobuf.load(`${__dirname}${protobufPath}`, (err, root) => {
+                      try {
+                        if (err) throw err;
 
-                    const ServiceRequest = root.lookupType(protobufType);
-                    resolve(ServiceRequest.encode(datum).finish());
+                        const ServiceRequest = root.lookupType(protobufType);
+                        resolve(ServiceRequest.encode(datum).finish());
+                      } catch (error) {
+                        debugLog('Buffer error: ', error);
+                        resolve(null);
+                      }
+                    });
                   } catch (error) {
-                    debugLog('Buffer error: ', error);
+                    debugLog('Could not convert to proto buff: ', error);
                     resolve(null);
                   }
-                });
-              } catch (error) {
-                debugLog('Could not convert to proto buff: ', error);
-                resolve(null);
-              }
-            })
-        )
-      )
-    ).filter(Boolean);
-  }
+                })
+            )
+          )
+        ).filter(Boolean)
+      : jsonData;
+
   if (url) {
     await Promise.all(
-      data.map(async (datum) => {
+      requestData.map(async (datum) => {
         const body = REPORT_TYPE === 'proto' ? datum : JSON.stringify(datum);
         const headers = {
           'accept-encoding': 'gzip',
@@ -105,13 +107,13 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
   } else if (s3Client && s3Key) {
     await s3Client
       .putObject({
-        Body: Buffer.from(JSON.stringify(data)),
+        Body: Buffer.from(JSON.stringify(requestData)),
         Bucket: S3_BUCKET,
         Key: s3Key + (REPORT_TYPE === 'proto' ? '.proto' : '.json'),
       })
       .promise();
   } else {
-    console.log(REPORT_TYPE === 'json' ? JSON.stringify(data) : data);
+    console.log(REPORT_TYPE === 'json' ? JSON.stringify(requestData) : requestData);
   }
 };
 
