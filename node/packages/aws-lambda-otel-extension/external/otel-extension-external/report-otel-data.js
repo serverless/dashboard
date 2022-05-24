@@ -2,7 +2,7 @@
 
 const createHttpRequest = require('http').request;
 const createHttpsRequest = require('https').request;
-const { logMessage } = require('./helper');
+const { debugLog } = require('./helper');
 
 const reportModes = new Set(['json', 'proto']);
 const REPORT_TYPE = reportModes.has(process.env.SLS_OTEL_REPORT_TYPE)
@@ -38,12 +38,12 @@ const processData = async (data, { url, s3Key, protobufPath, protobufType }) => 
                     const ServiceRequest = root.lookupType(protobufType);
                     resolve(ServiceRequest.encode(datum).finish());
                   } catch (error) {
-                    logMessage('Buffer error: ', error);
+                    debugLog('Buffer error: ', error);
                     resolve(null);
                   }
                 });
               } catch (error) {
-                logMessage('Could not convert to proto buff: ', error);
+                debugLog('Could not convert to proto buff: ', error);
                 resolve(null);
               }
             })

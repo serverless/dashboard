@@ -235,14 +235,14 @@ const measureAttributes = [
   },
 ];
 
-const logMessage = (...args) => {
+const debugLog = (...args) => {
   if (process.env.DEBUG_SLS_OTEL_LAYER) {
     console.log(...args);
   }
 };
 
 module.exports = {
-  logMessage,
+  debugLog,
   resourceAttributes,
   measureAttributes,
   stripResponseBlobData,
