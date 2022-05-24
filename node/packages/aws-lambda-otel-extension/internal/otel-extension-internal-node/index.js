@@ -30,12 +30,6 @@ const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
 const userSettings = require('./user-settings');
 
-const debugLog = (...args) => {
-  if (process.env.DEBUG_SLS_OTEL_LAYER) {
-    console.log(...args);
-  }
-};
-
 const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
@@ -229,25 +223,6 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       spans: Object.values(spanObj),
     };
   });
-
-  debugLog(
-    'Wrapper trace data: ',
-    JSON.stringify(
-      {
-        function: functionData,
-        traces: {
-          resourceSpans: [
-            {
-              resource: tracerProvider.resource.attributes,
-              instrumentationLibrarySpans: data,
-            },
-          ],
-        },
-      },
-      null,
-      2
-    )
-  );
 
   const telemetryDataPayload = {
     recordType: 'telemetryData',
