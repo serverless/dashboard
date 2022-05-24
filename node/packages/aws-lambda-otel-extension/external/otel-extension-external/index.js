@@ -15,7 +15,7 @@ module.exports = (async () => {
   const servers = new Set();
 
   const userSettings = require('./user-settings');
-  const { stripResponseBlobData, logMessage } = require('./helper');
+  const { stripResponseBlobData, debugLog } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
@@ -24,11 +24,11 @@ module.exports = (async () => {
   const sendReport = (method, payload) => {
     const startTime = Date.now();
     const requestId = ++reportRequestIdTracker;
-    logMessage(`[${requestId}] send "${method}"`);
+    debugLog(`[${requestId}] send "${method}"`);
     const promise = reportOtelData[method](payload);
     pendingReports.add(promise);
     promise.finally(() => {
-      logMessage(`[${requestId}] "${method}" sent in`, Date.now() - startTime);
+      debugLog(`[${requestId}] "${method}" sent in`, Date.now() - startTime);
       pendingReports.delete(promise);
     });
   };
@@ -234,7 +234,7 @@ module.exports = (async () => {
           });
           request.on('end', async () => {
             const data = JSON.parse(body);
-            logMessage('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(data));
+            debugLog('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(data));
             switch (data.recordType) {
               case 'eventData':
                 {

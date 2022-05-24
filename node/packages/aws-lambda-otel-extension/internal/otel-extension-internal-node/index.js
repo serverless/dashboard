@@ -28,7 +28,7 @@ const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
 const userSettings = require('./user-settings');
 
-const logMessage = (...args) => {
+const debugLog = (...args) => {
   if (process.env.DEBUG_SLS_OTEL_LAYER) {
     console.log(...args);
   }
@@ -228,7 +228,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     };
   });
 
-  logMessage(
+  debugLog(
     'Wrapper trace data: ',
     JSON.stringify(
       {
