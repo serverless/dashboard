@@ -23,6 +23,7 @@ const protobuf = REPORT_TYPE === 'proto' ? require('protobufjs') : null;
 // eslint-disable-next-line import/no-unresolved
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 
+let httpRequestIdTracker = 0;
 const processData = async (jsonData, { url, s3Key, protobufPath, protobufType }) => {
   const requestData =
     REPORT_TYPE === 'proto'
@@ -55,7 +56,7 @@ const processData = async (jsonData, { url, s3Key, protobufPath, protobufType })
 
   if (url) {
     await Promise.all(
-      requestData.map(async (datum) => {
+      requestData.map(async (datum, index) => {
         const body = REPORT_TYPE === 'proto' ? datum : JSON.stringify(datum);
         const headers = {
           'accept-encoding': 'gzip',
@@ -64,7 +65,10 @@ const processData = async (jsonData, { url, s3Key, protobufPath, protobufType })
           ...EXTRA_REQUEST_HEADERS,
         };
         await new Promise((resolve, reject) => {
+          const httpRequestId = ++httpRequestIdTracker;
           const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+          debugLog(`Request [${httpRequestId}]:`, url, JSON.stringify(jsonData[index]));
+          const requestStartTime = process.hrtime.bigint();
           const request = createRequest(
             url,
             {
@@ -73,6 +77,11 @@ const processData = async (jsonData, { url, s3Key, protobufPath, protobufType })
             },
             (response) => {
               if (response.statusCode === 200) {
+                debugLog(
+                  `Request [${httpRequestId}]: ok in: ${Math.round(
+                    Number(process.hrtime.bigint() - requestStartTime) / 1000000
+                  )}ms`
+                );
                 resolve();
                 return;
               }
@@ -81,18 +90,10 @@ const processData = async (jsonData, { url, s3Key, protobufPath, protobufType })
                 responseText += String(chunk);
               });
               response.on('end', () => {
-                process._rawDebug(
-                  'Ingestion server error',
-                  JSON.stringify({
-                    request: {
-                      url,
-                      headers,
-                    },
-                    response: {
-                      status: response.status,
-                      text: responseText,
-                    },
-                  })
+                debugLog(
+                  `Request [${httpRequestId}]: failed in: ${Math.round(
+                    Number(process.hrtime.bigint() - requestStartTime) / 1000000
+                  )}ms with: [${response.status}] ${responseText}`
                 );
                 resolve();
               });
@@ -127,7 +128,10 @@ const processLogData = async (data, { url }) => {
       ...EXTRA_REQUEST_HEADERS,
     };
     await new Promise((resolve, reject) => {
+      const httpRequestId = ++httpRequestIdTracker;
       const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+      debugLog(`Request [${httpRequestId}]:`, url, JSON.stringify(data));
+      const requestStartTime = process.hrtime.bigint();
       const request = createRequest(
         url,
         {
@@ -136,6 +140,11 @@ const processLogData = async (data, { url }) => {
         },
         (response) => {
           if (response.statusCode === 200) {
+            debugLog(
+              `Request [${httpRequestId}]: ok in: ${Math.round(
+                Number(process.hrtime.bigint() - requestStartTime) / 1000000
+              )}ms`
+            );
             resolve();
             return;
           }
@@ -144,18 +153,10 @@ const processLogData = async (data, { url }) => {
             responseText += String(chunk);
           });
           response.on('end', () => {
-            process._rawDebug(
-              'Ingestion server error',
-              JSON.stringify({
-                request: {
-                  url,
-                  headers,
-                },
-                response: {
-                  status: response.status,
-                  text: responseText,
-                },
-              })
+            debugLog(
+              `Request [${httpRequestId}]: failed in: ${Math.round(
+                Number(process.hrtime.bigint() - requestStartTime) / 1000000
+              )}ms with: [${response.status}] ${responseText}`
             );
             resolve();
           });
@@ -180,7 +181,10 @@ const processRequestResponseEventData = async (data, { url }) => {
       ...EXTRA_REQUEST_HEADERS,
     };
     await new Promise((resolve, reject) => {
+      const httpRequestId = ++httpRequestIdTracker;
       const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+      debugLog(`Request [${httpRequestId}]:`, url, JSON.stringify(data));
+      const requestStartTime = process.hrtime.bigint();
       const request = createRequest(
         url,
         {
@@ -189,6 +193,11 @@ const processRequestResponseEventData = async (data, { url }) => {
         },
         (response) => {
           if (response.statusCode === 200) {
+            debugLog(
+              `Request [${httpRequestId}]: ok in: ${Math.round(
+                Number(process.hrtime.bigint() - requestStartTime) / 1000000
+              )}ms`
+            );
             resolve();
             return;
           }
@@ -197,18 +206,10 @@ const processRequestResponseEventData = async (data, { url }) => {
             responseText += String(chunk);
           });
           response.on('end', () => {
-            process._rawDebug(
-              'Ingestion server error',
-              JSON.stringify({
-                request: {
-                  url,
-                  headers,
-                },
-                response: {
-                  status: response.status,
-                  text: responseText,
-                },
-              })
+            debugLog(
+              `Request [${httpRequestId}]: failed in: ${Math.round(
+                Number(process.hrtime.bigint() - requestStartTime) / 1000000
+              )}ms with: [${response.status}] ${responseText}`
             );
             resolve();
           });
