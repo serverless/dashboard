@@ -248,7 +248,7 @@ module.exports = (async () => {
           });
           request.on('end', async () => {
             const data = JSON.parse(body);
-            debugLog('BATCH FROM CUSTOM HTTP SERVER: ', body, JSON.stringify(data));
+            debugLog('Internal telemetry payload', JSON.stringify(data));
             switch (data.recordType) {
               case 'eventData':
                 {
