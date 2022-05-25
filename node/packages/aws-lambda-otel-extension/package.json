@@ -9,11 +9,8 @@
     "esbuild": "^0.14.39",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9",
-    "semver": "^7.3.7"
-  },
-  "devDependencies": {
-    "deasync": "^0.1.26",
-    "type": "^2.6.0"
+    "semver": "^7.3.7",
+    "yargs-parser": "^21.0.1"
   },
   "standard-version": {
     "tagPrefix": "@serverless/aws-lambda-otel-extension@",

@@ -25,6 +25,7 @@
     "chai": "^4.3.6",
     "chalk": "^4.1.2",
     "child-process-ext": "^2.1.1",
+    "deasync": "^0.1.26",
     "eslint": "^8.16.0",
     "eslint-plugin-import": "^2.26.0",
     "essentials": "^1.2.0",
@@ -42,8 +43,8 @@
     "standard-version": "^9.5.0",
     "stream-promise": "^3.2.0",
     "timers-ext": "^0.1.7",
-    "uuid": "^8.3.2",
-    "yargs-parser": "^21.0.1"
+    "type": "^2.6.0",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "lint": "eslint .",
