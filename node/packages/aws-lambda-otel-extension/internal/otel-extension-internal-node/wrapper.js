@@ -19,7 +19,7 @@ const wrappedHandler = require('./aws-lambda-instrumentation')._instance._getPat
   (event, context, callback) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) {
       process._rawDebug(
-        'Extension duration: internal request:',
+        'Extension overhead duration: internal request:',
         `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
       );
     }
@@ -58,7 +58,7 @@ module.exports.handler = (event, context, callback) => {
     delete EvalError.$serverlessResponseHandlerPromise;
     if (process.env.DEBUG_SLS_OTEL_LAYER && responseStartTime) {
       process._rawDebug(
-        'Extension duration: internal response:',
+        'Extension overhead duration: internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
       );
       responseStartTime = null;

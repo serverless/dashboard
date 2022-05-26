@@ -73,7 +73,7 @@ module.exports = (async () => {
             let functionLogEvents = data.filter((event) => event.type === 'function');
             if (process.env.DEBUG_SLS_OTEL_LAYER) {
               functionLogEvents = functionLogEvents.filter(
-                (event) => !event.record.startsWith('Extension duration: ')
+                (event) => !event.record.startsWith('Extension overhead duration: ')
               );
             }
             if (functionLogEvents.length) {
@@ -184,13 +184,13 @@ module.exports = (async () => {
           isInitializing = false;
           if (process.env.DEBUG_SLS_OTEL_LAYER) {
             process._rawDebug(
-              'Extension duration: external initialization:',
+              'Extension overhead duration: external initialization:',
               `${Math.round(Number(process.hrtime.bigint() - processStartTime) / 1000000)}ms`
             );
           }
         } else if (process.env.DEBUG_SLS_OTEL_LAYER) {
           process._rawDebug(
-            'Extension duration: external invocation:',
+            'Extension overhead duration: external invocation:',
             `${Math.round(Number(process.hrtime.bigint() - invocationStartTime) / 1000000)}ms`
           );
         }
@@ -326,7 +326,7 @@ module.exports = (async () => {
   for (const server of servers) server.close();
   if (process.env.DEBUG_SLS_OTEL_LAYER) {
     process._rawDebug(
-      'Extension duration: external shutdown:',
+      'Extension overhead duration: external shutdown:',
       `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
     );
   }
