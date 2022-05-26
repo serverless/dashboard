@@ -161,8 +161,8 @@ describe('integration', function () {
     await deleteFunction();
     log.info('Retrieve body of generated S3 objects %s', functionBasename);
     return Promise.all(
-      objects.map(async (objectKey) =>
-        JSON.parse(
+      objects.map(async (objectKey) => {
+        const result = JSON.parse(
           String(
             await streamToPromise(
               (
@@ -170,8 +170,10 @@ describe('integration', function () {
               ).Body
             )
           )
-        )
-      )
+        );
+        log.info('Report for %s: %o', objectKey, result);
+        return result;
+      })
     );
   };
 
@@ -316,7 +318,6 @@ describe('integration', function () {
       let reports;
       before(async () => {
         reports = await processFunction(handlerModuleName, invocationOptions);
-        log.debug('resolved reports %o', reports);
       });
       it('test', () => {
         const metricsReport = reports.find((report) => report[0].resourceMetrics)[0];
