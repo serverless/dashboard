@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.3.0...@serverless/aws-lambda-otel-extension@0.3.1) (2022-05-26)
+
+### Bug Fixes
+
+- Fix dependencies configuration ([9b41fa6](https://github.com/serverless/runtime/commit/9b41fa6198738669a5aebd58b7477f724888793d))
+
+### Maintenance Improvements
+
+- Bundle internal and external extensions into a single file ([9195c1e](https://github.com/serverless/runtime/commit/9195c1e8f760e27323ea65155fc3cef5e55d9ffb))
+- Distinguish JSON from request data ([aa0141b](https://github.com/serverless/runtime/commit/aa0141be19c7b18cbb0f3abcab027d958f2ab052))
+- Improve debug log for ingestion server requests ([d2b5233](https://github.com/serverless/runtime/commit/d2b5233020357c2384c894df5ef87e4ad2d03a0e))
+- Improve debug log for telemetry payload ([b133ea6](https://github.com/serverless/runtime/commit/b133ea665b2d0308cbd41f7605e5dec15d3acba5))
+- Log extension overhead processing durations ([7ddb265](https://github.com/serverless/runtime/commit/7ddb26576148f6c5466db00370fc5de770a6507a))
+- Remove obsolete debug log ([59ae9a8](https://github.com/serverless/runtime/commit/59ae9a8b1b48356c5974f1dd758ceb404c098bd5))
+- Rename `logMessage` to `debugLog` ([b7c2edc](https://github.com/serverless/runtime/commit/b7c2edcd3332d9383369e5ab1d8a68262b3be928))
+- Simplify protobuf processing ([e339066](https://github.com/serverless/runtime/commit/e339066d4b1f7046e06fdbd911b7f838b8945596))
+
 ## [0.3.0](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.2.21...@serverless/aws-lambda-otel-extension@0.3.0) (2022-05-23)
 
 ### ⚠ BREAKING CHANGES
