@@ -155,7 +155,7 @@ describe('integration', function () {
       objects = ((await awsRequest(S3, 'listObjectsV2', { Bucket: basename })).Contents || [])
         .map((object) => object.Key)
         .filter((key) => key.startsWith(`${functionName}/`));
-    } while (!objects.length);
+    } while (objects.length < 3);
 
     log.info('Delete function %s', functionBasename);
     await deleteFunction();
