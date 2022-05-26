@@ -397,7 +397,7 @@ const { handlerLoadDuration } = require('./prepare-wrapper')();
 
 if (process.env.DEBUG_SLS_OTEL_LAYER) {
   process._rawDebug(
-    'Extension duration: internal initialization:',
+    'Extension overhead duration: internal initialization:',
     `${Math.round(
       Number(process.hrtime.bigint() - processStartTime - handlerLoadDuration) / 1000000
     )}ms`
