@@ -1,3 +1,5 @@
+// Warning: This file must not require any dependencies
+
 'use strict';
 
 process.env._HANDLER = process.env._ORIGIN_HANDLER;
@@ -11,11 +13,13 @@ if (!EvalError.$serverlessHandlerFunction) {
 
 const handlerFunction = EvalError.$serverlessHandlerFunction;
 delete EvalError.$serverlessHandlerFunction;
+const awsLambdaInstrumentation = EvalError.$serverlessAwsLambdaInstrumentation;
+delete EvalError.$serverlessAwsLambdaInstrumentation;
 
 let requestStartTime;
 let responseStartTime;
 
-const wrappedHandler = require('./aws-lambda-instrumentation')._instance._getPatchHandler(
+const wrappedHandler = awsLambdaInstrumentation._instance._getPatchHandler(
   (event, context, callback) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) {
       process._rawDebug(

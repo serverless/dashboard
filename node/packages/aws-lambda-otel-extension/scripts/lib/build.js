@@ -1,15 +1,18 @@
 'use strict';
 
 const path = require('path');
-const readdir = require('fs2/readdir');
+const fsp = require('fs').promises;
 const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
 const mkdir = require('fs2/mkdir');
+const spawn = require('child-process-ext/spawn');
 const ensureNpmDependencies = require('./ensure-npm-dependencies');
 const { version } = require('../../package');
 
 const rootDir = path.resolve(__dirname, '../../');
+const esbuildFilename = path.resolve(rootDir, 'node_modules/.bin/esbuild');
 const externalDir = path.resolve(rootDir, 'external');
+const externalProtoRelativeDirname = 'otel-extension-external/proto';
 const externalRuntimeAgnosticDir = path.resolve(rootDir, 'external-runtime-agnostic');
 const internalDir = path.resolve(rootDir, 'internal');
 
@@ -24,26 +27,37 @@ module.exports = async (distFilename, options = {}) => {
     (async () => {
       if (mode & 2) {
         ensureNpmDependencies('external/otel-extension-external');
-        for (const relativeFilename of await readdir(externalDir, {
-          depth: Infinity,
-          type: { file: true },
-        })) {
-          if (mode === 2 && relativeFilename === 'extensions/otel-extension') continue;
-          zip.addLocalFile(
-            path.resolve(externalDir, relativeFilename),
-            path.dirname(relativeFilename)
-          );
-        }
         if (mode === 2) {
-          for (const relativeFilename of await readdir(externalRuntimeAgnosticDir, {
-            depth: Infinity,
-            type: { file: true },
-          })) {
-            zip.addLocalFile(
-              path.resolve(externalRuntimeAgnosticDir, relativeFilename),
-              path.dirname(relativeFilename)
-            );
-          }
+          zip.addLocalFile(
+            path.resolve(externalRuntimeAgnosticDir, 'extensions/otel-extension'),
+            'extensions'
+          );
+          zip.addLocalFile(
+            path.resolve(externalRuntimeAgnosticDir, 'otel-extension-external/node'),
+            'otel-extension-external'
+          );
+        } else {
+          zip.addLocalFile(path.resolve(externalDir, 'extensions/otel-extension'), 'extensions');
+        }
+        zip.addFile(
+          'otel-extension-external/index.js',
+          (
+            await spawn(esbuildFilename, [
+              path.resolve(path.resolve(externalDir, 'otel-extension-external/index.js')),
+              '--bundle',
+              '--platform=node',
+              '--external:./version',
+              '--external:/var/runtime/node_modules/aws-sdk',
+            ])
+          ).stdoutBuffer
+        );
+        for (const relativeFilename of await fsp.readdir(
+          path.resolve(externalDir, externalProtoRelativeDirname)
+        )) {
+          zip.addLocalFile(
+            path.resolve(externalDir, externalProtoRelativeDirname, relativeFilename),
+            externalProtoRelativeDirname
+          );
         }
         zip.addFile(
           'otel-extension-external/version.json',
@@ -52,15 +66,24 @@ module.exports = async (distFilename, options = {}) => {
       }
       if (mode & 1) {
         ensureNpmDependencies('internal/otel-extension-internal-node');
-        for (const relativeFilename of await readdir(internalDir, {
-          depth: Infinity,
-          type: { file: true },
-        })) {
-          zip.addLocalFile(
-            path.resolve(internalDir, relativeFilename),
-            path.dirname(relativeFilename)
-          );
-        }
+        zip.addFile(
+          'otel-extension-internal-node/index.js',
+          (
+            await spawn(esbuildFilename, [
+              path.resolve(path.resolve(internalDir, 'otel-extension-internal-node/index.js')),
+              '--bundle',
+              '--platform=node',
+            ])
+          ).stdoutBuffer
+        );
+        zip.addLocalFile(
+          path.resolve(internalDir, 'otel-extension-internal-node/exec-wrapper.sh'),
+          'otel-extension-internal-node'
+        );
+        zip.addLocalFile(
+          path.resolve(internalDir, 'otel-extension-internal-node/wrapper.js'),
+          'otel-extension-internal-node'
+        );
       }
     })(),
   ]);

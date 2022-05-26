@@ -88,6 +88,9 @@ module.exports = () => {
     if (typeof handlerFunction !== 'function') return result;
 
     EvalError.$serverlessHandlerFunction = handlerFunction;
+    // Exposed for Wrapper which is configured with no dependencies
+    // (it's to ensure no repeated code between distinct bundled files)
+    EvalError.$serverlessAwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
   }
 
   process.env._ORIGIN_HANDLER = process.env._HANDLER;

@@ -5,6 +5,7 @@
   "author": "Serverless, Inc.",
   "dependencies": {
     "adm-zip": "^0.5.9",
+    "child-process-ext": "^2.1.1",
     "esbuild": "^0.14.39",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9",
