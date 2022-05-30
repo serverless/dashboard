@@ -21,7 +21,7 @@ to build out a Tracing experience that's organized and intuitive.
 To make instrumentaiton automatic we're launching a new Open Source effort
 called [Serverless Runtime](https://github.com/serverless/runtime).
 
-Serverless runtim is our collection of [Open Telemetry](https://opentelemtry.io) 
+Serverless runtime is our collection of [Open Telemetry](https://opentelemtry.io) 
 collectors we use to instrument a variety of computing platforms.  
 
 The fastest way to get started with Serverless Runtime is to use the version
