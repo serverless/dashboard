@@ -7,7 +7,7 @@ menuOrder: 2
 # Curated Metric Views 
 
 Our curated metric views provide you the ability to view activity across your
-enter organization at a glance.  These include views are intended to be a
+entire organization at a glance.  These include views are intended to be a
 starting point based on patterns we recognize in the [Trace](../concepts/traces.md)
 data we receive. 
 
