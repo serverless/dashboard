@@ -229,9 +229,9 @@ describe('external', () => {
       .filter(Boolean)
       .map((string) => JSON.parse(string));
     log.debug('report data %o', reportData);
-    const metricsReport = reportData.find(([report]) => report.resourceMetrics)[0];
-    const tracesReport = reportData.find(([report]) => report.resourceSpans)[0];
-    const logReport = reportData.find(([report]) => report.Timestamp)[0];
+    const metricsReport = reportData.find((report) => report.resourceMetrics);
+    const tracesReport = reportData.find((report) => report.resourceSpans);
+    const logReport = reportData.find((report) => report && report[0] && report[0].Timestamp)[0];
 
     const resourceMetrics = normalizeOtelAttributes(
       metricsReport.resourceMetrics[0].resource.attributes

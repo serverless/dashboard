@@ -24,73 +24,65 @@ const protobufLoad = REPORT_TYPE === 'proto' ? require('protobufjs').load : null
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 
 let httpRequestIdTracker = 0;
-const sendReport = async (jsonData, { url, s3Key, protobufPath, protobufType }) => {
-  const requestData =
-    REPORT_TYPE === 'proto'
-      ? await Promise.all(
-          jsonData.map(async (datum) => {
-            const root = await protobufLoad(`${__dirname}${protobufPath}`);
-            const ServiceRequest = root.lookupType(protobufType);
-            return ServiceRequest.encode(datum).finish();
-          })
-        )
-      : jsonData;
+const sendReport = async (data, { url, s3Key, protobufPath, protobufType }) => {
+  const requestData = await (async () => {
+    if (REPORT_TYPE !== 'proto') return data;
+    const root = await protobufLoad(`${__dirname}${protobufPath}`);
+    const ServiceRequest = root.lookupType(protobufType);
+    return ServiceRequest.encode(data).finish();
+  })();
 
   if (url) {
-    await Promise.all(
-      requestData.map(async (datum, index) => {
-        const body = REPORT_TYPE === 'proto' ? datum : JSON.stringify(datum);
-        const headers = {
-          'accept-encoding': 'gzip',
-          'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-          ...EXTRA_REQUEST_HEADERS,
-        };
-        await new Promise((resolve, reject) => {
-          const httpRequestId = ++httpRequestIdTracker;
-          const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
-          debugLog(`Request [${httpRequestId}]:`, url, JSON.stringify(jsonData[index]));
-          const requestStartTime = process.hrtime.bigint();
-          const request = createRequest(
-            url,
-            {
-              method: 'post',
-              headers,
-            },
-            (response) => {
-              if (response.statusCode === 200) {
-                debugLog(
-                  `Request [${httpRequestId}]: ok in: ${Math.round(
-                    Number(process.hrtime.bigint() - requestStartTime) / 1000000
-                  )}ms`
-                );
-                resolve();
-                return;
-              }
-              let responseText = '';
-              response.on('data', (chunk) => {
-                responseText += String(chunk);
-              });
-              response.on('end', () => {
-                debugLog(
-                  `Request [${httpRequestId}]: failed in: ${Math.round(
-                    Number(process.hrtime.bigint() - requestStartTime) / 1000000
-                  )}ms with: [${response.status}] ${responseText}`
-                );
-                resolve();
-              });
-            }
-          );
-          request.on('error', reject);
-          request.write(body);
-          request.end();
-        });
-      })
-    );
+    const body = REPORT_TYPE === 'proto' ? requestData : JSON.stringify(data);
+    const headers = {
+      'accept-encoding': 'gzip',
+      'content-type': REPORT_TYPE === 'proto' ? 'application/x-protobuf' : 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+      ...EXTRA_REQUEST_HEADERS,
+    };
+    await new Promise((resolve, reject) => {
+      const httpRequestId = ++httpRequestIdTracker;
+      const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
+      debugLog(`Request [${httpRequestId}]:`, url, JSON.stringify(data));
+      const requestStartTime = process.hrtime.bigint();
+      const request = createRequest(
+        url,
+        {
+          method: 'post',
+          headers,
+        },
+        (response) => {
+          if (response.statusCode === 200) {
+            debugLog(
+              `Request [${httpRequestId}]: ok in: ${Math.round(
+                Number(process.hrtime.bigint() - requestStartTime) / 1000000
+              )}ms`
+            );
+            resolve();
+            return;
+          }
+          let responseText = '';
+          response.on('data', (chunk) => {
+            responseText += String(chunk);
+          });
+          response.on('end', () => {
+            debugLog(
+              `Request [${httpRequestId}]: failed in: ${Math.round(
+                Number(process.hrtime.bigint() - requestStartTime) / 1000000
+              )}ms with: [${response.status}] ${responseText}`
+            );
+            resolve();
+          });
+        }
+      );
+      request.on('error', reject);
+      request.write(body);
+      request.end();
+    });
   } else if (s3Client && s3Key) {
     await s3Client
       .putObject({
-        Body: Buffer.from(JSON.stringify(requestData)),
+        Body: Buffer.from(REPORT_TYPE === 'proto' ? requestData : JSON.stringify(requestData)),
         Bucket: S3_BUCKET,
         Key: s3Key + (REPORT_TYPE === 'proto' ? '.proto' : '.json'),
       })
