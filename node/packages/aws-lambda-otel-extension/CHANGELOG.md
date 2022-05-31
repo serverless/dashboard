@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.3.1...@serverless/aws-lambda-otel-extension@0.3.2) (2022-05-31)
+
+### Features
+
+- Filter out Serverless Dashboard data logs ([b35c41c](https://github.com/serverless/runtime/commit/b35c41c61dd162606722944bce46f7a71d3475ce))
+
 ### [0.3.1](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.3.0...@serverless/aws-lambda-otel-extension@0.3.1) (2022-05-26)
 
 ### Bug Fixes
