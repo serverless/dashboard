@@ -24,7 +24,7 @@ const protobufLoad = REPORT_TYPE === 'proto' ? require('protobufjs').load : null
 const s3Client = S3_BUCKET ? new (require('/var/runtime/node_modules/aws-sdk').S3)() : null;
 
 let httpRequestIdTracker = 0;
-const processData = async (jsonData, { url, s3Key, protobufPath, protobufType }) => {
+const sendReport = async (jsonData, { url, s3Key, protobufPath, protobufType }) => {
   const requestData =
     REPORT_TYPE === 'proto'
       ? await Promise.all(
@@ -206,7 +206,7 @@ const processRequestResponseEventData = async (data, { url }) => {
 
 module.exports = {
   metrics: async (data) =>
-    processData(data, {
+    sendReport(data, {
       url: METRICS_URL,
       // TODO: Once possible, switch to invocation id
       s3Key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/metrics/${new Date().toISOString()}`,
@@ -214,7 +214,7 @@ module.exports = {
       protobufType: 'opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest',
     }),
   traces: async (data) =>
-    processData(data, {
+    sendReport(data, {
       url: TRACES_URL,
       // TODO: Once possible, switch to invocation id
       s3Key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/traces/${new Date().toISOString()}`,
