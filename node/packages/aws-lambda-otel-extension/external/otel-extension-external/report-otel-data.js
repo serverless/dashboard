@@ -45,36 +45,29 @@ const sendReport = async (data, { url, s3Key, protobufPath, protobufType }) => {
       const createRequest = url.startsWith('https') ? createHttpsRequest : createHttpRequest;
       debugLog(`Request [${httpRequestId}]:`, url, JSON.stringify(data));
       const requestStartTime = process.hrtime.bigint();
-      const request = createRequest(
-        url,
-        {
-          method: 'post',
-          headers,
-        },
-        (response) => {
-          if (response.statusCode === 200) {
-            debugLog(
-              `Request [${httpRequestId}]: ok in: ${Math.round(
-                Number(process.hrtime.bigint() - requestStartTime) / 1000000
-              )}ms`
-            );
-            resolve();
-            return;
-          }
-          let responseText = '';
-          response.on('data', (chunk) => {
-            responseText += String(chunk);
-          });
-          response.on('end', () => {
-            debugLog(
-              `Request [${httpRequestId}]: failed in: ${Math.round(
-                Number(process.hrtime.bigint() - requestStartTime) / 1000000
-              )}ms with: [${response.status}] ${responseText}`
-            );
-            resolve();
-          });
+      const request = createRequest(url, { method: 'post', headers }, (response) => {
+        if (response.statusCode === 200) {
+          debugLog(
+            `Request [${httpRequestId}]: ok in: ${Math.round(
+              Number(process.hrtime.bigint() - requestStartTime) / 1000000
+            )}ms`
+          );
+          resolve();
+          return;
         }
-      );
+        let responseText = '';
+        response.on('data', (chunk) => {
+          responseText += String(chunk);
+        });
+        response.on('end', () => {
+          debugLog(
+            `Request [${httpRequestId}]: failed in: ${Math.round(
+              Number(process.hrtime.bigint() - requestStartTime) / 1000000
+            )}ms with: [${response.status}] ${responseText}`
+          );
+          resolve();
+        });
+      });
       request.on('error', reject);
       request.write(body);
       request.end();
