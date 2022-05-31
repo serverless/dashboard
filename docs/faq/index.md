@@ -173,7 +173,9 @@ console:
     monitoring:
       logs:
         disable: true
-      requestResponse:
+      request:
+        disable: true
+      response:
         disable: true
 service: myservice
 frameworkVersion: '3'
