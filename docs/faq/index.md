@@ -2,7 +2,7 @@
 title: FAQ
 menuText: FAQ
 description: Frequently Asked Questions about Serverless Console
-menuOrder: 8
+menuOrder: 1
 -->
 
 # FAQ
@@ -170,8 +170,11 @@ set the following properties.
 ```yaml
 org: myorg
 console: 
-    disableLogsCollection: true
-    disableRequestResponseCollection: true
+    monitoring:
+      logs:
+        disable: true
+      requestResponse:
+        disable: true
 service: myservice
 frameworkVersion: '3'
 ```
