@@ -328,25 +328,23 @@ const createMetricsPayload = (requestId, fun, report = null) => {
     }
   }
 
-  return [
-    {
-      resourceMetrics: [
-        {
-          resource: {
-            attributes: createResourceAttributes(fun),
-          },
-          instrumentationLibraryMetrics: [
-            {
-              instrumentationLibrary: {
-                name: 'serverless-meter',
-              },
-              metrics,
-            },
-          ],
+  return {
+    resourceMetrics: [
+      {
+        resource: {
+          attributes: createResourceAttributes(fun),
         },
-      ],
-    },
-  ];
+        instrumentationLibraryMetrics: [
+          {
+            instrumentationLibrary: {
+              name: 'serverless-meter',
+            },
+            metrics,
+          },
+        ],
+      },
+    ],
+  };
 };
 
 const createTracePayload = (requestId, fun, traces) => {

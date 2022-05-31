@@ -320,8 +320,8 @@ describe('integration', function () {
         reports = await processFunction(handlerModuleName, invocationOptions);
       });
       it('test', () => {
-        const metricsReport = reports.find((report) => report[0].resourceMetrics)[0];
-        const tracesReport = reports.find((report) => report[0].resourceSpans)[0];
+        const metricsReport = reports.find((report) => report.resourceMetrics);
+        const tracesReport = reports.find((report) => report.resourceSpans);
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );

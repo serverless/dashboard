@@ -281,10 +281,13 @@ module.exports = (async () => {
                   );
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
-                sendReport(
-                  'traces',
-                  createTracePayload(data.requestId, data.record.function, data.record.traces)
-                );
+                for (const tracePayload of createTracePayload(
+                  data.requestId,
+                  data.record.function,
+                  data.record.traces
+                )) {
+                  sendReport('traces', tracePayload);
+                }
                 break;
               default:
                 throw new Error('Unrecognized event data');
