@@ -70,7 +70,12 @@ module.exports = (async () => {
             response.writeHead(200, {});
             response.end('OK');
             const data = JSON.parse(body);
-            let functionLogEvents = data.filter((event) => event.type === 'function');
+            let functionLogEvents = data.filter(
+              (event) =>
+                event.type === 'function' &&
+                // TODO: Remove after Dashboard is turned off
+                !event.record.includes('SERVERLESS_ENTERPRISE')
+            );
             if (process.env.DEBUG_SLS_OTEL_LAYER) {
               functionLogEvents = functionLogEvents.filter(
                 (event) => !event.record.startsWith('Extension overhead duration: ')
