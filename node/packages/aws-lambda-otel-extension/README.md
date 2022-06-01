@@ -130,8 +130,14 @@ What data is monitored and collected during invocation can be fine tuned with se
 
 Following configuration properties are supported:
 
-- `disableLogsMonitoring`: Do not collect and monitor regular function logs
-- `disableRequestResponseMonitoring` - Do not propagate request (event payload) and lambda response values
+```yaml
+logs:
+  disabled: true # Disable logs monitoring
+request:
+  disabled: true # Disable request reporting
+response:
+  disabled: true # Disable response reporting
+```
 
 ### Tests
 
