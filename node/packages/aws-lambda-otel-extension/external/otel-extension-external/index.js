@@ -20,7 +20,7 @@ module.exports = (async () => {
   const servers = new Set();
 
   const userSettings = require('./user-settings');
-  const { stripResponseBlobData, debugLog } = require('./helper');
+  const { stripResponseBlobData, debugLog, get } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
@@ -147,7 +147,7 @@ module.exports = (async () => {
     // unconditionaly in all cases (it's not harmful if subscription is active)
     await new Promise((resolve, reject) => {
       const eventTypes = ['platform'];
-      if (!userSettings.disableLogsMonitoring) eventTypes.push('function');
+      if (!get(userSettings.logs, ['disabled'])) eventTypes.push('function');
       const putData = JSON.stringify({
         destination: { protocol: 'HTTP', URI: 'http://sandbox:4243' },
         types: eventTypes,
