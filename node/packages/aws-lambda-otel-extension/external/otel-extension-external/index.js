@@ -20,13 +20,13 @@ module.exports = (async () => {
   const servers = new Set();
 
   const userSettings = require('./user-settings');
-  const { stripResponseBlobData, debugLog, get } = require('./helper');
+  const { stripResponseBlobData, debugLog } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
 
   const pendingReports = new Set();
   const sendReport = (method, payload) => {
-    const promise = reportOtelData[method](payload);
+    const promise = reportOtelData(method, payload);
     pendingReports.add(promise);
     promise.finally(() => pendingReports.delete(promise));
   };
@@ -147,7 +147,7 @@ module.exports = (async () => {
     // unconditionaly in all cases (it's not harmful if subscription is active)
     await new Promise((resolve, reject) => {
       const eventTypes = ['platform'];
-      if (!get(userSettings.logs, ['disabled'])) eventTypes.push('function');
+      if (!userSettings.logs.disabled) eventTypes.push('function');
       const putData = JSON.stringify({
         destination: { protocol: 'HTTP', URI: 'http://sandbox:4243' },
         types: eventTypes,
@@ -263,7 +263,7 @@ module.exports = (async () => {
               case 'eventData':
                 {
                   if (data.record.requestEventPayload) {
-                    sendReport('requestResponse', data.record.requestEventPayload);
+                    sendReport('request', data.record.requestEventPayload);
                   }
                   const currentRequestData = getCurrentRequestData('request');
                   currentRequestData.eventData = data.record;
@@ -275,10 +275,7 @@ module.exports = (async () => {
               case 'telemetryData':
                 lastTelemetryData = data;
                 if (data.record.responseEventPayload) {
-                  sendReport(
-                    'requestResponse',
-                    stripResponseBlobData(data.record.responseEventPayload)
-                  );
+                  sendReport('response', stripResponseBlobData(data.record.responseEventPayload));
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
                 for (const tracePayload of createTracePayload(

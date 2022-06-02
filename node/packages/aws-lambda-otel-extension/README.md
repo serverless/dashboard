@@ -65,26 +65,54 @@ Ensure that layer version ARN is listed in Lambda layers.
 
 Ensure that internal extension of a layer is pre-loaded by configuring `AWS_LAMBDA_EXEC_WRAPPER` environment variable with `/opt/otel-extension-internal-node/exec-wrapper.sh`
 
-##### Configure destination endpoints of telemetry payloads
+##### 4. Configure monitoring settings
 
-Generated payload can be propagated to the following destinations:
+Monitoring settings are expected to be provided in JSON format at `SLS_OTEL_USER_SETTINGS` environment variable.
 
-_At this point, only one destination type can be configured, but that's subject to change in the future_
+All settings are optional, still if no settings are provided, the generated telemetry reports will be just logged into process output.
 
-###### External server
+Supported settings:
 
-Configure following environment variables with designated server urls:
+```yaml
+common:
+  # Settings common to all reports
+  destination:
+    # Request headers for server (url) destinations
+    requestHeaders: param1=value&param2=value # search params string of headers to be added to each request
+logs:
+  # Log report settings
+  disabled: true # Disable logs monitoring
+  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
+  destination: https://some-url/ | s3://bucketname[/rootkey]
+metrics:
+  outputType: protobuf | json # Output type (defaults to protobuf)
+  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
+  destination: https://some-url/ | s3://bucketname[/rootkey]
+request:
+  # Request report settings
+  disabled: true # Disable request reporting
+  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
+  destination: https://some-url/ | s3://bucketname[/rootkey]
+response:
+  # Response report settings
+  disabled: true # Disable response reporting
+  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
+  destination: https://some-url/ | s3://bucketname[/rootkey
+traces:
+  outputType: protobuf | json # Output type (defaults to protobuf)
+  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
+  destination: https://some-url/ | s3://bucketname[/rootkey]
+```
 
-- `SLS_OTEL_REPORT_METRICS_URL` (to obtain [traces](https://opentelemetry.io/docs/concepts/data-sources/#traces))
-- `SLS_OTEL_REPORT_TRACES_URL` (to obtain [metrics](https://opentelemetry.io/docs/concepts/data-sources/#metrics))
-- `SLS_OTEL_REPORT_LOGS_URL` (to obtain [logs](https://opentelemetry.io/docs/concepts/data-sources/#logs))
-- `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` (to obtain req/res sent to and from the lambda function)
+### Generated reports structure
 
-Additionally, through `SLS_OTEL_REPORT_REQUEST_HEADERS` environment variable, extra request headers can be configured, that will be sent with every request to each of the configured urls
+_TODO: Complete documentation on generated telemetry reports is in the works_
 
-It is important to note that lambda response data sent to `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` will ignore any non JSON objects in either a simple response or a HTTP response payload.
+#### Response reports
 
-For example, the following will be sent to the `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` without any modifications 👇
+Any non JSON objects in either a simple response or a HTTP response payload are not included
+
+For example, the following will be sent without any modifications 👇
 
 ```json
 { "message": "lambda response" }
@@ -94,7 +122,7 @@ For example, the following will be sent to the `SLS_OTEL_REPORT_REQUEST_RESPONSE
 { "statusCode": 200, "body": "{\"message\": \"lambda response\"}" }
 ```
 
-The following responses will be modified when sent to the `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` endpoint 👇
+The following responses will be altered
 
 _Simple non JSON object responses will be ignored_
 
@@ -109,35 +137,6 @@ _HTTP Responses with a non JSON body will be ignored_
 | Input                                              | Output                  |
 | -------------------------------------------------- | ----------------------- |
 | `{ "statusCode": 200, "body": "lambda response" }` | `{ "statusCode": 200 }` |
-
-###### S3 bucket
-
-Configure `SLS_OTEL_REPORT_S3_BUCKET` with bucket name (and ensure that Lambda has needed rights to write to the bucket)
-
-###### Inline logs
-
-For development purposes, just logging the reports may be good enough. It'll be the case if neither `SLS_OTEL_REPORT_<type>_URL` nor `SLS_OTEL_REPORT_S3_BUCKET` environment variables are configured.
-
-Just _metrics_ and _traces_ are logged by default. To also log reports of _lambda logs_ set the `SLS_TEST_PRINT_LOG_EVENT` environment variable to `1`.
-
-##### Payload format
-
-Payloads, by default are serialized into Protocol buffer format, but the format can be changed to JSON by setting `SLS_OTEL_REPORT_TYPE` environment variable to `json`
-
-##### Monitoring configuration
-
-What data is monitored and collected during invocation can be fine tuned with setting transported via `SLS_OTEL_USER_SETTINGS` environement variable. Value is expected to be serialized JSON object.
-
-Following configuration properties are supported:
-
-```yaml
-logs:
-  disabled: true # Disable logs monitoring
-request:
-  disabled: true # Disable request reporting
-response:
-  disabled: true # Disable response reporting
-```
 
 ### Tests
 
