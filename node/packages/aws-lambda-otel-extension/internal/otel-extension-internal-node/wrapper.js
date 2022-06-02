@@ -59,6 +59,7 @@ const wrappedHandler = awsLambdaInstrumentation._instance._getPatchHandler(
 module.exports.handler = (event, context, callback) => {
   requestStartTime = process.hrtime.bigint();
   const logResponseDuration = () => {
+    delete EvalError.$serverlessRequestHandlerPromise;
     delete EvalError.$serverlessResponseHandlerPromise;
     if (process.env.DEBUG_SLS_OTEL_LAYER && responseStartTime) {
       process._rawDebug(
@@ -69,33 +70,33 @@ module.exports.handler = (event, context, callback) => {
     }
   };
   let isPromiseResult = false;
-  const originalDone = context.done;
-  const done = (...args) => {
-    if (!isPromiseResult && EvalError.$serverlessResponseHandlerPromise) {
-      EvalError.$serverlessResponseHandlerPromise.finally(logResponseDuration);
-    }
-    return originalDone(...args);
-  };
+  const wrapCallback =
+    (originalCallback) =>
+    (...args) => {
+      if (isPromiseResult) {
+        originalCallback(...args);
+        return;
+      }
+      Promise.all([
+        EvalError.$serverlessRequestHandlerPromise,
+        EvalError.$serverlessResponseHandlerPromise,
+      ]).finally(() => {
+        process.nextTick(() => originalCallback(...args));
+        logResponseDuration();
+      });
+    };
+  const done = wrapCallback(context.done);
   context.done = done;
   context.succeed = (result) => done(null, result);
   context.fail = (err) => done(err == null ? 'handled' : err);
-  const result = wrappedHandler(event, context, (...args) => {
-    if (!isPromiseResult && EvalError.$serverlessResponseHandlerPromise) {
-      EvalError.$serverlessResponseHandlerPromise.finally(logResponseDuration);
-    }
-    return callback(...args);
-  });
+  const result = wrappedHandler(event, context, wrapCallback(callback));
   if (!result) return result;
   if (typeof result.then !== 'function') return result;
   isPromiseResult = true;
-  return result.then(
-    (asyncResult) => {
-      logResponseDuration();
-      return asyncResult;
-    },
-    (error) => {
-      logResponseDuration();
-      throw error;
-    }
+  return Promise.resolve(result).finally(() =>
+    Promise.all([
+      EvalError.$serverlessRequestHandlerPromise,
+      EvalError.$serverlessResponseHandlerPromise,
+    ]).finally(logResponseDuration)
   );
 };
