@@ -18,47 +18,46 @@ delete EvalError.$serverlessAwsLambdaInstrumentation;
 
 let requestStartTime;
 let responseStartTime;
+let currentInvocationId = 0;
 
 const wrappedHandler = awsLambdaInstrumentation._instance._getPatchHandler(
   (event, context, callback) => {
+    const invocationId = currentInvocationId;
     if (process.env.DEBUG_SLS_OTEL_LAYER) {
       process._rawDebug(
         'Extension overhead duration: internal request:',
         `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
       );
     }
-    let isPromiseResult = false;
-    const originalDone = context.done;
-    const done = (...args) => {
-      if (!isPromiseResult && !responseStartTime) responseStartTime = process.hrtime.bigint();
-      return originalDone(...args);
-    };
+    const wrapCallback =
+      (originalCallback) =>
+      (...args) => {
+        if (invocationId !== currentInvocationId) {
+          originalCallback(...args);
+          return;
+        }
+        if (!responseStartTime) responseStartTime = process.hrtime.bigint();
+        originalCallback(...args);
+      };
+    const done = wrapCallback(context.done);
     context.done = done;
     context.succeed = (result) => done(null, result);
     context.fail = (err) => done(err == null ? 'handled' : err);
-    const result = handlerFunction(event, context, (...args) => {
-      if (!isPromiseResult && !responseStartTime) responseStartTime = process.hrtime.bigint();
-      return callback(...args);
-    });
+    const result = handlerFunction(event, context, wrapCallback(callback));
     if (!result) return result;
     if (typeof result.then !== 'function') return result;
-    isPromiseResult = true;
-    return result.then(
-      (asyncResult) => {
-        if (!responseStartTime) responseStartTime = process.hrtime.bigint();
-        return asyncResult;
-      },
-      (error) => {
-        if (!responseStartTime) responseStartTime = process.hrtime.bigint();
-        throw error;
-      }
-    );
+    return Promise.resolve(result).finally(() => {
+      if (invocationId !== currentInvocationId) return;
+      if (!responseStartTime) responseStartTime = process.hrtime.bigint();
+    });
   }
 );
 
 module.exports.handler = (event, context, callback) => {
+  const invocationId = ++currentInvocationId;
   requestStartTime = process.hrtime.bigint();
   const logResponseDuration = () => {
+    if (invocationId !== currentInvocationId) return;
     delete EvalError.$serverlessRequestHandlerPromise;
     delete EvalError.$serverlessResponseHandlerPromise;
     if (process.env.DEBUG_SLS_OTEL_LAYER && responseStartTime) {
@@ -69,11 +68,10 @@ module.exports.handler = (event, context, callback) => {
       responseStartTime = null;
     }
   };
-  let isPromiseResult = false;
   const wrapCallback =
     (originalCallback) =>
     (...args) => {
-      if (isPromiseResult) {
+      if (invocationId !== currentInvocationId) {
         originalCallback(...args);
         return;
       }
@@ -92,11 +90,11 @@ module.exports.handler = (event, context, callback) => {
   const result = wrappedHandler(event, context, wrapCallback(callback));
   if (!result) return result;
   if (typeof result.then !== 'function') return result;
-  isPromiseResult = true;
-  return Promise.resolve(result).finally(() =>
-    Promise.all([
+  return Promise.resolve(result).finally(() => {
+    if (invocationId !== currentInvocationId) return null;
+    return Promise.all([
       EvalError.$serverlessRequestHandlerPromise,
       EvalError.$serverlessResponseHandlerPromise,
-    ]).finally(logResponseDuration)
-  );
+    ]).finally(logResponseDuration);
+  });
 };
