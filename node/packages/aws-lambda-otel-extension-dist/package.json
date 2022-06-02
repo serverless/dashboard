@@ -2,7 +2,7 @@
   "name": "@serverless/aws-lambda-otel-extension-dist",
   "author": "Serverless, Inc.",
   "devDependencies": {
-    "@serverless/aws-lambda-otel-extension": "^0.3.1",
+    "@serverless/aws-lambda-otel-extension": "^0.3.2",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9"
   },
