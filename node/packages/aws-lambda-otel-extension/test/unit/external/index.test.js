@@ -19,8 +19,10 @@ describe('external', () => {
     ensureNpmDependencies('external/otel-extension-external');
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
-    process.env.SLS_OTEL_REPORT_TYPE = 'json';
-    process.env.SLS_TEST_PRINT_LOG_EVENT = '1';
+    process.env.SLS_OTEL_USER_SETTINGS = JSON.stringify({
+      metrics: { outputType: 'json' },
+      traces: { outputType: 'json' },
+    });
     process.env.SLS_TEST_RUN = '1';
   });
 
@@ -224,14 +226,18 @@ describe('external', () => {
     server.close();
 
     log.debug('report string %s', stdoutData);
-    const reportData = stdoutData
-      .split('\n')
-      .filter(Boolean)
-      .map((string) => JSON.parse(string));
-    log.debug('report data %o', reportData);
-    const metricsReport = reportData.find((report) => report.resourceMetrics);
-    const tracesReport = reportData.find((report) => report.resourceSpans);
-    const logReport = reportData.find((report) => report && report[0] && report[0].Timestamp)[0];
+    const reports = {};
+    for (const reportString of stdoutData.split('\n').filter(Boolean)) {
+      const reportType = reportString.slice(2, reportString.indexOf(':'));
+      if (!reports[reportType]) reports[reportType] = [];
+      const jsonString = reportString.slice(reportString.indexOf(':') + 2);
+      log.debug('report %s JSON string %s', reportType, jsonString);
+      reports[reportType].push(JSON.parse(jsonString));
+    }
+    log.debug('reports %o', reports);
+    const metricsReport = reports.metrics[0];
+    const tracesReport = reports.traces[0];
+    const logReport = reports.logs[0][0];
 
     const resourceMetrics = normalizeOtelAttributes(
       metricsReport.resourceMetrics[0].resource.attributes

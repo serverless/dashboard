@@ -30,15 +30,6 @@ const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
 const userSettings = require('./user-settings');
 
-// TODO: Replace with '?.' notation once node.js v12 support is dropped
-const get = (value, propertyPath) => {
-  for (const key of propertyPath) {
-    if (value == null) return value;
-    value = value[key];
-  }
-  return value;
-};
-
 const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
@@ -249,7 +240,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     },
   };
 
-  if (!get(userSettings.response, ['disabled'])) {
+  if (!userSettings.response.disabled) {
     telemetryDataPayload.record.responseEventPayload = {
       responseData: res,
       errorData: err,
@@ -352,7 +343,7 @@ registerInstrumentations({
             },
           },
         };
-        if (!get(userSettings.request, ['disabled'])) {
+        if (!userSettings.request.disabled) {
           eventDataPayload.record.requestEventPayload = {
             traceId: span.spanContext().traceId,
             spanId: span.spanContext().spanId,

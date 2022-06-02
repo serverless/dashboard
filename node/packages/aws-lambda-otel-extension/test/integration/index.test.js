@@ -276,8 +276,10 @@ describe('integration', function () {
               Environment: {
                 Variables: {
                   AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-                  SLS_OTEL_REPORT_TYPE: 'json',
-                  SLS_OTEL_REPORT_S3_BUCKET: basename,
+                  SLS_OTEL_USER_SETTINGS: JSON.stringify({
+                    metrics: { outputType: 'json', destination: `s3://${basename}` },
+                    traces: { outputType: 'json', destination: `s3://${basename}` },
+                  }),
                   OTEL_LOG_LEVEL: 'ALL',
                   DEBUG_SLS_OTEL_LAYER: '1',
                 },

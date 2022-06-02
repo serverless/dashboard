@@ -1,11 +1,41 @@
+// Ensure its same as internal/otel-extension-internal-node/user-settings.js
+// TODO: Possibly centralize this logic assuming convinncing solution is found
+
 'use strict';
 
-const settingsJsonString = process.env.SLS_OTEL_USER_SETTINGS;
+module.exports = {
+  common: { destination: {} },
+  logs: {},
+  metrics: { outputType: 'protobuf' },
+  request: {},
+  response: {},
+  traces: { outputType: 'protobuf' },
+};
 
-if (!settingsJsonString) return;
+const userSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
 
-try {
-  module.exports = JSON.parse(settingsJsonString);
-} catch (error) {
-  process.stdout.write(`Resolution of user settings failed with: ${error.message}`);
+if (!userSettingsText) return;
+
+const userSettings = (() => {
+  try {
+    return JSON.parse(userSettingsText);
+  } catch (error) {
+    process._rawDebug(`Resolution of user settings failed with: ${error.message}`);
+    return null;
+  }
+})();
+
+if (!userSettings) return;
+
+// Normalize
+if (userSettings.common) {
+  if (userSettings.common.destination) {
+    Object.assign(module.exports.common.destination, userSettings.common.destination);
+  }
+}
+
+for (const subSettingsName of ['logs', 'metrics', 'request', 'response', 'traces']) {
+  if (userSettings[subSettingsName]) {
+    Object.assign(module.exports[subSettingsName], userSettings[subSettingsName]);
+  }
 }

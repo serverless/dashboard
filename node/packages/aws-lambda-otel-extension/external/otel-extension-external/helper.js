@@ -241,19 +241,9 @@ const debugLog = (...args) => {
   }
 };
 
-// TODO: Replace with '?.' notation once node.js v12 support is dropped
-const get = (value, propertyPath) => {
-  for (const key of propertyPath) {
-    if (value == null) return value;
-    value = value[key];
-  }
-  return value;
-};
-
 module.exports = {
   debugLog,
   resourceAttributes,
   measureAttributes,
   stripResponseBlobData,
-  get,
 };
