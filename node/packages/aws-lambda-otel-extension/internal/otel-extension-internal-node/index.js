@@ -44,6 +44,88 @@ const eventData = {};
 let timeoutHandler;
 let transactionCount = 0;
 
+const requestHandler = async (span, { event, context }) => {
+  handleTimeouts(context.getRemainingTimeInMillis());
+
+  const eventType = detectEventType(event);
+
+  eventData[context.awsRequestId] = {
+    ...tracerProvider.resource.attributes,
+    computeCustomArn: context.invokedFunctionArn,
+    functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+    computeRegion: process.env.AWS_REGION,
+    computeRuntime: `aws.lambda.nodejs.${process.versions.node}`,
+    computeCustomFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+    computeMemorySize: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
+    eventCustomXTraceId: process.env._X_AMZN_TRACE_ID,
+    computeCustomLogGroupName: process.env.AWS_LAMBDA_LOG_GROUP_NAME,
+    computeCustomLogStreamName: process.env.AWS_LAMBDA_LOG_STREAM_NAME,
+    computeCustomEnvArch: process.arch,
+    eventType,
+    eventCustomRequestId: context.awsRequestId,
+    computeIsColdStart: ++transactionCount === 1,
+    eventCustomDomain: null,
+    eventCustomRequestTimeEpoch: null,
+  };
+
+  if (eventType === 'aws.apigateway.http') {
+    eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
+    eventData[context.awsRequestId].eventSource = 'aws.apigateway';
+    eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
+    eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
+    eventData[context.awsRequestId].rawHttpPath = event.path;
+    eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
+    eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
+    eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
+      event.requestContext.requestTimeEpoch;
+  } else if (eventType === 'aws.apigatewayv2.http') {
+    eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
+    eventData[context.awsRequestId].eventSource = 'aws.apigateway';
+    eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
+    const routeKey = event.requestContext.routeKey;
+    eventData[context.awsRequestId].httpPath =
+      routeKey.split(' ')[1] || event.requestContext.routeKey;
+    eventData[context.awsRequestId].rawHttpPath = event.rawPath;
+    eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
+    eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
+    eventData[context.awsRequestId].eventCustomRequestTimeEpoch = event.requestContext.timeEpoch;
+  }
+
+  const eventDataPayload = {
+    recordType: 'eventData',
+    record: {
+      eventData: { [context.awsRequestId]: eventData[context.awsRequestId] },
+      span: {
+        traceId: span.spanContext().traceId,
+        spanId: span.spanContext().spanId,
+      },
+    },
+  };
+  if (!userSettings.request.disabled) {
+    eventDataPayload.record.requestEventPayload = {
+      traceId: span.spanContext().traceId,
+      spanId: span.spanContext().spanId,
+      requestData: event,
+      executionId: context.awsRequestId,
+    };
+  }
+
+  if (process.env.TEST_DRY_LOG) {
+    process._rawDebug(
+      `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
+    );
+  } else {
+    // Send request data to external so that we can attach this data to logs
+    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+      method: 'post',
+      body: JSON.stringify(eventDataPayload),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+};
+
 const responseHandler = async (span, { res, err }, isTimeout) => {
   await tracerProvider.forceFlush();
   spanProcessor.finishAllSpans();
@@ -285,91 +367,12 @@ registerInstrumentations({
     }),
     new AwsLambdaInstrumentation({
       disableAwsContextPropagation: true,
-      requestHook: async (span, { event, context }) => {
-        handleTimeouts(context.getRemainingTimeInMillis());
-
-        const eventType = detectEventType(event);
-
-        eventData[context.awsRequestId] = {
-          ...tracerProvider.resource.attributes,
-          computeCustomArn: context.invokedFunctionArn,
-          functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
-          computeRegion: process.env.AWS_REGION,
-          computeRuntime: `aws.lambda.nodejs.${process.versions.node}`,
-          computeCustomFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
-          computeMemorySize: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
-          eventCustomXTraceId: process.env._X_AMZN_TRACE_ID,
-          computeCustomLogGroupName: process.env.AWS_LAMBDA_LOG_GROUP_NAME,
-          computeCustomLogStreamName: process.env.AWS_LAMBDA_LOG_STREAM_NAME,
-          computeCustomEnvArch: process.arch,
-          eventType,
-          eventCustomRequestId: context.awsRequestId,
-          computeIsColdStart: ++transactionCount === 1,
-          eventCustomDomain: null,
-          eventCustomRequestTimeEpoch: null,
-        };
-
-        if (eventType === 'aws.apigateway.http') {
-          eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
-          eventData[context.awsRequestId].eventSource = 'aws.apigateway';
-          eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-          eventData[context.awsRequestId].httpPath = event.requestContext.resourcePath;
-          eventData[context.awsRequestId].rawHttpPath = event.path;
-          eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.httpMethod;
-          eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
-          eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
-            event.requestContext.requestTimeEpoch;
-        } else if (eventType === 'aws.apigatewayv2.http') {
-          eventData[context.awsRequestId].eventCustomApiId = event.requestContext.apiId;
-          eventData[context.awsRequestId].eventSource = 'aws.apigateway';
-          eventData[context.awsRequestId].eventCustomAccountId = event.requestContext.accountId;
-          const routeKey = event.requestContext.routeKey;
-          eventData[context.awsRequestId].httpPath =
-            routeKey.split(' ')[1] || event.requestContext.routeKey;
-          eventData[context.awsRequestId].rawHttpPath = event.rawPath;
-          eventData[context.awsRequestId].eventCustomHttpMethod = event.requestContext.http.method;
-          eventData[context.awsRequestId].eventCustomDomain = event.requestContext.domainName;
-          eventData[context.awsRequestId].eventCustomRequestTimeEpoch =
-            event.requestContext.timeEpoch;
-        }
-
-        const eventDataPayload = {
-          recordType: 'eventData',
-          record: {
-            eventData: { [context.awsRequestId]: eventData[context.awsRequestId] },
-            span: {
-              traceId: span.spanContext().traceId,
-              spanId: span.spanContext().spanId,
-            },
-          },
-        };
-        if (!userSettings.request.disabled) {
-          eventDataPayload.record.requestEventPayload = {
-            traceId: span.spanContext().traceId,
-            spanId: span.spanContext().spanId,
-            requestData: event,
-            executionId: context.awsRequestId,
-          };
-        }
-
-        if (process.env.TEST_DRY_LOG) {
-          process._rawDebug(
-            `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
-          );
-        } else {
-          // Send request data to external so that we can attach this data to logs
-          await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-            method: 'post',
-            body: JSON.stringify(eventDataPayload),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-        }
+      requestHook: (...args) => {
+        EvalError.$serverlessRequestHandlerPromise = requestHandler(...args);
       },
-      responseHook: async (span, { err, res }) => {
+      responseHook: (span, { err, res }) => {
         clearTimeout(timeoutHandler);
-        await (EvalError.$serverlessResponseHandlerPromise = responseHandler(span, { err, res }));
+        EvalError.$serverlessResponseHandlerPromise = responseHandler(span, { err, res });
       },
     }),
     new DnsInstrumentation(),
