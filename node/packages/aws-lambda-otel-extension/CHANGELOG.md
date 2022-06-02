@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.3.2...@serverless/aws-lambda-otel-extension@0.4.0) (2022-06-02)
+
+### ⚠ BREAKING CHANGES
+
+- All configuration settings are now set in JSON object in context of `SLS_OTEL_USER_SETTINGS` environment variable. Handling of following environment variables was replaced:
+  - `SLS_OTEL_REPORT_METRICS_URL` (replaced by `metrics.destination`)
+  - `SLS_OTEL_REPORT_TRACES_URL` (replaced by `traces.destination`)
+  - `SLS_OTEL_REPORT_LOGS_URL` (replaced by `logs.destination`)
+  - `SLS_OTEL_REPORT_REQUEST_RESPONSE_URL` (replaced by `request.destination` and `response.destination`)
+  - `SLS_OTEL_REPORT_REQUEST_HEADERS` (replaced by `common.destination.requestHeaders`)
+- `disableLogsMonitoring` is replaced by `logs.disabled`
+- `disableRequestResponseMonitoring` is replaced by `request.disabled` and `response.disabled`
+
+### Features
+
+- Generalize request handling and integrate settings propagated via environment variables into user settings ([e73acca](https://github.com/serverless/runtime/commit/e73acca9db5fc1ceb0681f7ddead978b6b6651b9))
+- Support new user settings format ([c6904b6](https://github.com/serverless/runtime/commit/c6904b6b6ae94a60fe8d496a1f11ac654cb8173d))
+
+### Bug Fixes
+
+- Wait for request/response hooks before settling invocation ([6742606](https://github.com/serverless/runtime/commit/67426068b78cce5db7a59888aee7b553baff82a7))
+- Ensure to handle property thenable/callback race ([77bf67f](https://github.com/serverless/runtime/commit/77bf67fdaa01aa58e620e04e80c68a943480d599))
+
+### Maintenance Improvements
+
+- Do not accept multiple paylaods at request functions ([db33381](https://github.com/serverless/runtime/commit/db3338183925fb8b55dc10a7f57553636e07dbf3))
+
 ### [0.3.2](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.3.1...@serverless/aws-lambda-otel-extension@0.3.2) (2022-05-31)
 
 ### Features
