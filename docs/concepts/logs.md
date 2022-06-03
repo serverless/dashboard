@@ -16,7 +16,8 @@ following property.
 ```yaml
 org: myorg
 console: 
-    disableLogsCollection: true
+    logs:
+        disable: true
 service: myservice
 frameworkVersion: '3'
 ```
