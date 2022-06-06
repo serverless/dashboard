@@ -2,7 +2,7 @@
 title: Scopes
 menuText: Scopes
 description: Overview of concepts used on serevrless console. 
-menuOrder: 4
+menuOrder: 5
 -->
 
 # Scopes
