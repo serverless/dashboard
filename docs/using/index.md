@@ -1,53 +1,40 @@
 <!--
-title: Getting Started
-menuText: Getting Started
-description: 
+title: Using Serveless Console
+menuText: Using Serveless Console
+description: A guide to using Serverless Console UI
 menuOrder: 1
 -->
 
-# Getting Started
-Welcome to Serveless Console. 
+# Overview
+Serverless Console provides an easy to use User Interface for monitoring your
+Serverless architectures. We automatically recongize patterns by observing
+[Traces](traces.md) sent by our [Serverless Runtime instrumentation](../concepts/index.md).
 
-The next generation monitoring tool for Teams 
-building with Serverless architectures. The easiest way 
-to get started with Serverless Console is using the 
-latest version of Serverless Framework (v3.8+ required).
-**Note:** Only Node.js is supported at this time. 
 
-```text
-npm install -g serverless
-```
+To start using the Console to monitor your apps, you'll need to signup, and
+create your own organization. 
 
-You can configure an existing project with 
-Serverless by adding `--console` flag the serverless command. 
+
+**Setting up a new project from a template**
+To start with a new example project, just run the following where you want to
+create your project.
 
 ```text
 serverless --console
 ```
 
-This will set the following in your Serverless project. 
+This will begin an interactive onboarding experience, which creates your first
+Serverless Framwork project.
 
-```yaml
-dashboard: true
-console: true
-org: my-org
-service: my-aws-node-project
+```text
+Creating a new serverless project
 
-frameworkVersion: '3'
+? What do you want to make? (Use arrow keys)
+  AWS - Node.js - Starter
+  AWS - Node.js - HTTP API
+  AWS - Node.js - Scheduled Task
+  AWS - Node.js - SQS Worker
+❯ AWS - Node.js - Express API
+  AWS - Node.js - Express API with DynamoDB
+  Other
 ```
-
-**Note:** If you are using Serveless Dashboard features be sure to keep the
-dashboard property set to true. This will give you access to existing dashboard
-features like Providers, Parameters and Secrets. 
-
-**Invoke your function, and login to Serverless Console**
-Once you have deployed your function, do the following to start using Serveless Console.
-
-1. Login to [Serverless Console](https://console.serverless.com) 
-1. Invoke your function, or hit you API Endpoint
-
-It may take a second for the first data point to show up,
-but will speed up considerably from there. Each time you invoke
-one of your instrumented functions, we receive [Traces](./concepts/traces.md) in Console. 
-
-For more details see our [concepts section](./concepts) or learn about using [Serverles Console](./using/).
