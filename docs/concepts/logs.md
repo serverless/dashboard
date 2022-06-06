@@ -2,7 +2,7 @@
 title: Logs
 menuText: Logs
 description: Log collection
-menuOrder: 6
+menuOrder: 7
 -->
 
 # Logs
