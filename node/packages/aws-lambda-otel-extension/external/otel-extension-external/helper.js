@@ -237,7 +237,7 @@ const measureAttributes = [
 
 const debugLog = (...args) => {
   if (process.env.DEBUG_SLS_OTEL_LAYER) {
-    console.log(...args);
+    process._rawDebug(...args);
   }
 };
 

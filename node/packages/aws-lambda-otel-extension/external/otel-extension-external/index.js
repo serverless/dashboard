@@ -187,14 +187,12 @@ module.exports = (async () => {
       const event = await new Promise((resolve, reject) => {
         if (isInitializing) {
           isInitializing = false;
-          if (process.env.DEBUG_SLS_OTEL_LAYER) {
-            process._rawDebug(
-              'Extension overhead duration: external initialization:',
-              `${Math.round(Number(process.hrtime.bigint() - processStartTime) / 1000000)}ms`
-            );
-          }
-        } else if (process.env.DEBUG_SLS_OTEL_LAYER) {
-          process._rawDebug(
+          debugLog(
+            'Extension overhead duration: external initialization:',
+            `${Math.round(Number(process.hrtime.bigint() - processStartTime) / 1000000)}ms`
+          );
+        } else {
+          debugLog(
             'Extension overhead duration: external invocation:',
             `${Math.round(Number(process.hrtime.bigint() - invocationStartTime) / 1000000)}ms`
           );
@@ -329,12 +327,10 @@ module.exports = (async () => {
   });
 
   for (const server of servers) server.close();
-  if (process.env.DEBUG_SLS_OTEL_LAYER) {
-    process._rawDebug(
-      'Extension overhead duration: external shutdown:',
-      `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
-    );
-  }
+  debugLog(
+    'Extension overhead duration: external shutdown:',
+    `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
+  );
   if (!process.env.SLS_TEST_RUN) process.exit();
 })().catch((error) => {
   // Ensure to crash extension process on unhandled rejection
