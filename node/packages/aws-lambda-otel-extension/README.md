@@ -158,6 +158,8 @@ Easiest is to run tests is by setting `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KE
 
 Tests create a temporary layer and Lambda resources and remove them after the test is finalized.
 
+All created resourced are named or prefixed with `test-otel-extension-<testUid>` string, where `testUid` is four characters taken from [local machine id](https://www.npmjs.com/package/node-machine-id) or in case of CI runs a random string. `testUid` string can also be overriden via environment variable `TEST_UID`
+
 ```bash
 npm run test:integration
 ```
