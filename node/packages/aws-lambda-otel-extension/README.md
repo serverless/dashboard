@@ -156,7 +156,7 @@ In tests, the home folder is mocked, therefore AWS access cannot be reliably set
 
 Easiest is to run tests is by setting `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` environment variables.
 
-Tests create a temporary layer, S3, and Lambda resources and remove them after the test is finalized.
+Tests create a temporary layer and Lambda resources and remove them after the test is finalized.
 
 ```bash
 npm run test:integration

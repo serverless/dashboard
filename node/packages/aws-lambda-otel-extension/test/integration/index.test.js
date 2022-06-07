@@ -6,10 +6,9 @@ const path = require('path');
 const fsp = require('fs').promises;
 const wait = require('timers-ext/promise/sleep');
 const awsRequestBare = require('@serverless/test/aws-request');
-const { S3 } = require('@aws-sdk/client-s3');
+const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { IAM } = require('@aws-sdk/client-iam');
-const streamToPromise = require('stream-promise/to-promise');
 const log = require('log').get('test');
 const buildLayer = require('../../scripts/lib/build');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
@@ -109,6 +108,7 @@ describe('integration', function () {
   ]);
 
   const processFunction = async (handlerModuleName, options = {}) => {
+    const startTime = Date.now();
     const payload = options.payload || { foo: 'bar' };
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
@@ -140,41 +140,44 @@ describe('integration', function () {
     const deleteFunction = async () => {
       await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionName });
     };
+    const resolveReportEvents = async () => {
+      try {
+        return (
+          await awsRequest(CloudWatchLogs, 'filterLogEvents', {
+            startTime,
+            logGroupName: `/aws/lambda/${functionName}`,
+          })
+        ).events.filter((event) => event.message.startsWith('⚡'));
+      } catch (error) {
+        if (error.name === 'ResourceNotFoundException') {
+          log.info('log group not ready, wait and retry %s', functionBasename);
+          await wait(1000);
+          return resolveReportEvents();
+        }
+        throw error;
+      }
+    };
 
     log.info('Ensure function is active %s', functionBasename);
     await ensureIsActive();
     log.info('Invoke function %s', functionBasename);
     await invokeFunction();
 
-    let objects;
+    let reportEvents;
     do {
       log.info('Invoke function again %s', functionBasename);
       await invokeFunction();
       await wait(1000);
-      log.info('Retrieve list of generated S3 objects %s', functionBasename);
-      objects = ((await awsRequest(S3, 'listObjectsV2', { Bucket: basename })).Contents || [])
-        .map((object) => object.Key)
-        .filter((key) => key.startsWith(`${functionName}/`));
-    } while (objects.length < 3);
+      log.info('Retrieve list of written reports %s', functionBasename);
+      reportEvents = await resolveReportEvents();
+    } while (reportEvents.length < 3);
 
     log.info('Delete function %s', functionBasename);
     await deleteFunction();
-    log.info('Retrieve body of generated S3 objects %s', functionBasename);
-    return Promise.all(
-      objects.map(async (objectKey) => {
-        const result = JSON.parse(
-          String(
-            await streamToPromise(
-              (
-                await awsRequest(S3, 'getObject', { Bucket: basename, Key: objectKey })
-              ).Body
-            )
-          )
-        );
-        log.info('Report for %s: %o', objectKey, result);
-        return result;
-      })
-    );
+    return reportEvents.map(({ message }) => [
+      message.slice(2, message.indexOf(':')),
+      JSON.parse(message.slice(message.indexOf(':') + 1).trim()),
+    ]);
   };
 
   before(async () => {
@@ -182,11 +185,6 @@ describe('integration', function () {
     basename = `test-otel-extension-${(Date.now() - nameTimeBase).toString(32)}`;
     log.notice('Creating %s', basename);
 
-    const createBucket = async () => {
-      log.info('Creating bucket %s', basename);
-      await awsRequest(S3, 'createBucket', { Bucket: basename });
-      log.info('Created bucket %s', basename);
-    };
     const createLayer = async () => {
       if (!process.env.TEST_LAYER_FILENAME) {
         log.info('Building layer');
@@ -242,11 +240,6 @@ describe('integration', function () {
                 Action: ['logs:PutLogEvents'],
                 Resource: `arn:*:logs:*:*:log-group:/aws/lambda/${basename}*:*:*`,
               },
-              {
-                Effect: 'Allow',
-                Action: ['s3:PutObject'],
-                Resource: `arn:aws:s3:::${basename}/*`,
-              },
             ],
           }),
         }),
@@ -277,11 +270,9 @@ describe('integration', function () {
                 Variables: {
                   AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
                   SLS_OTEL_USER_SETTINGS: JSON.stringify({
-                    metrics: { outputType: 'json', destination: `s3://${basename}` },
-                    traces: { outputType: 'json', destination: `s3://${basename}` },
+                    metrics: { outputType: 'json' },
+                    traces: { outputType: 'json' },
                   }),
-                  OTEL_LOG_LEVEL: 'ALL',
-                  DEBUG_SLS_OTEL_LAYER: '1',
                 },
               },
               Layers: [layerArn],
@@ -305,7 +296,6 @@ describe('integration', function () {
 
     [lambdasCodeZipBuffer] = await Promise.all([
       resolveDirZipBuffer(fixturesDirname),
-      createBucket(),
       createLayer(),
       createRole(),
     ]);
@@ -322,8 +312,8 @@ describe('integration', function () {
         reports = await processFunction(handlerModuleName, invocationOptions);
       });
       it('test', () => {
-        const metricsReport = reports.find((report) => report.resourceMetrics);
-        const tracesReport = reports.find((report) => report.resourceSpans);
+        const metricsReport = reports.find(([reportType]) => reportType === 'metrics')[1];
+        const tracesReport = reports.find(([reportType]) => reportType === 'traces')[1];
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );
@@ -359,17 +349,6 @@ describe('integration', function () {
 
   after(async function () {
     if (hasFailed(this.test.parent)) return; // Avoid cleanup
-    const deleteBucket = async () => {
-      const objects = (
-        (await awsRequest(S3, 'listObjectsV2', { Bucket: basename })).Contents || []
-      ).map((object) => ({
-        Key: object.Key,
-      }));
-      if (objects.length) {
-        await awsRequest(S3, 'deleteObjects', { Bucket: basename, Delete: { Objects: objects } });
-      }
-      await awsRequest(S3, 'deleteBucket', { Bucket: basename });
-    };
     const deleteLayer = async () =>
       awsRequest(Lambda, 'deleteLayerVersion', { LayerName: basename, VersionNumber: 1 });
     const deleteRole = async () => {
@@ -379,6 +358,6 @@ describe('integration', function () {
         awsRequest(IAM, 'deletePolicy', { PolicyArn: policyArn }),
       ]);
     };
-    await Promise.all([deleteBucket(), deleteLayer(), deleteRole()]);
+    await Promise.all([deleteLayer(), deleteRole()]);
   });
 });
