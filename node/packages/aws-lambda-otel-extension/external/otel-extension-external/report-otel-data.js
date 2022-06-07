@@ -113,8 +113,6 @@ module.exports = async (name, data) => {
       s3: { key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/metrics/${new Date().toISOString()}` },
     });
   } else {
-    process.stdout.write(`⚡ ${name}: `);
-    process.stdout.write(JSON.stringify(data));
-    process.stdout.write('\n');
+    process.stdout.write(`⚡ ${name}: ${JSON.stringify(data)}\n`);
   }
 };
