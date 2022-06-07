@@ -14,7 +14,7 @@ const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 const awsRequest = require('./aws-request');
-const testUid = require('./test-uid');
+const basename = require('./basename');
 
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
@@ -22,7 +22,6 @@ const hasFailed = require('@serverless/test/has-failed');
 
 describe('integration', function () {
   this.timeout(120000);
-  let basename;
   let layerArn;
   let policyArn;
   let lambdasCodeZipBuffer;
@@ -178,7 +177,6 @@ describe('integration', function () {
 
   before(async () => {
     ensureNpmDependencies('test/fixtures/lambdas');
-    basename = `test-otel-extension-${testUid}`;
     log.notice('Creating %s', basename);
 
     const createLayer = async () => {
