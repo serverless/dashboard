@@ -5,7 +5,6 @@ const { expect } = require('chai');
 const path = require('path');
 const fsp = require('fs').promises;
 const wait = require('timers-ext/promise/sleep');
-const awsRequestBare = require('@serverless/test/aws-request');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { IAM } = require('@aws-sdk/client-iam');
@@ -15,15 +14,12 @@ const buildLayer = require('../../scripts/lib/build');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
+const awsRequest = require('./aws-request');
 
 const nameTimeBase = new Date(2022, 1, 17).getTime();
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 const hasFailed = require('@serverless/test/has-failed');
-
-const awsClientParams = { region: process.env.AWS_REGION };
-const awsRequest = (client, method, args) =>
-  awsRequestBare({ client, params: awsClientParams }, method, args);
 
 const resolveTestUid = async () => {
   if (process.env.TEST_UID) return process.env.TEST_UID;
