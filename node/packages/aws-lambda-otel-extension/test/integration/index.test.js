@@ -8,28 +8,17 @@ const wait = require('timers-ext/promise/sleep');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { IAM } = require('@aws-sdk/client-iam');
-const { machineId: getMachineId } = require('node-machine-id');
 const log = require('log').get('test');
 const buildLayer = require('../../scripts/lib/build');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 const awsRequest = require('./aws-request');
+const testUid = require('./test-uid');
 
-const nameTimeBase = new Date(2022, 1, 17).getTime();
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 const hasFailed = require('@serverless/test/has-failed');
-
-const resolveTestUid = async () => {
-  if (process.env.TEST_UID) return process.env.TEST_UID;
-  switch (process.env.TEST_UID_MODE || (process.env.CI ? 'run' : 'machine')) {
-    case 'run':
-      return (Date.now() - nameTimeBase).toString(32);
-    default:
-      return (await getMachineId(true)).split('-')[1];
-  }
-};
 
 describe('integration', function () {
   this.timeout(120000);
@@ -189,7 +178,7 @@ describe('integration', function () {
 
   before(async () => {
     ensureNpmDependencies('test/fixtures/lambdas');
-    basename = `test-otel-extension-${await resolveTestUid()}`;
+    basename = `test-otel-extension-${testUid}`;
     log.notice('Creating %s', basename);
 
     const createLayer = async () => {
