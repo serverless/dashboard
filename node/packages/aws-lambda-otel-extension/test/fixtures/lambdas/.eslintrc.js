@@ -17,5 +17,5 @@ module.exports = {
       },
     ],
   },
-  ignorePatterns: ['esbuild-esm-callback-success.js'],
+  ignorePatterns: ['success-callback-esbuild-from-esm.js'],
 };

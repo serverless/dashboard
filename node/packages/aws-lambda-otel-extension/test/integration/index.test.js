@@ -34,11 +34,11 @@ describe('integration', function () {
   let roleArn;
 
   const functionsConfig = new Map([
-    ['callback-success', true],
-    ['esbuild-esm-callback-success', true],
-    ['esm-callback-success/index', true],
+    ['success-callback', true],
+    ['success-callback-esbuild-from-esm', true],
+    ['success-callback-esm/index', true],
     [
-      'express-app',
+      'success-callback-express',
       {
         invocationOptions: {
           payload: {
