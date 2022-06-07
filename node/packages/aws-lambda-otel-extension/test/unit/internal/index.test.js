@@ -113,12 +113,12 @@ describe('internal', () => {
     ];
   });
 
-  it('should handle plain success invocation', async () => handleSuccess('callback-success'));
+  it('should handle plain success invocation', async () => handleSuccess('success-callback'));
   it('should handle esbuild ESM bundle result', async () =>
-    handleSuccess('esbuild-esm-callback-success'));
-  it('should handle ESM module', async () => handleSuccess('esm-callback-success/index'));
+    handleSuccess('success-callback-esbuild-from-esm'));
+  it('should handle ESM module', async () => handleSuccess('success-callback-esm/index'));
   it('should handle "express" handler', async () => {
-    const report = await handleSuccess('express-app', {
+    const report = await handleSuccess('success-callback-express', {
       version: '2.0',
       routeKey: '$default',
       rawPath: '/',
