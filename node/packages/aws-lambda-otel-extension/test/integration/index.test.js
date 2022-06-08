@@ -15,6 +15,7 @@ const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 const awsRequest = require('./aws-request');
 const basename = require('./basename');
+const cleanup = require('./cleanup');
 
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
@@ -343,15 +344,6 @@ describe('integration', function () {
 
   after(async function () {
     if (hasFailed(this.test.parent)) return; // Avoid cleanup
-    const deleteLayer = async () =>
-      awsRequest(Lambda, 'deleteLayerVersion', { LayerName: basename, VersionNumber: 1 });
-    const deleteRole = async () => {
-      await awsRequest(IAM, 'detachRolePolicy', { RoleName: basename, PolicyArn: policyArn });
-      return Promise.all([
-        awsRequest(IAM, 'deleteRole', { RoleName: basename }),
-        awsRequest(IAM, 'deletePolicy', { PolicyArn: policyArn }),
-      ]);
-    };
-    await Promise.all([deleteLayer(), deleteRole()]);
+    await cleanup({ skipFunctionsCleanup: true });
   });
 });
