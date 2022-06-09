@@ -111,6 +111,7 @@ module.exports = (async () => {
                   // In case of invocation failure extension will be shutdown before generating report
                   if (lastTelemetryData) {
                     fs.writeFileSync(tmpStorageFile, JSON.stringify(lastTelemetryData));
+                    debugLog('Extension: Store telemetry data for the next process');
                   }
                   closeOngoingInvocation();
                   break;
@@ -119,6 +120,7 @@ module.exports = (async () => {
                   if (!lastTelemetryData) {
                     try {
                       lastTelemetryData = JSON.parse(fs.readFileSync(tmpStorageFile), 'utf-8');
+                      debugLog('Extension: Restore telemetry data from the previous process');
                     } catch {
                       /* ignore */
                     }
