@@ -167,7 +167,7 @@ describe('integration', function () {
       await wait(1000);
       log.info('Retrieve list of written reports %s', functionBasename);
       reportEvents = await resolveReportEvents();
-    } while (reportEvents.length < 3);
+    } while (reportEvents.length < 5);
 
     log.info('Delete function %s', functionBasename);
     await deleteFunction();
