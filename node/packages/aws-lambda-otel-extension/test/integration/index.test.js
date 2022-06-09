@@ -8,6 +8,7 @@ const wait = require('timers-ext/promise/sleep');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { IAM } = require('@aws-sdk/client-iam');
+const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const buildLayer = require('../../scripts/lib/build');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
@@ -180,6 +181,7 @@ describe('integration', function () {
     ensureNpmDependencies('test/fixtures/lambdas');
     log.notice('Creating %s', basename);
 
+    const accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
     const createLayer = async () => {
       if (!process.env.TEST_LAYER_FILENAME) {
         log.info('Building layer');
@@ -219,6 +221,12 @@ describe('integration', function () {
               },
             ],
           }),
+        }).catch((error) => {
+          if (error.Code === 'EntityAlreadyExists') {
+            log.notice('IAM role already exists');
+            return { Role: { Arn: `arn:aws:iam::${accountId}:role/${basename}` } };
+          }
+          throw error;
         }),
         awsRequest(IAM, 'createPolicy', {
           PolicyName: basename,
@@ -237,6 +245,12 @@ describe('integration', function () {
               },
             ],
           }),
+        }).catch((error) => {
+          if (error.Code === 'EntityAlreadyExists') {
+            log.notice('IAM policy already exists');
+            return { Policy: { Arn: `arn:aws:iam::${accountId}:policy/${basename}` } };
+          }
+          throw error;
         }),
       ]);
       log.info('Attaching IAM policy to role');
