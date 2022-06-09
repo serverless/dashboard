@@ -352,11 +352,9 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
 };
 
 const handleTimeouts = (remainingTime) => {
-  const timeoutTime = remainingTime - 50;
-  // const setTimeoutTime = Date.now();
-  timeoutHandler = setTimeout(async () => {
-    await responseHandler(null, {}, true);
-  }, timeoutTime).unref();
+  timeoutHandler = setTimeout(() => {
+    responseHandler(null, {}, true);
+  }, remainingTime - 50).unref();
 };
 
 registerInstrumentations({
