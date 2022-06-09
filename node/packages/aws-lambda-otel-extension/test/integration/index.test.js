@@ -197,7 +197,7 @@ describe('integration', function () {
       layerArn = (
         await awsRequest(Lambda, 'listLayerVersions', { LayerName: basename })
       ).LayerVersions.shift().LayerVersionArn;
-      log.info('Layer ready');
+      log.info('Layer ready %s', layerArn);
     };
     const createRole = async () => {
       log.info('Creating IAM role and policy');
@@ -319,6 +319,7 @@ describe('integration', function () {
       let reports;
       before(async () => {
         reports = await processFunction(handlerModuleName, invocationOptions);
+        log.info('retrieved reposts %o', reports);
       });
       it('test', () => {
         const metricsReport = reports.find(([reportType]) => reportType === 'metrics')[1];
