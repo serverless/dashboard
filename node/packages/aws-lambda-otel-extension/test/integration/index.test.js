@@ -320,6 +320,12 @@ describe('integration', function () {
               await self([handlerModuleName, { creationOptions }]);
               return;
             }
+            if (error.message.includes('Function already exist')) {
+              log.notice('Function %s already exists, deleting and re-creating', functionBasename);
+              await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionName });
+              await self([handlerModuleName, { creationOptions }]);
+              return;
+            }
             throw error;
           }
         })
