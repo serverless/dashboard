@@ -144,7 +144,7 @@ describe('integration', function () {
             startTime,
             logGroupName: `/aws/lambda/${functionName}`,
           })
-        ).events.filter((event) => event.message.startsWith('⚡'));
+        ).events;
       } catch (error) {
         if (error.name === 'ResourceNotFoundException') {
           log.info('log group not ready, wait and retry %s', functionBasename);
@@ -157,24 +157,38 @@ describe('integration', function () {
 
     log.info('Ensure function is active %s', functionBasename);
     await ensureIsActive();
-    log.info('Invoke function %s', functionBasename);
+    log.info('Invoke function #1 %s', functionBasename);
+    await invokeFunction();
+    log.info('Invoke function #2 %s', functionBasename);
     await invokeFunction();
 
-    let reportEvents;
+    let reports;
     do {
-      log.info('Invoke function again %s', functionBasename);
-      await invokeFunction();
-      await wait(1000);
       log.info('Retrieve list of written reports %s', functionBasename);
-      reportEvents = await resolveReportEvents();
-    } while (reportEvents.length < 5);
+      const events = await resolveReportEvents();
+      reports = [];
+      let currentInvocationReports = [];
+      for (const { message } of events) {
+        if (message.startsWith('⚡')) {
+          const reportType = message.slice(2, message.indexOf(':'));
+          if (reportType === 'logs') continue;
+          currentInvocationReports.push([
+            reportType,
+            JSON.parse(message.slice(message.indexOf(':') + 1).trim()),
+          ]);
+          continue;
+        }
+        if (message.startsWith('REPORT RequestId: ')) {
+          reports.push(currentInvocationReports);
+          currentInvocationReports = [];
+        }
+      }
+    } while (reports.length < 2);
 
     log.info('Delete function %s', functionBasename);
     await deleteFunction();
-    return reportEvents.map(({ message }) => [
-      message.slice(2, message.indexOf(':')),
-      JSON.parse(message.slice(message.indexOf(':') + 1).trim()),
-    ]);
+
+    return reports;
   };
 
   before(async () => {
@@ -322,8 +336,14 @@ describe('integration', function () {
         log.info('retrieved reposts %o', reports);
       });
       it('test', () => {
-        const metricsReport = reports.find(([reportType]) => reportType === 'metrics')[1];
-        const tracesReport = reports.find(([reportType]) => reportType === 'traces')[1];
+        expect(
+          reports.map((invocationReports) => invocationReports.map(([type]) => type))
+        ).to.deep.equal([
+          ['request', 'response', 'metrics', 'traces'],
+          ['metrics', 'request', 'response', 'metrics', 'traces'],
+        ]);
+        const metricsReport = reports[0][2][1];
+        const tracesReport = reports[0][3][1];
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );
