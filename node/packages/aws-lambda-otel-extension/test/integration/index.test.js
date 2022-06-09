@@ -345,14 +345,17 @@ describe('integration', function () {
         log.info('retrieved reposts %o', reports);
       });
       it('test', () => {
+        // While reports should come in order as specified below,
+        // there were observed cases when it wasn't the case,
+        // e.g. telemetryData (response) was received before eventData (request)
         expect(
-          reports.map((invocationReports) => invocationReports.map(([type]) => type))
+          reports.map((invocationReports) => invocationReports.map(([type]) => type).sort())
         ).to.deep.equal([
-          ['request', 'response', 'metrics', 'traces'],
-          ['metrics', 'request', 'response', 'metrics', 'traces'],
+          ['request', 'response', 'metrics', 'traces'].sort(),
+          ['metrics', 'request', 'response', 'metrics', 'traces'].sort(),
         ]);
-        const metricsReport = reports[0][2][1];
-        const tracesReport = reports[0][3][1];
+        const metricsReport = reports[0].find(([reportType]) => reportType === 'metrics')[1];
+        const tracesReport = reports[0].find(([reportType]) => reportType === 'traces')[1];
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );
