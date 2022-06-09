@@ -19,16 +19,18 @@ delete EvalError.$serverlessAwsLambdaInstrumentation;
 let requestStartTime;
 let responseStartTime;
 let currentInvocationId = 0;
+const debugLog = (...args) => {
+  if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
+};
 
 const wrappedHandler = awsLambdaInstrumentation._instance._getPatchHandler(
   (event, context, callback) => {
     const invocationId = currentInvocationId;
-    if (process.env.DEBUG_SLS_OTEL_LAYER) {
-      process._rawDebug(
-        'Extension overhead duration: internal request:',
-        `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
-      );
-    }
+    debugLog(
+      'Extension overhead duration: internal request:',
+      `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
+    );
+
     const wrapCallback =
       (originalCallback) =>
       (...args) => {
@@ -60,8 +62,8 @@ module.exports.handler = (event, context, callback) => {
     if (invocationId !== currentInvocationId) return;
     delete EvalError.$serverlessRequestHandlerPromise;
     delete EvalError.$serverlessResponseHandlerPromise;
-    if (process.env.DEBUG_SLS_OTEL_LAYER && responseStartTime) {
-      process._rawDebug(
+    if (responseStartTime) {
+      debugLog(
         'Extension overhead duration: internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
       );
