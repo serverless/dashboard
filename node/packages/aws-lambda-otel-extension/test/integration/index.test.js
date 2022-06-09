@@ -95,6 +95,12 @@ describe('integration', function () {
       'error-timeout',
       {
         invocationOptions: { isFailure: true },
+        // On timeout re-initialization of external extension gets slow, and we observe that second
+        // invocation times out before actually lambda is initialized.
+        // This is either because currently our external extension is Node.js based,
+        // so has slow startup time, or it can be performance issue on AWS side.
+        // To ensure reliable result increase timeout, so we get second invocation correct
+        creationOptions: { configuration: { Timeout: 7 } },
         test: ({ instrumentationSpans }) => {
           const { attributes } =
             instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
@@ -274,7 +280,8 @@ describe('integration', function () {
 
     const createFunctions = async () => {
       await Promise.all(
-        Array.from(functionsConfig.keys()).map(async function self(handlerModuleName) {
+        Array.from(functionsConfig, async function self([handlerModuleName, { creationOptions }]) {
+          if (!creationOptions) creationOptions = {};
           const functionBasename = handlerModuleName.includes(path.sep)
             ? path.dirname(handlerModuleName)
             : handlerModuleName;
@@ -282,13 +289,15 @@ describe('integration', function () {
           log.info('Create function %s', functionBasename);
           try {
             await awsRequest(Lambda, 'createFunction', {
+              Handler: `${handlerModuleName}.handler`,
+              Role: roleArn,
+              Runtime: 'nodejs14.x',
+              ...creationOptions.configuration,
               Code: {
                 ZipFile: lambdasCodeZipBuffer,
               },
               FunctionName: functionName,
-              Handler: `${handlerModuleName}.handler`,
-              Role: roleArn,
-              Runtime: 'nodejs14.x',
+              Layers: [layerArn],
               Environment: {
                 Variables: {
                   AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
@@ -299,7 +308,6 @@ describe('integration', function () {
                   }),
                 },
               },
-              Layers: [layerArn],
             });
           } catch (error) {
             if (
@@ -309,7 +317,7 @@ describe('integration', function () {
               error.message.includes('because the KMS key is invalid for CreateGrant')
             ) {
               // Occassional race condition issue on AWS side, retry
-              await self(handlerModuleName);
+              await self([handlerModuleName, { creationOptions }]);
               return;
             }
             throw error;
