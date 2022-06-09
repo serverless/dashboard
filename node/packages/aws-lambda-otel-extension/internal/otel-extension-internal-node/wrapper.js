@@ -56,6 +56,7 @@ const wrappedHandler = awsLambdaInstrumentation._instance._getPatchHandler(
 );
 
 module.exports.handler = (event, context, callback) => {
+  debugLog('Internal extension: Invocation');
   const invocationId = ++currentInvocationId;
   requestStartTime = process.hrtime.bigint();
   const logResponseDuration = () => {

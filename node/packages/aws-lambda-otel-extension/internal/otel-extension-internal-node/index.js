@@ -2,6 +2,13 @@
 
 const processStartTime = process.hrtime.bigint();
 
+const debugLog = (...args) => {
+  if (process.env.DEBUG_SLS_OTEL_LAYER) {
+    process._rawDebug(...args);
+  }
+};
+debugLog('Internal extension: Init');
+
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
@@ -115,6 +122,7 @@ const requestHandler = async (span, { event, context }) => {
       `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
     );
   } else {
+    debugLog('Internal extension: Send event data');
     // Send request data to external so that we can attach this data to logs
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
@@ -338,6 +346,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
       `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
     );
   } else {
+    debugLog('Internal extension: Send telemetry data');
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
       body: JSON.stringify(telemetryDataPayload),

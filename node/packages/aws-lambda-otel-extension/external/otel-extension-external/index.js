@@ -96,6 +96,7 @@ module.exports = (async () => {
             for (const event of data) {
               switch (event.type) {
                 case 'platform.start':
+                  debugLog('Extension platform log: start');
                   getCurrentRequestData('start');
                   // eslint-disable-next-line no-loop-func
                   ongoingInvocationDeferred = new Promise((resolve) => {
@@ -103,6 +104,7 @@ module.exports = (async () => {
                   });
                   break;
                 case 'platform.runtimeDone':
+                  debugLog('Extension platform log: runtimeDone');
                   invocationStartTime = process.hrtime.bigint();
                   runtimeEventEmitter.emit('runtimeDone');
                   if (event.record.status === 'success') continue;
@@ -113,6 +115,7 @@ module.exports = (async () => {
                   closeOngoingInvocation();
                   break;
                 case 'platform.report':
+                  debugLog('Extension platform log: report');
                   if (!lastTelemetryData) {
                     try {
                       lastTelemetryData = JSON.parse(fs.readFileSync(tmpStorageFile), 'utf-8');
@@ -184,6 +187,7 @@ module.exports = (async () => {
     const waitUntilAllReportsAreSent = () => Promise.all(Array.from(pendingReports));
     // Events lifecycle handler
     const waitForEvent = async () => {
+      debugLog('Extension: Ready for an event');
       const event = await new Promise((resolve, reject) => {
         if (isInitializing) {
           isInitializing = false;
@@ -224,6 +228,7 @@ module.exports = (async () => {
         request.on('error', reject);
         request.end();
       });
+      debugLog('Extension: Received event ', event.eventType);
       switch (event.eventType) {
         case 'SHUTDOWN':
           shutdownStartTime = process.hrtime.bigint();
