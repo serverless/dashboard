@@ -334,7 +334,7 @@ describe('integration', function () {
     await createFunctions();
   });
 
-  for (const [handlerModuleName, { invocationOptions, test }] of functionsConfig) {
+  for (const [handlerModuleName, { invocationOptions = {}, test }] of functionsConfig) {
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
@@ -345,17 +345,23 @@ describe('integration', function () {
         log.info('retrieved reposts %o', reports);
       });
       it('test', () => {
-        // While reports should come in order as specified below,
-        // there were observed cases when it wasn't the case,
-        // e.g. telemetryData (response) was received before eventData (request)
-        expect(
-          reports.map((invocationReports) => invocationReports.map(([type]) => type).sort())
-        ).to.deep.equal([
-          ['request', 'response', 'metrics', 'traces'].sort(),
-          ['metrics', 'request', 'response', 'metrics', 'traces'].sort(),
-        ]);
-        const metricsReport = reports[0].find(([reportType]) => reportType === 'metrics')[1];
-        const tracesReport = reports[0].find(([reportType]) => reportType === 'traces')[1];
+        if (!invocationOptions.isFailure) {
+          // Current timeout handling is unreliable, therefore do not attempt to confirm
+          // on all reports
+
+          // While reports should come in order as specified below,
+          // there were observed cases when it wasn't the case,
+          // e.g. telemetryData (response) was received before eventData (request)
+          expect(
+            reports.map((invocationReports) => invocationReports.map(([type]) => type).sort())
+          ).to.deep.equal([
+            ['request', 'response', 'metrics', 'traces'].sort(),
+            ['metrics', 'request', 'response', 'metrics', 'traces'].sort(),
+          ]);
+        }
+        const allReports = reports.flat();
+        const metricsReport = allReports.find(([reportType]) => reportType === 'metrics')[1];
+        const tracesReport = allReports.find(([reportType]) => reportType === 'traces')[1];
         const resourceMetrics = normalizeOtelAttributes(
           metricsReport.resourceMetrics[0].resource.attributes
         );
