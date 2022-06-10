@@ -17,6 +17,6 @@ module.exports = async (functionRoot) => {
   try {
     return zip.toBuffer();
   } finally {
-    log.info('Zip buffer genereated %s', functionRoot);
+    log.info('Zip buffer generated %s', functionRoot);
   }
 };
