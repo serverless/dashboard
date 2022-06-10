@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: The Serverless Role for required read & write permission on your AWS account, Please keep this role for best integration experience with Serverless Console.
+Resources:
+  ServerlessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              # Serverless AWS root account - prod
+              AWS: arn:aws:iam::364777543101:root
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId:
+                  Ref: ExternalId
+      Path: "/"
+      RoleName: ServerlessRole
+      Policies:
+        - PolicyName: serverless-feature-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  # API Gateway Permissions
+                  - "apigateway:GET"
+                  # App Runner Permissions
+                  - "apprunner:Describe*"
+                  - "apprunner:List*"
+                  # AppSync Permissions
+                  - "appsync:Get*"
+                  - "appsync:List*"
+                  # Autoscaling Permissions
+                  - "autoscaling:Describe*"
+                  # Backup Permissions
+                  - "backup:List*"
+                  # CloudFront Permissions
+                  - "cloudfront:GetDistributionConfig"
+                  - "cloudfront:ListDistributions"
+                  # CloudTrail Permissions
+                  - "cloudtrail:DescribeTrails"
+                  - "cloudtrail:GetTrailStatus"
+                  - "cloudtrail:LookupEvents"
+                  # CloudWatch Permissions
+                  - "cloudwatch:Describe*"
+                  - "cloudwatch:Get*"
+                  - "cloudwatch:List*"
+                  - "cloudwatch:StartMetricStreams"
+                  - "cloudwatch:StopMetricStreams"
+                  # CloudWatch Logs Permissions
+                  - "logs:DeleteSubscriptionFilter"
+                  - "logs:DescribeLogGroups"
+                  - "logs:DescribeLogStreams"
+                  - "logs:DescribeSubscriptionFilters"
+                  - "logs:FilterLogEvents"
+                  - "logs:PutSubscriptionFilter"
+                  - "logs:TestMetricFilter"
+                  # CodeBuild Permissions
+                  - "codebuild:BatchGet*"
+                  - "codebuild:Get*"
+                  - "codebuild:List*"
+                  # CodeDeploy Permissions
+                  - "codedeploy:List*"
+                  - "codedeploy:BatchGet*"
+                  # Cost Explorer Service Permissions
+                  - "ce:GetCostAndUsageWithResources"
+                  - "ce:GetCostAndUsage"
+                  # DynamoDB Permissions
+                  - "dynamodb:Describe*"
+                  - "dynamodb:Get*"
+                  - "dynamodb:List*"
+                  # EC2 Permissions
+                  - "ec2: Describe*"
+                  # ECS Permissions
+                  - "ecs:Describe*"
+                  - "ecs:List*"
+                  # ElastiCache Permissions
+                  - "elasticache:Describe*"
+                  - "elasticache:List*"
+                  # ELB(Elastic Load Balancing) Permissions
+                  - "elasticloadbalancing:Describe*"
+                  # EMR(Elastic Map Reduce) Permissions
+                  - "elasticmapreduce:List*"
+                  - "elasticmapreduce:Describe*"
+                  # ES(Elasticsearch) Permissions
+                  - "es:ListTags"
+                  - "es:ListDomainNames"
+                  - "es:DescribeElasticsearchDomains"
+                  # Health Permissions
+                  - "health:DescribeEvents"
+                  - "health:DescribeEventDetails"
+                  - "health:DescribeAffectedEntities"
+                  # Kinesis Permissions
+                  - "kinesis:Describe*"
+                  - "kinesis:List*"
+                  # Lambda Permissions
+                  - "lambda:Get*"
+                  - "lambda:List*"
+                  - "lambda:UpdateFunctionConfiguration"
+                  # Organizations Permissions
+                  - "organizations:Describe*"
+                  - "organizations:List*"
+                  # Resource Group Tagging Permissions
+                  - "tag:GetResources"
+                  - "tag:GetTagKeys"
+                  - "tag:GetTagValues"
+                  # RDS (Relational Database Service) Permissions
+                  - "rds:Describe*"
+                  - "rds:List*"
+                  # Route 53 Permissions
+                  - "route53:List*"
+                  # S3 (Simple Storage Service) Permissions
+                  - "s3:GetBucketLogging"
+                  - "s3:GetBucketLocation"
+                  - "s3:GetBucketNotification"
+                  - "s3:GetBucketTagging"
+                  - "s3:ListAllMyBuckets"
+                  - "s3:PutBucketNotification"
+                  # SES (Simple Email Service) Permissions
+                  - "ses:Get*"
+                  - "ses:List*"
+                  # SNS (Simple Notification System) Permissions
+                  - "sns:Get*"
+                  - "sns:List*"
+                  # SQS (Simple Queue Service) Permissions
+                  - "sqs:Get*"
+                  - "sqs:List*"
+                  # Step Functions Permissions
+                  - "states:DescribeStateMachine"
+                  - "states:Get*"
+                  - "states:List*"
+                  # X-Ray Permissions
+                  - "xray:BatchGetTraces"
+                  - "xray:GetTraceSummaries"
+                Resource: "*"
+Parameters:
+  ExternalId:
+    Description: "[!Do not change!] External ID for securing the role"
+    Type: String
