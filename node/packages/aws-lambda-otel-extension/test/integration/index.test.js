@@ -20,7 +20,6 @@ const cleanup = require('./cleanup');
 
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
-const hasFailed = require('@serverless/test/has-failed');
 
 describe('integration', function () {
   this.timeout(120000);
@@ -401,8 +400,5 @@ describe('integration', function () {
     });
   }
 
-  after(async function () {
-    if (hasFailed(this.test.parent)) return; // Avoid cleanup
-    await cleanup({ skipFunctionsCleanup: true });
-  });
+  after(async () => cleanup({ skipFunctionsCleanup: true }));
 });
