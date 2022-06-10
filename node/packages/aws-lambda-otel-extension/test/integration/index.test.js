@@ -23,10 +23,8 @@ const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 describe('integration', function () {
   this.timeout(120000);
-  let layerArn;
-  let policyArn;
+  const config = {};
   let lambdasCodeZipBuffer;
-  let roleArn;
 
   const functionsConfig = new Map([
     ['success-callback', true],
@@ -200,7 +198,7 @@ describe('integration', function () {
     ensureNpmDependencies('test/fixtures/lambdas');
     log.notice('Creating %s', basename);
 
-    const accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
+    config.accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
     const createLayer = async () => {
       if (!process.env.TEST_LAYER_FILENAME) {
         log.info('Building layer');
@@ -213,14 +211,14 @@ describe('integration', function () {
         Content: { ZipFile: await fsp.readFile(process.env.TEST_LAYER_FILENAME || layerFilename) },
       });
       log.info('Resolving layer ARN');
-      layerArn = (
+      config.layerArn = (
         await awsRequest(Lambda, 'listLayerVersions', { LayerName: basename })
       ).LayerVersions.shift().LayerVersionArn;
-      log.info('Layer ready %s', layerArn);
+      log.info('Layer ready %s', config.layerArn);
     };
     const createRole = async () => {
       log.info('Creating IAM role and policy');
-      [
+      const [
         {
           Role: { Arn: roleArn },
         },
@@ -243,7 +241,7 @@ describe('integration', function () {
         }).catch((error) => {
           if (error.Code === 'EntityAlreadyExists') {
             log.notice('IAM role already exists');
-            return { Role: { Arn: `arn:aws:iam::${accountId}:role/${basename}` } };
+            return { Role: { Arn: `arn:aws:iam::${config.accountId}:role/${basename}` } };
           }
           throw error;
         }),
@@ -267,7 +265,7 @@ describe('integration', function () {
         }).catch((error) => {
           if (error.Code === 'EntityAlreadyExists') {
             log.notice('IAM policy already exists');
-            return { Policy: { Arn: `arn:aws:iam::${accountId}:policy/${basename}` } };
+            return { Policy: { Arn: `arn:aws:iam::${config.accountId}:policy/${basename}` } };
           }
           throw error;
         }),
@@ -275,6 +273,8 @@ describe('integration', function () {
       log.info('Attaching IAM policy to role');
       await awsRequest(IAM, 'attachRolePolicy', { RoleName: basename, PolicyArn: policyArn });
       log.info('Attached IAM policy to role');
+      config.roleArn = roleArn;
+      config.policyArn = policyArn;
     };
 
     const createFunctions = async () => {
@@ -289,14 +289,14 @@ describe('integration', function () {
           try {
             await awsRequest(Lambda, 'createFunction', {
               Handler: `${handlerModuleName}.handler`,
-              Role: roleArn,
+              Role: config.roleArn,
               Runtime: 'nodejs14.x',
               ...creationOptions.configuration,
               Code: {
                 ZipFile: lambdasCodeZipBuffer,
               },
               FunctionName: functionName,
-              Layers: [layerArn],
+              Layers: [config.layerArn],
               Environment: {
                 Variables: {
                   AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
