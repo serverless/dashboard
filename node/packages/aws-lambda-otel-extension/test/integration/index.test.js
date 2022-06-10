@@ -29,7 +29,7 @@ describe('integration', function () {
     [
       'success-callback-express',
       {
-        invocationOptions: {
+        i: {
           payload: {
             version: '2.0',
             routeKey: '$default',
@@ -87,13 +87,13 @@ describe('integration', function () {
     [
       'error-timeout',
       {
-        invocationOptions: { isFailure: true },
+        invokeOptions: { isFailure: true },
         // On timeout re-initialization of external extension gets slow, and we observe that second
         // invocation times out before actually lambda is initialized.
         // This is either because currently our external extension is Node.js based,
         // so has slow startup time, or it can be performance issue on AWS side.
         // To ensure reliable result increase timeout, so we get second invocation correct
-        creationOptions: { configuration: { Timeout: 7 } },
+        createOptions: { configuration: { Timeout: 7 } },
         test: ({ instrumentationSpans }) => {
           const { attributes } =
             instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
@@ -194,8 +194,8 @@ describe('integration', function () {
     ensureNpmDependencies('test/fixtures/lambdas');
     const createFunctions = async () => {
       await Promise.all(
-        Array.from(functionsConfig, async function self([handlerModuleName, { creationOptions }]) {
-          if (!creationOptions) creationOptions = {};
+        Array.from(functionsConfig, async function self([handlerModuleName, { createOptions }]) {
+          if (!createOptions) createOptions = {};
           const functionBasename = handlerModuleName.includes(path.sep)
             ? path.dirname(handlerModuleName)
             : handlerModuleName;
@@ -206,7 +206,7 @@ describe('integration', function () {
               Handler: `${handlerModuleName}.handler`,
               Role: config.roleArn,
               Runtime: 'nodejs14.x',
-              ...creationOptions.configuration,
+              ...createOptions.configuration,
               Code: {
                 ZipFile: lambdasCodeZipBuffer,
               },
@@ -231,13 +231,13 @@ describe('integration', function () {
               error.message.includes('because the KMS key is invalid for CreateGrant')
             ) {
               // Occassional race condition issue on AWS side, retry
-              await self([handlerModuleName, { creationOptions }]);
+              await self([handlerModuleName, { createOptions }]);
               return;
             }
             if (error.message.includes('Function already exist')) {
               log.notice('Function %s already exists, deleting and re-creating', functionBasename);
               await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionName });
-              await self([handlerModuleName, { creationOptions }]);
+              await self([handlerModuleName, { createOptions }]);
               return;
             }
             throw error;
@@ -253,18 +253,18 @@ describe('integration', function () {
     await createFunctions();
   });
 
-  for (const [handlerModuleName, { invocationOptions = {}, test }] of functionsConfig) {
+  for (const [handlerModuleName, { invokeOptions = {}, test }] of functionsConfig) {
     const functionBasename = handlerModuleName.includes(path.sep)
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
     describe(functionBasename, () => {
       let reports;
       before(async () => {
-        reports = await processFunction(handlerModuleName, invocationOptions);
+        reports = await processFunction(handlerModuleName, invokeOptions);
         log.info('retrieved reposts %o', reports);
       });
       it('test', () => {
-        if (!invocationOptions.isFailure) {
+        if (!invokeOptions.isFailure) {
           // Current timeout handling is unreliable, therefore do not attempt to confirm
           // on all reports
 
