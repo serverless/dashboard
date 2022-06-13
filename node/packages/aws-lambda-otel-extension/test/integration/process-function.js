@@ -63,8 +63,6 @@ const ensureIsActive = async (fnConfig) => {
 };
 
 const invoke = async (fnConfig, testConfig) => {
-  // Local computer time might a bit out of sync. Relax time range by 3 seconds
-  fnConfig.invokeStartTime = Date.now() - 3000;
   const { invokeOptions = {} } = testConfig;
 
   const payload = invokeOptions.payload || {};
