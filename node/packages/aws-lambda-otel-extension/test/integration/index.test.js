@@ -95,32 +95,46 @@ describe('integration', function () {
     ],
   ]);
 
-  let deferredResults;
+  const testScenariosConfig = [];
 
-  before(async () => {
-    await createCoreResources(coreConfig);
-    deferredResults = new Map(
-      Array.from(functionsConfig, ([handlerModuleName, testConfig]) => [
-        handlerModuleName,
-        processFunction(handlerModuleName, testConfig, coreConfig).catch((error) => ({
-          // As we process result promises sequentially step by step in next turn, allowing them to
-          // reject will generate unhandled rejection.
-          // Therefore this scenario is converted to successuful { error } resolution
-          error,
-        })),
-      ])
-    );
-  });
-
-  for (const [handlerModuleName, { invokeOptions = {}, test }] of functionsConfig) {
+  for (const [handlerModuleName, testConfig] of functionsConfig) {
     const functionBasename = handlerModuleName.includes('/')
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
 
+    testScenariosConfig.push({
+      handlerModuleName,
+      testConfig,
+      functionBasename,
+    });
+  }
+
+  before(async () => {
+    await createCoreResources(coreConfig);
+    for (const testScenarioConfig of testScenariosConfig) {
+      testScenarioConfig.deferredResult = processFunction(
+        testScenarioConfig.handlerModuleName,
+        testScenarioConfig.testConfig,
+        coreConfig
+      ).catch((error) => ({
+        // As we process result promises sequentially step by step in next turn, allowing them to
+        // reject will generate unhandled rejection.
+        // Therefore this scenario is converted to successuful { error } resolution
+        error,
+      }));
+    }
+  });
+
+  for (const testScenarioConfig of testScenariosConfig) {
+    const {
+      functionBasename,
+      testConfig: { invokeOptions = {}, test },
+    } = testScenarioConfig;
+
     it(functionBasename, async () => {
-      const functionResult = await deferredResults.get(handlerModuleName);
-      if (functionResult.error) throw functionResult.error;
-      const { reports } = functionResult;
+      const testResult = await testScenarioConfig.deferredResult;
+      if (testResult.error) throw testResult.error;
+      const { reports } = testResult;
       if (!invokeOptions.isFailure) {
         // Current timeout handling is unreliable, therefore do not attempt to confirm
         // on all reports
