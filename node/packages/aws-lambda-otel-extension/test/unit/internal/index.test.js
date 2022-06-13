@@ -69,21 +69,21 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
   try {
     await requireUncached(async () => {
       await require('../../../internal/otel-extension-internal-node');
+      const handlerModule = await require('../../../internal/otel-extension-internal-node/wrapper');
       await new Promise((resolve, reject) => {
-        const maybeThenable =
-          require('../../../internal/otel-extension-internal-node/wrapper').handler(
-            payload,
-            {
-              awsRequestId: '123',
-              functionName,
-              invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
-              getRemainingTimeInMillis: () => 3000,
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
+        const maybeThenable = handlerModule.handler(
+          payload,
+          {
+            awsRequestId: '123',
+            functionName,
+            invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
+            getRemainingTimeInMillis: () => 3000,
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
         if (isThenable(maybeThenable)) resolve(maybeThenable);
       });
     });
