@@ -67,14 +67,16 @@ const invoke = async (fnConfig, testConfig) => {
   fnConfig.invokeStartTime = Date.now() - 3000;
   const { invokeOptions = {} } = testConfig;
 
+  const payload = invokeOptions.payload || {};
+  log.debug('invoke request payload %O', payload);
   const result = await awsRequest(Lambda, 'invoke', {
     FunctionName: fnConfig.name,
-    Payload: Buffer.from(JSON.stringify(invokeOptions.payload || {}), 'utf8'),
+    Payload: Buffer.from(JSON.stringify(payload), 'utf8'),
   });
   try {
     const responsePayload = JSON.parse(Buffer.from(result.Payload));
-    log.debug('invoke payload %O', responsePayload);
-    log.debug('invoke parsed payload %O', JSON.parse(responsePayload.body));
+    log.debug('invoke response payload %O', responsePayload);
+    log.debug('invoke response parsed payload %O', JSON.parse(responsePayload.body));
   } catch {
     /* ignore */
   }
