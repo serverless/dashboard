@@ -103,9 +103,11 @@ describe('integration', function () {
       : handlerModuleName;
 
     testScenariosConfig.push({
-      handlerModuleName,
+      functionConfig: {
+        handlerModuleName,
+        basename: functionBasename,
+      },
       testConfig,
-      functionBasename,
     });
   }
 
@@ -113,7 +115,7 @@ describe('integration', function () {
     await createCoreResources(coreConfig);
     for (const testScenarioConfig of testScenariosConfig) {
       testScenarioConfig.deferredResult = processFunction(
-        testScenarioConfig.handlerModuleName,
+        testScenarioConfig.functionConfig,
         testScenarioConfig.testConfig,
         coreConfig
       ).catch((error) => ({
@@ -127,7 +129,7 @@ describe('integration', function () {
 
   for (const testScenarioConfig of testScenariosConfig) {
     const {
-      functionBasename,
+      functionConfig: { basename: functionBasename },
       testConfig: { invokeOptions = {}, test },
     } = testScenarioConfig;
 
