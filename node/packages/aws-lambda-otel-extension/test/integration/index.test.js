@@ -21,7 +21,7 @@ describe('integration', function () {
     [
       'success-callback-express',
       {
-        i: {
+        invokeOptions: {
           payload: {
             version: '2.0',
             routeKey: '$default',
