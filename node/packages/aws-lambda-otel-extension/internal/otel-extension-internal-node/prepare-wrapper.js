@@ -13,7 +13,15 @@ module.exports = () => {
   const handlerModuleDirname = path.resolve(process.env.LAMBDA_TASK_ROOT, handlerDirname);
   const handlerModuleName = path.resolve(handlerModuleDirname, handlerModuleBasename);
 
+  const nodeVersionMajor = Number(process.version.split('.')[0].slice(1));
+  const isAsyncLoader = nodeVersionMajor >= 16;
+
   const importEsm = (() => {
+    if (isAsyncLoader) {
+      return async (p) => {
+        return await import(p);
+      };
+    }
     try {
       // eslint-disable-next-line import/no-unresolved
       return require(path.resolve(process.env.LAMBDA_RUNTIME_DIR, 'deasync')).deasyncify(
@@ -74,20 +82,25 @@ module.exports = () => {
   result.handlerLoadDuration = process.hrtime.bigint() - startTime;
 
   if (!hasInitializationFailed) {
-    const handlerPropertyPathTokens = handlerBasename
-      .slice(handlerModuleBasename.length + 1)
-      .split('.');
-    const handlerFunctionName = handlerPropertyPathTokens.pop();
     let handlerContext = handlerModule;
     if (handlerContext == null) return result;
-    while (handlerPropertyPathTokens.length) {
-      handlerContext = handlerContext[handlerPropertyPathTokens.shift()];
-      if (handlerContext == null) return result;
-    }
-    const handlerFunction = handlerContext[handlerFunctionName];
-    if (typeof handlerFunction !== 'function') return result;
 
-    EvalError.$serverlessHandlerFunction = handlerFunction;
+    if (isAsyncLoader && typeof handlerContext.then === 'function') {
+      EvalError.$serverlessHandlerDeferred = handlerContext;
+    } else {
+      const handlerPropertyPathTokens = handlerBasename
+        .slice(handlerModuleBasename.length + 1)
+        .split('.');
+      const handlerFunctionName = handlerPropertyPathTokens.pop();
+      while (handlerPropertyPathTokens.length) {
+        handlerContext = handlerContext[handlerPropertyPathTokens.shift()];
+        if (handlerContext == null) return result;
+      }
+      const handlerFunction = handlerContext[handlerFunctionName];
+      if (typeof handlerFunction !== 'function') return result;
+
+      EvalError.$serverlessHandlerFunction = handlerFunction;
+    }
     // Exposed for Wrapper which is configured with no dependencies
     // (it's to ensure no repeated code between distinct bundled files)
     EvalError.$serverlessAwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
