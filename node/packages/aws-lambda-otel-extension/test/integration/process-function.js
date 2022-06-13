@@ -67,10 +67,20 @@ const invoke = async (fnConfig, testConfig) => {
 
   const payload = invokeOptions.payload || {};
   log.debug('invoke request payload %O', payload);
-  const result = await awsRequest(Lambda, 'invoke', {
-    FunctionName: fnConfig.name,
-    Payload: Buffer.from(JSON.stringify(payload), 'utf8'),
-  });
+  let result;
+  try {
+    result = await awsRequest(Lambda, 'invoke', {
+      FunctionName: fnConfig.name,
+      Payload: Buffer.from(JSON.stringify(payload), 'utf8'),
+    });
+  } catch (error) {
+    if (error.message.includes('The role defined for the function cannot be assumed by Lambda')) {
+      // Occassional race condition issue on AWS side, retry
+      await invoke(fnConfig, testConfig);
+      return;
+    }
+    throw error;
+  }
   try {
     const responsePayload = JSON.parse(Buffer.from(result.Payload));
     log.debug('invoke response payload %O', responsePayload);
