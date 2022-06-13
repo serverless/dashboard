@@ -25,7 +25,7 @@ describe('integration', function () {
           payload: {
             version: '2.0',
             routeKey: '$default',
-            rawPath: '/',
+            rawPath: '/foo',
             rawQueryString: '',
             headers: {
               'accept':
@@ -54,7 +54,7 @@ describe('integration', function () {
               domainPrefix: '1hqnqp4a70',
               http: {
                 method: 'GET',
-                path: '/',
+                path: '/foo',
                 protocol: 'HTTP/1.1',
                 sourceIp: '80.55.87.22',
                 userAgent:
