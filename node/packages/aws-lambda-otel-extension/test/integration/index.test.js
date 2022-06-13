@@ -3,6 +3,7 @@
 const { expect } = require('chai');
 
 const path = require('path');
+const _ = require('lodash');
 const log = require('log').get('test');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const basename = require('./basename');
@@ -15,9 +16,26 @@ describe('integration', function () {
   const coreConfig = {};
 
   const functionsConfig = new Map([
-    ['success-callback', true],
-    ['success-callback-esbuild-from-esm', true],
-    ['success-callback-esm/index', true],
+    [
+      'success-callback',
+      {
+        cases: new Map([
+          ['v12', { createOptions: { configuration: { Runtime: 'nodejs12.x' } } }],
+          ['v14', { createOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { createOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
+        ]),
+      },
+    ],
+    ['success-callback-esbuild-from-esm', {}],
+    [
+      'success-callback-esm/index',
+      {
+        cases: new Map([
+          ['v14', { createOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { createOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
+        ]),
+      },
+    ],
     [
       'success-callback-express',
       {
@@ -102,13 +120,26 @@ describe('integration', function () {
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
 
-    testScenariosConfig.push({
-      functionConfig: {
-        handlerModuleName,
-        basename: functionBasename,
-      },
-      testConfig,
-    });
+    if (testConfig.cases) {
+      const commonTestConfig = testConfig.testConfig;
+      for (const [name, caseTestConfig] of testConfig.cases) {
+        testScenariosConfig.push({
+          functionConfig: {
+            handlerModuleName,
+            basename: `${functionBasename}-${name}`,
+          },
+          testConfig: _.merge({}, commonTestConfig, caseTestConfig),
+        });
+      }
+    } else {
+      testScenariosConfig.push({
+        functionConfig: {
+          handlerModuleName,
+          basename: functionBasename,
+        },
+        testConfig,
+      });
+    }
   }
 
   before(async () => {
