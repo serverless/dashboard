@@ -10,6 +10,10 @@ app.get('/', (req, res) => {
   return res.status(200).json({ message: 'Hello from root!' });
 });
 
+app.get('/foo', (req, res) => {
+  return res.status(200).json({ message: 'Hello from /foo!' });
+});
+
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
 module.exports.handler = serverless(app);
