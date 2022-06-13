@@ -112,15 +112,29 @@ const retrieveReports = async (fnConfig) => {
     const events = await retrieveReportEvents();
     reports = [];
     let currentInvocationReports = [];
+    let startedMessage;
     for (const { message } of events) {
       if (message.startsWith('⚡')) {
         const reportType = message.slice(2, message.indexOf(':'));
         if (reportType === 'logs') continue;
-        currentInvocationReports.push([
-          reportType,
-          JSON.parse(message.slice(message.indexOf(':') + 1).trim()),
-        ]);
+        const reportJsonString = message.slice(message.indexOf(':') + 1);
+        if (reportJsonString.endsWith('\n')) {
+          currentInvocationReports.push([reportType, JSON.parse(reportJsonString.trim())]);
+        } else {
+          startedMessage = { type: reportType, report: reportJsonString };
+        }
         continue;
+      }
+      if (startedMessage) {
+        startedMessage.report += message;
+        if (startedMessage.report.endsWith('\n')) {
+          currentInvocationReports.push([
+            startedMessage.type,
+            JSON.parse(startedMessage.report.trim()),
+          ]);
+          startedMessage = null;
+          continue;
+        }
       }
       if (message.startsWith('REPORT RequestId: ')) {
         reports.push(currentInvocationReports);
