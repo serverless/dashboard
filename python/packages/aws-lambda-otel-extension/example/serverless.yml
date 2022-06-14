@@ -1,6 +1,6 @@
 # Output payloads can be seen at https://webhook.site/#!/7e7e19a5-e875-462d-b5b8-6c46df0d2a98
 
-service: aws-lambda-otel-extension-python-example
+service: serverless-console-python-example
 
 frameworkVersion: "3"
 
@@ -8,7 +8,8 @@ provider:
   name: aws
   runtime: python3.9
   layers:
-    - !Ref PythonExtensionLambdaLayer
+    - !Ref InternalPythonExtensionLambdaLayer
+    - !Ref ExternalAgnosticExtensionLambdaLayer
   environment:
     AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-extension-internal-python/exec-wrapper.sh
     SLS_OTEL_SERVER_URL: http://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951
@@ -57,9 +58,9 @@ plugins:
   - serverless-python-requirements
 
 layers:
-  pythonExtension:
-    path: ../assets/internal
+  externalAgnosticExtension:
     package:
-      patterns:
-        - '!**''
-        - 'otel-extension-internal-python/**'
+      artifact: ../../../../node/packages/aws-lambda-otel-extension/dist/extension-external.zip
+  internalPythonExtension:
+    package:
+      artifact: ../dist/extension.zip
