@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.2](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.1...@serverless/aws-lambda-otel-extension@0.4.2) (2022-06-14)
+
+### Bug Fixes
+
+- Updated timeout error message ([f67571e](https://github.com/serverless/runtime/commit/f67571ef5df790af2ae49f7a312eb96b38285cb0))
+
 ### [0.4.1](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.0...@serverless/aws-lambda-otel-extension@0.4.1) (2022-06-13)
 
 ### Bug Fixes
