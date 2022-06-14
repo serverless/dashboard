@@ -201,7 +201,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     functionData.errorExceptionType = 'TimeoutError';
     functionData.errorExceptionMessage = '';
     functionData.errorExceptionStacktrace =
-      'Function execution is going to exceeded configured timeout limit.';
+      'Function execution exceeded the configured timeout limit.';
   } else if (err) {
     functionData.error = true;
     functionData.errorCulprit = err.message;
