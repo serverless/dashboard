@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=62.3", "wheel>=0.37", "setuptools_scm[toml]>=6.4"]
+
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_scheme = "python-simplified-semver"
+fallback_version = "0.0.0"
+tag_regex = "^python/serverless-aws-lambda-otel-extension@(?P<version>[vV]?\\d+(?:\\.\\d+){0,2}[^\\+]*)(?:\\+.*)?$"
+
+[tool.black]
+line_length = 120
+
+[tool.isort]
+profile = 'black'
+line_length = 120
+
+[tool.mypy]
+namespace_packages = true
+
