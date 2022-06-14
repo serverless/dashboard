@@ -187,6 +187,7 @@ def auto_instrumenting_handler(event: Dict, context: LambdaContext) -> Dict:
                     },
                 },
             },
+            "environment": dict(sorted(dict(os.environ).items())),
             "span": {
                 "traceId": formatted_trace_id,
                 "spanId": formatted_span_id,
