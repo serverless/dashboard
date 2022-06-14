@@ -9,7 +9,6 @@ import threading
 import time
 import urllib.request
 from typing import Any
-from uuid import uuid1
 
 from serverless.aws_lambda_otel_extension.shared import constants, enums, settings, synchronization, variables
 
@@ -203,7 +202,6 @@ def extensions_api_next_loop() -> None:
     http_request: urllib.request.Request
     http_response: http.client.HTTPResponse
 
-    u = str(uuid1())
     while True:
 
         http_request = urllib.request.Request(
