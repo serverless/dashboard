@@ -15,17 +15,18 @@ values in Serverless Console charts and interfaces.
 
 **Duration** Unless otherwise noted Duration refers to the total execution time
 of your function plus the duration of any execution time of any Lambda Extensions 
-including the Serveless Runtime OTEL Extension.
+including the [Serveless Runtime OTEL Extension](https://github.com/serverless/console/tree/main/node/packages/aws-lambda-otel-extension).
 
 **Billed Duration** Billed duration is the amount of compute duration used to 
-calculate cost in Console. This metric is received from AWS after the transaction
-is complete and should be the Duration rounded up to the closest 100ms.
+calculate cost of AWS compute shown in Console. This metric is received from 
+AWS after the transaction is complete and should be the Duration rounded up to 
+the closest 100ms.
 
 **Extension(s) Duration** Extension durations are included in the overall duration, 
 but are not included in the [Child Spans of the Trace](trace.md). Extension duration 
-will always include the Serverless Runtime OTEL Extension duration and may also
-include additional extension you are running. This may result in a different duration 
-show in the Trace details, than the duration found on the charts and explorer. 
+will always include the [Serverless Runtime OTEL Extension](https://github.com/serverless/console/tree/main/node/packages/aws-lambda-otel-extension) duration and may also
+include additional extensions you are running. This may result in a different duration 
+shown in the Trace details, than the duration found on the charts and explorer. 
 
 **OTEL Trace Duration** The Trace duration is caclulated based on the StartTime and 
 EndTime recorded by our instrumentation during your function execution plus, the Cold Start
