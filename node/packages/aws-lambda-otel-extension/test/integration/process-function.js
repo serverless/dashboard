@@ -12,6 +12,14 @@ const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
+const reportPattern = new RegExp(
+  'Duration:\\s*(?<duration>[\\d.]+)\\s*ms\\s+' +
+    'Billed Duration:\\s*(?<billedDuration>[\\d]+)\\s*ms\\s+' +
+    'Memory Size:\\s*(?<memorySize>[\\d]+)\\s*MB\\s+' +
+    'Max Memory Used:\\s*(?<maxMemoryUsed>[\\d]+)\\s*MB\\s*' +
+    '(?:Init Duration:\\s*(?<initDuration>[\\d.]+)\\s*ms)?'
+);
+
 const create = async (testConfig, coreConfig) => {
   const { configuration } = testConfig;
   try {
@@ -122,18 +130,29 @@ const retrieveReports = async (testConfig) => {
   };
 
   let invocationsData;
+  let processesData;
   do {
     const events = await retrieveReportEvents();
+    processesData = [];
     invocationsData = [];
-    let currentInvocationReports = [];
+    let currentInvocationData;
+    let currentProcessData;
     let startedMessage;
     for (const { message } of events) {
+      if (message.startsWith('Extension overhead duration: external initialization')) {
+        processesData.push((currentProcessData = {}));
+        continue;
+      }
+      if (message.startsWith('START RequestId: ')) {
+        currentInvocationData = { reports: [] };
+        continue;
+      }
       if (message.startsWith('⚡')) {
         const reportType = message.slice(2, message.indexOf(':'));
         if (reportType === 'logs') continue;
         const reportJsonString = message.slice(message.indexOf(':') + 1);
         if (reportJsonString.endsWith('\n')) {
-          currentInvocationReports.push([reportType, JSON.parse(reportJsonString.trim())]);
+          currentInvocationData.reports.push([reportType, JSON.parse(reportJsonString.trim())]);
         } else {
           startedMessage = { type: reportType, report: reportJsonString };
         }
@@ -142,7 +161,7 @@ const retrieveReports = async (testConfig) => {
       if (startedMessage) {
         startedMessage.report += message;
         if (startedMessage.report.endsWith('\n')) {
-          currentInvocationReports.push([
+          currentInvocationData.report.push([
             startedMessage.type,
             JSON.parse(startedMessage.report.trim()),
           ]);
@@ -151,14 +170,23 @@ const retrieveReports = async (testConfig) => {
         }
       }
       if (message.startsWith('REPORT RequestId: ')) {
-        invocationsData.push({ reports: currentInvocationReports });
-        currentInvocationReports = [];
+        const reportMatch = message.match(reportPattern);
+        if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);
+        const reportData = reportMatch.groups;
+        currentInvocationData.billedDuration = Number(reportData.billedDuration);
+        currentInvocationData.duration = Number(reportData.duration);
+        currentInvocationData.maxMemoryUsed = Number(reportData.maxMemoryUsed);
+        if (reportData.initDuration) {
+          currentProcessData.initDuration = Number(reportData.initDuration);
+        }
+        invocationsData.push(currentInvocationData);
       }
     }
   } while (invocationsData.length < 2);
 
-  log.info('Obtained reports %s %o', testConfig.name, invocationsData);
-  return { invocationsData };
+  const result = { processesData, invocationsData };
+  log.info('Obtained reports %s %o', testConfig.name, result);
+  return result;
 };
 
 module.exports = async (testConfig, coreConfig) => {
