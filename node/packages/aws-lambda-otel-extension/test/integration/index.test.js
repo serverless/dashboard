@@ -2,14 +2,13 @@
 
 const { expect } = require('chai');
 
-const path = require('path');
-const _ = require('lodash');
 const log = require('log').get('test');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const basename = require('./basename');
 const cleanup = require('./cleanup');
 const createCoreResources = require('./create-core-resources');
 const processFunction = require('./process-function');
+const resolveTestScenariosConfig = require('./resolve-test-scenarios-config');
 
 describe('integration', function () {
   this.timeout(120000);
@@ -119,34 +118,7 @@ describe('integration', function () {
     ],
   ]);
 
-  const testScenariosConfig = [];
-
-  for (const [handlerModuleName, testConfig] of functionsConfig) {
-    const functionBasename = handlerModuleName.includes('/')
-      ? path.dirname(handlerModuleName)
-      : handlerModuleName;
-
-    if (testConfig.cases) {
-      const commonTestConfig = testConfig.testConfig;
-      for (const [name, caseTestConfig] of testConfig.cases) {
-        testScenariosConfig.push({
-          functionConfig: {
-            handlerModuleName,
-            basename: `${functionBasename}-${name}`,
-          },
-          testConfig: _.merge({}, commonTestConfig, caseTestConfig),
-        });
-      }
-    } else {
-      testScenariosConfig.push({
-        functionConfig: {
-          handlerModuleName,
-          basename: functionBasename,
-        },
-        testConfig,
-      });
-    }
-  }
+  const testScenariosConfig = resolveTestScenariosConfig(functionsConfig);
 
   before(async () => {
     await createCoreResources(coreConfig);
