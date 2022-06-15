@@ -172,7 +172,7 @@ def auto_instrumenting_handler(event: Dict, context: LambdaContext) -> Dict:
             "eventCustomDomain": None,
             "eventCustomRequestId": aws_request_id,
             "eventCustomRequestTimeEpoch": None,
-            "eventCustomXTraceId": environment._X_AMZN_TRACE_ID,
+            "eventCustomXTraceId": os.getenv(constants._X_AMZN_TRACE_ID_ENV_VAR),
             "eventType": event_type.value,
             "functionName": invoked_function_name,
         }
@@ -255,6 +255,13 @@ def auto_instrumenting_handler(event: Dict, context: LambdaContext) -> Dict:
                 },
                 "instrumentedSpans": instrumentedSpans,
             },
+        },
+        "responseEventPayload": {
+            "traceId": formatted_trace_id,
+            "spanId": formatted_span_id,
+            "responseData": actual_response,
+            "errorData": None,
+            "executionId": faas_execution_id,
         },
     }
 

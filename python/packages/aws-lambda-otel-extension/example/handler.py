@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import sys
 import time
 
@@ -29,7 +28,6 @@ def hello(event, context):
 
     body = {
         "message": "Go Serverless v3.0! Your function executed successfully!",
-        "environ": dict(os.environ),
         "input": event,
     }
 
