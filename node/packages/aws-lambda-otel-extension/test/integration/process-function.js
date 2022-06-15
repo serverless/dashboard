@@ -56,6 +56,7 @@ const create = async (testConfig, coreConfig) => {
 };
 
 const ensureIsActive = async (testConfig) => {
+  await wait(100);
   const {
     Configuration: { State: state },
   } = await awsRequest(Lambda, 'getFunction', {
