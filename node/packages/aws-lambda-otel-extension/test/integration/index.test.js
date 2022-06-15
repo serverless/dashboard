@@ -4,11 +4,10 @@ const { expect } = require('chai');
 
 const log = require('log').get('test');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
-const basename = require('./basename');
 const cleanup = require('./cleanup');
 const createCoreResources = require('./create-core-resources');
 const processFunction = require('./process-function');
-const resolveTestScenariosConfig = require('./resolve-test-scenarios-config');
+const resolveTestScenarios = require('./resolve-test-scenarios');
 
 describe('integration', function () {
   this.timeout(120000);
@@ -111,16 +110,12 @@ describe('integration', function () {
     ['success-callback-error', { expectedOutcome: 'error:handled' }],
   ]);
 
-  const testScenariosConfig = resolveTestScenariosConfig(functionsConfig);
+  const testScenarios = resolveTestScenarios(functionsConfig);
 
   before(async () => {
     await createCoreResources(coreConfig);
-    for (const testScenarioConfig of testScenariosConfig) {
-      testScenarioConfig.deferredResult = processFunction(
-        testScenarioConfig.functionConfig,
-        testScenarioConfig.testConfig,
-        coreConfig
-      ).catch((error) => ({
+    for (const testConfig of testScenarios) {
+      testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to
         // reject will generate unhandled rejection.
         // Therefore this scenario is converted to successuful { error } resolution
@@ -129,17 +124,13 @@ describe('integration', function () {
     }
   });
 
-  for (const testScenarioConfig of testScenariosConfig) {
-    const {
-      functionConfig: { basename: functionBasename },
-      testConfig: { expectedOutcome, test },
-    } = testScenarioConfig;
-
-    it(functionBasename, async () => {
-      const testResult = await testScenarioConfig.deferredResult;
+  for (const testConfig of testScenarios) {
+    it(testConfig.name, async () => {
+      const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
+      const { expectedOutcome } = testConfig;
       const { reports } = testResult;
-      if (!expectedOutcome || expectedOutcome !== 'error:unhandled') {
+      if (expectedOutcome !== 'error:unhandled') {
         // Current timeout handling is unreliable, therefore do not attempt to confirm
         // on all reports
 
@@ -162,25 +153,25 @@ describe('integration', function () {
       const resourceMetrics = normalizeOtelAttributes(
         metricsReport.resourceMetrics[0].resource.attributes
       );
-      expect(resourceMetrics['faas.name']).to.equal(`${basename}-${functionBasename}`);
+      expect(resourceMetrics['faas.name']).to.equal(testConfig.configuration.FunctionName);
       const resourceSpans = normalizeOtelAttributes(
         tracesReport.resourceSpans[0].resource.attributes
       );
-      expect(resourceSpans['faas.name']).to.equal(`${basename}-${functionBasename}`);
+      expect(resourceSpans['faas.name']).to.equal(testConfig.configuration.FunctionName);
 
       const instrumentationSpans = {};
       for (const {
-        instrumentationLibrary: { name },
+        instrumentationLibrary: { name: instrumentationLibraryName },
         spans,
       } of tracesReport.resourceSpans[0].instrumentationLibrarySpans) {
-        instrumentationSpans[name] = spans.map((span) => ({
+        instrumentationSpans[instrumentationLibraryName] = spans.map((span) => ({
           ...span,
           attributes: normalizeOtelAttributes(span.attributes),
         }));
       }
       log.debug('instrumentationSpans %o', instrumentationSpans);
-      if (test) {
-        test({
+      if (testConfig.test) {
+        testConfig.test({
           metricsReport,
           tracesReport,
           resourceMetrics,
