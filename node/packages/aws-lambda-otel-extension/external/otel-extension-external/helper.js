@@ -174,13 +174,13 @@ const measureAttributes = [
     type: 'stringValue',
   },
   {
-    key: 'faas.error_exception_stacktrace',
-    source: 'errorExceptionMessage',
+    key: 'faas.error_stacktrace',
+    source: 'errorStacktrace',
     type: 'stringValue',
   },
   {
-    key: 'faas.error_exception_message',
-    source: 'errorExceptionStacktrace',
+    key: 'faas.error_message',
+    source: 'errorMessage',
     type: 'stringValue',
   },
   {
@@ -229,8 +229,8 @@ const measureAttributes = [
     type: 'stringValue',
   },
   {
-    key: 'faas.error_exception_type',
-    source: 'errorExceptionType',
+    key: 'faas.error_type',
+    source: 'errorType',
     type: 'stringValue',
   },
 ];
