@@ -96,13 +96,12 @@ describe('integration', function () {
     [
       'error-timeout',
       {
-        invokeOptions: { expectedOutcome: 'error:unhandled' },
         // On timeout re-initialization of external extension gets slow, and we observe that second
         // invocation times out before actually lambda is initialized.
         // This is either because currently our external extension is Node.js based,
         // so has slow startup time, or it can be performance issue on AWS side.
         // To ensure reliable result increase timeout, so we get second invocation correct
-        functionOptions: { configuration: { Timeout: 7 } },
+        functionOptions: { configuration: { Timeout: 7 }, expectedOutcome: 'error:unhandled' },
         test: ({ instrumentationSpans }) => {
           const { attributes } =
             instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
@@ -113,7 +112,7 @@ describe('integration', function () {
     [
       'success-callback-error',
       {
-        invokeOptions: { expectedOutcome: 'error:handled' },
+        functionOptions: { expectedOutcome: 'error:handled' },
       },
     ],
   ]);
@@ -139,14 +138,17 @@ describe('integration', function () {
   for (const testScenarioConfig of testScenariosConfig) {
     const {
       functionConfig: { basename: functionBasename },
-      testConfig: { invokeOptions = {}, test },
+      testConfig: { functionOptions = {}, test },
     } = testScenarioConfig;
 
     it(functionBasename, async () => {
       const testResult = await testScenarioConfig.deferredResult;
       if (testResult.error) throw testResult.error;
       const { reports } = testResult;
-      if (!invokeOptions.expectedOutcome || invokeOptions.expectedOutcome !== 'error:unhandled') {
+      if (
+        !functionOptions.expectedOutcome ||
+        functionOptions.expectedOutcome !== 'error:unhandled'
+      ) {
         // Current timeout handling is unreliable, therefore do not attempt to confirm
         // on all reports
 
