@@ -198,16 +198,13 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   if (isTimeout) {
     functionData.error = true;
     functionData.errorCulprit = 'timeout';
-    functionData.errorExceptionType = 'TimeoutError';
-    functionData.errorExceptionMessage = '';
-    functionData.errorExceptionStacktrace =
-      'Function execution exceeded the configured timeout limit.';
+    functionData.errorType = 'TimeoutError';
   } else if (err) {
     functionData.error = true;
     functionData.errorCulprit = err.message;
-    functionData.errorExceptionType = typeof err;
-    functionData.errorExceptionMessage = err.message;
-    functionData.errorExceptionStacktrace = err.stack;
+    functionData.errorType = typeof err;
+    functionData.errorMessage = err.message;
+    functionData.errorStacktrace = err.stack;
   } else if (
     pathData['http.status_code'] >= 500 &&
     ['aws.apigateway.http', 'aws.apigatewayv2.http'].includes(functionData.eventType)
@@ -215,9 +212,9 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     // This happens if we get a 500 status code set explicity within in the app
     functionData.error = true;
     functionData.errorCulprit = 'internal server error';
-    functionData.errorExceptionType = typeof new Error();
-    functionData.errorExceptionMessage = 'internal server error';
-    functionData.errorExceptionStacktrace = 'internal server error';
+    functionData.errorType = typeof new Error();
+    functionData.errorMessage = 'internal server error';
+    functionData.errorStacktrace = 'internal server error';
   }
 
   const grouped = spans.reduce((obj, val) => {

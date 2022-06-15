@@ -37,7 +37,7 @@ error `TRUE`
 with `aws.sqs`
 - `faas.name` - This the name of the single function that was invoked. 
 `console-node-http-api-hello`
-- `faas.error_exception_message` The error message if one is captured.
+- `faas.error_message` The error message if one is captured.
 `Exception occured`
 
 **HTTP Tags** - HTTP tags identify details for HTTP based API's
