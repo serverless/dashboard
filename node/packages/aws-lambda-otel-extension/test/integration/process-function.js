@@ -63,7 +63,7 @@ const ensureIsActive = async (functionConfig) => {
 };
 
 const invoke = async (functionConfig, testConfig) => {
-  const { invokeOptions = {} } = testConfig;
+  const { invokeOptions = {}, functionOptions = {} } = testConfig;
 
   const payload = invokeOptions.payload || {};
   log.debug('invoke request payload %O', payload);
@@ -89,7 +89,7 @@ const invoke = async (functionConfig, testConfig) => {
     /* ignore */
   }
   if (result.FunctionError) {
-    if (invokeOptions.expectedOutcome && invokeOptions.expectedOutcome.startsWith('error')) {
+    if (functionOptions.expectedOutcome && functionOptions.expectedOutcome.startsWith('error')) {
       return;
     }
     throw new Error(`Invocation errored: ${result.FunctionError}`);
