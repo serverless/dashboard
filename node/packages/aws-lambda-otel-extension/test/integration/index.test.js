@@ -129,7 +129,7 @@ describe('integration', function () {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
       const { expectedOutcome } = testConfig;
-      const { reports } = testResult;
+      const { invocationsData } = testResult;
       if (expectedOutcome !== 'error:unhandled') {
         // Current timeout handling is unreliable, therefore do not attempt to confirm
         // on all reports
@@ -138,13 +138,13 @@ describe('integration', function () {
         // there were observed cases when it wasn't the case,
         // e.g. telemetryData (response) was received before eventData (request)
         expect(
-          reports.map((invocationReports) => invocationReports.map(([type]) => type).sort())
+          invocationsData.map(({ reports }) => reports.map(([type]) => type).sort())
         ).to.deep.equal([
           ['request', 'response', 'metrics', 'traces'].sort(),
           ['metrics', 'request', 'response', 'metrics', 'traces'].sort(),
         ]);
       }
-      const allInvocationReports = reports.flat();
+      const allInvocationReports = invocationsData.map(({ reports }) => reports).flat();
       const metricsReport = allInvocationReports.find(
         ([reportType]) => reportType === 'metrics'
       )[1];
