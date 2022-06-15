@@ -107,7 +107,7 @@ describe('integration', function () {
         test: ({ instrumentationSpans }) => {
           const { attributes } =
             instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
-          expect(attributes['faas.error_type']).to.equal('TimeoutError');
+          expect(attributes['faas.error_type']).to.equal('timeout');
         },
       },
     ],
