@@ -13,13 +13,13 @@ const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 const create = async (functionConfig, coreConfig, testConfig) => {
-  const { functionOptions = {} } = testConfig;
+  const { configuration } = testConfig;
   try {
     await awsRequest(Lambda, 'createFunction', {
       Handler: `${functionConfig.handlerModuleName}.handler`,
       Role: coreConfig.roleArn,
       Runtime: 'nodejs14.x',
-      ...functionOptions.configuration,
+      ...configuration,
       Code: {
         ZipFile: functionConfig.codeZipBuffer,
       },
@@ -63,9 +63,9 @@ const ensureIsActive = async (functionConfig) => {
 };
 
 const invoke = async (functionConfig, testConfig) => {
-  const { functionOptions = {} } = testConfig;
+  const { expectedOutcome, invokePayload } = testConfig;
 
-  const payload = testConfig.invokePayload || {};
+  const payload = invokePayload || {};
   log.debug('invoke request payload %O', payload);
   let result;
   try {
@@ -89,9 +89,7 @@ const invoke = async (functionConfig, testConfig) => {
     /* ignore */
   }
   if (result.FunctionError) {
-    if (functionOptions.expectedOutcome && functionOptions.expectedOutcome.startsWith('error')) {
-      return;
-    }
+    if (expectedOutcome && expectedOutcome.startsWith('error')) return;
     throw new Error(`Invocation errored: ${result.FunctionError}`);
   }
 };

@@ -19,9 +19,9 @@ describe('integration', function () {
       'success-callback',
       {
         cases: new Map([
-          ['v12', { functionOptions: { configuration: { Runtime: 'nodejs12.x' } } }],
-          ['v14', { functionOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
-          ['v16', { functionOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
       },
     ],
@@ -30,8 +30,8 @@ describe('integration', function () {
       'success-callback-esm/index',
       {
         cases: new Map([
-          ['v14', { functionOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
-          ['v16', { functionOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
       },
     ],
@@ -99,7 +99,8 @@ describe('integration', function () {
         // This is either because currently our external extension is Node.js based,
         // so has slow startup time, or it can be performance issue on AWS side.
         // To ensure reliable result increase timeout, so we get second invocation correct
-        functionOptions: { configuration: { Timeout: 7 }, expectedOutcome: 'error:unhandled' },
+        configuration: { Timeout: 7 },
+        expectedOutcome: 'error:unhandled',
         test: ({ instrumentationSpans }) => {
           const { attributes } =
             instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
@@ -107,12 +108,7 @@ describe('integration', function () {
         },
       },
     ],
-    [
-      'success-callback-error',
-      {
-        functionOptions: { expectedOutcome: 'error:handled' },
-      },
-    ],
+    ['success-callback-error', { expectedOutcome: 'error:handled' }],
   ]);
 
   const testScenariosConfig = resolveTestScenariosConfig(functionsConfig);
@@ -136,17 +132,14 @@ describe('integration', function () {
   for (const testScenarioConfig of testScenariosConfig) {
     const {
       functionConfig: { basename: functionBasename },
-      testConfig: { functionOptions = {}, test },
+      testConfig: { expectedOutcome, test },
     } = testScenarioConfig;
 
     it(functionBasename, async () => {
       const testResult = await testScenarioConfig.deferredResult;
       if (testResult.error) throw testResult.error;
       const { reports } = testResult;
-      if (
-        !functionOptions.expectedOutcome ||
-        functionOptions.expectedOutcome !== 'error:unhandled'
-      ) {
+      if (!expectedOutcome || expectedOutcome !== 'error:unhandled') {
         // Current timeout handling is unreliable, therefore do not attempt to confirm
         // on all reports
 
