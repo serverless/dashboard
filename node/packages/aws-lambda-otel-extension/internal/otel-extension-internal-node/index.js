@@ -202,7 +202,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   } else if (err) {
     functionData.error = true;
     functionData.errorCulprit = err.message;
-    functionData.errorType = typeof err;
+    functionData.errorType = 'unhandled';
     functionData.errorMessage = err.message;
     functionData.errorStacktrace = err.stack;
   } else if (
@@ -212,7 +212,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     // This happens if we get a 500 status code set explicity within in the app
     functionData.error = true;
     functionData.errorCulprit = 'internal server error';
-    functionData.errorType = typeof new Error();
+    functionData.errorType = 'handled';
     functionData.errorMessage = 'internal server error';
     functionData.errorStacktrace = 'internal server error';
   }
