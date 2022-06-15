@@ -120,10 +120,11 @@ const retrieveReports = async (testConfig) => {
     }
   };
 
-  let reports;
+  let invocationsData;
   do {
+    await wait(1000);
     const events = await retrieveReportEvents();
-    reports = [];
+    invocationsData = [];
     let currentInvocationReports = [];
     let startedMessage;
     for (const { message } of events) {
@@ -150,14 +151,14 @@ const retrieveReports = async (testConfig) => {
         }
       }
       if (message.startsWith('REPORT RequestId: ')) {
-        reports.push(currentInvocationReports);
+        invocationsData.push({ reports: currentInvocationReports });
         currentInvocationReports = [];
       }
     }
-  } while (reports.length < 2);
+  } while (invocationsData.length < 2);
 
-  log.info('Obtained reports %s %o', testConfig.name, reports);
-  return reports;
+  log.info('Obtained reports %s %o', testConfig.name, invocationsData);
+  return { invocationsData };
 };
 
 module.exports = async (testConfig, coreConfig) => {
@@ -182,5 +183,5 @@ module.exports = async (testConfig, coreConfig) => {
   await deleteFunction(testConfig);
 
   log.info('Retrieve list of written reports %s', testConfig.name);
-  return { reports: await retrieveReports(testConfig) };
+  return retrieveReports(testConfig);
 };
