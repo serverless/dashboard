@@ -12,18 +12,15 @@ const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
-const create = async (functionConfig, coreConfig, testConfig) => {
+const create = async (testConfig, coreConfig) => {
   const { configuration } = testConfig;
   try {
     await awsRequest(Lambda, 'createFunction', {
-      Handler: `${functionConfig.handlerModuleName}.handler`,
       Role: coreConfig.roleArn,
       Runtime: 'nodejs14.x',
-      ...configuration,
       Code: {
-        ZipFile: functionConfig.codeZipBuffer,
+        ZipFile: await resolveDirZipBuffer(fixturesDirname),
       },
-      FunctionName: functionConfig.name,
       Layers: [coreConfig.layerArn],
       Environment: {
         Variables: {
@@ -35,6 +32,7 @@ const create = async (functionConfig, coreConfig, testConfig) => {
           }),
         },
       },
+      ...configuration,
     });
   } catch (error) {
     if (
@@ -42,41 +40,44 @@ const create = async (functionConfig, coreConfig, testConfig) => {
       error.message.includes('because the KMS key is invalid for CreateGrant')
     ) {
       // Occassional race condition issue on AWS side, retry
-      await create(functionConfig, coreConfig, testConfig);
+      await create(testConfig, coreConfig);
       return;
     }
     if (error.message.includes('Function already exist')) {
-      log.notice('Function %s already exists, deleting and re-creating', functionConfig.basename);
-      await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionConfig.name });
-      await create(functionConfig, coreConfig, testConfig);
+      log.notice('Function %s already exists, deleting and re-creating', testConfig.name);
+      await awsRequest(Lambda, 'deleteFunction', {
+        FunctionName: testConfig.configuration.FunctionName,
+      });
+      await create(testConfig, coreConfig);
       return;
     }
     throw error;
   }
 };
 
-const ensureIsActive = async (functionConfig) => {
+const ensureIsActive = async (testConfig) => {
   const {
     Configuration: { State: state },
-  } = await awsRequest(Lambda, 'getFunction', { FunctionName: functionConfig.name });
-  if (state !== 'Active') await ensureIsActive(functionConfig);
+  } = await awsRequest(Lambda, 'getFunction', {
+    FunctionName: testConfig.configuration.FunctionName,
+  });
+  if (state !== 'Active') await ensureIsActive(testConfig);
 };
 
-const invoke = async (functionConfig, testConfig) => {
+const invoke = async (testConfig) => {
   const { expectedOutcome, invokePayload } = testConfig;
 
-  const payload = invokePayload || {};
-  log.debug('invoke request payload %O', payload);
+  log.debug('invoke request payload %O', invokePayload);
   let result;
   try {
     result = await awsRequest(Lambda, 'invoke', {
-      FunctionName: functionConfig.name,
-      Payload: Buffer.from(JSON.stringify(payload), 'utf8'),
+      FunctionName: testConfig.configuration.FunctionName,
+      Payload: Buffer.from(JSON.stringify(invokePayload), 'utf8'),
     });
   } catch (error) {
     if (error.message.includes('The role defined for the function cannot be assumed by Lambda')) {
       // Occassional race condition issue on AWS side, retry
-      await invoke(functionConfig, testConfig);
+      await invoke(testConfig);
       return;
     }
     throw error;
@@ -89,27 +90,29 @@ const invoke = async (functionConfig, testConfig) => {
     /* ignore */
   }
   if (result.FunctionError) {
-    if (expectedOutcome && expectedOutcome.startsWith('error')) return;
+    if (expectedOutcome.startsWith('error')) return;
     throw new Error(`Invocation errored: ${result.FunctionError}`);
   }
 };
 
-const deleteFunction = async (functionConfig) => {
-  await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionConfig.name });
+const deleteFunction = async (testConfig) => {
+  await awsRequest(Lambda, 'deleteFunction', {
+    FunctionName: testConfig.configuration.FunctionName,
+  });
 };
 
-const retrieveReports = async (functionConfig) => {
+const retrieveReports = async (testConfig) => {
   const retrieveReportEvents = async () => {
     try {
       return (
         await awsRequest(CloudWatchLogs, 'filterLogEvents', {
-          startTime: functionConfig.invokeStartTime,
-          logGroupName: `/aws/lambda/${functionConfig.name}`,
+          startTime: testConfig.invokeStartTime,
+          logGroupName: `/aws/lambda/${testConfig.configuration.FunctionName}`,
         })
       ).events;
     } catch (error) {
       if (error.name === 'ResourceNotFoundException') {
-        log.info('log group not ready, wait and retry %s', functionConfig.basename);
+        log.info('log group not ready, wait and retry %s', testConfig.name);
         await wait(1000);
         return retrieveReportEvents();
       }
@@ -153,32 +156,31 @@ const retrieveReports = async (functionConfig) => {
     }
   } while (reports.length < 2);
 
-  log.info('Obtained reports %s %o', functionConfig.basename, reports);
+  log.info('Obtained reports %s %o', testConfig.name, reports);
   return reports;
 };
 
-module.exports = async (functionConfig, testConfig, coreConfig) => {
+module.exports = async (testConfig, coreConfig) => {
   ensureNpmDependencies('test/fixtures/lambdas');
-  functionConfig.codeZipBuffer = await resolveDirZipBuffer(fixturesDirname);
-  functionConfig.name = `${basename}-${functionConfig.basename}`;
+  testConfig.configuration.FunctionName = `${basename}-${testConfig.name}`;
 
-  log.info('Create function %s', functionConfig.basename);
-  await create(functionConfig, coreConfig, testConfig);
+  log.info('Create function %s', testConfig.name);
+  await create(testConfig, coreConfig);
 
-  log.info('Ensure function is active %s', functionConfig.basename);
-  await ensureIsActive(functionConfig);
+  log.info('Ensure function is active %s', testConfig.name);
+  await ensureIsActive(testConfig);
 
   // Provide extra time room, in case local clock is not perfectly in sync
-  functionConfig.invokeStartTime = Date.now() - 5000;
-  log.info('Invoke function #1 %s', functionConfig.basename);
-  await invoke(functionConfig, testConfig);
+  testConfig.invokeStartTime = Date.now() - 5000;
+  log.info('Invoke function #1 %s', testConfig.name);
+  await invoke(testConfig);
 
-  log.info('Invoke function #2 %s', functionConfig.basename);
-  await invoke(functionConfig, testConfig);
+  log.info('Invoke function #2 %s', testConfig.name);
+  await invoke(testConfig);
 
-  log.info('Delete function %s', functionConfig.basename);
-  await deleteFunction(functionConfig);
+  log.info('Delete function %s', testConfig.name);
+  await deleteFunction(testConfig);
 
-  log.info('Retrieve list of written reports %s', functionConfig.basename);
-  return { reports: await retrieveReports(functionConfig) };
+  log.info('Retrieve list of written reports %s', testConfig.name);
+  return { reports: await retrieveReports(testConfig) };
 };
