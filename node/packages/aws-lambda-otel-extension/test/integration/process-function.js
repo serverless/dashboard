@@ -89,7 +89,9 @@ const invoke = async (functionConfig, testConfig) => {
     /* ignore */
   }
   if (result.FunctionError) {
-    if (invokeOptions.isFailure) return;
+    if (invokeOptions.expectedOutcome && invokeOptions.expectedOutcome.startsWith('error')) {
+      return;
+    }
     throw new Error(`Invocation errored: ${result.FunctionError}`);
   }
 };
