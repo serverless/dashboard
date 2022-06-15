@@ -104,6 +104,7 @@ const deleteFunction = async (testConfig) => {
 
 const retrieveReports = async (testConfig) => {
   const retrieveReportEvents = async () => {
+    await wait(1000);
     try {
       return (
         await awsRequest(CloudWatchLogs, 'filterLogEvents', {
@@ -114,7 +115,6 @@ const retrieveReports = async (testConfig) => {
     } catch (error) {
       if (error.name === 'ResourceNotFoundException') {
         log.info('log group not ready, wait and retry %s', testConfig.name);
-        await wait(1000);
         return retrieveReportEvents();
       }
       throw error;
@@ -123,7 +123,6 @@ const retrieveReports = async (testConfig) => {
 
   let invocationsData;
   do {
-    await wait(1000);
     const events = await retrieveReportEvents();
     invocationsData = [];
     let currentInvocationReports = [];
