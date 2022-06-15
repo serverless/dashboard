@@ -202,7 +202,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   } else if (err) {
     functionData.error = true;
     functionData.errorCulprit = err.message;
-    functionData.errorType = 'unhandled';
+    functionData.errorType = 'handled';
     functionData.errorMessage = err.message;
     functionData.errorStacktrace = err.stack;
   } else if (
