@@ -170,7 +170,8 @@ module.exports = async (functionConfig, testConfig, coreConfig) => {
   log.info('Ensure function is active %s', functionConfig.basename);
   await ensureIsActive(functionConfig);
 
-  functionConfig.invokeStartTime = Date.now();
+  // Provide extra time room, in case local clock is not perfectly in sync
+  functionConfig.invokeStartTime = Date.now() - 5000;
   log.info('Invoke function #1 %s', functionConfig.basename);
   await invoke(functionConfig, testConfig);
 
