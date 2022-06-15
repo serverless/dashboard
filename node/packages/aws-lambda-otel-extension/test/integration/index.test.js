@@ -19,9 +19,9 @@ describe('integration', function () {
       'success-callback',
       {
         cases: new Map([
-          ['v12', { createOptions: { configuration: { Runtime: 'nodejs12.x' } } }],
-          ['v14', { createOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
-          ['v16', { createOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v12', { functionOptions: { configuration: { Runtime: 'nodejs12.x' } } }],
+          ['v14', { functionOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { functionOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
         ]),
       },
     ],
@@ -30,8 +30,8 @@ describe('integration', function () {
       'success-callback-esm/index',
       {
         cases: new Map([
-          ['v14', { createOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
-          ['v16', { createOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v14', { functionOptions: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { functionOptions: { configuration: { Runtime: 'nodejs16.x' } } }],
         ]),
       },
     ],
@@ -102,7 +102,7 @@ describe('integration', function () {
         // This is either because currently our external extension is Node.js based,
         // so has slow startup time, or it can be performance issue on AWS side.
         // To ensure reliable result increase timeout, so we get second invocation correct
-        createOptions: { configuration: { Timeout: 7 } },
+        functionOptions: { configuration: { Timeout: 7 } },
         test: ({ instrumentationSpans }) => {
           const { attributes } =
             instrumentationSpans['@opentelemetry/instrumentation-aws-lambda'][0];
