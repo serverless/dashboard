@@ -198,7 +198,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   if (isTimeout) {
     functionData.error = true;
     functionData.errorCulprit = 'timeout';
-    functionData.errorType = 'TimeoutError';
+    functionData.errorType = 'timeout';
   } else if (err) {
     functionData.error = true;
     functionData.errorCulprit = err.message;
