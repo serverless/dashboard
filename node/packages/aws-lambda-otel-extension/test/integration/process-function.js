@@ -63,9 +63,9 @@ const ensureIsActive = async (functionConfig) => {
 };
 
 const invoke = async (functionConfig, testConfig) => {
-  const { invokeOptions = {}, functionOptions = {} } = testConfig;
+  const { functionOptions = {} } = testConfig;
 
-  const payload = invokeOptions.payload || {};
+  const payload = testConfig.invokePayload || {};
   log.debug('invoke request payload %O', payload);
   let result;
   try {
