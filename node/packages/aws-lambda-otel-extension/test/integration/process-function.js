@@ -13,13 +13,13 @@ const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 const create = async (functionConfig, coreConfig, testConfig) => {
-  const { createOptions = {} } = testConfig;
+  const { functionOptions = {} } = testConfig;
   try {
     await awsRequest(Lambda, 'createFunction', {
       Handler: `${functionConfig.handlerModuleName}.handler`,
       Role: coreConfig.roleArn,
       Runtime: 'nodejs14.x',
-      ...createOptions.configuration,
+      ...functionOptions.configuration,
       Code: {
         ZipFile: functionConfig.codeZipBuffer,
       },
