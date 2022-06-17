@@ -12,8 +12,8 @@ Against following scenarios:
 
 - `bare` - No instrumentation (bare run with no layer attached)
 - `external-only` - Just external extension which handles lambda event cycle, as no internal extension is loaded, no reports are processed
-- `to-log` - External & internal extension but with reports being logged to console (doesn't involve communication with external server)
-- `to-console` - (If `SLS_ORG_NAME` & `SLS_ORG_TOKEN` env vars are set) External & internal extension reporting to Console Kinesis server.
+- `to-log` - External & internal extension but with reports being logged to the stdout (doesn't involve communication with external server)
+- `to-console` - (If `SLS_ORG_NAME` & `SLS_ORG_TOKEN` env vars are set) External & internal extension reporting to the Console Kinesis server.
 
 ## Provided results
 
