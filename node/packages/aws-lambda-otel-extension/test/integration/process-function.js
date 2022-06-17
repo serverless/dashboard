@@ -227,6 +227,7 @@ module.exports = async (testConfig, coreConfig) => {
   ensureNpmDependencies('test/fixtures/lambdas');
   testConfig.configuration.FunctionName = `${basename}-${testConfig.name}`;
 
+  log.notice('Process function %s', testConfig.name);
   log.info('Create function %s', testConfig.name);
   await create(testConfig, coreConfig);
 
