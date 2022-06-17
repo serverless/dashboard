@@ -25,6 +25,7 @@ module.exports = (functionsConfig) => {
       name: currentName,
       configuration: { Handler: `${handlerModuleName}.handler` },
       expectedOutcome: 'success',
+      invokeCount: 2,
       invokePayload: {},
     };
     const cases = testConfigInput.cases;
