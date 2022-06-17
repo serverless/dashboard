@@ -267,7 +267,7 @@ module.exports = (async () => {
           request.on('data', (data) => {
             body += data;
           });
-          request.on('end', async () => {
+          request.on('end', () => {
             response.writeHead(200, '');
             response.end('OK');
             const data = JSON.parse(body);
