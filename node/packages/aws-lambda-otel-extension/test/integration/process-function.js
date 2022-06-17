@@ -78,6 +78,7 @@ const invoke = async (testConfig) => {
 
   log.debug('invoke request payload %O', invokePayload);
   let result;
+  const startTime = process.hrtime.bigint();
   try {
     result = await awsRequest(Lambda, 'invoke', {
       FunctionName: testConfig.configuration.FunctionName,
@@ -86,11 +87,11 @@ const invoke = async (testConfig) => {
   } catch (error) {
     if (error.message.includes('The role defined for the function cannot be assumed by Lambda')) {
       // Occassional race condition issue on AWS side, retry
-      await invoke(testConfig);
-      return;
+      return invoke(testConfig);
     }
     throw error;
   }
+  const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
   try {
     const responsePayload = JSON.parse(Buffer.from(result.Payload));
     log.debug('invoke response payload %O', responsePayload);
@@ -99,9 +100,10 @@ const invoke = async (testConfig) => {
     /* ignore */
   }
   if (result.FunctionError) {
-    if (expectedOutcome.startsWith('error')) return;
+    if (expectedOutcome.startsWith('error')) return duration;
     throw new Error(`Invocation errored: ${result.FunctionError}`);
   }
+  return duration;
 };
 
 const deleteFunction = async (testConfig) => {
@@ -188,9 +190,7 @@ const retrieveReports = async (testConfig) => {
     }
   } while (invocationsData.length < 2);
 
-  const result = { processesData, invocationsData };
-  log.info('Obtained reports %s %o', testConfig.name, result);
-  return result;
+  return { processesData, invocationsData };
 };
 
 module.exports = async (testConfig, coreConfig) => {
@@ -203,17 +203,23 @@ module.exports = async (testConfig, coreConfig) => {
   log.info('Ensure function is active %s', testConfig.name);
   await ensureIsActive(testConfig);
 
+  const invokeDurations = [];
   // Provide extra time room, in case local clock is not perfectly in sync
   testConfig.invokeStartTime = Date.now() - 5000;
   log.info('Invoke function #1 %s', testConfig.name);
-  await invoke(testConfig);
+  invokeDurations.push(await invoke(testConfig));
 
   log.info('Invoke function #2 %s', testConfig.name);
-  await invoke(testConfig);
+  invokeDurations.push(await invoke(testConfig));
 
   log.info('Delete function %s', testConfig.name);
   await deleteFunction(testConfig);
 
   log.info('Retrieve list of written reports %s', testConfig.name);
-  return retrieveReports(testConfig);
+  const reports = await retrieveReports(testConfig);
+  for (let i = 0; i < reports.invocationsData.length; i++) {
+    reports.invocationsData[i].localDuration = invokeDurations[i];
+  }
+  log.info('Obtained reports %s %o', testConfig.name, reports);
+  return reports;
 };
