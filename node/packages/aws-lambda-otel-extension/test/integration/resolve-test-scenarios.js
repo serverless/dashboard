@@ -13,7 +13,7 @@ const resolveNestedTestScenario = (parentTestConfig, [name, config]) => {
   return _.merge({}, parentTestConfig, config, { name: `${parentTestConfig.name}-${name}` });
 };
 
-module.exports = (functionsConfig) => {
+module.exports = (functionsConfig, commonTestConfig = {}) => {
   const testScenarios = [];
 
   for (const [handlerModuleName, testConfigInput] of functionsConfig) {
@@ -21,13 +21,16 @@ module.exports = (functionsConfig) => {
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
 
-    const currentTestConfig = {
-      name: currentName,
-      configuration: { Handler: `${handlerModuleName}.handler` },
-      expectedOutcome: 'success',
-      invokeCount: 2,
-      invokePayload: {},
-    };
+    const currentTestConfig = _.merge(
+      {
+        name: currentName,
+        configuration: { Handler: `${handlerModuleName}.handler` },
+        expectedOutcome: 'success',
+        invokeCount: 2,
+        invokePayload: {},
+      },
+      commonTestConfig
+    );
     const cases = testConfigInput.cases;
     if (cases) {
       _.merge(currentTestConfig, testConfigInput.config);
