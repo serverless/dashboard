@@ -163,7 +163,7 @@ const retrieveReports = async (testConfig) => {
       if (startedMessage) {
         startedMessage.report += message;
         if (startedMessage.report.endsWith('\n')) {
-          currentInvocationData.report.push([
+          currentInvocationData.reports.push([
             startedMessage.type,
             JSON.parse(startedMessage.report.trim()),
           ]);
