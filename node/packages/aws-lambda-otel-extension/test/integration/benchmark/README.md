@@ -5,6 +5,8 @@
 Current version benchmarks following functions:
 
 - Bare function [`success-callback`](../../fixtures/lambdas/success-callback.js)
+- Basic express endpoint [`success-callback-express`](../../fixtures/lambdas/success-callback-express.js)
+- Heavy logging function [`success-callback-logger`](../../fixtures/lambdas/success-callback-logger.js) - logs 1000 individual log messages
 
 Against following scenarios:
 
