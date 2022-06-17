@@ -113,19 +113,23 @@ const deleteFunction = async (testConfig) => {
 };
 
 const retrieveReports = async (testConfig) => {
-  const retrieveReportEvents = async () => {
+  const retrieveEvents = async (nextToken = undefined) => {
+    const result = await awsRequest(CloudWatchLogs, 'filterLogEvents', {
+      startTime: testConfig.invokeStartTime,
+      logGroupName: `/aws/lambda/${testConfig.configuration.FunctionName}`,
+      nextToken,
+    });
+    if (result.nextToken) return [...result.events, ...(await retrieveEvents(result.nextToken))];
+    return result.events;
+  };
+  const retrieveAllEvents = async () => {
     await wait(1000);
     try {
-      return (
-        await awsRequest(CloudWatchLogs, 'filterLogEvents', {
-          startTime: testConfig.invokeStartTime,
-          logGroupName: `/aws/lambda/${testConfig.configuration.FunctionName}`,
-        })
-      ).events;
+      return retrieveEvents();
     } catch (error) {
       if (error.name === 'ResourceNotFoundException') {
         log.info('log group not ready, wait and retry %s', testConfig.name);
-        return retrieveReportEvents();
+        return retrieveAllEvents();
       }
       throw error;
     }
@@ -134,7 +138,7 @@ const retrieveReports = async (testConfig) => {
   let invocationsData;
   let processesData;
   do {
-    const events = await retrieveReportEvents();
+    const events = await retrieveAllEvents();
     processesData = [];
     invocationsData = [];
     let currentInvocationData;
