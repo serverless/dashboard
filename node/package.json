@@ -23,6 +23,7 @@
     "@commitlint/lint": "^17.0.0",
     "@serverless/eslint-config": "^4.0.1",
     "@serverless/test": "^11.0.0",
+    "@serverless/utils": "^6.6.0",
     "chai": "^4.3.6",
     "chalk": "^4.1.2",
     "child-process-ext": "^2.1.1",
