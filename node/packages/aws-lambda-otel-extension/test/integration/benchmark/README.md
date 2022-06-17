@@ -25,7 +25,7 @@ Each scenario (function + instrumentation setup case) is evaluated 5 times, and 
 
 There's 2s gap between function invocations, to ensure we test against single lambda instance.
 
-For each scenario, median value (out of 5) for each duration numbers described below are read, calculated and written to the outcome CSV output
+For each scenario, multiple duration metrics (described below) are observed, they are read from CW logs, have their median calculated (out of five occurances) and are written to the outcome CSV output
 
 ### Initialization durations
 
