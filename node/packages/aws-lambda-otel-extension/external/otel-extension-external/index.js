@@ -268,6 +268,8 @@ module.exports = (async () => {
             body += data;
           });
           request.on('end', async () => {
+            response.writeHead(200, '');
+            response.end('OK');
             const data = JSON.parse(body);
             debugLog('Internal telemetry payload', JSON.stringify(data));
             switch (data.recordType) {
@@ -307,8 +309,6 @@ module.exports = (async () => {
               default:
                 throw new Error('Unrecognized event data');
             }
-            response.writeHead(200, '');
-            response.end('OK');
           });
         })
         .listen(OTEL_SERVER_PORT)
