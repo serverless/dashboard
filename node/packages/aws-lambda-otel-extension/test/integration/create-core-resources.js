@@ -92,7 +92,7 @@ const createRole = async (config) => {
 };
 
 module.exports = async (config) => {
-  log.notice('Creating %s', basename);
+  log.notice('Creating core resources %s', basename);
   config.accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
 
   await Promise.all([createLayer(config), createRole(config)]);
