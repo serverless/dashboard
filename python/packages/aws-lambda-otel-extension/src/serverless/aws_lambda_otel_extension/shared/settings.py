@@ -33,3 +33,9 @@ sls_otel_resource_attributes = (
 )
 
 test_dry_log = environment.TEST_DRY_LOG in constants.TRUTHY
+
+cloud_region = environment.AWS_REGION or defaults.AWS_REGION
+
+faas_name = environment.AWS_LAMBDA_FUNCTION_NAME or defaults.AWS_LAMBDA_FUNCTION_NAME
+faas_version = environment.AWS_LAMBDA_FUNCTION_VERSION or defaults.AWS_LAMBDA_FUNCTION_VERSION
+faas_max_memory = environment.AWS_LAMBDA_FUNCTION_MEMORY_SIZE or defaults.AWS_LAMBDA_FUNCTION_MEMORY_SIZE
