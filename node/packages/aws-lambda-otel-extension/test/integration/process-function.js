@@ -236,11 +236,11 @@ module.exports = async (testConfig, coreConfig) => {
   const invokeDurations = [];
   // Provide extra time room, in case local clock is not perfectly in sync
   testConfig.invokeStartTime = Date.now() - 5000;
-  log.info('Invoke function #1 %s', testConfig.name);
-  invokeDurations.push(await invoke(testConfig));
-
-  log.info('Invoke function #2 %s', testConfig.name);
-  invokeDurations.push(await invoke(testConfig));
+  let counter = 1;
+  do {
+    log.info('Invoke function #%d %s', counter, testConfig.name);
+    invokeDurations.push(await invoke(testConfig));
+  } while (++counter <= testConfig.invokeCount);
 
   log.info('Delete function %s', testConfig.name);
   await deleteFunction(testConfig);
