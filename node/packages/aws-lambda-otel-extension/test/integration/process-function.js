@@ -170,6 +170,10 @@ const retrieveReports = async (testConfig) => {
         }
       }
       if (message.startsWith('REPORT RequestId: ')) {
+        if (!currentProcessData) {
+          // With extensions not loaded we won't get "Extension overhead.." log
+          processesData.push((currentProcessData = {}));
+        }
         const reportMatch = message.match(reportPattern);
         if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);
         const reportData = reportMatch.groups;
