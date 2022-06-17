@@ -25,7 +25,7 @@ Each scenario (function + instrumentation setup case) is evaluated 5 times, and 
 
 There's 2s gap between function invocations, to ensure we test against single lambda instance.
 
-For each scenario, median value (calculated out of 5) for each duration numbers (as described below) are read, calculated and written to the outcome `.csv`
+For each scenario, median value (out of 5) for each duration numbers described below are read, calculated and written to the outcome CSV output
 
 ### Initialization durations
 
@@ -35,7 +35,7 @@ For each scenario, median value (calculated out of 5) for each duration numbers 
 
 ### Invocation durations
 
-Those are split into two `first` and `following`, as first invocation (putting aside initialization phase) also often implies some initialization overhead. Obtained numbers show it should not be measured as equal to following invocations.
+Those are split into two `first` and `following`, as first invocation (putting aside initialization phase) also often implies some initialization overhead (obtained numbers show it should not be measured as equal to following invocations)
 
 - `internal:[first|following]:request` - Measured internally, internal extension request processing overhead (time between receiving the event from AWS and passing it to original handler)
 - `internal:[first|following]:response` - Measured internally, internal extension response processing overhead (time between receiving the reponse from original handler, and returning it to AWS)
