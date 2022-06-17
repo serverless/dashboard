@@ -140,6 +140,12 @@ _HTTP Responses with a non JSON body will be ignored_
 
 ### Tests
 
+To run tests ensure to additionaly run `npm install` in following folders:
+
+- `external/otel-extension-external`
+- `internal/otel-extension-internal-node`
+- `test/fixtures/lambdas`
+
 #### Unit tests
 
 Unit tests are configured to be independent of any external infrastructure (AWS Lambda environment is emulated).
