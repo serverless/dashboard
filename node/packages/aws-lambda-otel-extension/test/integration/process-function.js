@@ -239,7 +239,7 @@ module.exports = async (testConfig, coreConfig) => {
   testConfig.invokeStartTime = Date.now() - 5000;
   let counter = 1;
   do {
-    await wait(500);
+    await wait(2000);
     log.info('Invoke function #%d %s', counter, testConfig.name);
     invokeDurations.push(await invoke(testConfig));
   } while (++counter <= testConfig.invokeCount);
