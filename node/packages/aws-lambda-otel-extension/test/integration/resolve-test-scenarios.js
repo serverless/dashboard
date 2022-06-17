@@ -13,7 +13,7 @@ const resolveNestedTestScenario = (parentTestConfig, [name, config]) => {
   return _.merge({}, parentTestConfig, config, { name: `${parentTestConfig.name}-${name}` });
 };
 
-module.exports = (functionsConfig, commonTestConfig = {}) => {
+module.exports = (functionsConfig, options = {}) => {
   const testScenarios = [];
 
   for (const [handlerModuleName, testConfigInput] of functionsConfig) {
@@ -29,7 +29,7 @@ module.exports = (functionsConfig, commonTestConfig = {}) => {
         invokeCount: 2,
         invokePayload: {},
       },
-      commonTestConfig
+      options.commonTestConfig
     );
     const cases = testConfigInput.cases;
     if (cases) {
@@ -42,5 +42,18 @@ module.exports = (functionsConfig, commonTestConfig = {}) => {
     testScenarios.push(_.merge(currentTestConfig, testConfigInput));
   }
 
-  return testScenarios.flat(Infinity);
+  const result = testScenarios.flat(Infinity);
+  if (!options.multiplyBy) return result;
+  return result
+    .map((testScenario) => {
+      const multipliedResult = [];
+      let counter = 1;
+      do {
+        multipliedResult.push(
+          _.merge({}, testScenario, { name: `${testScenario.name}-${counter}` })
+        );
+      } while (++counter <= options.multiplyBy);
+      return multipliedResult;
+    })
+    .flat();
 };
