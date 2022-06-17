@@ -142,12 +142,30 @@ const retrieveReports = async (testConfig) => {
     let startedMessage;
     for (const { message } of events) {
       if (message.startsWith('Extension overhead duration: external initialization')) {
-        processesData.push((currentProcessData = {}));
+        processesData.push(
+          (currentProcessData = {
+            extensionOverheadDurations: {
+              externalInit: parseInt(message.slice(message.lastIndexOf(':') + 1), 10),
+            },
+          })
+        );
         continue;
       }
+      if (message.startsWith('Extension overhead duration: internal initialization')) {
+        currentProcessData.extensionOverheadDurations.internalInit = parseInt(
+          message.slice(message.lastIndexOf(':') + 1),
+          10
+        );
+      }
       if (message.startsWith('START RequestId: ')) {
-        currentInvocationData = { reports: [] };
+        currentInvocationData = { reports: [], extensionOverheadDurations: {} };
         continue;
+      }
+      if (message.startsWith('Extension overhead duration: internal request')) {
+        currentInvocationData.extensionOverheadDurations.internalRequest = parseInt(
+          message.slice(message.lastIndexOf(':') + 1),
+          10
+        );
       }
       if (message.startsWith('⚡')) {
         const reportType = message.slice(2, message.indexOf(':'));
@@ -171,10 +189,22 @@ const retrieveReports = async (testConfig) => {
           continue;
         }
       }
+      if (message.startsWith('Extension overhead duration: internal response')) {
+        currentInvocationData.extensionOverheadDurations.internalResponse = parseInt(
+          message.slice(message.lastIndexOf(':') + 1),
+          10
+        );
+      }
+      if (message.startsWith('Extension overhead duration: external invocation')) {
+        currentInvocationData.extensionOverheadDurations.externalResponse = parseInt(
+          message.slice(message.lastIndexOf(':') + 1),
+          10
+        );
+      }
       if (message.startsWith('REPORT RequestId: ')) {
         if (!currentProcessData) {
           // With extensions not loaded we won't get "Extension overhead.." log
-          processesData.push((currentProcessData = {}));
+          processesData.push((currentProcessData = { extensionOverheadDurations: {} }));
         }
         const reportMatch = message.match(reportPattern);
         if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);
