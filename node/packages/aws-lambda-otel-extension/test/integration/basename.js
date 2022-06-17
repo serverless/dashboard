@@ -2,4 +2,4 @@
 
 const testUid = require('./test-uid');
 
-module.exports = `test-otel-extension-${testUid}`;
+module.exports = `test-oext-${testUid}`;

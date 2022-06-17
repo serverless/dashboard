@@ -59,7 +59,7 @@ Run `npm install` in following folders:
 
 - `AWS_REGION` - region in which benchmarked lambds need to be deployed
 - `SLS_ORG_NAME` & `SLS_ORG_TOKEN`- (optional) Needed to benchmark scenario of reporting to the Console Kinesis server
-- `TEST_UID` - (optional) common name token to be used as part of genered resource names. All generated resource names will be prefixed with `test-otel-extension-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all genereated resources are removed after benchmark is done
+- `TEST_UID` - (optional) common name token to be used as part of genered resource names. All generated resource names will be prefixed with `test-oext-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all genereated resources are removed after benchmark is done
 - `LOG_LEVEL` - (optional) For more verbose output `LOG_LEVEL=info` can be used
 
 ## Run
