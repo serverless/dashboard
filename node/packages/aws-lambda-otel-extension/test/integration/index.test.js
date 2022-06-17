@@ -137,13 +137,14 @@ describe('integration', function () {
         // While reports should come in order as specified below,
         // there were observed cases when it wasn't the case,
         // e.g. telemetryData (response) was received before eventData (request)
-        expect(
-          invocationsData.map(({ reports }) => reports.map(([type]) => type).sort())
-        ).to.deep.equal([
-          ['request', 'response', 'metrics', 'traces'].sort(),
-          ['metrics', 'request', 'response', 'metrics', 'traces'].sort(),
-        ]);
+        const reportTypes = { request: 0, response: 0, metrics: 0, traces: 0 };
+        invocationsData.map(({ reports }) => reports.map(([type]) => ++reportTypes[type]));
+        expect(reportTypes.request).to.equal(2);
+        expect(reportTypes.response).to.equal(2);
+        expect(reportTypes.metrics).to.be.at.least(3);
+        expect(reportTypes.traces).to.equal(2);
       }
+
       const allInvocationReports = invocationsData.map(({ reports }) => reports).flat();
       const metricsReport = allInvocationReports.find(
         ([reportType]) => reportType === 'metrics'
