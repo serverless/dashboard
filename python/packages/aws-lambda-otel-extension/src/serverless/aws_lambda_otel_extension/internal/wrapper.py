@@ -7,13 +7,12 @@ import sys
 import time
 import urllib.request
 from contextlib import contextmanager
-from functools import lru_cache
 from importlib import import_module
 from typing import Callable, Dict, Generator, List
 
-from opentelemetry import context as context_api
+import opentelemetry.context
 from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
-from opentelemetry.sdk.trace import ReadableSpan, Span, Tracer, TracerProvider
+from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
 from opentelemetry.sdk.util import instrumentation
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
@@ -21,10 +20,10 @@ from opentelemetry.trace import (
     SpanKind,
     format_span_id,
     format_trace_id,
-    get_tracer,
     get_tracer_provider,
     set_tracer_provider,
 )
+from opentelemetry.trace.span import Span
 
 from serverless.aws_lambda_otel_extension.internal.resources import (
     AWSLambdaResourceDetector,
@@ -40,14 +39,20 @@ from serverless.aws_lambda_otel_extension.shared.types import LambdaContext
 
 @contextmanager
 def suppress_instrumentation() -> Generator:
-    token = context_api.attach(context_api.set_value(context_api._SUPPRESS_INSTRUMENTATION_KEY, True))
+    token = opentelemetry.context.attach(
+        opentelemetry.context.set_value(opentelemetry.context._SUPPRESS_INSTRUMENTATION_KEY, True)
+    )
     try:
         yield
     finally:
-        context_api.detach(token)
+        opentelemetry.context.detach(token)
 
 
-@lru_cache(maxsize=1)
+def configure_environment() -> None:
+    if "_HANDLER" not in os.environ:
+        os.environ["_HANDLER"] = os.environ["ORIG_HANDLER"]
+
+
 def configure_tracer_provider() -> None:
 
     resource = get_aggregated_resources(
@@ -67,13 +72,12 @@ def configure_tracer_provider() -> None:
 
 def get_actual_handler_function() -> Callable:
 
-    handler_module_name, handler_function_name = os.environ["ORIG_HANDLER"].rsplit(".", 1)
+    handler_module_name, handler_function_name = os.environ.get("ORIG_HANDLER", os.environ["_HANDLER"]).rsplit(".", 1)
     handler_module = import_module(handler_module_name)
 
     return getattr(handler_module, handler_function_name)
 
 
-@lru_cache(maxsize=1)
 def perform_module_instrumentation() -> None:
 
     try:
@@ -102,19 +106,21 @@ def clear_finished_spans():
 
 def auto_instrumenting_handler(event: Dict, context: LambdaContext) -> Dict:
 
-    configure_tracer_provider()
-    perform_module_instrumentation()
+    if not variables.invocations:
+        configure_environment()
+        configure_tracer_provider()
+        perform_module_instrumentation()
 
-    tracer_provider: TracerProvider = get_tracer_provider()
-    tracer: Tracer = get_tracer(__name__, "0.0.1", tracer_provider)
+    tracer_provider = get_tracer_provider()
+    tracer = tracer_provider.get_tracer(__name__, "0.0.1")
 
-    orig_handler = os.environ.get("ORIG_HANDLER", os.environ.get("_HANDLER"))
+    orig_handler = os.environ.get("ORIG_HANDLER", os.environ["_HANDLER"])
 
-    invoked_function_arn = getattr(context, "invoked_function_arn", None)
+    invoked_function_arn = getattr(context, "invoked_function_arn", "unknown")
     invoked_function_name = environment.AWS_LAMBDA_FUNCTION_NAME
     invoked_function_version = environment.AWS_LAMBDA_FUNCTION_VERSION
 
-    aws_request_id = getattr(context, "aws_request_id", None)
+    aws_request_id = getattr(context, "aws_request_id", "unknown")
 
     variables.append_invocation(aws_request_id)
 
@@ -173,7 +179,7 @@ def auto_instrumenting_handler(event: Dict, context: LambdaContext) -> Dict:
             "eventCustomRequestId": aws_request_id,
             "eventCustomRequestTimeEpoch": None,
             "eventCustomXTraceId": os.getenv(constants._X_AMZN_TRACE_ID_ENV_VAR),
-            "eventType": event_type.value,
+            "eventType": event_type.value if event_type else None,
             "functionName": invoked_function_name,
         }
 
