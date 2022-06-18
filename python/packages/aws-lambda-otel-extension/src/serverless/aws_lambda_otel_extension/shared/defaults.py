@@ -1,10 +1,7 @@
-# Include nothing here.  Globals only.
+import typing
 
-SLS_OTEL_SERVER_HOST = "sandbox.localdomain"
-SLS_OTEL_SERVER_PORT = 2772
-
-SLS_LOG_SERVER_HOST = "sandbox.localdomain"
-SLS_LOG_SERVER_PORT = 4243
+SLS_OPENTELEMETRY_SERVER_URL = "http://sandbox.localdomain:2772"
+SLS_LOG_SERVER_URL = "http://sandbox.localdomain:4243"
 
 SLS_OTEL_RESOURCE_ATTRIBUTES_ORG_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 SLS_OTEL_RESOURCE_ATTRIBUTES_SERVICE_NAME = "undefined"
@@ -21,3 +18,5 @@ AWS_LAMBDA_FUNCTION_ARN = "arn:aws:lambda:serverless:Fake"
 AWS_LAMBDA_FUNCTION_MEMORY_SIZE = 1024
 AWS_LAMBDA_FUNCTION_REQUEST_ID = "1234567890"
 AWS_LAMBDA_FUNCTION_LOG_GROUP_NAME = "/aws/lambda/Fake"
+
+OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: typing.List[str] = []

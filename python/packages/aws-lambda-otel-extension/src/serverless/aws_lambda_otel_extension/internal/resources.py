@@ -2,7 +2,6 @@ from opentelemetry.sdk.resources import Resource, ResourceDetector
 from opentelemetry.semconv.resource import ResourceAttributes
 
 from serverless.aws_lambda_otel_extension.shared import settings
-from serverless.aws_lambda_otel_extension.shared.utilities import split_resource_attributes
 
 
 # Replicating what is implemented here:
@@ -12,14 +11,14 @@ class AWSLambdaResourceDetector(ResourceDetector):
 
         return Resource(
             {
-                ResourceAttributes.CLOUD_REGION: settings.cloud_region,
-                ResourceAttributes.FAAS_VERSION: settings.faas_version,
-                ResourceAttributes.FAAS_NAME: settings.faas_name,
-                ResourceAttributes.FAAS_MAX_MEMORY: settings.faas_max_memory,
+                ResourceAttributes.CLOUD_REGION: settings.aws_region,
+                ResourceAttributes.FAAS_VERSION: settings.aws_lambda_function_version,
+                ResourceAttributes.FAAS_NAME: settings.aws_lambda_function_name,
+                ResourceAttributes.FAAS_MAX_MEMORY: settings.aws_lambda_function_memory_size,
             }
         )
 
 
 class ServerlessResourceDetector(ResourceDetector):
     def detect(self) -> Resource:
-        return Resource(split_resource_attributes(settings.sls_otel_resource_attributes))
+        return Resource(settings.sls_otel_resource_attributes)

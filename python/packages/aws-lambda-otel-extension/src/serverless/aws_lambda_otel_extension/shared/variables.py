@@ -11,5 +11,5 @@ invocations = []
 def append_invocation(s: str) -> None:
     with extension_theading_lock:
         global invocations
-        logger.debug("append_invocation:%s", s)
+        logger.debug("Appended Invocation %s", s)
         invocations.append(s)

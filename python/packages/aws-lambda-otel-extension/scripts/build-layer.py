@@ -88,11 +88,8 @@ def main():
     BUILD_PATH.mkdir(exist_ok=True)
     DIST_PATH.mkdir(exist_ok=True)
 
-    BUILD_EXTENSION_PATH.mkdir(parents=True, exist_ok=True)
     logger.debug("copytree:%s:%s", ASSETS_INTERNAL_PATH, BUILD_EXTENSION_PATH)
-    shutil.copytree(
-        str(ASSETS_INTERNAL_PATH), str(BUILD_EXTENSION_PATH), dirs_exist_ok=True, copy_function=shutil.copy2
-    )
+    shutil.copytree(str(ASSETS_INTERNAL_PATH), str(BUILD_EXTENSION_PATH), copy_function=shutil.copy2)
 
     BUILD_EXTENSION_PATH.joinpath(".serverless_aws_lambda_otel_extension").write_text(str(time.time()))
 
@@ -180,7 +177,11 @@ def main():
                     zip_file.extractall(str(extraction_path))
 
     logger.debug("unlink:%s", DIST_PATH_EXTENSION_INTERNAL_ZIP_PATH)
-    DIST_PATH_EXTENSION_INTERNAL_ZIP_PATH.unlink(missing_ok=True)
+
+    try:
+        DIST_PATH_EXTENSION_INTERNAL_ZIP_PATH.unlink()
+    except:
+        pass
 
     with zipfile.ZipFile(DIST_PATH_EXTENSION_INTERNAL_ZIP_PATH, "w") as zip_file:
         logger.debug("packing:%s", DIST_PATH_EXTENSION_INTERNAL_ZIP_PATH)
