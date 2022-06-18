@@ -29,21 +29,21 @@ For each scenario, multiple duration metrics (described below) are observed, the
 
 ### Initialization durations
 
-- `external:init` - Measured internally, external extension initialization overhead
-- `internal:init` - Measured internally, internal extension initialization overhead
-- `aws:init` - `initDuration`, as provided by AWS in function report
+- `init:external` - Measured internally, external extension initialization overhead
+- `init:internal` - Measured internally, internal extension initialization overhead
+- `init:aws` - `initDuration`, as provided by AWS in function report
 
 ### Invocation durations
 
 Those are split into two `first` and `following`, as first invocation (putting aside initialization phase) also often implies some initialization overhead (obtained numbers show it should not be measured as equal to following invocations)
 
-- `internal:[first|following]:request` - Measured internally, internal extension request processing overhead (time between receiving the event from AWS and passing it to original handler)
-- `internal:[first|following]:response` - Measured internally, internal extension response processing overhead (time between receiving the reponse from original handler, and returning it to AWS)
-- `external:[first|following]:response` - Measured internally, time between lambda invocation being closed, and external extension marking itself ready for next invocation
-- `aws:[first|following]:duration` - `duration` as provided by AWS in function report
-- `aws:[first|following]:billedDuration` - `billedDuration` as provided by AWS in function report
-- `local:[first|following]:duration` - Duration of AWS SDK invocation request as observed locally
-- `aws:[first|following]:maxMemoryUsed` - `maxMemoryUsed` as provided by AWS in function report
+- `[first|following]:internal:request` - Measured internally, internal extension request processing overhead (time between receiving the event from AWS and passing it to original handler)
+- `[first|following]:internal]:response` - Measured internally, internal extension response processing overhead (time between receiving the reponse from original handler, and returning it to AWS)
+- `[first|following]:external:response` - Measured internally, time between lambda invocation being closed, and external extension marking itself ready for next invocation
+- `[first|following]:aws:duration` - `duration` as provided by AWS in function report
+- `[first|following]:aws:billedDuration` - `billedDuration` as provided by AWS in function report
+- `[first|following]:loca]:duration` - Duration of AWS SDK invocation request as observed locally
+- `[first|following]:aws:maxMemoryUsed` - `maxMemoryUsed` as provided by AWS in function report
 
 ## Setup
 
