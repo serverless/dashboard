@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
-from serverless.aws_lambda_otel_extension.shared.enums import LambdaEventType
-from serverless.aws_lambda_otel_extension.shared.types import LambdaContext
+from serverless.aws_lambda_otel_extension.enums import LambdaEventType
+from serverless.aws_lambda_otel_extension.types import LambdaContext
 
 
 def is_event_alexa_skill(event: Dict, context: LambdaContext) -> bool:

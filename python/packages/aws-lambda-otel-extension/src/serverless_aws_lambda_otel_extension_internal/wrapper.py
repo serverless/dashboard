@@ -9,7 +9,8 @@
 # We want to retain the use of the `serverless.*` namespace for practicality reasons and wedges like this are required
 # when dealing with code that operates similar to the AWS bootstrap code via older import discovery methods.
 
-import serverless.aws_lambda_otel_extension.internal.wrapper
+from serverless.aws_lambda_otel_extension.internal.wrapper.handler import auto_instrumenting_handler
 
-# "Export" the auto_instrumenting_handler function from the internal wrapper module.
-auto_instrumenting_handler = serverless.aws_lambda_otel_extension.internal.wrapper.auto_instrumenting_handler
+__all__ = [
+    "auto_instrumenting_handler",
+]
