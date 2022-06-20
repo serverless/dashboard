@@ -125,7 +125,7 @@ const retrieveReports = async (testConfig) => {
   const retrieveAllEvents = async () => {
     await wait(1000);
     try {
-      return retrieveEvents();
+      return await retrieveEvents();
     } catch (error) {
       if (error.name === 'ResourceNotFoundException') {
         log.info('log group not ready, wait and retry %s', testConfig.name);
