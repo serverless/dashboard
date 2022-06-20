@@ -1,37 +1,18 @@
-# Simple properties as module variables to avoid having a redundant settings variable and Settings class.
-
 import json
 
-from serverless.aws_lambda_otel_extension import environment
+from serverless.aws_lambda_otel_extension import constants, defaults, environment
 from serverless.aws_lambda_otel_extension.utilities import default_if_none, split_string_on_commas_or_none
 
-from serverless.aws_lambda_otel_extension import constants, defaults
-
-# Load settings from JSON packed environment variable.
-# Example:
-# {
-#     "common": {"http": {"request": {"headers": [{"serverless_token": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}]}}},
-#     "extension": {
-#         "opentelemetry": {"http": {"url": "http://example.com"}},
-#         "logs": {"http": {"url": "http://localhost:4269"}},
-#     },
-#     "opentelemetry": {
-#         "resource": {
-#             "attributes": {
-#                 "sls_service_name": "${self:service}",
-#                 "sls_stage": "${sls.stage}",
-#                 "sls_org_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-#             }
-#         }
-#     },
-#     "logs": {"http": {"request": {"url": "https://example.com/ingestion/kinesis/v1/logs"}}},
-#     "metrics": {"http": {"request": {"url": "https://example.com/ingestion/kinesis/v1/metrics"}}},
-#     "request": {"http": {"request": {"url": "https://example.com/ingestion/kinesis/v1/request-response"}}},
-#     "response": {"http": {"request": {"url": "https://example.com/ingestion/kinesis/v1/request-response"}}},
-#     "traces": {"http": {"request": {"url": "https://example.com/ingestion/kinesis/v1/traces"}}},
-# }
-
-sls_otel_user_settings = json.loads(environment.SLS_OTEL_USER_SETTINGS) if environment.SLS_OTEL_USER_SETTINGS else {}
+# Merge in settings from JSON packed environment variables.
+sls_otel_user_settings = {
+    # TODO: Add support for file based configuration.
+    # **(
+    #     json.load(open("/var/task/.serverless-otel-user-settings"))
+    #     if os.path.exists("/var/task/.serverless-otel-user-settings")
+    #     else {}
+    # ),
+    **(json.loads(environment.SLS_OTEL_USER_SETTINGS) if environment.SLS_OTEL_USER_SETTINGS else {}),
+}
 
 # Used by wrapper to send events.
 extension_otel_http_url = defaults.SLS_OPENTELEMETRY_SERVER_URL

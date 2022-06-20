@@ -1,5 +1,6 @@
 import logging
 import typing
+
 from serverless.aws_lambda_otel_extension import constants
 
 SLS_OPENTELEMETRY_SERVER_URL = "http://sandbox:2772"

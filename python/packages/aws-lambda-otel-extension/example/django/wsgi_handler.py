@@ -74,9 +74,7 @@ def handler(event, context):
                 exec(meta.get("data", ""))
             elif meta.get("command") == "command":
                 # Run shell commands
-                result = subprocess.check_output(
-                    meta.get("data", ""), shell=True, stderr=subprocess.STDOUT
-                )
+                result = subprocess.check_output(meta.get("data", ""), shell=True, stderr=subprocess.STDOUT)
                 output_buffer.write(result.decode())
             elif meta.get("command") == "manage":
                 # Run Django management commands
@@ -88,9 +86,7 @@ def handler(event, context):
                 from flask.cli import FlaskGroup
 
                 flask_group = FlaskGroup(create_app=_create_app)
-                flask_group.main(
-                    shlex.split(meta.get("data", "")), standalone_mode=False
-                )
+                flask_group.main(shlex.split(meta.get("data", "")), standalone_mode=False)
             else:
                 raise Exception("Unknown command: {}".format(meta.get("command")))
         except subprocess.CalledProcessError as e:
