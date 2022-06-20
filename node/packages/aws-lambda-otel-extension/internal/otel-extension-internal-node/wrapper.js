@@ -18,6 +18,7 @@ const wrapHandler = (handlerFunction) => {
   let requestStartTime;
   let responseStartTime;
   let currentInvocationId = 0;
+  let isResolved = false;
   const debugLog = (...args) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
   };
@@ -33,10 +34,9 @@ const wrapHandler = (handlerFunction) => {
       const wrapCallback =
         (originalCallback) =>
         (...args) => {
-          if (invocationId !== currentInvocationId) {
-            originalCallback(...args);
-            return;
-          }
+          if (invocationId !== currentInvocationId) return;
+          if (isResolved) return;
+          isResolved = true;
           if (!responseStartTime) responseStartTime = process.hrtime.bigint();
           originalCallback(...args);
         };
@@ -49,16 +49,19 @@ const wrapHandler = (handlerFunction) => {
       if (typeof result.then !== 'function') return result;
       return Promise.resolve(result).finally(() => {
         if (invocationId !== currentInvocationId) return;
+        if (isResolved) return;
+        isResolved = true;
         if (!responseStartTime) responseStartTime = process.hrtime.bigint();
       });
     }
   );
 
   return (event, context, callback) => {
+    requestStartTime = process.hrtime.bigint();
     EvalError.$serverlessInvocationStart = Date.now();
     debugLog('Internal extension: Invocation');
+    isResolved = false;
     const invocationId = ++currentInvocationId;
-    requestStartTime = process.hrtime.bigint();
     const logResponseDuration = () => {
       if (invocationId !== currentInvocationId) return;
       delete EvalError.$serverlessRequestHandlerPromise;
