@@ -1,6 +1,6 @@
 # Glossary
 
-Specific definitions for all terms and concepts used within Serverless Console's product, documentation and related works.
+Specific definitions for how Serverless Console interprets its own concepts, as well as relative industry concepts related to the product.
 
 # Metric
 
@@ -71,6 +71,18 @@ This phase includes:
 * Running cleanup tasks in Extensions.
 
 Additional time is allocated to your AWS Lambda function's timeout limit for Shutdown.
+
+### Cold-Start
+
+When an AWS Lambda function recieves a request, and it has not been used before, or for several minutes, its environment and code must first be Initialized.  This process is known as an AWS Lambda Cold-Start.  This process adds latency to the overall invocation duration.
+
+After the execution completes, the execution environment is frozen. To improve resource management and performance, the Lambda service retains the execution environment for a non-deterministic period of time. During this time, if another request arrives for the same function, the service may reuse the environment. This second request typically finishes more quickly, since the execution environment already exists and it’s not necessary to download the code and run the initialization code. This is called a Warm-Start.
+
+According to an analysis of production Lambda workloads, cold starts typically occur in under 1% of invocations. The duration of a cold start varies from under 100 ms to over 1 second.
+
+### Warm-Start
+
+When an AWS Lambda function instance receives a request after having received previous requests within the last few minutes.  The Initialization phase does not happen and this is known as a Warm-Start.
 
 # Benchmark
 
