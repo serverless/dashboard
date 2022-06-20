@@ -68,7 +68,7 @@ module.exports = async () => {
       },
     ],
     [
-      'to-log',
+      'json-log',
       {
         configuration: {
           Environment: {
@@ -76,8 +76,24 @@ module.exports = async () => {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
               DEBUG_SLS_OTEL_LAYER: '1',
               SLS_OTEL_USER_SETTINGS: JSON.stringify({
+                logs: { disabled: true },
                 metrics: { outputType: 'json' },
                 traces: { outputType: 'json' },
+              }),
+            },
+          },
+        },
+      },
+    ],
+    [
+      'proto-log',
+      {
+        configuration: {
+          Environment: {
+            Variables: {
+              AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
+              DEBUG_SLS_OTEL_LAYER: '1',
+              SLS_OTEL_USER_SETTINGS: JSON.stringify({
                 logs: { disabled: true },
               }),
             },
@@ -89,7 +105,7 @@ module.exports = async () => {
 
   const { token, orgId } = await resolveIngestionData();
   if (token) {
-    cases.set('to-console', {
+    cases.set('proto-console', {
       configuration: {
         Environment: {
           Variables: {
@@ -195,7 +211,8 @@ module.exports = async () => {
           new Map(
             Array.from(cases, ([name, caseConfig]) => {
               switch (name) {
-                case 'to-log': {
+                case 'json-log':
+                case 'proto-log': {
                   const userSettings = JSON.parse(
                     caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
                   );
@@ -213,7 +230,7 @@ module.exports = async () => {
                     }),
                   ];
                 }
-                case 'to-console': {
+                case 'proto-console': {
                   const userSettings = JSON.parse(
                     caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
                   );
