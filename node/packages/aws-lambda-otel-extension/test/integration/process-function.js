@@ -213,6 +213,11 @@ const retrieveReports = async (testConfig) => {
         const reportMatch = message.match(reportPattern);
         if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);
         const reportData = reportMatch.groups;
+        if (!currentInvocationData) {
+          throw new Error(
+            `Cannot resolve invocation for data for ${testConfig.configuration.FunctionName}`
+          );
+        }
         currentInvocationData.billedDuration = Number(reportData.billedDuration);
         currentInvocationData.duration = Number(reportData.duration);
         currentInvocationData.maxMemoryUsed = Number(reportData.maxMemoryUsed);
