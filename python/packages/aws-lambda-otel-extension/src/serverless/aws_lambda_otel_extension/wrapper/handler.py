@@ -45,33 +45,16 @@ from serverless.aws_lambda_otel_extension.resource import SlsResourceDetector
 from serverless.aws_lambda_otel_extension.semconv.trace import OverloadedSpanAttributes, SlsSpanAttributes
 from serverless.aws_lambda_otel_extension.trace.export import LoggingSpanExporter
 
+
 logger = logging.getLogger(__name__)
 
-in_memory_span_exporter = InMemorySpanExporter()
 
 aws_request_ids = []
-
-module_lock = Lock()
-
-
-def _metrics_encoder_default(obj):
-    if isinstance(obj, typing.FrozenSet):
-        return list(obj)
-
-
-_metrics_encoder = json.JSONEncoder(
-    skipkeys=False,
-    ensure_ascii=True,
-    check_circular=True,
-    allow_nan=True,
-    indent=None,
-    separators=None,
-    default=_metrics_encoder_default,
-)
+aws_request_ids_append_lock = Lock()
 
 
 def append_aws_request_id(aws_request_id: str) -> None:
-    with module_lock:
+    with aws_request_ids_append_lock:
         global aws_request_ids
         logger.debug({"aws_request_id": aws_request_id})
         aws_request_ids.append(aws_request_id)
@@ -86,56 +69,16 @@ def suppress_instrumentation() -> typing.Generator:
         context_detach(token)
 
 
-def configure_environment() -> None:
-    os.environ.setdefault("_HANDLER", os.environ["ORIG_HANDLER"])
-
-
-def configure_tracer_provider() -> None:
-
-    resource = get_aggregated_resources(
-        detectors=[
-            ProcessResourceDetector(),
-            AwsLambdaResourceDetector(),
-            SlsResourceDetector(),
-            # This comes last because we want it to override `service.name` if it is present.
-            OTELResourceDetector(),
-        ]
-    )
-
-    tracer_provider = TracerProvider(resource=resource)
-
-    tracer_provider.add_span_processor(SimpleSpanProcessor(in_memory_span_exporter))
-
-    if settings.test_dry_log:
-        # Extra information is logged to the console.
-        tracer_provider.add_span_processor(
-            SimpleSpanProcessor(LoggingSpanExporter(pretty_print=settings.test_dry_log_pretty))
-        )
-
-    set_tracer_provider(tracer_provider)
-
-
 def extract_account_id_from_invoked_function_arn(invoked_arn: str) -> typing.Optional[str]:
     if not invoked_arn:
         return None
 
     invoked_arn_parts = invoked_arn.split(":")
+
     if len(invoked_arn_parts) < 6:
         return None
 
     return invoked_arn_parts[4]
-
-
-def get_actual_handler_filepath() -> typing.Optional[str]:
-    handler_module_name, _handler_function_name = os.getenv("ORIG_HANDLER", os.environ["_HANDLER"]).rsplit(".", 1)
-    handler_module = import_module(handler_module_name)
-    return getattr(handler_module, "__file__", None)
-
-
-def get_actual_handler_function() -> typing.Callable:
-    handler_module_name, handler_function_name = os.getenv("ORIG_HANDLER", os.environ["_HANDLER"]).rsplit(".", 1)
-    handler_module = import_module(handler_module_name)
-    return getattr(handler_module, handler_function_name)
 
 
 def perform_module_instrumentation() -> None:
@@ -357,14 +300,43 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
     # Set logging level for the entire package namespace.
     logging.getLogger(constants.PACKAGE_NAMESPACE).setLevel(settings.sls_aws_lambda_otel_extension_log_level)
 
+    # This gets passed around a lot and contains all the finished spans needed to build out event payloads for the
+    # collector.
+    in_memory_span_exporter = InMemorySpanExporter()
+
+    # We should always attempt to make sure _HANDLER is defined from the ORIG_HANDLER if it is missing.
+    os.environ.setdefault("_HANDLER", constants.PACKAGE_COMPATIBLE_WRAPPER_MODULE)
+
     # If there are no invocations (cold start) then configure the environment and set up the tracer provider.
     if not aws_request_ids:
-        configure_environment()
-        configure_tracer_provider()
+        resource = get_aggregated_resources(
+            detectors=[
+                ProcessResourceDetector(),
+                AwsLambdaResourceDetector(),
+                SlsResourceDetector(),
+                # This comes last because we want it to override `service.name` if it is present.
+                OTELResourceDetector(),
+            ]
+        )
 
-    tracer_provider = get_tracer_provider()
+        tracer_provider = TracerProvider(resource=resource)
+
+        # This is always required regarless of settings.test_dry_log.
+        tracer_provider.add_span_processor(SimpleSpanProcessor(in_memory_span_exporter))
+
+        # Extra information is logged to the console.
+        if settings.test_dry_log:
+            tracer_provider.add_span_processor(
+                SimpleSpanProcessor(LoggingSpanExporter(pretty_print=settings.test_dry_log_pretty))
+            )
+
+        set_tracer_provider(tracer_provider)
+    else:
+        tracer_provider = typing.cast(TracerProvider, get_tracer_provider())
+
     tracer = tracer_provider.get_tracer(__name__, constants.PACKAGE_VERSION)
 
+    # Store this for later without if suddenly changing later.
     orig_handler = os.environ.get("ORIG_HANDLER", os.environ["_HANDLER"])
 
     invoked_function_arn = getattr(context, "invoked_function_arn", "unknown")
@@ -459,8 +431,11 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
 
     actual_response_or_exception: typing.Union[typing.Dict, Exception]
 
-    actual_handler_function = get_actual_handler_function()
-    actual_handler_filepath = get_actual_handler_filepath()
+    handler_module_name, handler_function_name = os.getenv("ORIG_HANDLER", os.environ["_HANDLER"]).rsplit(".", 1)
+    handler_module = import_module(handler_module_name)
+
+    actual_handler_filepath = getattr(handler_module, "__file__", None)
+    actual_handler_function = getattr(handler_module, handler_function_name)
 
     execution_id = context.aws_request_id
 

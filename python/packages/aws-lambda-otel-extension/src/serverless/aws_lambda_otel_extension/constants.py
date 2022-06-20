@@ -8,6 +8,9 @@ _package_distribution = get_distribution("serverless-aws-lambda-otel-extension")
 PACKAGE_NAME = _package_distribution.project_name
 PACKAGE_NAMESPACE = "serverless.aws_lambda_otel_extension"
 PACKAGE_VERSION = _package_distribution.version
+PACKAGE_COMPATIBLE_WRAPPER_MODULE = (
+    "serverless_aws_lambda_otel_extension_internal_wrapper_handler.auto_instrumenting_handler"
+)
 
 _X_AMZN_TRACE_ID_ENV_VAR = "_X_AMZN_TRACE_ID"
 
