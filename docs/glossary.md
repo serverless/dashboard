@@ -26,8 +26,6 @@ The duration of Traces for AWS Lambda specifically measure the combined duration
 
 It’s important to note that duration of Traces for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application.  The spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
 
-# Span
-
 ## AWS Lambda
 
 ### Initialization
@@ -73,3 +71,25 @@ This phase includes:
 * Running cleanup tasks in Extensions.
 
 Additional time is allocated to your AWS Lambda function's timeout limit for Shutdown.
+
+# Benchmark
+
+A Benchmark is a general way of describing the results of running a test against a Use-Case and specific Variations thereof.
+
+## Use-Case
+
+A Benchmark Use-Case represents a common use-case we want to measure via a Benchmark.
+
+For example, measuring the performance of sending an AWS Lambda function using Node.js + Express.js is a Benchmark Use-Case.
+
+## Variant
+
+A Benchmark Use-Case Variant is a variation of a Benchmark Use-Case that we wish to run a Benchmark for independently to observe something specific.  
+
+Every Benchmark Use-Case can have one of multiple Variations. 
+
+For example, measuring the performance of an AWS Lambda function using Node.js + Express.js is a Benchmark Use-Case, and measuring it during an AWS Lambda Cold-Start, an AWS Lambda Warm-Start, are Variations.
+
+## Report
+
+A report detailing and summarizing the results of running Benchmarks against different Use-Case Variations, published by Serverless Inc.
