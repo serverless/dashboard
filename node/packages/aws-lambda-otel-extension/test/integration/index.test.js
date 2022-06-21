@@ -7,7 +7,7 @@ const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const cleanup = require('./cleanup');
 const createCoreResources = require('./create-core-resources');
 const processFunction = require('./process-function');
-const resolveTestScenarios = require('./resolve-test-scenarios');
+const resolveTestVariantsConfig = require('./resolve-test-variants-config');
 
 describe('integration', function () {
   this.timeout(120000);
@@ -110,7 +110,7 @@ describe('integration', function () {
     ['success-callback-error', { expectedOutcome: 'error:handled' }],
   ]);
 
-  const testVariantsConfig = resolveTestScenarios(functionVariantsConfig);
+  const testVariantsConfig = resolveTestVariantsConfig(functionVariantsConfig);
 
   before(async () => {
     await createCoreResources(coreConfig);

@@ -5,7 +5,7 @@ const path = require('path');
 const apiRequest = require('@serverless/utils/api-request');
 const backendUrl = require('@serverless/utils/lib/auth/urls').backend;
 const createCoreResources = require('../create-core-resources');
-const resolveTestScenarios = require('../resolve-test-scenarios');
+const resolveTestVariantsConfig = require('../resolve-test-variants-config');
 const processFunction = require('../process-function');
 const cleanup = require('../cleanup');
 const resolveFileZipBuffer = require('../../utils/resolve-file-zip-buffer');
@@ -277,7 +277,7 @@ module.exports = async (options = {}) => {
 
   const coreConfig = {};
   await createCoreResources(coreConfig);
-  const testVariantsConfig = resolveTestScenarios(functionVariantsConfig, { multiplyBy: 5 });
+  const testVariantsConfig = resolveTestVariantsConfig(functionVariantsConfig, { multiplyBy: 5 });
   for (const testConfig of testVariantsConfig) {
     testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
       // As we process result promises sequentially step by step in next turn, allowing them to
