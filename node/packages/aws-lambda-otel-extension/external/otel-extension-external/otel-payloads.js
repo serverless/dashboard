@@ -198,7 +198,7 @@ const createResponsePayload = (eventData, currentRequestData) => {
   const strippedResponseData = stripResponseBlobData(eventData);
   return {
     ...strippedResponseData,
-    timestamp: new Date().getTime(),
+    timestamp: Date.now(),
     attributes: resourceAtt,
     resource: metricsAtt,
   };

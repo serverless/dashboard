@@ -18,7 +18,6 @@ const wrapHandler = (handlerFunction) => {
   let requestStartTime;
   let responseStartTime;
   let currentInvocationId = 0;
-  global.invokeStartDate = new Date().getTime();
   const debugLog = (...args) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
   };
@@ -56,6 +55,7 @@ const wrapHandler = (handlerFunction) => {
   );
 
   return (event, context, callback) => {
+    EvalError.$serverlessInvocationStart = Date.now();
     debugLog('Internal extension: Invocation');
     const invocationId = ++currentInvocationId;
     requestStartTime = process.hrtime.bigint();
