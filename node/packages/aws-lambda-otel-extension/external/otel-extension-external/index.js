@@ -3,10 +3,8 @@
 'use strict';
 
 const processStartTime = process.hrtime.bigint();
-const processStartDate = new Date().getTime();
 let isInitializing = true;
 let invocationStartTime;
-let invocationStartDate;
 let shutdownStartTime;
 
 module.exports = (async () => {
@@ -104,7 +102,6 @@ module.exports = (async () => {
               switch (event.type) {
                 case 'platform.start':
                   debugLog('Extension platform log: start');
-                  invocationStartDate = new Date().getTime();
                   getCurrentRequestData('start');
                   // eslint-disable-next-line no-loop-func
                   ongoingInvocationDeferred = new Promise((resolve) => {
@@ -277,9 +274,12 @@ module.exports = (async () => {
                 {
                   if (data.record.requestEventPayload) {
                     const { resourceAtt, metricsAtt } = createAttributes(data.record);
+                    const currentRequestData = getCurrentRequestData();
                     sendReport('request', {
                       ...data.record.requestEventPayload,
-                      timestamp: invocationStartDate || processStartDate,
+                      timestamp: currentRequestData.logsQueue[0]
+                        ? currentRequestData.logsQueue[0].time
+                        : new Date().getTime() - 100,
                       attributes: resourceAtt,
                       resource: metricsAtt,
                     });
