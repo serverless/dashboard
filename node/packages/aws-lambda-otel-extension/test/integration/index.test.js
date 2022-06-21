@@ -13,7 +13,7 @@ describe('integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
-  const functionsConfig = new Map([
+  const functionVariantsConfig = new Map([
     [
       'success-callback',
       {
@@ -110,11 +110,11 @@ describe('integration', function () {
     ['success-callback-error', { expectedOutcome: 'error:handled' }],
   ]);
 
-  const testScenarios = resolveTestScenarios(functionsConfig);
+  const testVariantsConfig = resolveTestScenarios(functionVariantsConfig);
 
   before(async () => {
     await createCoreResources(coreConfig);
-    for (const testConfig of testScenarios) {
+    for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to
         // reject will generate unhandled rejection.
@@ -124,7 +124,7 @@ describe('integration', function () {
     }
   });
 
-  for (const testConfig of testScenarios) {
+  for (const testConfig of testVariantsConfig) {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
