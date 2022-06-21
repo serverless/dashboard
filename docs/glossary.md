@@ -1,3 +1,10 @@
+<!--
+title: Glossary
+menuText: Glossary
+description: 
+menuOrder: 2
+-->
+
 # Glossary
 
 Specific definitions for how Serverless Console interprets its own concepts, as well as relative industry concepts related to the product.
