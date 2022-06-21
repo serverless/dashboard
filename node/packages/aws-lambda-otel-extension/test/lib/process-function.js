@@ -6,7 +6,7 @@ const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const wait = require('timers-ext/promise/sleep');
 const basename = require('./basename');
-const awsRequest = require('./aws-request');
+const awsRequest = require('../utils/aws-request');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 

@@ -7,7 +7,7 @@ const { IAM } = require('@aws-sdk/client-iam');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const buildLayer = require('../../scripts/lib/build');
-const awsRequest = require('./aws-request');
+const awsRequest = require('../utils/aws-request');
 const basename = require('./basename');
 
 const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');

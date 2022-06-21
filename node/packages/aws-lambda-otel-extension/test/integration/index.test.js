@@ -4,10 +4,10 @@ const { expect } = require('chai');
 
 const log = require('log').get('test');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
-const cleanup = require('./cleanup');
-const createCoreResources = require('./create-core-resources');
-const processFunction = require('./process-function');
-const resolveTestVariantsConfig = require('./resolve-test-variants-config');
+const cleanup = require('../lib/cleanup');
+const createCoreResources = require('../lib/create-core-resources');
+const processFunction = require('../lib/process-function');
+const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
 
 describe('integration', function () {
   this.timeout(120000);
