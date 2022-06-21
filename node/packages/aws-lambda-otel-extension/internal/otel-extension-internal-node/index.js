@@ -113,6 +113,7 @@ const requestHandler = async (span, { event, context }) => {
       traceId: span.spanContext().traceId,
       spanId: span.spanContext().spanId,
       requestData: event,
+      timestamp: global.invokeStartDate,
       executionId: context.awsRequestId,
     };
   }
