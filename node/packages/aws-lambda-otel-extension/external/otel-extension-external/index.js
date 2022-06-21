@@ -274,12 +274,8 @@ module.exports = (async () => {
                 {
                   if (data.record.requestEventPayload) {
                     const { resourceAtt, metricsAtt } = createAttributes(data.record);
-                    const currentRequestData = getCurrentRequestData();
                     sendReport('request', {
                       ...data.record.requestEventPayload,
-                      timestamp: currentRequestData.logsQueue[0]
-                        ? currentRequestData.logsQueue[0].time
-                        : new Date().getTime() - 100,
                       attributes: resourceAtt,
                       resource: metricsAtt,
                     });
