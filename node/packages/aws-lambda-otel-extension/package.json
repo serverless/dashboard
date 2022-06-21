@@ -44,7 +44,8 @@
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "test": "mocha \"test/unit/**/*.test.js\"",
     "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
-    "test:integration": "mocha \"test/integration/**/*.test.js\""
+    "test:integration": "mocha \"test/integration/**/*.test.js\"",
+    "test:performance": "mocha test/benchmark/performance.test.js"
   },
   "publishConfig": {
     "access": "public"
