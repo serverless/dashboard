@@ -277,8 +277,8 @@ module.exports = async (options = {}) => {
 
   const coreConfig = {};
   await createCoreResources(coreConfig);
-  const testScenarios = resolveTestScenarios(functionVariantsConfig, { multiplyBy: 5 });
-  for (const testConfig of testScenarios) {
+  const testVariantsConfig = resolveTestScenarios(functionVariantsConfig, { multiplyBy: 5 });
+  for (const testConfig of testVariantsConfig) {
     testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
       // As we process result promises sequentially step by step in next turn, allowing them to
       // reject will generate unhandled rejection.
@@ -288,7 +288,7 @@ module.exports = async (options = {}) => {
   }
 
   const resultsMap = new Map();
-  for (const testConfig of testScenarios) {
+  for (const testConfig of testVariantsConfig) {
     const testResult = await testConfig.deferredResult;
     if (testResult.error) throw testResult.error;
     const basename = testConfig.name.slice(0, -2);
