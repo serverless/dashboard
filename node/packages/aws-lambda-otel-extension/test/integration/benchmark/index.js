@@ -147,7 +147,7 @@ module.exports = async (options = {}) => {
             },
           },
         },
-        cases: benchmarkVariantsConfig,
+        variants: benchmarkVariantsConfig,
       },
     ],
     [
@@ -201,7 +201,7 @@ module.exports = async (options = {}) => {
             isBase64Encoded: false,
           },
         },
-        cases: benchmarkVariantsConfig,
+        variants: benchmarkVariantsConfig,
       },
     ],
     [
@@ -217,7 +217,7 @@ module.exports = async (options = {}) => {
             Timeout: 20,
           },
         },
-        cases: (() =>
+        variants: (() =>
           new Map(
             Array.from(benchmarkVariantsConfig, ([name, caseConfig]) => {
               switch (name) {

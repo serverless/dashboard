@@ -17,7 +17,7 @@ describe('integration', function () {
     [
       'success-callback',
       {
-        cases: new Map([
+        variants: new Map([
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
@@ -28,7 +28,7 @@ describe('integration', function () {
     [
       'success-callback-esm/index',
       {
-        cases: new Map([
+        variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),

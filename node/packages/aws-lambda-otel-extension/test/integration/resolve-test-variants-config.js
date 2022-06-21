@@ -4,11 +4,13 @@ const path = require('path');
 const _ = require('lodash');
 
 const resolveNestedTestConfig = (parentTestConfig, [name, config]) => {
-  if (config.cases) {
+  if (config.variants) {
     const currentTestConfig = _.merge({}, parentTestConfig, config.config, {
       name: `${parentTestConfig.name}-${name}`,
     });
-    return Array.from(config.cases, (child) => resolveNestedTestConfig(currentTestConfig, child));
+    return Array.from(config.variants, (child) =>
+      resolveNestedTestConfig(currentTestConfig, child)
+    );
   }
   return _.merge({}, parentTestConfig, config, { name: `${parentTestConfig.name}-${name}` });
 };
@@ -31,11 +33,11 @@ module.exports = (functionVariantsConfig, options = {}) => {
       },
       options.commonTestConfig
     );
-    const cases = testConfigInput.cases;
-    if (cases) {
+    const variants = testConfigInput.variants;
+    if (variants) {
       _.merge(currentTestConfig, testConfigInput.config);
       testVariants.push(
-        Array.from(cases, (child) => resolveNestedTestConfig(currentTestConfig, child))
+        Array.from(variants, (child) => resolveNestedTestConfig(currentTestConfig, child))
       );
       continue;
     }
