@@ -1,6 +1,6 @@
 'use strict';
 
-const { resourceAttributes, measureAttributes } = require('./helper');
+const { resourceAttributes, measureAttributes, stripResponseBlobData } = require('./helper');
 
 const createMetricAttributes = (fun, report) => {
   const metricAttributes = measureAttributes.map(({ key, value, source, type }) => {
@@ -182,6 +182,26 @@ const createLogPayload = (eventData, logs) => {
       ProcessingOrderId: process.hrtime.bigint().toString(),
     };
   });
+};
+
+const createRequestPayload = (eventData) => {
+  const { resourceAtt, metricsAtt } = createAttributes(eventData);
+  return {
+    ...eventData,
+    attributes: resourceAtt,
+    resource: metricsAtt,
+  };
+};
+
+const createResponsePayload = (eventData, currentRequestData) => {
+  const { resourceAtt, metricsAtt } = createAttributes(currentRequestData);
+  const strippedResponseData = stripResponseBlobData(eventData);
+  return {
+    ...strippedResponseData,
+    timestamp: new Date().getTime(),
+    attributes: resourceAtt,
+    resource: metricsAtt,
+  };
 };
 
 const createHistogramMetric = ({ name, unit, count, sum, record, attributes }) => ({
@@ -409,4 +429,6 @@ module.exports = {
   createLogPayload,
   createTracePayload,
   createMetricsPayload,
+  createRequestPayload,
+  createResponsePayload,
 };

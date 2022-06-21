@@ -20,13 +20,14 @@ module.exports = (async () => {
   const servers = new Set();
 
   const userSettings = require('./user-settings');
-  const { stripResponseBlobData, debugLog } = require('./helper');
+  const { debugLog } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const {
     createMetricsPayload,
     createTracePayload,
     createLogPayload,
-    createAttributes,
+    createRequestPayload,
+    createResponsePayload,
   } = require('./otel-payloads');
 
   const pendingReports = new Set();
@@ -273,12 +274,7 @@ module.exports = (async () => {
               case 'eventData':
                 {
                   if (data.record.requestEventPayload) {
-                    const { resourceAtt, metricsAtt } = createAttributes(data.record);
-                    sendReport('request', {
-                      ...data.record.requestEventPayload,
-                      attributes: resourceAtt,
-                      resource: metricsAtt,
-                    });
+                    sendReport('request', createRequestPayload(data.record.requestEventPayload));
                   }
                   const currentRequestData = getCurrentRequestData('request');
                   currentRequestData.eventData = data.record;
@@ -291,16 +287,10 @@ module.exports = (async () => {
                 lastTelemetryData = data;
                 if (data.record.responseEventPayload) {
                   const { eventData: currentRequestData } = getCurrentRequestData();
-                  const { resourceAtt, metricsAtt } = createAttributes(currentRequestData);
-                  const strippedResponseData = stripResponseBlobData(
-                    data.record.responseEventPayload
+                  sendReport(
+                    'response',
+                    createResponsePayload(data.record.responseEventPayload, currentRequestData)
                   );
-                  sendReport('response', {
-                    ...strippedResponseData,
-                    timestamp: new Date().getTime(),
-                    attributes: resourceAtt,
-                    resource: metricsAtt,
-                  });
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
                 for (const tracePayload of createTracePayload(
