@@ -89,6 +89,7 @@ const invoke = async (testConfig) => {
       // Occassional race condition issue on AWS side, retry
       return invoke(testConfig);
     }
+    error.message = `"${testConfig.configuration.FunctionName}" invocation failed: ${error.message}`;
     throw error;
   }
   const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
