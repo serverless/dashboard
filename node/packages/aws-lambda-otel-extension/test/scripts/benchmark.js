@@ -5,7 +5,7 @@
 require('essentials');
 require('log-node')();
 
-require('../integration/benchmark')().then((resultsMap) => {
+require('../benchmark')().then((resultsMap) => {
   process.stdout.write(
     `${[
       [

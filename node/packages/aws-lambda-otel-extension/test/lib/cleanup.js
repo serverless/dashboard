@@ -4,7 +4,7 @@ const { IAM } = require('@aws-sdk/client-iam');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
-const awsRequest = require('./aws-request');
+const awsRequest = require('../utils/aws-request');
 const basename = require('./basename');
 
 const getAllFunctionNames = async (marker = undefined) => {
