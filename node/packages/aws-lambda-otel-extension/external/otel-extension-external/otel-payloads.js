@@ -111,8 +111,7 @@ const createResourceAttributes = (fun) =>
     }
   });
 
-const createLogPayload = (eventData, logs) => {
-  const spanData = eventData.span;
+const createAttributes = (eventData) => {
   const key = Object.keys(eventData.eventData)[0];
 
   const metricAttributeNames = new Set([
@@ -148,6 +147,16 @@ const createLogPayload = (eventData, logs) => {
     if (!resourceAttributeNames.has(attribute.key)) continue;
     resourceAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
+
+  return {
+    resourceAtt,
+    metricsAtt,
+  };
+};
+
+const createLogPayload = (eventData, logs) => {
+  const spanData = eventData.span;
+  const { resourceAtt, metricsAtt } = createAttributes(eventData);
 
   const severityNumberMap = {
     TRACE: 1,
@@ -396,6 +405,7 @@ const createTracePayload = (requestId, fun, traces) => {
 };
 
 module.exports = {
+  createAttributes,
   createLogPayload,
   createTracePayload,
   createMetricsPayload,

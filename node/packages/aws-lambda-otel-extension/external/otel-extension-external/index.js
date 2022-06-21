@@ -3,8 +3,10 @@
 'use strict';
 
 const processStartTime = process.hrtime.bigint();
+const processStartDate = new Date().getTime();
 let isInitializing = true;
 let invocationStartTime;
+let invocationStartDate;
 let shutdownStartTime;
 
 module.exports = (async () => {
@@ -22,7 +24,12 @@ module.exports = (async () => {
   const userSettings = require('./user-settings');
   const { stripResponseBlobData, debugLog } = require('./helper');
   const reportOtelData = require('./report-otel-data');
-  const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
+  const {
+    createMetricsPayload,
+    createTracePayload,
+    createLogPayload,
+    createAttributes,
+  } = require('./otel-payloads');
 
   const pendingReports = new Set();
   const sendReport = (method, payload) => {
@@ -97,6 +104,7 @@ module.exports = (async () => {
               switch (event.type) {
                 case 'platform.start':
                   debugLog('Extension platform log: start');
+                  invocationStartDate = new Date().getTime();
                   getCurrentRequestData('start');
                   // eslint-disable-next-line no-loop-func
                   ongoingInvocationDeferred = new Promise((resolve) => {
@@ -268,7 +276,13 @@ module.exports = (async () => {
               case 'eventData':
                 {
                   if (data.record.requestEventPayload) {
-                    sendReport('request', data.record.requestEventPayload);
+                    const { resourceAtt, metricsAtt } = createAttributes(data.record);
+                    sendReport('request', {
+                      ...data.record.requestEventPayload,
+                      timestamp: invocationStartDate || processStartDate,
+                      attributes: resourceAtt,
+                      resource: metricsAtt,
+                    });
                   }
                   const currentRequestData = getCurrentRequestData('request');
                   currentRequestData.eventData = data.record;
@@ -280,7 +294,17 @@ module.exports = (async () => {
               case 'telemetryData':
                 lastTelemetryData = data;
                 if (data.record.responseEventPayload) {
-                  sendReport('response', stripResponseBlobData(data.record.responseEventPayload));
+                  const { eventData: currentRequestData } = getCurrentRequestData();
+                  const { resourceAtt, metricsAtt } = createAttributes(currentRequestData);
+                  const strippedResponseData = stripResponseBlobData(
+                    data.record.responseEventPayload
+                  );
+                  sendReport('response', {
+                    ...strippedResponseData,
+                    timestamp: new Date().getTime(),
+                    attributes: resourceAtt,
+                    resource: metricsAtt,
+                  });
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
                 for (const tracePayload of createTracePayload(
