@@ -14,7 +14,7 @@ if (!EvalError.$serverlessHandlerFunction && !EvalError.$serverlessHandlerDeferr
 const awsLambdaInstrumentation = EvalError.$serverlessAwsLambdaInstrumentation;
 delete EvalError.$serverlessAwsLambdaInstrumentation;
 
-const wrapHandler = (handlerFunction) => {
+const wrapOriginalHandler = (orignalHandler) => {
   let requestStartTime;
   let responseStartTime;
   let currentInvocationId = 0;
@@ -23,31 +23,33 @@ const wrapHandler = (handlerFunction) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
   };
 
-  const wrappedHandler = awsLambdaInstrumentation._instance._getPatchHandler(
-    (event, context, callback) => {
+  const otelHandler = awsLambdaInstrumentation._instance._getPatchHandler(
+    (event, context, otelCallback) => {
       const invocationId = currentInvocationId;
       debugLog(
         'Extension overhead duration: internal request:',
         `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
       );
 
-      const wrapCallback =
-        (originalCallback) =>
+      const wrapOtelCallback =
+        (someOtelCallback) =>
         (...args) => {
+          // Callback invoked directly by Lambda logic, it'll invoke otel wrap callback
           if (invocationId !== currentInvocationId) return;
           if (isResolved) return;
           isResolved = true;
           if (!responseStartTime) responseStartTime = process.hrtime.bigint();
-          originalCallback(...args);
+          someOtelCallback(...args);
         };
-      const done = wrapCallback(context.done);
+      const done = wrapOtelCallback(context.done);
       context.done = done;
       context.succeed = (result) => done(null, result);
       context.fail = (err) => done(err == null ? 'handled' : err);
-      const result = handlerFunction(event, context, wrapCallback(callback));
+      const result = orignalHandler(event, context, wrapOtelCallback(otelCallback));
       if (!result) return result;
       if (typeof result.then !== 'function') return result;
       return Promise.resolve(result).finally(() => {
+        // Lambda logic resolved, passing result to otel wrapper
         if (invocationId !== currentInvocationId) return;
         if (isResolved) return;
         isResolved = true;
@@ -56,7 +58,7 @@ const wrapHandler = (handlerFunction) => {
     }
   );
 
-  return (event, context, callback) => {
+  return (event, context, awsCallback) => {
     requestStartTime = process.hrtime.bigint();
     EvalError.$serverlessInvocationStart = Date.now();
     debugLog('Internal extension: Invocation');
@@ -74,29 +76,31 @@ const wrapHandler = (handlerFunction) => {
         responseStartTime = null;
       }
     };
-    const wrapCallback =
-      (originalCallback) =>
+    const wrapAwsCallback =
+      (someAwsCallback) =>
       (...args) => {
+        // Callback invoked by Otel instrumentation after triggering response hook
         if (invocationId !== currentInvocationId) {
-          originalCallback(...args);
+          someAwsCallback(...args);
           return;
         }
         Promise.all([
           EvalError.$serverlessRequestHandlerPromise,
           EvalError.$serverlessResponseHandlerPromise,
         ]).finally(() => {
-          process.nextTick(() => originalCallback(...args));
+          process.nextTick(() => someAwsCallback(...args));
           logResponseDuration();
         });
       };
-    const done = wrapCallback(context.done);
+    const done = wrapAwsCallback(context.done);
     context.done = done;
     context.succeed = (result) => done(null, result);
     context.fail = (err) => done(err == null ? 'handled' : err);
-    const result = wrappedHandler(event, context, wrapCallback(callback));
+    const result = otelHandler(event, context, wrapAwsCallback(awsCallback));
     if (!result) return result;
     if (typeof result.then !== 'function') return result;
     return Promise.resolve(result).finally(() => {
+      // Otel response hook triggered, passing result to AWS
       if (invocationId !== currentInvocationId) return null;
       return Promise.all([
         EvalError.$serverlessRequestHandlerPromise,
@@ -128,11 +132,11 @@ if (EvalError.$serverlessHandlerDeferred) {
     const handlerFunction = handlerContext[handlerFunctionName];
     if (typeof handlerFunction !== 'function') return handlerModule;
 
-    return { handler: wrapHandler(handlerFunction) };
+    return { handler: wrapOriginalHandler(handlerFunction) };
   });
   return;
 }
 
-const handlerFunction = EvalError.$serverlessHandlerFunction;
+const originalHandler = EvalError.$serverlessHandlerFunction;
 delete EvalError.$serverlessHandlerFunction;
-module.exports.handler = wrapHandler(handlerFunction);
+module.exports.handler = wrapOriginalHandler(originalHandler);
