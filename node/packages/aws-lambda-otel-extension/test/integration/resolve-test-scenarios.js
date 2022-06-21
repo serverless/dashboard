@@ -3,20 +3,20 @@
 const path = require('path');
 const _ = require('lodash');
 
-const resolveNestedTestScenario = (parentTestConfig, [name, config]) => {
+const resolveNestedTestConfig = (parentTestConfig, [name, config]) => {
   if (config.cases) {
     const currentTestConfig = _.merge({}, parentTestConfig, config.config, {
       name: `${parentTestConfig.name}-${name}`,
     });
-    return Array.from(config.cases, (child) => resolveNestedTestScenario(currentTestConfig, child));
+    return Array.from(config.cases, (child) => resolveNestedTestConfig(currentTestConfig, child));
   }
   return _.merge({}, parentTestConfig, config, { name: `${parentTestConfig.name}-${name}` });
 };
 
-module.exports = (functionsConfig, options = {}) => {
-  const testScenarios = [];
+module.exports = (functionVariantsConfig, options = {}) => {
+  const testVariants = [];
 
-  for (const [handlerModuleName, testConfigInput] of functionsConfig) {
+  for (const [handlerModuleName, testConfigInput] of functionVariantsConfig) {
     const currentName = handlerModuleName.includes('/')
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
@@ -34,15 +34,15 @@ module.exports = (functionsConfig, options = {}) => {
     const cases = testConfigInput.cases;
     if (cases) {
       _.merge(currentTestConfig, testConfigInput.config);
-      testScenarios.push(
-        Array.from(cases, (child) => resolveNestedTestScenario(currentTestConfig, child))
+      testVariants.push(
+        Array.from(cases, (child) => resolveNestedTestConfig(currentTestConfig, child))
       );
       continue;
     }
-    testScenarios.push(_.merge(currentTestConfig, testConfigInput));
+    testVariants.push(_.merge(currentTestConfig, testConfigInput));
   }
 
-  const result = testScenarios.flat(Infinity);
+  const result = testVariants.flat(Infinity);
   if (!options.multiplyBy) return result;
   return result
     .map((testScenario) => {
