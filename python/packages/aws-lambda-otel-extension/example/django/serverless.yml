@@ -20,17 +20,17 @@ provider:
           Resource:
             - "*"
   environment:
-    DEBUG_SLS_OTEL_LAYER: true
-    OTEL_RESOURCE_ATTRIBUTES: custom.name=example-project,custom.tag.provider=serverless,service.name=service
+    # DEBUG_SLS_OTEL_LAYER: true
+    # OTEL_RESOURCE_ATTRIBUTES: custom.name=example-project,custom.tag.provider=serverless,service.name=service
     OTEL_PYTHON_ENABLED_INSTRUMENTATIONS: ~common,django
     SLS_AWS_LAMBDA_OTEL_EXTENSION_LOG_LEVEL: debug
-    OTEL_PYTHON_LOG_LEVEL: debug
-    OTEL_PYTHON_LOG_CORRELATION: true
+    #OTEL_PYTHON_LOG_LEVEL: debug
+    #OTEL_PYTHON_LOG_CORRELATION: true
     SLS_OTEL_USER_SETTINGS: |
       {
           "common": {
               "destination": {
-                  "requestHeaders": "serverless_token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  "requestHeaders": "serverless_token=${self:custom.SERVERLESS_TOKEN}"
               }
           },
           "extension": {
@@ -38,20 +38,15 @@ provider:
                   "http": {
                     "_url": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951"
                   }
-              },
-              "logs": {
-                  "http": {
-                    "_url": "http://sandbox:4243"
-                  }
               }
           },
           "opentelemetry": {
               "resource": {
                   "attributes": {
-                      "service.name": "${self:service}",
-                      "sls_service_name": "${self:service}",
+                      "service.name": "${self:custom.SLS_SERVICE_NAME}",
+                      "sls_service_name": "${self:custom.SLS_SERVICE_NAME}",
                       "sls_stage": "${sls:stage}",
-                      "sls_org_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                      "sls_org_id": "${self:custom.SLS_ORG_ID}"
                   }
               },
               "metrics": {
@@ -59,19 +54,24 @@ provider:
               }
           },
           "logs": {
-            "destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/logs"
+            "_destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/logs",
+            "destination": "https://core.serverless-dev.com/ingestion/kinesis/v1/logs"
           },
           "metrics": {
-            "destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/metrics"
+            "_destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/metrics",
+            "destination": "https://core.serverless-dev.com/ingestion/kinesis/v1/metrics"
           },
           "request": {
-            "destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/request-response"
+            "_destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/request-response",
+            "destination": "https://core.serverless-dev.com/ingestion/kinesis/v1/request-response"
           },
           "response": {
-            "destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/request-response"
+            "_destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/request-response",
+            "destination": "https://core.serverless-dev.com/ingestion/kinesis/v1/request-response"
           },
           "traces": {
-            "destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/traces"
+            "_destination": "https://webhook.site/9fe27a37-8ebd-4a3b-9969-e446cfb03951/ingestion/kinesis/v1/traces",
+            "destination": "https://core.serverless-dev.com/ingestion/kinesis/v1/traces"
           }
       }
 
@@ -104,6 +104,8 @@ functions:
     environment:
       ORIG_HANDLER: test_handler.handler
       OTEL_PYTHON_ENABLED_INSTRUMENTATIONS: ~common
+    events:
+      - httpApi: ANY /boomchickens
 
 plugins:
   - serverless-python-requirements
@@ -125,3 +127,8 @@ layers:
       patterns:
         - "!**"
         - "otel-extension-internal-python/**"
+
+custom:
+  SERVERLESS_TOKEN: ${env:SERVERLESS_TOKEN, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+  SLS_SERVICE_NAME: ${env:SLS_SERVICE_NAME, self:service}
+  SLS_ORG_ID: ${env:SLS_ORG_ID, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}

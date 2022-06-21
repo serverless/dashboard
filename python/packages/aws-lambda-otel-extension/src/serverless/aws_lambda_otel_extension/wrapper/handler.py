@@ -4,7 +4,6 @@ import logging
 import os
 import platform
 import sys
-import time
 import typing
 import urllib.request
 from contextlib import contextmanager
@@ -19,16 +18,19 @@ from opentelemetry.context import set_value as set_context_value
 from opentelemetry.distro import OpenTelemetryDistro
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
 from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.propagators.aws import AwsXRayPropagator
 from opentelemetry.sdk.extension.aws.resource import AwsLambdaResourceDetector
+from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
-from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
+from opentelemetry.sdk.trace import ReadableSpan, Span, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import (
-    Span,
     SpanContext,
     format_span_id,
     format_trace_id,
@@ -38,7 +40,7 @@ from opentelemetry.trace import (
 )
 from pkg_resources import iter_entry_points
 
-from serverless.aws_lambda_otel_extension import constants, environment, settings, types
+from serverless.aws_lambda_otel_extension import constants, defaults, environment, settings, types
 from serverless.aws_lambda_otel_extension.enums import LambdaEventType
 from serverless.aws_lambda_otel_extension.event import detect_lambda_event_type
 from serverless.aws_lambda_otel_extension.resource import SlsResourceDetector
@@ -57,6 +59,7 @@ def append_aws_request_id(aws_request_id: str) -> None:
         global aws_request_ids
         logger.debug({"aws_request_id": aws_request_id})
         aws_request_ids.append(aws_request_id)
+        logger.debug({"aws_request_ids": aws_request_ids})
 
 
 @contextmanager
@@ -80,7 +83,7 @@ def extract_account_id_from_invoked_function_arn(invoked_arn: str) -> typing.Opt
     return invoked_arn_parts[4]
 
 
-def perform_module_instrumentation() -> None:
+def perform_automatic_instrumentation() -> None:
 
     distro = OpenTelemetryDistro()
 
@@ -115,68 +118,83 @@ def perform_module_instrumentation() -> None:
         entry_point.load()()
 
 
-def format_span_compatible(span: ReadableSpan) -> typing.Dict:
+def format_span_compatible(span: Span) -> typing.Dict:
 
     parent_id = None
 
     if span.parent is not None:
         if isinstance(span.parent, Span):
-            ctx = span.parent.context
-            parent_id = format_span_id(ctx.span_id)
-        elif isinstance(span.parent, SpanContext):
+            parent_id = format_span_id(span.parent.get_span_context().span_id)
+        if isinstance(span.parent, SpanContext):
             parent_id = format_span_id(span.parent.span_id)
 
     events = []
 
-    for event in span._events:
+    for event in span.events:
         events.append(
             {
                 "name": event.name,
                 "timeUnixNano": event.timestamp,
-                "attributes": span._format_attributes(event.attributes),
+                "attributes": {
+                    **span._format_attributes(event.attributes),
+                    SlsSpanAttributes.SLS_ORIGINAL_PROPERTIES: ",".join(
+                        span._format_attributes(event.attributes).keys()
+                    ),
+                },
             }
         )
 
     links = []
 
-    for link in span._links:
+    for link in span.links:
         links.append(
             {
                 "traceId": format_trace_id(link.context.trace_id),
                 "spanId": format_span_id(link.context.span_id),
-                "attributes": span._format_attributes(link.attributes),
+                "attributes": {
+                    **span._format_attributes(link.attributes),
+                    SlsSpanAttributes.SLS_ORIGINAL_PROPERTIES: ",".join(
+                        span._format_attributes(link.attributes).keys()
+                    ),
+                },
             }
         )
 
-    return {
+    data: typing.Dict = {
         "name": span._name,
         "traceId": format_trace_id(span.context.trace_id),
         "spanId": format_span_id(span.context.span_id),
-        "parentTraceId": parent_id,
+        "parentSpanId": parent_id,
         "kind": f"SPAN_KIND_{span.kind.name}",
-        # "execWrapperStartTimeNano": environment.EXEC_WRAPPER_START_UNIX_NANO,
-        "startTimeUnixNano": span._start_time,
-        "endTimeUnixNano": span._end_time,
-        "attributes": span._format_attributes(span._attributes),
+        "startTimeUnixNano": str(span._start_time),
+        "endTimeUnixNano": str(span._end_time),
+        "attributes": {
+            **span._format_attributes(span._attributes),
+            SlsSpanAttributes.SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(span._attributes).keys()),
+        },
         "events": events,
-        "links": span._format_links(span._links),
+        "links": links,
         "status": {},
     }
+
+    if environment.EXEC_WRAPPER_START_UNIX_NANO:
+        data["execWrapperStartTimeNano"] = environment.EXEC_WRAPPER_START_UNIX_NANO
+
+    return data
 
 
 def instrumented_handler(
     event: typing.Dict,
     context: types.LambdaContext,
-    actual_handler_function,
-    actual_handler_filepath,
+    actual_handler_function: typing.Callable,
     in_memory_span_exporter: InMemorySpanExporter,
-    base_attributes,
-    http_attributes,
-    resource_attributes,
-    execution_id,
+    base_attributes: typing.Dict,
+    http_attributes: typing.Dict,
+    resource_attributes: typing.Dict,
+    span_links: typing.List[Span],
 ) -> typing.Union[typing.Dict, Exception]:
 
-    span = get_current_span()
+    span = typing.cast(Span, get_current_span())
     span_context = span.get_span_context()
 
     trace_id = format_trace_id(span_context.trace_id)
@@ -187,19 +205,19 @@ def instrumented_handler(
     actual_handler_module_name = getattr(actual_handler_function, "__module__", None)
     actual_handler_function_name = getattr(actual_handler_function, "__name__", None)
 
-    aws_request_id = getattr(context, "aws_request_id", "unknown")
+    aws_request_id = context.aws_request_id
 
     event_data_record = {
         "record": {
             "eventData": {
-                execution_id: {
+                context.aws_request_id: {
                     **base_attributes,
                     **http_attributes,
                     **resource_attributes,
                 },
             },
             "requestEventPayload": {
-                "executionId": execution_id,
+                "executionId": context.aws_request_id,
                 "requestData": event,
                 "spanId": span_id,
                 "traceId": trace_id,
@@ -211,6 +229,9 @@ def instrumented_handler(
         },
         "recordType": "eventData",
     }
+
+    event_data_record_body = json.dumps(event_data_record)
+    event_data_record = json.loads(event_data_record_body)
 
     if not settings.test_dry_log:
         with suppress_instrumentation():
@@ -227,30 +248,32 @@ def instrumented_handler(
                 extension_otel_http_response.read()
             except Exception:
                 logger.exception("Failed to send handler eventData")
+            logger.debug({"event_data_record": event_data_record})
     else:
         if settings.test_dry_log_pretty:
             logger.info(json.dumps({"event_data_record": event_data_record}, indent=4, sort_keys=True))
         else:
             logger.info({"event_data_record": event_data_record})
 
-    actual_response_or_exception: typing.Union[typing.Dict, Exception]
+    handler_response_or_exception: typing.Union[typing.Dict, Exception]
 
+    logger.debug({"invoking": repr(actual_handler_function)})
     try:
-        actual_response_or_exception = actual_handler_function(event, context)
+        handler_response_or_exception = actual_handler_function(event, context)
     except Exception as exception:
-        actual_response_or_exception = exception
+        handler_response_or_exception = exception
 
-    http_request_path = None
+    logger.debug({"invoked": repr(actual_handler_function), "type": repr(type(handler_response_or_exception))})
+
+    overloaded_http_path = None
 
     # Fetch the HTTP request path in order to add the non-standard `http.path` attribute.
     for finished_span in in_memory_span_exporter.get_finished_spans():
         if isinstance(finished_span, ReadableSpan):
             if finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django":
                 if finished_span.attributes:
-                    if "http.route" in finished_span.attributes:
-                        http_request_path = finished_span.attributes["http.route"]
-                    # if "http.status_code" in finished_span.attributes:
-                    #     http_response_status_code = finished_span.attributes["http.status_code"]
+                    if SpanAttributes.HTTP_ROUTE in finished_span.attributes:
+                        overloaded_http_path = finished_span.attributes[SpanAttributes.HTTP_ROUTE]
 
     if span.is_recording():
 
@@ -265,18 +288,21 @@ def instrumented_handler(
                 span.update_name(app)
                 span.set_attribute(SlsSpanAttributes.SLS_HANDLER_RENAMED, True)
                 span.set_attribute(SlsSpanAttributes.SLS_HANDLER_ACTUAL, app)
-                if environment.ORIG_HANDLER:
-                    span.set_attribute(SlsSpanAttributes.SLS_HANDLER_MIDDLEWARE, environment.ORIG_HANDLER)
-                if environment._HANDLER:
-                    span.set_attribute(SlsSpanAttributes.SLS_HANDLER_ENTRYPOINT, environment._HANDLER or "unknown")
             except Exception:
-                pass
+                span.set_attribute(SlsSpanAttributes.SLS_HANDLER_RENAMED, False)
+        else:
+            if environment.ORIG_HANDLER:
+                span.set_attribute(SlsSpanAttributes.SLS_HANDLER_ACTUAL, environment.ORIG_HANDLER)
+            if environment._HANDLER:
+                span.set_attribute(SlsSpanAttributes.SLS_HANDLER_ENTRYPOINT, environment._HANDLER)
 
         span.set_attributes(
             {
                 ResourceAttributes.FAAS_ID: invoked_function_arn,
                 SpanAttributes.FAAS_EXECUTION: aws_request_id,
                 SpanAttributes.AWS_LAMBDA_INVOKED_ARN: invoked_function_arn,
+                SlsSpanAttributes.SLS_AWS_REQUEST_IDS: aws_request_ids,
+                SlsSpanAttributes.SLS_AWS_REQUEST_IDS_COUNT: len(aws_request_ids),
             }
         )
 
@@ -286,15 +312,19 @@ def instrumented_handler(
             span.set_attribute(SpanAttributes.CODE_NAMESPACE, actual_handler_module_name)
         if actual_handler_function_name:
             span.set_attribute(SpanAttributes.CODE_FUNCTION, actual_handler_function_name)
-        if actual_handler_filepath:
-            span.set_attribute(SpanAttributes.CODE_FILEPATH, actual_handler_filepath)
 
         # TODO: Find out how important this is.. possible waste of time scanning through finished spans in order to
         # attribute here vs in telemetryData.
-        if http_request_path:
-            span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, http_request_path)
+        if overloaded_http_path:
+            span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, overloaded_http_path)
 
-    return actual_response_or_exception
+        if isinstance(span._links, BoundedList):
+            span._links.extend(span_links)
+
+    if isinstance(handler_response_or_exception, Exception):
+        raise handler_response_or_exception
+
+    return handler_response_or_exception
 
 
 def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext) -> typing.Dict:
@@ -307,10 +337,20 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
     in_memory_span_exporter = InMemorySpanExporter()
 
     # We should always attempt to make sure _HANDLER is defined from the ORIG_HANDLER if it is missing.
-    os.environ.setdefault("_HANDLER", constants.PACKAGE_COMPATIBLE_WRAPPER_MODULE)
+    os.environ.setdefault(constants._HANDLER_ENV_VAR, constants.PACKAGE_COMPATIBLE_WRAPPER_MODULE)
+    os.environ.setdefault(
+        constants.OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT_ENV_VAR,
+        str(defaults.OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT),
+    )
+
+    invoked_function_arn = context.invoked_function_arn
+    aws_request_id = context.aws_request_id
+
+    is_cold_start = not aws_request_ids
+    append_aws_request_id(aws_request_id)
 
     # If there are no invocations (cold start) then configure the environment and set up the tracer provider.
-    if not aws_request_ids:
+    if is_cold_start:
         resource = get_aggregated_resources(
             detectors=[
                 ProcessResourceDetector(),
@@ -321,10 +361,7 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
             ]
         )
 
-        tracer_provider = TracerProvider(resource=resource)
-
-        # This is always required regarless of settings.test_dry_log.
-        tracer_provider.add_span_processor(SimpleSpanProcessor(in_memory_span_exporter))
+        tracer_provider = TracerProvider(id_generator=AwsXRayIdGenerator(), resource=resource)
 
         # Extra information is logged to the console.
         if settings.test_dry_log:
@@ -333,28 +370,33 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
             )
 
         set_tracer_provider(tracer_provider)
+
+        set_global_textmap(AwsXRayPropagator())
+
     else:
         tracer_provider = typing.cast(TracerProvider, get_tracer_provider())
+
+    tracer_provider.add_span_processor(SimpleSpanProcessor(in_memory_span_exporter))
 
     tracer = tracer_provider.get_tracer(__name__, constants.PACKAGE_VERSION)
 
     # Store this for later without if suddenly changing later.
     orig_handler = os.environ.get("ORIG_HANDLER", os.environ["_HANDLER"])
 
-    invoked_function_arn = getattr(context, "invoked_function_arn", "unknown")
-
-    aws_request_id = getattr(context, "aws_request_id", "unknown")
+    resource_attributes: typing.Dict
 
     if isinstance(tracer_provider, TracerProvider):
         resource_attributes = {**tracer_provider.resource.attributes}
     else:
         resource_attributes = {}
 
-    if not aws_request_ids:
-        with tracer.start_as_current_span(name="serverless_instrumentation_init"):
-            perform_module_instrumentation()
+    span_links = []
 
-    append_aws_request_id(aws_request_id)
+    if is_cold_start:
+        with tracer.start_as_current_span(name="perform_automatic_instrumentation()") as _span:
+            if isinstance(_span, Span):
+                span_links.append(_span)
+            perform_automatic_instrumentation()
 
     event_type = detect_lambda_event_type(event, context)
 
@@ -364,7 +406,7 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
         "computeCustomFunctionVersion": environment.AWS_LAMBDA_FUNCTION_VERSION,
         "computeCustomLogGroupName": environment.AWS_LAMBDA_LOG_GROUP_NAME,
         "computeCustomLogStreamName": environment.AWS_LAMBDA_LOG_STREAM_NAME,
-        "computeIsColdStart": not aws_request_ids,  # Quick and dirty
+        "computeIsColdStart": is_cold_start,
         "computeMemorySize": environment.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
         "computeRegion": environment.AWS_REGION,
         "computeRuntime": "aws.lambda.python.{}.{}.{}".format(
@@ -383,28 +425,28 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
     wrapper_attributes: typing.Dict = {}
     http_attributes: typing.Dict = {}
 
-    http_request_path = None
-    http_response_status_code = None
+    http_path = None
+    http_status_code = None
 
     if event_type in [LambdaEventType.APIGateway, LambdaEventType.APIGatewayV2]:
 
         http_attributes = {
-            "_eventCustomRequestId": event["requestContext"]["requestId"],
             "eventCustomAccountId": event["requestContext"]["accountId"],
             "eventCustomApiId": event["requestContext"]["apiId"],
             "eventCustomDomain": event["requestContext"]["domainName"],
+            "_eventCustomRequestId": event["requestContext"]["requestId"],
             "eventSource": "aws.apigateway",
         }
 
     if event_type == LambdaEventType.APIGateway:
 
-        http_request_path = event["requestContext"]["resourcePath"]
+        http_path = event["requestContext"]["resourcePath"]
 
         http_attributes = {
             **http_attributes,
             "eventCustomHttpMethod": event["requestContext"]["httpMethod"],
             "eventCustomRequestTimeEpoch": event["requestContext"]["requestTimeEpoch"],
-            "httpPath": http_request_path,
+            "httpPath": http_path,
             "rawHttpPath": event["path"],
         }
 
@@ -413,73 +455,83 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
         routeKey = event["requestContext"]["routeKey"]
 
         if " " in routeKey:
-            http_request_path = routeKey.split(" ")[1]
+            http_path = routeKey.split(" ")[1]
         else:
-            http_request_path = routeKey
+            http_path = routeKey
 
         http_attributes = {
             **http_attributes,
             "eventCustomHttpMethod": event["requestContext"]["http"]["method"],
             "eventCustomRequestTimeEpoch": event["requestContext"]["timeEpoch"],
             "eventCustomStage": event["requestContext"]["stage"],
-            "httpPath": http_request_path,
+            "httpPath": http_path,
             "rawHttpPath": event["rawPath"],
         }
 
     extension_otel_http_request: urllib.request.Request
     extension_otel_http_response: http.client.HTTPResponse
 
-    actual_response_or_exception: typing.Union[typing.Dict, Exception]
+    handler_response_or_exception: typing.Union[typing.Dict, Exception]
 
     handler_module_name, handler_function_name = os.getenv("ORIG_HANDLER", os.environ["_HANDLER"]).rsplit(".", 1)
     handler_module = import_module(handler_module_name)
 
-    actual_handler_filepath = getattr(handler_module, "__file__", None)
     actual_handler_function = getattr(handler_module, handler_function_name)
-
-    execution_id = context.aws_request_id
 
     # Hack way of utilizing the standard AwsLambdaInstrumentor since it doesn't support request or response hooks which
     # would have worked beautifully as function defined functions.
     # See: https://github.com/open-telemetry/opentelemetry-python-contrib/issues/1140
     os.environ["ORIG_HANDLER"] = f"{instrumented_handler.__module__}.{instrumented_handler.__name__}"
-    AwsLambdaInstrumentor().instrument()
+
+    if is_cold_start:
+        with tracer.start_as_current_span(name="AwsLambdaInstrumentor().instrument()") as _span:
+            if isinstance(_span, Span):
+                span_links.append(_span)
+            AwsLambdaInstrumentor().instrument()
+
     os.environ["ORIG_HANDLER"] = orig_handler
 
     # Call instrumented_handler which will in turn send an event to the collector and then call the
     # actual_handler_function.
-    actual_response_or_exception = instrumented_handler(
-        event,
-        context,
-        actual_handler_function,
-        actual_handler_filepath,
-        in_memory_span_exporter,
-        base_attributes,
-        http_attributes,
-        resource_attributes,
-        execution_id,
-    )
 
-    if isinstance(tracer_provider, TracerProvider):
-        tracer_provider.force_flush()
-        tracer_provider.shutdown()
-
-    # TODO: Add a timeout to this.
-    while not in_memory_span_exporter._stopped:
-        time.sleep(0.05)
+    try:
+        handler_response_or_exception = instrumented_handler(
+            event,
+            context,
+            actual_handler_function,
+            in_memory_span_exporter,
+            base_attributes,
+            http_attributes,
+            resource_attributes,
+            span_links,
+        )
+    except Exception as exception:
+        handler_response_or_exception = exception
 
     finished_spans_by_instrumentation: typing.Dict[InstrumentationScope, typing.List[ReadableSpan]] = {}
 
+    tracer_provider.force_flush()
     finished_spans = in_memory_span_exporter.get_finished_spans()
 
     aws_lambda_instrumentation_span = None
 
     for finished_span in finished_spans:
+        try:
+            logger.debug({"finished_span": {"instrumentation_scope": finished_span.instrumentation_scope}})
+        except Exception:
+            logger.exception({"error": "Failed to log finished span scope"})
+
         if isinstance(finished_span, ReadableSpan):
+
+            finished_spans_by_instrumentation.setdefault(finished_span.instrumentation_scope, []).append(finished_span)
             if finished_span.instrumentation_scope.name == "opentelemetry.instrumentation.aws_lambda":
                 # There should be only one span for this instrumentation.
                 aws_lambda_instrumentation_span = finished_span
-            finished_spans_by_instrumentation.setdefault(finished_span.instrumentation_scope, []).append(finished_span)
+
+            if finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django":
+                if finished_span.attributes:
+                    if "http.status_code" in finished_span.attributes:
+                        http_status_code = finished_span.attributes["http.status_code"]
 
     instrumented_spans = []
 
@@ -496,48 +548,52 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
 
     # Prepare HTTP attributes.
     http_attributes = {
-        "httpStatusCode": http_response_status_code,
+        "httpStatusCode": http_status_code,
         **http_attributes,
     }
 
     # Prepare wrapper attributes.
     wrapper_attributes = {
         **wrapper_attributes,
-        "error": isinstance(actual_response_or_exception, Exception),
+        "error": isinstance(handler_response_or_exception, Exception),
     }
 
     if aws_lambda_instrumentation_span:
         if aws_lambda_instrumentation_span.start_time:
             wrapper_attributes = {
                 **wrapper_attributes,
-                "startTime": (aws_lambda_instrumentation_span.start_time / 1000000),
+                "startTime": int(aws_lambda_instrumentation_span.start_time / 1000000),
             }
 
         if aws_lambda_instrumentation_span.end_time:
             wrapper_attributes = {
                 **wrapper_attributes,
-                "endTime": (aws_lambda_instrumentation_span.end_time / 1000000),
+                "endTime": int(aws_lambda_instrumentation_span.end_time / 1000000),
             }
 
     # If there was an exception, add it to the wrapper attributes.
-    if isinstance(actual_response_or_exception, Exception):
+    if isinstance(handler_response_or_exception, Exception):
         wrapper_attributes = {
             **wrapper_attributes,
-            "errorCulprit": str(actual_response_or_exception),
-            "errorMessage": str(actual_response_or_exception),
-            "errorType": "handled",  # FIXME: Verify this is normal
-            "errorStackTrace": "".join(TracebackException.from_exception(actual_response_or_exception).format()),
+            "errorCulprit": str(handler_response_or_exception),
+            "errorExceptionMessage": str(handler_response_or_exception),
+            "errorExceptionType": "handled",  # FIXME: Verify this is normal
+            "errorExceptionStacktrace": "".join(
+                TracebackException.from_exception(handler_response_or_exception).format()
+            ),
         }
 
     # TODO: We are making an assumption here that there is only ever one resource.. that's not always going to be the
     # case.  All the spans/metrics/logs need to be organized by the resource objects they are associated with.. which is
     # why traces/metrics below are lists.
 
+    logger.debug({"aws_lambda_instrumentation_span": repr(aws_lambda_instrumentation_span)})
+
     if aws_lambda_instrumentation_span:
 
         span_context = aws_lambda_instrumentation_span.get_span_context()
-        span_id = span_context.span_id
-        trace_id = span_context.trace_id
+        span_id = format_span_id(span_context.span_id)
+        trace_id = format_trace_id(span_context.trace_id)
 
         telemetry_data_record = {
             "record": {
@@ -549,9 +605,9 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
                 },
                 "responseEventPayload": {
                     "errorData": None,
-                    "executionId": execution_id,
-                    "responseData": actual_response_or_exception
-                    if isinstance(actual_response_or_exception, dict)
+                    "executionId": context.aws_request_id,
+                    "responseData": handler_response_or_exception
+                    if isinstance(handler_response_or_exception, dict)
                     else None,
                     "spanId": span_id,
                     "traceId": trace_id,
@@ -570,7 +626,11 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
                 },
             },
             "recordType": "telemetryData",
+            "requestId": context.aws_request_id,
         }
+
+        telemetry_data_record_body = json.dumps(telemetry_data_record)
+        telemetry_data_record = json.loads(telemetry_data_record_body)
 
         if not settings.test_dry_log:
             with suppress_instrumentation():
@@ -581,21 +641,20 @@ def auto_instrumenting_handler(event: typing.Dict, context: types.LambdaContext)
                         headers={
                             constants.HTTP_CONTENT_TYPE_HEADER: constants.HTTP_CONTENT_TYPE_APPLICATION_JSON,
                         },
-                        data=bytes(json.dumps(telemetry_data_record), "utf-8"),
+                        data=bytes(telemetry_data_record_body, "utf-8"),
                     )
                     extension_otel_http_response = urllib.request.urlopen(extension_otel_http_request)
                     extension_otel_http_response.read()
                 except Exception:
                     logger.exception("Failed to send handler telemetryData")
+                logger.debug({"telemetry_data_record": telemetry_data_record_body})
         else:
             if settings.test_dry_log_pretty:
                 logger.info(json.dumps({"telemetry_data_record": telemetry_data_record}, indent=4, sort_keys=True))
             else:
-                logger.info({"telemetry_data_record": telemetry_data_record})
+                logger.info({"telemetry_data_record": telemetry_data_record_body})
 
-    # ...
+    if isinstance(handler_response_or_exception, Exception):
+        raise handler_response_or_exception
 
-    if isinstance(actual_response_or_exception, Exception):
-        raise actual_response_or_exception
-
-    return actual_response_or_exception
+    return handler_response_or_exception

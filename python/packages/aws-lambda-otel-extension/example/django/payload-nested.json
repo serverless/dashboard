@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "routeKey": "$default",
-  "rawPath": "/nested/hi",
+  "rawPath": "/nested/webhookinvoke",
   "rawQueryString": "",
   "headers": {
     "accept": "*/*",
@@ -20,7 +20,7 @@
     "domainPrefix": "qkhrb8p852",
     "http": {
       "method": "GET",
-      "path": "/nested/hi",
+      "path": "/nested/webhookinvoke",
       "protocol": "HTTP/1.1",
       "sourceIp": "206.174.34.16",
       "userAgent": "curl/7.68.0"
