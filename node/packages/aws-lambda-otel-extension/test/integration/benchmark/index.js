@@ -9,7 +9,7 @@ const resolveTestVariantsConfig = require('../resolve-test-variants-config');
 const processFunction = require('../process-function');
 const cleanup = require('../cleanup');
 const resolveFileZipBuffer = require('../../utils/resolve-file-zip-buffer');
-const { median } = require('../../utils/stats');
+const { median, average } = require('../../utils/stats');
 const log = require('log').get('test');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
@@ -55,7 +55,7 @@ module.exports = async (options = {}) => {
       },
     ],
     [
-      'external-only',
+      'externalOnly',
       {
         configuration: {
           Environment: {
@@ -68,7 +68,7 @@ module.exports = async (options = {}) => {
       },
     ],
     [
-      'json-log',
+      'jsonLog',
       {
         configuration: {
           Environment: {
@@ -86,7 +86,7 @@ module.exports = async (options = {}) => {
       },
     ],
     [
-      'proto-log',
+      'protoLog',
       {
         configuration: {
           Environment: {
@@ -105,7 +105,7 @@ module.exports = async (options = {}) => {
 
   const { token, orgId } = await resolveIngestionData();
   if (token) {
-    allBenchmarkVariantsConfig.set('proto-console', {
+    allBenchmarkVariantsConfig.set('protoConsole', {
       configuration: {
         Environment: {
           Variables: {
@@ -221,8 +221,8 @@ module.exports = async (options = {}) => {
           new Map(
             Array.from(benchmarkVariantsConfig, ([name, caseConfig]) => {
               switch (name) {
-                case 'json-log':
-                case 'proto-log': {
+                case 'jsonLog':
+                case 'protoLog': {
                   const userSettings = JSON.parse(
                     caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
                   );
@@ -240,7 +240,7 @@ module.exports = async (options = {}) => {
                     }),
                   ];
                 }
-                case 'proto-console': {
+                case 'protoConsole': {
                   const userSettings = JSON.parse(
                     caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
                   );
@@ -287,177 +287,222 @@ module.exports = async (options = {}) => {
     }));
   }
 
-  const resultsMap = new Map();
-  for (const testConfig of testVariantsConfig) {
-    const testResult = await testConfig.deferredResult;
-    if (testResult.error) throw testResult.error;
-    const basename = testConfig.name.slice(0, -2);
-    if (!resultsMap.has(basename)) resultsMap.set(basename, []);
-    resultsMap.get(basename).push(testResult);
+  try {
+    const resultsMap = new Map();
+    for (const testConfig of testVariantsConfig) {
+      const testResult = await testConfig.deferredResult;
+      if (testResult.error) throw testResult.error;
+      const basename = testConfig.name.slice(0, -2);
+      const separatorIndex = basename.lastIndexOf('-');
+      const functionVariantName = basename.slice(0, separatorIndex);
+      const benchmarkVariantName = basename.slice(separatorIndex + 1);
+      if (!resultsMap.has(functionVariantName)) resultsMap.set(functionVariantName, new Map());
+      const functionVariantResultsMap = resultsMap.get(functionVariantName);
+      if (!functionVariantResultsMap.has(benchmarkVariantName)) {
+        functionVariantResultsMap.set(benchmarkVariantName, { reports: [] });
+      }
+      functionVariantResultsMap.get(benchmarkVariantName).reports.push(testResult);
+    }
+
+    for (const [functionVariantName, functionVariantResultsMap] of resultsMap) {
+      for (const [benchmarkVariantName, benchmarkVariantResult] of functionVariantResultsMap) {
+        const { reports } = benchmarkVariantResult;
+
+        const durationsData = {
+          initialization: {
+            external: reports.map(
+              ({
+                processesData: [
+                  {
+                    extensionOverheadDurations: { externalInit },
+                  },
+                ],
+              }) => externalInit || 0
+            ),
+            internal: reports.map(
+              ({
+                processesData: [
+                  {
+                    extensionOverheadDurations: { internalInit },
+                  },
+                ],
+              }) => internalInit || 0
+            ),
+            total: reports.map(({ processesData: [{ initDuration }] }) => initDuration),
+          },
+          invocation: {
+            first: {
+              internal: {
+                request: reports.map(
+                  ({
+                    invocationsData: [
+                      {
+                        extensionOverheadDurations: { internalRequest },
+                      },
+                    ],
+                  }) => internalRequest || 0
+                ),
+                response: reports.map(
+                  ({
+                    invocationsData: [
+                      {
+                        extensionOverheadDurations: { internalResponse },
+                      },
+                    ],
+                  }) => internalResponse || 0
+                ),
+              },
+              external: reports.map(
+                ({
+                  invocationsData: [
+                    {
+                      extensionOverheadDurations: { externalResponse },
+                    },
+                  ],
+                }) => externalResponse || 0
+              ),
+              total: reports.map(({ invocationsData: [{ duration }] }) => duration),
+              billed: reports.map(({ invocationsData: [{ billedDuration }] }) => billedDuration),
+              local: reports.map(({ invocationsData: [{ localDuration }] }) => localDuration),
+              maxMemoryUsed: reports.map(
+                ({ invocationsData: [{ maxMemoryUsed }] }) => maxMemoryUsed
+              ),
+            },
+            following: {
+              internal: {
+                request: reports.map(
+                  ({
+                    invocationsData: [
+                      ,
+                      {
+                        extensionOverheadDurations: { internalRequest },
+                      },
+                    ],
+                  }) => internalRequest || 0
+                ),
+                response: reports.map(
+                  ({
+                    invocationsData: [
+                      ,
+                      {
+                        extensionOverheadDurations: { internalResponse },
+                      },
+                    ],
+                  }) => internalResponse || 0
+                ),
+              },
+              external: reports.map(
+                ({
+                  invocationsData: [
+                    ,
+                    {
+                      extensionOverheadDurations: { externalResponse },
+                    },
+                  ],
+                }) => externalResponse || 0
+              ),
+              total: reports.map(({ invocationsData: [, { duration }] }) => duration),
+              billed: reports.map(({ invocationsData: [, { billedDuration }] }) => billedDuration),
+              local: reports.map(({ invocationsData: [, { localDuration }] }) => localDuration),
+              maxMemoryUsed: reports.map(
+                ({ invocationsData: [, { maxMemoryUsed }] }) => maxMemoryUsed
+              ),
+            },
+          },
+        };
+
+        benchmarkVariantResult.results = {
+          initialization: {
+            external: {
+              average: average(durationsData.initialization.external),
+              median: median(durationsData.initialization.external),
+            },
+            internal: {
+              average: average(durationsData.initialization.internal),
+              median: median(durationsData.initialization.internal),
+            },
+            total: {
+              average: average(durationsData.initialization.total),
+              median: median(durationsData.initialization.total),
+            },
+          },
+          invocation: {
+            first: {
+              internal: {
+                request: {
+                  average: average(durationsData.invocation.first.internal.request),
+                  median: median(durationsData.invocation.first.internal.request),
+                },
+                response: {
+                  average: average(durationsData.invocation.first.internal.response),
+                  median: median(durationsData.invocation.first.internal.response),
+                },
+              },
+              external: {
+                average: average(durationsData.invocation.first.external),
+                median: median(durationsData.invocation.first.external),
+              },
+              total: {
+                average: average(durationsData.invocation.first.total),
+                median: median(durationsData.invocation.first.total),
+              },
+              billed: {
+                average: average(durationsData.invocation.first.billed),
+                median: median(durationsData.invocation.first.billed),
+              },
+              local: {
+                average: average(durationsData.invocation.first.local),
+                median: median(durationsData.invocation.first.local),
+              },
+              maxMemoryUsed: {
+                average: average(durationsData.invocation.first.maxMemoryUsed),
+                median: median(durationsData.invocation.first.maxMemoryUsed),
+              },
+            },
+            following: {
+              internal: {
+                request: {
+                  average: average(durationsData.invocation.following.internal.request),
+                  median: median(durationsData.invocation.following.internal.request),
+                },
+                response: {
+                  average: average(durationsData.invocation.following.internal.response),
+                  median: median(durationsData.invocation.following.internal.response),
+                },
+              },
+              external: {
+                average: average(durationsData.invocation.following.external),
+                median: median(durationsData.invocation.following.external),
+              },
+              total: {
+                average: average(durationsData.invocation.following.total),
+                median: median(durationsData.invocation.following.total),
+              },
+              billed: {
+                average: average(durationsData.invocation.following.billed),
+                median: median(durationsData.invocation.following.billed),
+              },
+              local: {
+                average: average(durationsData.invocation.following.local),
+                median: median(durationsData.invocation.following.local),
+              },
+              maxMemoryUsed: {
+                average: average(durationsData.invocation.following.maxMemoryUsed),
+                median: median(durationsData.invocation.following.maxMemoryUsed),
+              },
+            },
+          },
+        };
+        log.info(
+          'Results for %s: $o',
+          `${functionVariantName}-${benchmarkVariantName}`,
+          benchmarkVariantResult.results
+        );
+      }
+    }
+
+    return resultsMap;
+  } finally {
+    await cleanup({ skipFunctionsCleanup: true });
   }
-  await cleanup({ skipFunctionsCleanup: true });
-
-  process.stdout.write(
-    `${[
-      [
-        'name',
-        'init:external',
-        'init:internal',
-        'init:aws',
-
-        'first:internal:request',
-        'first:internal:response',
-        'first:external:response',
-        'first:aws:duration',
-        'first:aws:billedDuration',
-        'first:local:duration',
-        'first:aws:maxMemoryUsed',
-
-        'following:internal:request',
-        'following:internal:response',
-        'following:external:response',
-        'following:aws:duration',
-        'following:aws:billedDuration',
-        'following:local:duration',
-        'following:aws:maxMemoryUsed',
-      ]
-        .map(JSON.stringify)
-        .join('\t'),
-      ...Array.from(resultsMap, ([name, results]) => {
-        return [
-          JSON.stringify(name),
-          Math.round(
-            median(
-              results.map(
-                ({
-                  processesData: [
-                    {
-                      extensionOverheadDurations: { externalInit },
-                    },
-                  ],
-                }) => externalInit || 0
-              )
-            )
-          ),
-          Math.round(
-            median(
-              results.map(
-                ({
-                  processesData: [
-                    {
-                      extensionOverheadDurations: { internalInit },
-                    },
-                  ],
-                }) => internalInit || 0
-              )
-            )
-          ),
-          Math.round(median(results.map(({ processesData: [{ initDuration }] }) => initDuration))),
-
-          Math.round(
-            median(
-              results.map(
-                ({
-                  invocationsData: [
-                    {
-                      extensionOverheadDurations: { internalRequest },
-                    },
-                  ],
-                }) => internalRequest || 0
-              )
-            )
-          ),
-          Math.round(
-            median(
-              results.map(
-                ({
-                  invocationsData: [
-                    {
-                      extensionOverheadDurations: { internalResponse },
-                    },
-                  ],
-                }) => internalResponse || 0
-              )
-            )
-          ),
-          Math.round(
-            median(
-              results.map(
-                ({
-                  invocationsData: [
-                    {
-                      extensionOverheadDurations: { externalResponse },
-                    },
-                  ],
-                }) => externalResponse || 0
-              )
-            )
-          ),
-          Math.round(median(results.map(({ invocationsData: [{ duration }] }) => duration))),
-          Math.round(
-            median(results.map(({ invocationsData: [{ billedDuration }] }) => billedDuration))
-          ),
-          Math.round(
-            median(results.map(({ invocationsData: [{ localDuration }] }) => localDuration))
-          ),
-          Math.round(
-            median(results.map(({ invocationsData: [{ maxMemoryUsed }] }) => maxMemoryUsed))
-          ),
-
-          Math.round(
-            median(
-              results.map(
-                ({
-                  invocationsData: [
-                    ,
-                    {
-                      extensionOverheadDurations: { internalRequest },
-                    },
-                  ],
-                }) => internalRequest || 0
-              )
-            )
-          ),
-          Math.round(
-            median(
-              results.map(
-                ({
-                  invocationsData: [
-                    ,
-                    {
-                      extensionOverheadDurations: { internalResponse },
-                    },
-                  ],
-                }) => internalResponse || 0
-              )
-            )
-          ),
-          Math.round(
-            median(
-              results.map(
-                ({
-                  invocationsData: [
-                    ,
-                    {
-                      extensionOverheadDurations: { externalResponse },
-                    },
-                  ],
-                }) => externalResponse || 0
-              )
-            )
-          ),
-          Math.round(median(results.map(({ invocationsData: [, { duration }] }) => duration))),
-          Math.round(
-            median(results.map(({ invocationsData: [, { billedDuration }] }) => billedDuration))
-          ),
-          Math.round(
-            median(results.map(({ invocationsData: [, { localDuration }] }) => localDuration))
-          ),
-          Math.round(
-            median(results.map(({ invocationsData: [, { maxMemoryUsed }] }) => maxMemoryUsed))
-          ),
-        ].join('\t');
-      }),
-    ].join('\n')}\n`
-  );
 };
