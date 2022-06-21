@@ -43,8 +43,8 @@ const resolveIngestionData = async () => {
   return { token, orgId };
 };
 
-module.exports = async () => {
-  const cases = new Map([
+module.exports = async (options = {}) => {
+  const allBenchmarkVariantsConfig = new Map([
     [
       'bare',
       {
@@ -105,7 +105,7 @@ module.exports = async () => {
 
   const { token, orgId } = await resolveIngestionData();
   if (token) {
-    cases.set('proto-console', {
+    allBenchmarkVariantsConfig.set('proto-console', {
       configuration: {
         Environment: {
           Variables: {
@@ -126,7 +126,17 @@ module.exports = async () => {
     });
   }
 
-  const config = new Map([
+  const benchmarkVariantsConfig = options.benchmarkVariants
+    ? new Map(
+        Array.from(allBenchmarkVariantsConfig).filter(([name]) =>
+          options.benchmarkVariants.has(name)
+        )
+      )
+    : allBenchmarkVariantsConfig;
+
+  if (!benchmarkVariantsConfig.size) throw new Error('No matching benchmark variant');
+
+  const allFunctionVariantsConfig = new Map([
     [
       'success-callback',
       {
@@ -137,7 +147,7 @@ module.exports = async () => {
             },
           },
         },
-        cases,
+        cases: benchmarkVariantsConfig,
       },
     ],
     [
@@ -191,7 +201,7 @@ module.exports = async () => {
             isBase64Encoded: false,
           },
         },
-        cases,
+        cases: benchmarkVariantsConfig,
       },
     ],
     [
@@ -209,7 +219,7 @@ module.exports = async () => {
         },
         cases: (() =>
           new Map(
-            Array.from(cases, ([name, caseConfig]) => {
+            Array.from(benchmarkVariantsConfig, ([name, caseConfig]) => {
               switch (name) {
                 case 'json-log':
                 case 'proto-log': {
@@ -257,9 +267,17 @@ module.exports = async () => {
     ],
   ]);
 
+  const functionVariantsConfig = options.functionVariants
+    ? new Map(
+        Array.from(allFunctionVariantsConfig).filter(([name]) => options.functionVariants.has(name))
+      )
+    : allFunctionVariantsConfig;
+
+  if (!functionVariantsConfig.size) throw new Error('No matching function variant');
+
   const coreConfig = {};
   await createCoreResources(coreConfig);
-  const testScenarios = resolveTestScenarios(config, { multiplyBy: 5 });
+  const testScenarios = resolveTestScenarios(functionVariantsConfig, { multiplyBy: 5 });
   for (const testConfig of testScenarios) {
     testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
       // As we process result promises sequentially step by step in next turn, allowing them to
