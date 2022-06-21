@@ -2,8 +2,8 @@
 
 const asc = (arr) => arr.sort((a, b) => a - b);
 
-const quantile = (arr, q) => {
-  const sorted = asc(arr);
+const quantile = (values, q) => {
+  const sorted = asc(values);
   const pos = (sorted.length - 1) * q;
   const base = Math.floor(pos);
   const rest = pos - base;
@@ -13,6 +13,12 @@ const quantile = (arr, q) => {
   return sorted[base];
 };
 
-const q50 = (arr) => quantile(arr, 0.5);
+const q50 = (values) => quantile(values, 0.5);
 
-module.exports.median = (arr) => q50(arr);
+module.exports.median = (values) => q50(values);
+
+module.exports.average = (values) => {
+  let sum = 0;
+  for (const value of values) sum += value;
+  return sum / values.length;
+};
