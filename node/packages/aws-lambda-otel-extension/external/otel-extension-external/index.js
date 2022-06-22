@@ -39,7 +39,7 @@ module.exports = (async () => {
 
   // Rotate current request data
   // Each new "platform.start" or invoke event resets the object
-  const getCurrentRequestData = (() => {
+  const getCurrentRequestContext = (() => {
     let current;
     return (uniqueEventName) => {
       if (!current) current = { logsQueue: [] };
@@ -88,13 +88,13 @@ module.exports = (async () => {
               );
             }
             if (functionLogEvents.length) {
-              const currentRequestData = getCurrentRequestData();
-              if (!currentRequestData.eventData) {
-                currentRequestData.logsQueue.push(...functionLogEvents);
+              const currentRequestContext = getCurrentRequestContext();
+              if (!currentRequestContext.requestData) {
+                currentRequestContext.logsQueue.push(...functionLogEvents);
               } else {
                 sendReport(
                   'logs',
-                  createLogPayload(currentRequestData.eventData, functionLogEvents)
+                  createLogPayload(currentRequestContext.requestData, functionLogEvents)
                 );
               }
             }
@@ -103,7 +103,7 @@ module.exports = (async () => {
               switch (event.type) {
                 case 'platform.start':
                   debugLog('Extension platform log: start');
-                  getCurrentRequestData('start');
+                  getCurrentRequestContext('start');
                   // eslint-disable-next-line no-loop-func
                   ongoingInvocationDeferred = new Promise((resolve) => {
                     resolveOngoingInvocationDeferred = resolve;
@@ -243,7 +243,7 @@ module.exports = (async () => {
           await Promise.resolve(ongoingInvocationDeferred).then(waitUntilAllReportsAreSent);
           break;
         case 'INVOKE':
-          getCurrentRequestData('invoke');
+          getCurrentRequestContext('invoke');
           await new Promise((resolve) => {
             runtimeEventEmitter.once('runtimeDone', resolve);
           })
@@ -276,20 +276,23 @@ module.exports = (async () => {
                   if (data.record.requestEventPayload) {
                     sendReport('request', createRequestPayload(data.record.requestEventPayload));
                   }
-                  const currentRequestData = getCurrentRequestData('request');
-                  currentRequestData.eventData = data.record;
-                  if (currentRequestData.logsQueue.length) {
-                    sendReport('logs', createLogPayload(data.record, currentRequestData.logsQueue));
+                  const currentRequestContext = getCurrentRequestContext('request');
+                  currentRequestContext.requestData = data.record;
+                  if (currentRequestContext.logsQueue.length) {
+                    sendReport(
+                      'logs',
+                      createLogPayload(data.record, currentRequestContext.logsQueue)
+                    );
                   }
                 }
                 break;
               case 'telemetryData':
                 lastTelemetryData = data;
                 if (data.record.responseEventPayload) {
-                  const { eventData: currentRequestData } = getCurrentRequestData();
+                  const { requestData } = getCurrentRequestContext();
                   sendReport(
                     'response',
-                    createResponsePayload(data.record.responseEventPayload, currentRequestData)
+                    createResponsePayload(data.record.responseEventPayload, requestData)
                   );
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
