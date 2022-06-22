@@ -118,9 +118,6 @@ When an AWS Lambda function instance receives a request after having received pr
 A timeout is a [configurable limit for the duration of your AWS Lambda](product/duration.md#configuring-timeouts-in-aws-lambda).
 
 
-
-
-
 <!--
 # Benchmark
 
@@ -143,4 +140,6 @@ For example, measuring the performance of an AWS Lambda function using Node.js +
 ## Report
 
 A report detailing and summarizing the results of running Benchmarks against different Use-Case Variations, published by Serverless Inc.
+
 -->
+
