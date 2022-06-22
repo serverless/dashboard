@@ -274,7 +274,7 @@ module.exports = (async () => {
               case 'eventData':
                 {
                   if (data.record.requestEventPayload) {
-                    sendReport('request', createRequestPayload(data.record.requestEventPayload));
+                    sendReport('request', createRequestPayload(data.record));
                   }
                   const currentRequestContext = getCurrentRequestContext('request');
                   currentRequestContext.requestData = data.record;
