@@ -1,18 +1,23 @@
 <!--
-title: Metric Views
-menuText: Metric Views
+title: Metrics
+menuText: Metrics
 description: A guide to using our metric views and create your own.
 menuOrder: 2
 -->
-# Curated Metric Views 
+
+# Metrics 
+
+Metrics about your [Trace](traces.md) are collected and stored in Serverless
+Console. These metrics are stored individually on each trace as well as
+aggregated for storage and alerting purposes. The [tags](tags.md) from your
+trace are also included on these metrics for filtering.
 
 Our curated metric views provide you the ability to view activity across your
 entire organization at a glance.  These include views are intended to be a
 starting point based on patterns we recognize in the [Trace](../concepts/traces.md)
 data we receive. 
 
-We focus the patterns around you acheive outcomes important to them as use
-cases.
+Our metrics are built around common use cases including:
 
 **API's** - Our API view provides convenient tools for troubleshooting errors
 and slowness in REST APIs. The API view allows you to quickly see slow request
@@ -22,6 +27,15 @@ outliers, filter for status codes, and spot usage trends across your endpoints.
 functions holistically across your organization. 
 
 Fore more details about how we recognize these Traces see our [Scopes concept.](../concepts/scopes.md)
+
+## Collected Metrics
+Currently the following metrics are supported for ingestion.
+
+**FAAS Compute Duration** - This metric is used for collecting details about the
+total time it took for a given Trace which is used for calculating costs. 
+
+**FAAS Memory Percent**  - This is the memory percentage used for a function
+invocation.
 
 ## Filters
 
@@ -53,7 +67,6 @@ tag. For Serverless Framework users this can be specified as stage.
 region your application is running in. 
 
 ### API Filters
-
 The following filters are applicable only to the API Scope. 
 
 - **API Endpoint** Collected using the `http.path` tag this is will contain the
@@ -69,7 +82,8 @@ contain the status code returned by the API. This is useful for identifying
 errors.
 
 ### Function Filters
- 
+ The following filters are applicable only to the function Scope.
+
 - **Function Names** Collected using the `faas.name` tag this is the name of the 
 function invoked. For Serverless framework users this is specified as the
 function name(s) in the serverless.yaml file. 

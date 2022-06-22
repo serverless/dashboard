@@ -47,6 +47,6 @@ Once you have deployed your function, do the following to start using Serverless
 
 It may take a second for the first data point to show up,
 but will speed up considerably from there. Each time you invoke
-one of your instrumented functions, we receive [Traces](./concepts/traces.md) in Console. 
+one of your instrumented functions, we receive [Traces](./product//traces.md) in Console. 
 
-For more details see our [concepts section](./concepts) or learn about using [Serverless Console](./using/).
+For more details see our [product section](./product) or learn about using [Serverless Console on AWS](./platform/aws/).
