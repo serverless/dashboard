@@ -111,8 +111,8 @@ const createResourceAttributes = (fun) =>
     }
   });
 
-const createAttributes = (eventData) => {
-  const key = Object.keys(eventData.eventData)[0];
+const createAttributes = (requestData) => {
+  const key = Object.keys(requestData.eventData)[0];
 
   const metricAttributeNames = new Set([
     'faas.arch',
@@ -121,7 +121,7 @@ const createAttributes = (eventData) => {
     'faas.api_gateway_app_id',
   ]);
   const metricsAtt = {};
-  for (const attribute of createMetricAttributes(eventData.eventData[key])) {
+  for (const attribute of createMetricAttributes(requestData.eventData[key])) {
     if (!metricAttributeNames.has(attribute.key)) continue;
     metricsAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
@@ -143,7 +143,7 @@ const createAttributes = (eventData) => {
     'faas.collector_version',
   ]);
   const resourceAtt = {};
-  for (const attribute of createResourceAttributes(eventData.eventData[key])) {
+  for (const attribute of createResourceAttributes(requestData.eventData[key])) {
     if (!resourceAttributeNames.has(attribute.key)) continue;
     resourceAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
@@ -154,9 +154,9 @@ const createAttributes = (eventData) => {
   };
 };
 
-const createLogPayload = (eventData, logs) => {
-  const spanData = eventData.span;
-  const { resourceAtt, metricsAtt } = createAttributes(eventData);
+const createLogPayload = (requestData, logs) => {
+  const spanData = requestData.span;
+  const { resourceAtt, metricsAtt } = createAttributes(requestData);
 
   const severityNumberMap = {
     TRACE: 1,
