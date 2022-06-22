@@ -184,18 +184,18 @@ const createLogPayload = (eventData, logs) => {
   });
 };
 
-const createRequestPayload = (eventData) => {
-  const { resourceAtt, metricsAtt } = createAttributes(eventData);
+const createRequestPayload = (requestData) => {
+  const { resourceAtt, metricsAtt } = createAttributes(requestData);
   return {
-    ...eventData,
+    ...requestData.requestEventPayload,
     attributes: resourceAtt,
     resource: metricsAtt,
   };
 };
 
-const createResponsePayload = (eventData, currentRequestData) => {
+const createResponsePayload = (responseData, currentRequestData) => {
   const { resourceAtt, metricsAtt } = createAttributes(currentRequestData);
-  const strippedResponseData = stripResponseBlobData(eventData);
+  const strippedResponseData = stripResponseBlobData(responseData);
   return {
     ...strippedResponseData,
     timestamp: Date.now(),
