@@ -1,14 +1,14 @@
-package agent
+package metrics
 
 import (
 	"aws-lambda-otel-extension/external/lib"
+	"aws-lambda-otel-extension/external/reporter"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/golang-collections/go-datastructures/queue"
 	"go.uber.org/zap"
 )
 
@@ -22,20 +22,20 @@ type TelemetryPayload struct {
 type InternalHttpListener struct {
 	httpServer *http.Server
 	// metricsQueue is a synchronous queue and is used to put the received metrics to be consumed later (see main)
-	queue  *queue.Queue
-	logger *lib.Logger
+	reportAgent *reporter.HttpClient
+	logger      *lib.Logger
 }
 
-func NewInternalHttpListener(queue *queue.Queue) *InternalHttpListener {
+func NewInternalHttpListener(reportAgent *reporter.HttpClient) *InternalHttpListener {
 	return &InternalHttpListener{
-		httpServer: nil,
-		queue:      queue,
-		logger:     lib.NewLogger(),
+		httpServer:  nil,
+		reportAgent: reportAgent,
+		logger:      lib.NewLogger(),
 	}
 }
 
 // Start initiates the server in a goroutine
-func (l *InternalHttpListener) Start() (bool, error) {
+func (l *InternalHttpListener) Start() bool {
 	address := fmt.Sprintf("sandbox:%s", OTEL_SERVER_PORT)
 	l.httpServer = &http.Server{Addr: address}
 	http.HandleFunc("/", l.http_handler)
@@ -49,7 +49,7 @@ func (l *InternalHttpListener) Start() (bool, error) {
 			l.logger.Error("Http Server closed", zap.Error(err))
 		}
 	}()
-	return true, nil
+	return true
 }
 
 // http_handler handles the requests coming from the Internal API.
@@ -67,7 +67,9 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 	// fmt.Println("Internal API event received:", string(body))
 
 	// Puts the message into the queue
-	err = l.queue.Put(string(body))
+	// err = l.queue.Put(string(body))
+
+	l.reportAgent.PostMetric(string(body))
 	if err != nil {
 		l.logger.Error("Can't push logs to destination", zap.Error(err))
 	}

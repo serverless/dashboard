@@ -1,8 +1,7 @@
-package agent
+package logs
 
 import (
 	"aws-lambda-otel-extension/external/lib"
-	"aws-lambda-otel-extension/external/logsapi"
 	"context"
 	"errors"
 	"fmt"
@@ -36,7 +35,7 @@ func NewLogsApiHttpListener(queue *queue.Queue) *LogsApiHttpListener {
 }
 
 // Start initiates the server in a goroutine where the logs will be sent
-func (s *LogsApiHttpListener) Start() (bool, error) {
+func (s *LogsApiHttpListener) Start() bool {
 	address := fmt.Sprintf("sandbox:%s", LOGS_SERVER_PORT)
 	s.httpServer = &http.Server{Addr: address}
 	http.HandleFunc("/", s.http_handler)
@@ -47,10 +46,10 @@ func (s *LogsApiHttpListener) Start() (bool, error) {
 			s.logger.Error("Unexpected stop on Logsapi Http Server", zap.Error(err))
 			s.Shutdown()
 		} else {
-			s.logger.Error("Http Server closed", zap.Error(err))
+			s.logger.Debug("Http Server closed", zap.Error(err))
 		}
 	}()
-	return true, nil
+	return true
 }
 
 // http_handler handles the requests coming from the Logs API.
@@ -67,8 +66,15 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 
 	fmt.Println("Logs API event received:", string(body))
 
+	// get structured messages
+	messages, err := parseLogsAPIPayload(body)
+
+	for _, message := range messages {
+		s.queue.Put(message)
+	}
+
 	// Puts the message into the queue
-	err = s.queue.Put(string(body))
+	// err = s.queue.Put(string(body))
 	if err != nil {
 		s.logger.Error("Can't push logs to destination", zap.Error(err))
 	}
@@ -114,18 +120,15 @@ func (h HttpAgent) Init(agentID string) error {
 
 	logsApiBaseUrl := fmt.Sprintf("http://%s", extensions_api_address)
 
-	logsApiClient, err := logsapi.NewClient(logsApiBaseUrl)
+	logsApiClient, err := NewClient(logsApiBaseUrl)
 	if err != nil {
 		return err
 	}
 
-	_, err = h.listener.Start()
-	if err != nil {
-		return err
-	}
+	_ = h.listener.Start()
 
-	eventTypes := []logsapi.EventType{logsapi.Platform, logsapi.Function}
-	bufferingCfg := logsapi.BufferingCfg{
+	eventTypes := []EventType{Platform, Function}
+	bufferingCfg := BufferingCfg{
 		MaxItems:  10000,
 		MaxBytes:  262144,
 		TimeoutMS: 1000,
@@ -133,11 +136,11 @@ func (h HttpAgent) Init(agentID string) error {
 	if err != nil {
 		return err
 	}
-	destination := logsapi.Destination{
-		Protocol:   logsapi.HttpProto,
-		URI:        logsapi.URI(fmt.Sprintf("http://sandbox:%s", LOGS_SERVER_PORT)),
-		HttpMethod: logsapi.HttpPost,
-		Encoding:   logsapi.JSON,
+	destination := Destination{
+		Protocol:   HttpProto,
+		URI:        URI(fmt.Sprintf("http://sandbox:%s", LOGS_SERVER_PORT)),
+		HttpMethod: HttpPost,
+		Encoding:   JSON,
 	}
 
 	_, err = logsApiClient.Subscribe(eventTypes, bufferingCfg, destination, agentID)

@@ -8,10 +8,11 @@ import (
 	"strings"
 	"syscall"
 
-	"aws-lambda-otel-extension/external/agent"
 	"aws-lambda-otel-extension/external/extension"
 	"aws-lambda-otel-extension/external/lib"
-	"aws-lambda-otel-extension/external/logsapi"
+	"aws-lambda-otel-extension/external/logs"
+	"aws-lambda-otel-extension/external/metrics"
+	"aws-lambda-otel-extension/external/reporter"
 
 	"github.com/golang-collections/go-datastructures/queue"
 	"go.uber.org/zap"
@@ -22,13 +23,24 @@ var (
 )
 
 // INITIAL_QUEUE_SIZE is the initial size set for the synchronous logQueue
-const INITIAL_QUEUE_SIZE = 5
+const INITIAL_QUEUE_SIZE = 100
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	logger := lib.NewLogger()
+	userSettings, err := lib.GetUserSettings()
+	if err != nil {
+		logger.Error("Failed to get user settings", zap.Error(err))
+		return
+	}
 
 	logger.Info("Starting external extension")
+
+	reportAgent := reporter.NewHttpClient(&userSettings)
+
+	// Start listening metrics
+	metricsApiListener := metrics.NewInternalHttpListener(reportAgent)
+	metricsApiListener.Start()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
@@ -38,7 +50,8 @@ func main() {
 		logger.Debug(fmt.Sprintf("Received signal: %s, Exiting", s))
 	}()
 
-	_, err := extensionClient.Register(ctx)
+	// Register the extension
+	_, err = extensionClient.Register(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +62,7 @@ func main() {
 	// Helper function to empty the log queue
 	var logsStr string = ""
 	flushLogQueue := func(force bool) {
-		for !(logQueue.Empty() && (force || strings.Contains(logsStr, string(logsapi.RuntimeDone)))) {
+		for !(logQueue.Empty() && (force || strings.Contains(logsStr, string(logs.RuntimeDone)))) {
 			logs, err := logQueue.Get(1)
 			if err != nil {
 				logger.Error("flush error", zap.Error(err))
@@ -66,7 +79,7 @@ func main() {
 	}
 
 	// Create Logs API agent
-	logsApiAgent, err := agent.NewLogsApiAgent(logQueue)
+	logsApiAgent, err := logs.NewLogsApiAgent(logQueue)
 	if err != nil {
 		logger.Fatal("couldnt create logs api agent", zap.Error(err))
 	}
