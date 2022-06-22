@@ -1549,10 +1549,10 @@ Resources:
 
                   # Add tags to an Amazon CloudWatch resource.
                   # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_TagResource.html
-                  - "cloudtrail:TagResource"
+                  - "cloudwatch:TagResource"
                   # Remove a tag from an Amazon CloudWatch resource.
                   # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_UntagResource.html
-                  - "cloudtrail:UntagResource"
+                  - "cloudwatch:UntagResource"
 
                   ##
                   ## Cloudwatch Logs
@@ -1750,6 +1750,17 @@ Resources:
                   - "s3:PutBucketTagging"
 
                   #
+                  ## SES (Simple Email Service) V2
+                  #
+
+                  # Add one or more tags (keys and values) to a specified resource.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_TagResource.html
+                  - "ses:TagResource"
+                  # Remove one or more tags (keys and values) from a specified resource.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_UntagResource.html
+                  - "ses:UntagResource"
+
+                  #
                   ## SQS (Simple Queue Service)
                   #
 
@@ -1763,13 +1774,6 @@ Resources:
                   #
                   ## Step Functions
                   #
-
-                  # Add one or more tags (keys and values) to a specified resource.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_TagResource.html
-                  - "ses:TagResource"
-                  # Remove one or more tags (keys and values) from a specified resource.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_UntagResource.html
-                  - "ses:UntagResource"
 
                   # Tag an AWS Step Functions resource.
                   # https://docs.aws.amazon.com/step-functions/latest/apireference/API_TagResource.html
