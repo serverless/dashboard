@@ -8,7 +8,7 @@ menuOrder: 4
 # Tags & Tag Definitions
 
 Tagging data on Traces plays an important role in allow you to make sense of
-your data. Our [Serverless Runtime](https://github.com/serverless/runtime)
+your data. Our [Serverless Runtime](runtime.md)
 instrumentation automatically collects the following tags defined by extending
 the [Open Telemetry semantic tagging conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#common-attributes).
 These tags are defined for each trace, but our UI provides an easy way to
