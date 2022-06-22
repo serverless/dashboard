@@ -390,6 +390,9 @@ Resources:
                   # List trails associated with the current region for your account.
                   # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_ListTrails.html
                   - "cloudtrail:ListTrails"
+                  # Look up API activity events captured by CloudTrail.
+                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html
+                  - "cloudtrail:LookupEvents"
 
                   #
                   ## Cloudwatch
@@ -1320,9 +1323,6 @@ Resources:
                   # Get information about the email-sending status and capabilities for your account.
                   # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html
                   - "ses:GetAccount"
-                  # Return a contact from a contact list.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetContact.html
-                  - "ses:GetContact"
                   # Retrieve the results of a predictive inbox placement test.
                   # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDeliverabilityTestReport.html
                   - "ses:GetDeliverabilityTestReport"
@@ -1335,12 +1335,6 @@ Resources:
                   # Return the template object, which includes the subject line, HTML part, and text part for the template you specify.
                   # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetEmailTemplate.html
                   - "ses:GetEmailTemplate"
-                  # List all of the contact lists available for your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListContactLists.html
-                  - "ses:ListContactLists"
-                  # List the contacts present in a specific contact list.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListContacts.html
-                  - "ses:ListContacts"
                   # Retrieve the list of the predictive inbox placement tests that you've performed, regardless of their statuses, for your account.
                   # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDeliverabilityTestReports.html
                   - "ses:ListDeliverabilityTestReports"
@@ -1536,9 +1530,6 @@ Resources:
                   # Add one or more tags to a trail, up to a limit of 10.
                   # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html
                   - "cloudtrail:AddTags"
-                  # Look up API activity events captured by CloudTrail.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html
-                  - "cloudtrail:LookupEvents"
                   # Remove tags from a trail.
                   # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_RemoveTags.html
                   - "cloudtrail:RemoveTags"
@@ -1698,6 +1689,12 @@ Resources:
                   # Modify the version-specific settings of an AWS Lambda function
                   # https://docs.aws.amazon.com/lambda/latest/dg/API_UpdateFunctionConfiguration.html
                   - "lambda:UpdateFunctionConfiguration"
+                  # Invoke a function asynchronously
+                  # https://docs.aws.amazon.com/lambda/latest/dg/API_InvokeAsync.html
+                  - "lambda:InvokeAsync"
+                  # Invoke an AWS Lambda function
+                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
+                  - "lambda:InvokeFunction"
                   # Add tags to an AWS Lambda function
                   # https://docs.aws.amazon.com/lambda/latest/dg/API_TagResources.html
                   - "lambda:TagResource"
