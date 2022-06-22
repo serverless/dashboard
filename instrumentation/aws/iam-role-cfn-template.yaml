@@ -457,6 +457,9 @@ Resources:
                   # Retrieve log events, optionally filtered by a filter pattern from the specified log group.
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_FilterLogEvents.html
                   - "logs:FilterLogEvents"
+                  # List the tags for the specified log group.
+                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_ListTagsLogGroup.html
+                  - "logs:ListTagsLogGroup"
                   # Test the filter pattern of a metric filter against a sample of log event messages.
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_TestMetricFilter.html
                   - "logs:TestMetricFilter"
@@ -1212,9 +1215,6 @@ Resources:
                   # List tags for one health check or hosted zone.
                   # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListTagsForResource.html
                   - "route53:ListTagsForResource"
-                  # List tags for up to 10 health checks or hosted zones.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListTagsForResources.html
-                  - "route53:ListTagsForResources"
 
                   #
                   ## S3
@@ -1294,26 +1294,67 @@ Resources:
                   - "s3:ListBucketVersions"
 
                   #
-                  ## SES (Simple Email Service)
+                  ## SES (Simple Email Service) V1
                   #
 
-                  # Return the details for the specified service quota, including the AWS default value.
-                  # https://docs.aws.amazon.com/servicequotas/2019-06-24/apireference/API_GetAWSDefaultServiceQuota.html
-                  - "ses:GetAWSDefaultServiceQuota"
-                  # Return the details for the specified service quota, including the applied value.
-                  # https://docs.aws.amazon.com/servicequotas/2019-06-24/apireference/API_GetServiceQuota.html
-                  - "ses:GetServiceQuota"
-                  # List all default service quotas for the specified AWS service.
-                  # https://docs.aws.amazon.com/servicequotas/2019-06-24/apireference/API_ListAWSDefaultServiceQuotas.html
-                  - "ses:ListAWSDefaultServiceQuotas"
-                  # List all service quotas for the specified AWS service, in that account, in that Region.
-                  # https://docs.aws.amazon.com/servicequotas/2019-06-24/apireference/API_ListServiceQuotas.html
-                  - "ses:ListServiceQuotas"
-                  # List the AWS services available in Service Quotas.
-                  # https://docs.aws.amazon.com/servicequotas/2019-06-24/apireference/API_ListServices.html
-                  - "ses:ListServices"
-                  # View the existing tags on a SQ resource.
-                  # https://docs.aws.amazon.com/servicequotas/2019-06-24/apireference/API_ListTagsForResource
+                  # Return the email sending status of your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetAccountSendingEnabled.html
+                  - "ses:GetAccountSendingEnabled"
+                  # Returns the user's sending statistics.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetSendStatistics.html
+                  - "ses:GetSendStatistics"
+                  # Return the template object, which includes the subject line, HTML par, and text part for the template you specify.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetTemplate.html
+                  - "ses:GetTemplate"
+                  # List the email templates present in your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_ListTemplates.html
+                  - "ses:ListTemplates"
+                  # List all of the email addresses that have been verified in your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_ListVerifiedEmailAddresses.html
+                  - "ses:ListVerifiedEmailAddresses"
+
+                  #
+                  ## SES (Simple Email Service) V2
+                  #
+
+                  # Get information about the email-sending status and capabilities for your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html
+                  - "ses:GetAccount"
+                  # Return a contact from a contact list.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetContact.html
+                  - "ses:GetContact"
+                  # Retrieve the results of a predictive inbox placement test.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDeliverabilityTestReport.html
+                  - "ses:GetDeliverabilityTestReport"
+                  # Retrieve all the deliverability data for a specific campaign.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDomainDeliverabilityCampaign.html
+                  - "ses:GetDomainDeliverabilityCampaign"
+                  # Retrieve inbox placement and engagement rates for the domains that you use to send email.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDomainStatisticsReport.html
+                  - "ses:GetDomainStatisticsReport"
+                  # Return the template object, which includes the subject line, HTML part, and text part for the template you specify.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetEmailTemplate.html
+                  - "ses:GetEmailTemplate"
+                  # List all of the contact lists available for your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListContactLists.html
+                  - "ses:ListContactLists"
+                  # List the contacts present in a specific contact list.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListContacts.html
+                  - "ses:ListContacts"
+                  # Retrieve the list of the predictive inbox placement tests that you've performed, regardless of their statuses, for your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDeliverabilityTestReports.html
+                  - "ses:ListDeliverabilityTestReports"
+                  # List deliverability data for campaigns that used a specific domain to send email during a specified time range.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDomainDeliverabilityCampaigns.html
+                  - "ses:ListDomainDeliverabilityCampaigns"
+                  # List the email identities for your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListEmailIdentities.html
+                  - "ses:ListEmailIdentities"
+                  # List all of the email templates for your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListEmailTemplates.html
+                  - "ses:ListEmailTemplates"
+                  # Retrieve a list of the tags (keys and values) that are associated with a specific resource for your account.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListTagsForResource.html
                   - "ses:ListTagsForResource"
 
                   #
@@ -1455,6 +1496,64 @@ Resources:
                   # https://docs.aws.amazon.com/apigateway/latest/api/API_UpdateStage.html
                   - "apigateway:UpdateStage"
 
+                  #
+                  ## App Runner
+                  #
+
+                  # Add tags to, or update tag values of, an AWS App Runner resource.
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_TagResource.html
+                  - "apprunner:TagResource"
+                  # Remove tags from an AWS App Runner resource.
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_UntagResource.html
+                  - "apprunner:UntagResource"
+
+                  #
+                  ## AppSync
+                  #
+
+                  # Tag a resource.
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_TagResource.html
+                  - "appsync:TagResource"
+                  # Untag a resource.
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_UntagResource.html
+                  - "appsync:UntagResource"
+
+                  #
+                  ## Cloudfront
+                  #
+
+                  # Add tags to a CloudFront resource.
+                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_TagResource.html
+                  - "cloudfront:TagResource"
+                  # Remove tags from a CloudFront resource.
+                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UntagResource.html
+                  - "cloudfront:UntagResource"
+
+                  #
+                  ## CloudTrail
+                  #
+
+                  # Add one or more tags to a trail, up to a limit of 10.
+                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html
+                  - "cloudtrail:AddTags"
+                  # Look up API activity events captured by CloudTrail.
+                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html
+                  - "cloudtrail:LookupEvents"
+                  # Remove tags from a trail.
+                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_RemoveTags.html
+                  - "cloudtrail:RemoveTags"
+
+                  #
+                  ## Cloudwatch
+                  #
+
+                  # Add tags to an Amazon CloudWatch resource.
+                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_TagResource.html
+                  - "cloudtrail:TagResource"
+                  # Remove a tag from an Amazon CloudWatch resource.
+                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_UntagResource.html
+                  - "cloudtrail:UntagResource"
+
                   ##
                   ## Cloudwatch Logs
                   #
@@ -1469,20 +1568,128 @@ Resources:
                   # Creates or updates an access policy associated with an existing destination. An access policy is an IAM policy document that is used to authorize claims to register a subscription filter against a given destination.
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestinationPolicy.html
                   - "logs:PutDestinationPolicy"
-                  # Create or update a subscription filter and associates it with the specified log group
+                  # Create or update a subscription filter and associates it with the specified log group.
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html
                   - "logs:PutSubscriptionFilter"
-                  # Delete a subscription filter associated with the specified log group
+                  # Delete a subscription filter associated with the specified log group.
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteSubscriptionFilter.html
                   - "logs:DeleteSubscriptionFilter"
+                  # Add or update the specified tags for the specified log group.
+                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_TagLogGroup.html
+                  - "logs:TagLogGroup"
+                  # Remove the specified tags from the specified log group.
+                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_UntagLogGroup.html
+                  - "logs:UntagLogGroup"
 
                   #
-                  ## CloudTrail
+                  ## CodeDeploy
                   #
 
-                  # Look up API activity events captured by CloudTrail.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html
-                  - "cloudtrail:LookupEvents"
+                  # Associate the list of tags in the input Tags parameter with the resource identified by the ResourceArn input parameter.
+                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_TagResource.html
+                  - "codedeploy:TagResource"
+                  # Disassociate a resource from a list of tags. The resource is identified by the ResourceArn input parameter. The tags are identfied by the list of keys in the TagKeys input parameter.
+                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_UntagResource.html
+                  - "codedeploy:UntagResource"
+
+                  #
+                  ## Cost Explorer
+                  #
+
+                  # Tag a Cost Explorer resource.
+                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_TagResource.html
+                  - "ce:TagResource"
+                  # Remove tags from a Cost Explorer resource.
+                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_UntagResource.html
+                  - "ce:UntagResource"
+
+                  #
+                  ## DynamoDB
+                  #
+
+                  # Associate a set of tags with an Amazon DynamoDB resource.
+                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TagResource.html
+                  - "dynamodb:TagResource"
+                  # Remove the association of tags from an Amazon DynamoDB resource.
+                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UntagResource.html
+                  - "dynamodb:UntagResource"
+
+                  #
+                  ## ECS
+                  #
+
+                  # Tag the specified resource.
+                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TagResource.html
+                  - "ecs:TagResource"
+                  # Untag the specified resource.
+                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeCapacityProviders.html
+                  - "ecs:UntagResource"
+
+                  #
+                  ## ElastiCache
+                  #
+
+                  # Add tags to an ElastiCache resource.
+                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_AddTagsToResource.html
+                  - "elasticache:AddTagsToResource"
+                  # Remove tags from a ElastiCache resource.
+                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_RemoveTagsFromResource.html
+                  - "elasticache:RemoveTagsFromResource"
+
+                  #
+                  ## ELB (Elastic Load Balancing) V1
+                  #
+
+                  # Adds the specified tags to the specified load balancer. Each load balancer can have a maximum of 10 tags.
+                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_AddTags.html
+                  - "elasticloadbalancing:AddTags"
+                  # Removes one or more tags from the specified load balancer.
+                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_RemoveTags.html
+                  - "elasticloadbalancing:RemoveTags"
+
+                  #
+                  ## ELB (Elastic Load Balancing) V2
+                  #
+
+                  # Adds the specified tags to the specified load balancer. Each load balancer can have a maximum of 10 tags.
+                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_AddTags.html
+                  - "elasticloadbalancing:AddTags"
+                  # Removes one or more tags from the specified load balancer.
+                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_RemoveTags.html
+                  - "elasticloadbalancing:RemoveTags"
+
+                  #
+                  ## EMR (Elastic Map Reduce)
+                  #
+
+                  # Add tags to an Amazon EMR resource.
+                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_AddTags.html
+                  - "elasticmapreduce:AddTags"
+                  # Remove tags from an Amazon EMR resource.
+                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_RemoveTags.html
+                  - "elasticmapreduce:RemoveTags"
+
+                  #
+                  ## ES (ElasticSearch)
+                  #
+
+                  # Attach resource tags to an OpenSearch Service domain.
+                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-addtags
+                  - "es:AddTags"
+                  # Remove resource tags from an OpenSearch Service domain.
+                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-removetags
+                  - "es:RemoveTags"
+
+                  #
+                  ## Kinesis
+                  #
+
+                  # Add or update tags for the specified Amazon Kinesis stream. Each stream can have up to 10 tags.
+                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_AddTagsToStream.html
+                  - "kinesis:AddTagsToStream"
+                  # Remove tags from the specified Kinesis data stream. Removed tags are deleted and cannot be recovered after this operation successfully completes.
+                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_RemoveTagsFromStream.html
+                  - "kinesis:RemoveTagsFromStream"
 
                   #
                   ## Lambda
@@ -1491,14 +1698,96 @@ Resources:
                   # Modify the version-specific settings of an AWS Lambda function
                   # https://docs.aws.amazon.com/lambda/latest/dg/API_UpdateFunctionConfiguration.html
                   - "lambda:UpdateFunctionConfiguration"
+                  # Add tags to an AWS Lambda function
+                  # https://docs.aws.amazon.com/lambda/latest/dg/API_TagResources.html
+                  - "lambda:TagResource"
+                  # Remove tags from an AWS Lambda function
+                  # https://docs.aws.amazon.com/lambda/latest/dg/API_UntagResource.html
+                  - "lambda:UntagResource"
+
+                  #
+                  ## Organizations
+                  #
+
+                  # Add one or more tags to the specified resource.
+                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_TagResource.html
+                  - "organizations:TagResource"
+                  # Remove one or more tags from the specified resource.
+                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_UntagResource.html
+                  - "organizations:UntagResource"
+
+                  #
+                  ## Resource Group Tagging
+                  #
+
+                  # Apply one or more tags to the specified resources.
+                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_TagResources.html
+                  - "tag:TagResources"
+                  # Remove the specified tags from the specified resources.
+                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_UntagResources.html
+                  - "tag:TagResources"
+
+                  #
+                  ## RDS (Relational Database Service)
+                  #
+
+                  # Add metadata tags to an Amazon RDS resource.
+                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_AddTagsToResource.html
+                  - "rds:AddTagsToResource"
+                  # Remove metadata tags from an Amazon RDS resource.
+                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RemoveTagsFromResource.html
+                  - "rds:RemoveTagsFromResource"
 
                   #
                   ## S3
                   #
 
-                  # Grants permission to receive notifications when certain events happen in an Amazon S3 bucket
+                  # Grants permission to receive notifications when certain events happen in an Amazon S3 bucket.
                   # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotification.html
                   - "s3:PutBucketNotification"
+                  # Add a set of tags to an existing Amazon S3 bucket.
+                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketTagging.html
+                  - "s3:PutBucketTagging"
+
+                  #
+                  ## SQS (Simple Queue Service)
+                  #
+
+                  # Add tags to the specified SQS queue.
+                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_TagQueue.html
+                  - "sqs:TagQueue"
+                  # Remove tags from the specified SQS queue.
+                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_UntagQueue.html
+                  - "sqs:UntagQueue"
+
+                  #
+                  ## Step Functions
+                  #
+
+                  # Add one or more tags (keys and values) to a specified resource.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_TagResource.html
+                  - "ses:TagResource"
+                  # Remove one or more tags (keys and values) from a specified resource.
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_UntagResource.html
+                  - "ses:UntagResource"
+
+                  # Tag an AWS Step Functions resource.
+                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_TagResource.html
+                  - "states:TagResource"
+                  # Remove a tag from an AWS Step Functions resource.
+                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_UntagResource.html
+                  - "states:UntagResource"
+
+                  #
+                  ## X-Ray
+                  #
+
+                  # Add tags to an X-Ray resource.
+                  # https://docs.aws.amazon.com/xray/latest/api/API_TagResource.html
+                  - "xray:TagResource"
+                  # Remove tags from an X-Ray resource.
+                  # https://docs.aws.amazon.com/xray/latest/api/API_UntagResource.html
+                  - "xray:UntagResource"
 
                 Resource: "*"
 Parameters:
