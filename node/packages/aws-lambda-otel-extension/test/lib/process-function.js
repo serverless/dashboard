@@ -20,6 +20,8 @@ const reportPattern = new RegExp(
     '(?:Init Duration:\\s*(?<initDuration>[\\d.]+)\\s*ms)?'
 );
 
+const handledOutcomes = new Set(['success', 'error:handled']);
+
 const create = async (testConfig, coreConfig) => {
   const { configuration } = testConfig;
   try {
@@ -242,6 +244,11 @@ const retrieveReports = async (testConfig) => {
     }
   } while (invocationsData.length < 2);
 
+  if (processesData.length !== 1 && handledOutcomes.has(testConfig.expectedOutcome)) {
+    throw new Error(
+      `Unexpected count of processes (${processesData.length}) for: ${testConfig.name}`
+    );
+  }
   return { processesData, invocationsData };
 };
 
