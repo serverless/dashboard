@@ -15,7 +15,6 @@ module.exports = {
       },
     ],
   },
-  ignorePatterns: ['test/fixtures/lambdas/esbuild-esm-callback-success.js'],
   overrides: [
     {
       files: ['test/**/*.js'],

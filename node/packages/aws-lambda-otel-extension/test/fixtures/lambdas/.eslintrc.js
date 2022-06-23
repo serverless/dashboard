@@ -18,5 +18,5 @@ module.exports = {
     ],
     'no-console': 'off',
   },
-  ignorePatterns: ['success-callback-esbuild-from-esm.js'],
+  ignorePatterns: ['esbuild-from-esm-callback.js'],
 };
