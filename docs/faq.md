@@ -6,6 +6,9 @@ menuOrder: 5
 -->
 
 # FAQ
+
+## Configuring apps and services
+
 **How do I start using Serverless Console with my app?**
 
 The simplest way to get going with Serverless Console is to make sure your on
@@ -20,7 +23,7 @@ frameworkVersion: '3'
 ```
 
 **Note:** The following example will disable the use of Serverless Dashboard. 
-## What Serverless.yaml fields effect console?
+**What Serverless.yaml fields effect console?**
 
 Several details of your serverless.yaml file will be relevant in Serverless
 Console. This includes, your org (required), stage, service and function names.
@@ -58,7 +61,10 @@ Serverless Console.
 ```text
 severless deploy --stage #included as environment
 ```
-## I am not able to deploy or login to console from the CLI, how do I fix this?
+
+## Logging in and signing up
+
+**I am not able to deploy or login to console from the CLI, how do I fix this?**
 
 You need to be on version 3.18+ to login and deploy. To check the version of your framework run.
 
@@ -71,11 +77,11 @@ To upgrade to the latest version run.
 ```text
 npm -g install serverless
 ```
-## Where did my organization name come from?
+**Where did my organization name come from?**
 
 An organization is a unique tenant within the Serverless suite of products (including Serverless Dashboard, Serverless Cloud, and Serverless Console). This name must be unique, and we randomly assign a combination of words as your organization name if you're using Console for the first time. 
 
-## How does Serverless Console relate to Serveless Dashboard?
+**How does Serverless Console relate to Serveless Dashboard?**
 
 Serverless Console is a new stand alone product, but can leverage functionality
 from Serverless Dashboard features for parameters and providers. To take
@@ -93,41 +99,18 @@ frameworkVersion: '3'
 Serverles Console also share your orginization and users from Serverless
 Dashboard and/or Serverless Cloud. 
 
-## What starter apps can I used to get started?
+## Metrics and Use Cases
 
-If you'd like to get started quickly we offer several starter templates to get
-you going. Just choose one of the following below. These will clone a node.js
-app locally for you and create the apropriate `serverless.yaml` file to get you
-started. 
-
-```text
-## Express JS API
-serverless \
-    --org=<your-org-name> \
-    --name=console-http-api \
-    --template=aws-node-express-api \
-    --console
-```
-
-```text
-## Basic Chron Job
-serverless \
-    --org=<your-org-name> \
-    --name=console-chron \
-    --template=aws-node-scheduled-cron \
-    --console
-```
-
-## I am not seeing all my details from API-Gateway? 
+**I am not seeing all my details from API-Gateway?**
 At this time some details from API gateway are not collected. This means
 some errors are not recorded in a Trace. We recommend using a framework
 like [Express](../guide/esbuild.md) to assist with capturing a errors.
 
-## What languages and runtimes are supported?
+**What languages and runtimes are supported?**
 
 Currently Serverless Console only supports Node.js on AWS Lambda.
 
-## How can I use console to find API Errors?
+**How can I use console to find API Errors?**
 
 Trouble shooting and finding API errors is a valuable way to use Serveless
 Console. To identify API Errors, select the HTTP status codes and filter for
@@ -138,7 +121,7 @@ in your production envorionments across your org.
 You can use this view to quickly identify anomolies, and then locate the
 underlying [Trace](using/traces.md) that caused the problem.
 
-## How can I use console to find slow API Endpoints?
+**How can I use console to find slow API Endpoints?**
 
 Slow API responses can negatively impact users and cost your orginization money.
 Our metrics and trace explorer allow you to filter on specific endpoints and
@@ -147,34 +130,31 @@ performance, and the p90 metric shows you the worst 10%. Filtering the traces
 for Durations higher than those metrics will lead you to your slowest requests. 
 
 
-## Should I use Serverless Console to monitor my produciton evironment?
+## Pricing and Costs
 
-Go for it! We hope you can find errors, and slowness faster with Serverless
-Console, that said we know we are lacking key production readiness features
-like alerting that are needed before Console should be your only tool. 
-
-
-## How can I use console to analyze and predict costs?
-
-We display a cost metric based on the duration and memory used by your Lambda 
-function and is based on a x86 price of `$0.0000166667` per Gigabyte second.
-Using our cost figure, along wit our filters allows you to understand your
-Serveless compute costs across AWS accounts in ways it can be hard to accomplish
-otherwise. 
-
-## How much does Serverless Console cost?
+**How much does Serverless Console cost?**
 Serverless Console is priced per 100,000 Transactions for the Pro Tier, and per Million
-transactions for the Enterprise tier. 
+transactions for the Enterprise tier. Got to your settings page
+to sign up today. 
 
-## How do we calculate a Transaction 
-A transaction includes all elements of a [Trace](../product/traces.md) with
-some potential overages should your Trace container an especially
+**What is a Transaction?**
+A Transaction includes all elements of a [Trace](../product/traces.md) with
+some potential overages should your Trace contain an especially
 large number of logs, or spans. In most cases overages don't apply 
 and your transaction count will closely match your invocation count.
 
 Overages only apply when a Trace has
 * > 10kb of logs - a transaction is added for each additional 10kb
 * > 100 spans - a transaction is added for each additional 100 spans
+
+
+
+**How can I use console to analyze and predict costs?**
+We display a cost metric based on the duration and memory used by your Lambda 
+function and is based on a x86 price of `$0.0000166667` per Gigabyte second.
+Using our cost figure, along wit our filters allows you to understand your
+Serveless compute costs across AWS accounts in ways it can be hard to accomplish
+otherwise. 
 
 
 

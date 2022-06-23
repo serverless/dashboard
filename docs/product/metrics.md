@@ -14,7 +14,7 @@ trace are also included on these metrics for filtering.
 
 Our curated metric views provide you the ability to view activity across your
 entire organization at a glance.  These include views are intended to be a
-starting point based on patterns we recognize in the [Trace](../concepts/traces.md)
+starting point based on patterns we recognize in the [Trace](traces.md)
 data we receive. 
 
 Our metrics are built around common use cases including:
@@ -26,7 +26,7 @@ outliers, filter for status codes, and spot usage trends across your endpoints.
 **Functions** - Functions provide a view to see all your instrumented Lambda
 functions holistically across your organization. 
 
-Fore more details about how we recognize these Traces see our [Scopes concept.](../concepts/scopes.md)
+Fore more details about how we recognize these Traces see our [Scopes concept.](scopes.md)
 
 ## Collected Metrics
 Currently the following metrics are supported for ingestion.
@@ -44,7 +44,7 @@ refine the data they are seeing. To add filters click on the configuration icon
 in the top right and select the criteria you'd like to filter. 
 
 Each filter option will have a set of values we have received as
-[tags](../concepts/tags.md) when we ingested the [Trace](traces.md). Select the
+[tags](tags.md) when we ingested the [Trace](traces.md). Select the
 **+** icon on each filter option you'd like to include, and then Save those
 values to view the results. 
 
