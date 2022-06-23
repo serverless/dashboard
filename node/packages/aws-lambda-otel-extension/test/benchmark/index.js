@@ -138,12 +138,12 @@ module.exports = async (options = {}) => {
 
   const allFunctionVariantsConfig = new Map([
     [
-      'success-callback',
+      'callback',
       {
         config: {
           configuration: {
             Code: {
-              ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'success-callback.js')),
+              ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'callback.js')),
             },
           },
         },
@@ -151,7 +151,7 @@ module.exports = async (options = {}) => {
       },
     ],
     [
-      'success-callback-express',
+      'express',
       {
         config: {
           invokePayload: {
@@ -205,14 +205,12 @@ module.exports = async (options = {}) => {
       },
     ],
     [
-      'success-callback-logger',
+      'logger',
       {
         config: {
           configuration: {
             Code: {
-              ZipFile: resolveFileZipBuffer(
-                path.resolve(fixturesDirname, 'success-callback-logger.js')
-              ),
+              ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'logger.js')),
             },
             Timeout: 20,
           },

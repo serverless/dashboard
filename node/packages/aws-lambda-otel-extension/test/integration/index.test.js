@@ -15,7 +15,7 @@ describe('integration', function () {
 
   const functionVariantsConfig = new Map([
     [
-      'success-callback',
+      'callback',
       {
         variants: new Map([
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
@@ -24,9 +24,9 @@ describe('integration', function () {
         ]),
       },
     ],
-    ['success-callback-esbuild-from-esm', {}],
+    ['esbuild-from-esm-callback', {}],
     [
-      'success-callback-esm/index',
+      'esm-callback/index',
       {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
@@ -35,7 +35,7 @@ describe('integration', function () {
       },
     ],
     [
-      'success-callback-express',
+      'express',
       {
         invokePayload: {
           version: '2.0',
@@ -107,7 +107,7 @@ describe('integration', function () {
         },
       },
     ],
-    ['success-callback-error', { expectedOutcome: 'error:handled' }],
+    ['callback-error', { expectedOutcome: 'error:handled' }],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(functionVariantsConfig);
