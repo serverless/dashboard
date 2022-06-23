@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.3](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.2...@serverless/aws-lambda-otel-extension@0.4.3) (2022-06-23)
+
+### Features
+
+- Add attributes and resource to req/res payload ([18d69e9](https://github.com/serverless/runtime/commit/18d69e9a785a7019dceb2f3d657b7b31e2cf7164))
+
+### Maintenance Improvements
+
+- Changed getCurrentRequestData to getRequestContext ([a80a961](https://github.com/serverless/runtime/commit/a80a96163119615065c377c9bb3b18c4e2b8629f))
+- Added invoke time to internal context ([c70d60a](https://github.com/serverless/runtime/commit/c70d60aefb80099cb1422b1f2d745860f7258135))
+
 ### [0.4.2](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.1...@serverless/aws-lambda-otel-extension@0.4.2) (2022-06-15)
 
 ### Maintenance Improvements
