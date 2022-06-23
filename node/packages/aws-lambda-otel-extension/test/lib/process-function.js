@@ -147,6 +147,17 @@ const retrieveReports = async (testConfig) => {
     let currentInvocationData;
     let currentProcessData;
     let startedMessage;
+    const getCurrentInvocationData = () => {
+      if (!currentInvocationData) {
+        log.error(
+          'Not normative CW events (for start time %d): %o',
+          testConfig.invokeStartTime,
+          events
+        );
+        throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
+      }
+      return currentInvocationData;
+    };
     for (const { message } of events) {
       if (message.startsWith('Extension overhead duration: external initialization')) {
         processesData.push(
@@ -169,23 +180,20 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('Extension overhead duration: internal request')) {
-        if (!currentInvocationData) {
-          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
-        }
-        currentInvocationData.extensionOverheadDurations.internalRequest = parseInt(
+        getCurrentInvocationData().extensionOverheadDurations.internalRequest = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
       }
       if (message.startsWith('⚡')) {
-        if (!currentInvocationData) {
-          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
-        }
         const reportType = message.slice(2, message.indexOf(':'));
         if (reportType === 'logs') continue;
         const reportJsonString = message.slice(message.indexOf(':') + 1);
         if (reportJsonString.endsWith('\n')) {
-          currentInvocationData.reports.push([reportType, JSON.parse(reportJsonString.trim())]);
+          getCurrentInvocationData().reports.push([
+            reportType,
+            JSON.parse(reportJsonString.trim()),
+          ]);
         } else {
           startedMessage = { type: reportType, report: reportJsonString };
         }
@@ -194,7 +202,7 @@ const retrieveReports = async (testConfig) => {
       if (startedMessage) {
         startedMessage.report += message;
         if (startedMessage.report.endsWith('\n')) {
-          currentInvocationData.reports.push([
+          getCurrentInvocationData().reports.push([
             startedMessage.type,
             JSON.parse(startedMessage.report.trim()),
           ]);
@@ -203,19 +211,13 @@ const retrieveReports = async (testConfig) => {
         }
       }
       if (message.startsWith('Extension overhead duration: internal response')) {
-        if (!currentInvocationData) {
-          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
-        }
-        currentInvocationData.extensionOverheadDurations.internalResponse = parseInt(
+        getCurrentInvocationData().extensionOverheadDurations.internalResponse = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
       }
       if (message.startsWith('Extension overhead duration: external invocation')) {
-        if (!currentInvocationData) {
-          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
-        }
-        currentInvocationData.extensionOverheadDurations.externalResponse = parseInt(
+        getCurrentInvocationData().extensionOverheadDurations.externalResponse = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
@@ -228,12 +230,7 @@ const retrieveReports = async (testConfig) => {
         const reportMatch = message.match(reportPattern);
         if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);
         const reportData = reportMatch.groups;
-        if (!currentInvocationData) {
-          throw new Error(
-            `Cannot resolve invocation for data for ${testConfig.configuration.FunctionName}`
-          );
-        }
-        currentInvocationData.billedDuration = Number(reportData.billedDuration);
+        getCurrentInvocationData().billedDuration = Number(reportData.billedDuration);
         currentInvocationData.duration = Number(reportData.duration);
         currentInvocationData.maxMemoryUsed = Number(reportData.maxMemoryUsed);
         if (reportData.initDuration) {
