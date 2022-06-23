@@ -2,7 +2,7 @@
 title: Duration
 menuText: Duration
 description: Details about the durations shown in the Console UI 
-menuOrder: 7
+menuOrder: 8
 -->
 
 # Duration

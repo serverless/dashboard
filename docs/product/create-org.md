@@ -1,6 +1,6 @@
 <!--
 title: Creating an Org
-menuText: Creating an org
+menuText: Creating an Org
 description: A guide to ensuring API Applications are Setup to be Instrumented Correctly
 menuOrder: 3
 -->
