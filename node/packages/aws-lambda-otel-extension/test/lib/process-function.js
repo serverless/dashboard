@@ -167,12 +167,18 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('Extension overhead duration: internal request')) {
+        if (!currentInvocationData) {
+          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
+        }
         currentInvocationData.extensionOverheadDurations.internalRequest = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
       }
       if (message.startsWith('⚡')) {
+        if (!currentInvocationData) {
+          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
+        }
         const reportType = message.slice(2, message.indexOf(':'));
         if (reportType === 'logs') continue;
         const reportJsonString = message.slice(message.indexOf(':') + 1);
@@ -195,12 +201,18 @@ const retrieveReports = async (testConfig) => {
         }
       }
       if (message.startsWith('Extension overhead duration: internal response')) {
+        if (!currentInvocationData) {
+          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
+        }
         currentInvocationData.extensionOverheadDurations.internalResponse = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
       }
       if (message.startsWith('Extension overhead duration: external invocation')) {
+        if (!currentInvocationData) {
+          throw new Error(`Failed to resolve invocation data for ${testConfig.name}`);
+        }
         currentInvocationData.extensionOverheadDurations.externalResponse = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
