@@ -5,7 +5,20 @@
 require('essentials');
 require('log-node')();
 
-require('../benchmark')().then((resultsMap) => {
+const argv = require('yargs-parser')(process.argv.slice(2));
+
+const resolveSet = (comaSeparatedValue) =>
+  new Set(
+    comaSeparatedValue
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+  );
+
+require('../benchmark')({
+  benchmarkVariants: argv['benchmark-variants'] ? resolveSet(argv['benchmark-variants']) : null,
+  functionVariants: argv['use-cases'] ? resolveSet(argv['use-cases']) : null,
+}).then((resultsMap) => {
   process.stdout.write(
     `${[
       [
