@@ -2,15 +2,15 @@ package logs
 
 import (
 	"aws-lambda-otel-extension/external/lib"
+	"aws-lambda-otel-extension/external/reporter"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/golang-collections/go-datastructures/queue"
 	"go.uber.org/zap"
 )
 
@@ -21,30 +21,32 @@ const LOGS_SERVER_PORT = "4243"
 type LogsApiHttpListener struct {
 	httpServer *http.Server
 	// logQueue is a synchronous queue and is used to put the received logs to be consumed later (see main)
-	queue  *queue.Queue
-	logger *lib.Logger
+	logger      *lib.Logger
+	reportAgent *reporter.HttpClient
 }
 
 // NewLogsApiHttpListener returns a LogsApiHttpListener with the given log queue
-func NewLogsApiHttpListener(queue *queue.Queue) *LogsApiHttpListener {
+func NewLogsApiHttpListener(reportAgent *reporter.HttpClient) *LogsApiHttpListener {
 	return &LogsApiHttpListener{
-		httpServer: nil,
-		queue:      queue,
-		logger:     lib.NewLogger(),
+		httpServer:  nil,
+		logger:      lib.NewLogger(),
+		reportAgent: reportAgent,
 	}
 }
 
 // Start initiates the server in a goroutine where the logs will be sent
 func (s *LogsApiHttpListener) Start() bool {
 	address := fmt.Sprintf("sandbox:%s", LOGS_SERVER_PORT)
-	s.httpServer = &http.Server{Addr: address}
-	http.HandleFunc("/", s.http_handler)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", s.http_handler)
+	s.httpServer = &http.Server{Addr: address, Handler: mux}
+
 	go func() {
 		s.logger.Info("Serving logsapi agent on address: " + address)
 		err := s.httpServer.ListenAndServe()
 		if err != http.ErrServerClosed {
 			s.logger.Error("Unexpected stop on Logsapi Http Server", zap.Error(err))
-			s.Shutdown()
+			s.Shutdown(context.Background())
 		} else {
 			s.logger.Debug("Http Server closed", zap.Error(err))
 		}
@@ -58,6 +60,8 @@ func (s *LogsApiHttpListener) Start() bool {
 // Logging or printing besides the error cases below is not recommended if you have subscribed to receive extension logs.
 // Otherwise, logging here will cause Logs API to send new logs for the printed lines which will create an infinite loop.
 func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		s.logger.Error("Error reading body", zap.Error(err))
@@ -66,24 +70,23 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 
 	fmt.Println("Logs API event received:", string(body))
 
-	// get structured messages
-	messages, err := parseLogsAPIPayload(body)
-
-	for _, message := range messages {
-		s.queue.Put(message)
-	}
-
-	// Puts the message into the queue
-	// err = s.queue.Put(string(body))
+	// Send all transform process to run in a go routine
+	s.reportAgent.PostLogs(func() ([]byte, error) {
+		var b []byte
+		messages, err := readLogs(body)
+		if err != nil {
+			return b, err
+		}
+		return json.Marshal(messages)
+	})
 	if err != nil {
 		s.logger.Error("Can't push logs to destination", zap.Error(err))
 	}
 }
 
 // Shutdown terminates the HTTP server listening for logs
-func (s *LogsApiHttpListener) Shutdown() {
+func (s *LogsApiHttpListener) Shutdown(ctx context.Context) {
 	if s.httpServer != nil {
-		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 		err := s.httpServer.Shutdown(ctx)
 		if err != nil {
 			s.logger.Error("Failed to shutdown http server gracefully ", zap.Error(err))
@@ -101,9 +104,9 @@ type HttpAgent struct {
 
 // NewLogsApiAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
-func NewLogsApiAgent(jq *queue.Queue) (*HttpAgent, error) {
+func NewLogsApiAgent(reportAgent *reporter.HttpClient) (*HttpAgent, error) {
 
-	logsApiListener := NewLogsApiHttpListener(jq)
+	logsApiListener := NewLogsApiHttpListener(reportAgent)
 
 	return &HttpAgent{
 		listener: logsApiListener,
@@ -148,11 +151,11 @@ func (h HttpAgent) Init(agentID string) error {
 }
 
 // Shutdown finalizes the logging and terminates the listener
-func (a *HttpAgent) Shutdown() {
+func (a *HttpAgent) Shutdown(ctx context.Context) {
 	// err := a.logger.Shutdown()
 	// if err != nil {
 	// 	a.logger.Errorf("Error when trying to shutdown logger: %v", err)
 	// }
 
-	a.listener.Shutdown()
+	a.listener.Shutdown(ctx)
 }

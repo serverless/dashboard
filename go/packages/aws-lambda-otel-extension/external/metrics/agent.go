@@ -36,9 +36,10 @@ func NewInternalHttpListener(reportAgent *reporter.HttpClient) *InternalHttpList
 
 // Start initiates the server in a goroutine
 func (l *InternalHttpListener) Start() bool {
-	address := fmt.Sprintf("sandbox:%s", OTEL_SERVER_PORT)
-	l.httpServer = &http.Server{Addr: address}
-	http.HandleFunc("/", l.http_handler)
+	address := fmt.Sprintf("localhost:%s", OTEL_SERVER_PORT)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", l.http_handler)
+	l.httpServer = &http.Server{Addr: address, Handler: mux}
 	go func() {
 		l.logger.Info("Serving internal agent on address: " + address)
 		err := l.httpServer.ListenAndServe()
@@ -46,7 +47,7 @@ func (l *InternalHttpListener) Start() bool {
 			l.logger.Error("Unexpected stop on Http Server", zap.Error(err))
 			l.Shutdown()
 		} else {
-			l.logger.Error("Http Server closed", zap.Error(err))
+			l.logger.Debug("Http Server closed", zap.Error(err))
 		}
 	}()
 	return true

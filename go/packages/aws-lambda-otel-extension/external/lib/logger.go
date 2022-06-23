@@ -3,7 +3,6 @@ package lib
 import (
 	"encoding/json"
 	"log"
-	"os"
 
 	"go.uber.org/zap"
 )
@@ -20,12 +19,12 @@ func PrettyPrint(v interface{}) string {
 
 func NewLogger() (logger *zap.Logger) {
 	var err error
-	stage, ok := os.LookupEnv("STAGE")
-	if !ok || stage == "prod" {
-		logger, err = zap.NewProduction()
-	} else {
-		logger, err = zap.NewDevelopment()
-	}
+	// stage, ok := os.LookupEnv("STAGE")
+	// if !ok || stage == "prod" {
+	// 	logger, err = zap.NewProduction()
+	// } else {
+	logger, err = zap.NewDevelopment()
+	// }
 
 	defer logger.Sync()
 

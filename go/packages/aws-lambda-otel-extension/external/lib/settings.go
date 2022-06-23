@@ -2,6 +2,7 @@ package lib
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -18,10 +19,16 @@ type UserSettings struct {
 	Logs     UserSettingsEndpoint `json:"logs"`
 	Request  UserSettingsEndpoint `json:"request"`
 	Response UserSettingsEndpoint `json:"response"`
+	Common   struct {
+		Destination struct {
+			RequestHeaders string `json:"requestHeaders"`
+		} `json:"destination"`
+	} `json:"common"`
 }
 
 func GetUserSettings() (UserSettings, error) {
 	var userSettings UserSettings
+	fmt.Printf("User settings: %s\n", userSettingsText)
 	err := json.Unmarshal([]byte(userSettingsText), &userSettings)
 	if err != nil {
 		return UserSettings{}, err
