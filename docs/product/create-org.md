@@ -1,8 +1,8 @@
 <!--
-title: Creating an org
+title: Creating an Org
 menuText: Creating an org
 description: A guide to ensuring API Applications are Setup to be Instrumented Correctly
-menuOrder: 4
+menuOrder: 3
 -->
 
 # Creating an Organization 
