@@ -2,7 +2,7 @@
 title: Traces
 menuText: Traces
 description: Using Explorer and understanding Traces and Spans.
-menuOrder: 3
+menuOrder: 6
 -->
 # Traces
 
