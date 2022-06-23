@@ -136,7 +136,7 @@ module.exports = async (options = {}) => {
 
   if (!benchmarkVariantsConfig.size) throw new Error('No matching benchmark variant');
 
-  const allFunctionVariantsConfig = new Map([
+  const allUseCasesConfig = new Map([
     [
       'callback',
       {
@@ -265,17 +265,15 @@ module.exports = async (options = {}) => {
     ],
   ]);
 
-  const functionVariantsConfig = options.functionVariants
-    ? new Map(
-        Array.from(allFunctionVariantsConfig).filter(([name]) => options.functionVariants.has(name))
-      )
-    : allFunctionVariantsConfig;
+  const useCasesConfig = options.useCases
+    ? new Map(Array.from(allUseCasesConfig).filter(([name]) => options.useCases.has(name)))
+    : allUseCasesConfig;
 
-  if (!functionVariantsConfig.size) throw new Error('No matching function variant');
+  if (!useCasesConfig.size) throw new Error('No matching use case');
 
   const coreConfig = {};
   await createCoreResources(coreConfig);
-  const testVariantsConfig = resolveTestVariantsConfig(functionVariantsConfig, { multiplyBy: 5 });
+  const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig, { multiplyBy: 5 });
   for (const testConfig of testVariantsConfig) {
     testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
       // As we process result promises sequentially step by step in next turn, allowing them to

@@ -17,7 +17,7 @@ const resolveSet = (comaSeparatedValue) =>
 
 require('../benchmark')({
   benchmarkVariants: argv['benchmark-variants'] ? resolveSet(argv['benchmark-variants']) : null,
-  functionVariants: argv['use-cases'] ? resolveSet(argv['use-cases']) : null,
+  useCases: argv['use-cases'] ? resolveSet(argv['use-cases']) : null,
 }).then((resultsMap) => {
   process.stdout.write(
     `${[
