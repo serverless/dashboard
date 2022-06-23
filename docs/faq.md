@@ -148,7 +148,6 @@ Overages only apply when a Trace has
 * > 100 spans - a transaction is added for each additional 100 spans
 
 
-
 **How can I use console to analyze and predict costs?**
 We display a cost metric based on the duration and memory used by your Lambda 
 function and is based on a x86 price of `$0.0000166667` per Gigabyte second.
@@ -156,17 +155,17 @@ Using our cost figure, along wit our filters allows you to understand your
 Serveless compute costs across AWS accounts in ways it can be hard to accomplish
 otherwise. 
 
+## Data Retention
 
+**What data is stored by Serverless Console and for how long?**
 
-## What data is stored by Serverless Console and for how long?
-
-We store a limited set of specified [metrics](concepts/metrics.md) and [tags](/concepts/tags.md)
+We store a limited set of specified [metrics](product/metrics.md) and [tags](/product/tags.md)
 in our systems for up to 30 days. While this does include meta data about your
 systems limited sensitive information is included.
 
 Logs are stored for 7 days before being deleted. 
 
-## How can I disable log and event data collection?
+**How can I disable log and event data collection?**
 Log and event data can contain sensitive information. 
 To disable log, and/or request response data collection 
 set the following properties.
@@ -184,23 +183,3 @@ console:
 service: myservice
 frameworkVersion: '3'
 ```
-
-
-## If I setup an organization in Serverless before, will it work with console?
-Yes, you will automatically start using an existing organization if you have already set one up in Servrless Dashboard. 
-
-## I joined an organization in Serverless, will it be there in Serverless Console?
-Yes, any organizations you are a member of in Serverless Dashboard will be automatically added to your Serverless Console. 
-
-## If I change my org name in Console, will my dashboard name change as well?
-
-No, if you change your org name in Console, you’ll need to specify the dashboard name separately to take advantage of dashboard features like Parameters and Providers. This can be done by including the console specific name in the console section of your configuration, as in the example below.
-
-```yaml
-org: thisismydashboardname
-console: 
-   org: thisismyconsolename
-service: thisismyservice
-frameworkVersion: '3'
-```
-
