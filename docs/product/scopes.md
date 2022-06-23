@@ -1,7 +1,7 @@
 <!--
 title: Scopes
 menuText: Scopes
-description: Overview of concepts used on serevrless console. 
+description: Overview of the scope concept 
 menuOrder: 10
 -->
 
