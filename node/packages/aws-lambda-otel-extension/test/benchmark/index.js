@@ -205,6 +205,32 @@ module.exports = async (options = {}) => {
       },
     ],
     [
+      '250ms',
+      {
+        config: {
+          configuration: {
+            Code: {
+              ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, '250ms.js')),
+            },
+          },
+        },
+        variants: benchmarkVariantsConfig,
+      },
+    ],
+    [
+      '1s',
+      {
+        config: {
+          configuration: {
+            Code: {
+              ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, '1s.js')),
+            },
+          },
+        },
+        variants: benchmarkVariantsConfig,
+      },
+    ],
+    [
       'logger',
       {
         config: {
