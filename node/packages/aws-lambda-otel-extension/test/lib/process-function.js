@@ -142,6 +142,7 @@ const retrieveReports = async (testConfig) => {
   let processesData;
   do {
     const events = await retrieveAllEvents();
+    log.debug('Events for %s: %o', testConfig.name, events);
     processesData = [];
     invocationsData = [];
     let currentInvocationData;
@@ -174,6 +175,7 @@ const retrieveReports = async (testConfig) => {
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
+        continue;
       }
       if (message.startsWith('START RequestId: ')) {
         currentInvocationData = { reports: [], extensionOverheadDurations: {} };
@@ -184,6 +186,7 @@ const retrieveReports = async (testConfig) => {
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
+        continue;
       }
       if (message.startsWith('⚡')) {
         const reportType = message.slice(2, message.indexOf(':'));
@@ -215,12 +218,14 @@ const retrieveReports = async (testConfig) => {
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
+        continue;
       }
       if (message.startsWith('Extension overhead duration: external invocation')) {
         getCurrentInvocationData().extensionOverheadDurations.externalResponse = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
+        continue;
       }
       if (message.startsWith('REPORT RequestId: ')) {
         if (!currentProcessData) {
