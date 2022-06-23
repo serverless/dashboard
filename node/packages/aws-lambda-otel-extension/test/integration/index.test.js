@@ -13,7 +13,7 @@ describe('integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
-  const functionVariantsConfig = new Map([
+  const useCasesConfig = new Map([
     [
       'callback',
       {
@@ -110,7 +110,7 @@ describe('integration', function () {
     ['callback-error', { expectedOutcome: 'error:handled' }],
   ]);
 
-  const testVariantsConfig = resolveTestVariantsConfig(functionVariantsConfig);
+  const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
 
   before(async () => {
     await createCoreResources(coreConfig);
