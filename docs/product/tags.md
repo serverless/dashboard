@@ -2,7 +2,7 @@
 title: Tags
 menuText: Tags
 description: Tag definitions and examples
-menuOrder: 8
+menuOrder: 9
 -->
 
 # Tags & Tag Definitions

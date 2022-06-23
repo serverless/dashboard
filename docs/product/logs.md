@@ -2,7 +2,7 @@
 title: Logs
 menuText: Logs
 description: A guide for using logs within Serverless Console
-menuOrder: 4
+menuOrder: 5
 -->
 
 # Logs
