@@ -2,7 +2,7 @@
 title: Platforms
 menuText: Platforms
 description: Serverless Console 
-menuOrder: 1
+menuOrder: 2
 -->
 
 # Serverless Console for AWS
