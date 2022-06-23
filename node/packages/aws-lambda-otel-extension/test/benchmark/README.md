@@ -1,51 +1,166 @@
 # Benchmarks
 
-## Coverage
+## Tested use cases
 
-Current version benchmarks following functions:
+### Node.js function ([`callback`](../../fixtures/lambdas/callback.js))
 
-- Bare function [`success-callback`](../../fixtures/lambdas/success-callback.js)
-- Basic express endpoint [`success-callback-express`](../../fixtures/lambdas/success-callback-express.js)
-- Heavy logging function [`success-callback-logger`](../../fixtures/lambdas/success-callback-logger.js) - logs 1000 individual log messages
+No-op Node.js function. Handler takes callback and immediately invokes it with dummy payload
 
-Against following scenarios:
+### Node.js + Express function ([`express`](../../fixtures/lambdas/express.js))
 
-- `bare` - No instrumentation (bare run with no layer attached)
-- `external-only` - Just external extension which handles lambda event cycle, as no internal extension is loaded, no reports are processed
-- `to-log` - External & internal extension but with reports being logged to the stdout (doesn't involve communication with external server)
-- `to-console` - (If `SLS_ORG_NAME` & `SLS_ORG_TOKEN` env vars are set) External & internal extension reporting to the Console Kinesis server.
+Simple express app with two endpoints which respond with dummy payload.
+Function is invoked with payload that reflecxts one that function will receive if it would be triggered through API Gateway integration
 
-## Provided results
+### Node.js 250ms function ([`250ms`](../../fixtures/lambdas/250ms.js))
 
-Each scenario (function + instrumentation setup case) is evaluated 5 times, and that consist of:
+No-op Node.js function. Handler takes callback waits 250ms and invokes it with dummy payload.
+In this case produced extension invocation overheads are slightly smaller as some of the extension work is done during lambda operation
 
-- Function creation
-- First function invocation
-- Second function invocation
+### Node.js 1s function ([`1s`](../../fixtures/lambdas/1s.js))
 
-There's 2s gap between function invocations, to ensure we test against single lambda instance.
+No-op Node.js function. Handler takes callback waits 1 second and invokes it with dummy payload.
+In this case, produced extension invocation overheads are additionally reduced. Tests show that for longer going functions overheads remain same as for that one
 
-For each scenario, multiple duration metrics (described below) are observed, they are read from CW logs, have their median calculated (out of five occurances) and are written to the outcome CSV output
+### Node.js heavy logging function ([`logger`](../../fixtures/lambdas/logger.js))
 
-### Initialization durations
+Logs 1000 individual log messages via `console.log` in short time frames
 
-- `init:external` - Measured internally, external extension initialization overhead
-- `init:internal` - Measured internally, internal extension initialization overhead
-- `init:aws` - `initDuration`, as provided by AWS in function report
+It's the only case which writes any logs (in other cases log reporting is not existing).
 
-### Invocation durations
+## Benchmark variants
 
-Those are split into two `first` and `following`, as first invocation (putting aside initialization phase) also often implies some initialization overhead (obtained numbers show it should not be measured as equal to following invocations)
+### `bare`
 
-- `[first|following]:internal:request` - Measured internally, internal extension request processing overhead (time between receiving the event from AWS and passing it to original handler)
-- `[first|following]:internal]:response` - Measured internally, internal extension response processing overhead (time between receiving the reponse from original handler, and returning it to AWS)
-- `[first|following]:external:response` - Measured internally, time between lambda invocation being closed, and external extension marking itself ready for next invocation
-- `[first|following]:aws:duration` - `duration` as provided by AWS in function report
-- `[first|following]:aws:billedDuration` - `billedDuration` as provided by AWS in function report
-- `[first|following]:loca]:duration` - Duration of AWS SDK invocation request as observed locally
-- `[first|following]:aws:maxMemoryUsed` - `maxMemoryUsed` as provided by AWS in function report
+No instrumentation (bare run with no extension layers onboard).
 
-## Setup
+As there are no extensions loaded, there's no extension duration overhead introduced, and benchmark will naturally report them with zeros.
+
+What we get is metrics from AWS report, that confirm on initialization duration, invocation duration, billed invocation duration and max memory used.
+
+### `externalOnly`
+
+Just external extension which processes lambda event cycle. As no internal extension is loaded, no reports are processed and send by the external extension.
+
+Difference from `bare` is that external extension process is initialized by AWS, and its that process that monitors and queues lambda invocation event cycle.
+
+This additional process managment introduces natural duration overhead which is best calculated by reading duration as reported by AWS for this variant and subtracting from it a `bare` variant duration _(current numbers show ca 100ms overhead for initialization, ca 60ms for first invocation , and ca 30ms for every following invocation)_
+
+There's no time spent here on processing reports and propagating them to the ingestion server (as none are to be send from the internal extension). So internally measured invocation duration overhead of external extension is also reported as not existing
+
+### `jsonLog`
+
+External & internal extensions are loaded. Internal extension operates fully, while in external extension from obtained reports just payloads are generated and logged into `stdout` (there's no conversion to Protobuf and not reporting to the remote ingestion server).
+
+Difference from `externalOnly` is purely that internal extension is loaded and fully active and that it sends reports to the external extension.
+While external extension prepares the payloads and logs them to the console (in JSON form) overhead of that is neglible (internal ovehead measurements are expected to show `0`).
+
+Comparing its duration overhead against `externalOnly` shows how much overhead do internal extension introduce.
+
+### `protoLog`
+
+Exactly same as `jsonLog` with a difference, that in the external extension JSON payloads are converted to the Protobuf (and it's Protobuf output that's logged to the `stdout`)
+
+Comparing duration differences with `jsonLog` we can see how much overhead is generated by Protobuf conversion
+
+### `protoConsole`
+
+Exactly same as `protoLog` but external extension reports the generated payloads to the ingestion server.
+
+Comparing duration differences with `protoLog` we can see how much overhead is generated by communication with the remote ingestion server
+
+## Reported metrics
+
+Each benchmark variant is run against 5 lambda instances.
+
+Therefore for each metric outlined below, we get 5 numbers. Durations returned in result report are averages of those 5 values.
+
+Internally measured durations are written by the extensions to the `stdout`, and are read (together with invocation reports as written by AWS) from CloudWatch logs.
+
+### Observed AWS Lambda execution lifecycle phases
+
+#### Ininitialization (`init`)
+
+Lambda instance initilization
+
+##### Observed metrics
+
+###### `init:external`
+
+Duration of the external extension initialization logic, measured internally in external extension. It's the time between start of the external extension process, and reporting to the AWS extension API that we're ready to process Lambda invocations (AWS won't run any invocations until we do that).
+
+This won't cover total external extension process initialization time, which is also taken by initialization of the process on its own.
+_Currently through benchmark reports we can see that external extension initialization takes ca 100ms, while internally measured initialization takes ca 30ms)_
+
+###### `init:internal`
+
+Duration of the internal extension initialization logic, measured internally in internal extension. It's a time measured from start of the internal extension logic, until it returns for further evaluation by AWS runtime engine.
+
+This initialization is synchronous, but internal extension may propagate some async tasks, of which processing is then mixed with tasks as issued eventually by lambda initialization logic (if it's asynchronous) or first invocation logic.
+
+Due to how otel libraries are designed, internal extension issues an asynchronous task, still it's very minimal and shouldn't introduce any notable overhead.
+
+As internal extension runs in very same process as lambda, there's we don't deal with other process initialization overhead. Still as this extension is handled by AWS runtime logic which otherwise is not triggered, and pollutes process memory with its objects, we still can observe some extra overhead not covered by this metric.
+_Currently through benchmark reports, we can see that internal extension initialization (for noop lambda) takes ca 150ms, while internally measured iintialization takes ca 120ms_
+
+###### `init:total`
+
+Total initialization time as reported by AWS (with `initDuration` metric provided in report of the first invocation)
+
+#### Invocation
+
+Benchmarks observe first invocation (`first`) (one that in regular circumstances immediately follows initialization), and the the second (`following`).
+
+Two first invocations are observed separately, as data shows that durations of first invocation are always worse than of the second, and that for the following (third, fourth etc.) invocations numbers are similar as for the second.
+_This difference could be attributed to how Node.js internal optimization works, where paths which were already taken usually run faster (it's to be confirmed whether we see similar differences with other runtimes)._
+
+##### Observed metrics
+
+###### `[first|following]:internal:request`
+
+Invocation request handing duration in context of the Node.js internal extension. It's a time that's measured from the moment when our handler wrapper received an invocation event from AWS until we invoke the original Lambda handler.
+
+It's a synchronous task, but extension logic starts asynchronous request to the external extension, which is processed when original lambda logic is run (or after it ends processing, in case of fast resolving lambda). This means that the extension and original handler tasks ordering is mixed, and we cannot reliably measure internally an overhead as introduced by the internal extension request handling in total.
+
+###### `[first|following]:internal:response`
+
+Invocation response handling duration in the context of the Node.js internal extension. It's a time that's measured from the moment when original handler provided response until we pass it back to AWS.
+
+This one is asynchronous, as we propagate the response only after we're certain that extension request and response handlers have finalized its tasks (send successfully the telemetry data to the external extension).
+
+###### `[first|following]:external`
+
+Time spent in context of external extension process between recieving the `platform.runtimeDone` event (which signals that ongoing invocation have ended) and reporting via AWS Lambda extension API that we're ready to process next invocation )(external extension reports that only after all started ingestion server requests are finalized)
+
+###### `[first|following]:total`
+
+Total duration time as reported by AWS (with `duration` metric provided in invocation report)
+
+###### `[first|following]:billed`
+
+Billed duration time as reported by AWS (with `billedDuration` metric provided in invocation report)
+
+###### `[first|following]:local
+
+Locally measured SDK invocation time. This value is largely influenced by the location from which we run benchmarks and quality of the internet connection.
+
+For benchmarks run against `us-east-1` region, shortest values we'll get e.g. in New York, but running benchmarks in San Francisco will already add extra latency, and numbers get additionally worse, when running benchmarks from farther locations
+
+###### `[first|following]:maxMemoryUsed
+
+Max memory used as reported by AWS (with `maxMemoryUsed` metric provided in invocation report). It's to expose what memory overhead is introduced by the extensions
+
+### Summary
+
+While overhead durations as measured and reported by the extensions internally help to coin where exactly performance bottlenecks occur, the real extension overhead numbers can only be deducated from durations as reported by the AWS.
+
+With benchmark variants, as setup correctly. It's safe to assume that:
+
+- Comparing durations of `externalOnly` vs `bare` expose the overhead of the AWS Lambda event lifecycle handling in the external extension
+- Comparing durations of `jsonLog` vs `externalOnly` expose the overhead of the internal extension
+- Comparing durations of `protoLog` vs `jsonLog` expose the overhead of the Protobuf conversion that happens in external exteneion
+- Comparing durations of `protoConsole` vs `protoBuf` expose the overhead of the communication with ingestion server that happens in external extension
+
+## Setup & Run
 
 ### 1. Ensure all dependencies are installed:
 
@@ -59,12 +174,14 @@ Run `npm install` in following folders:
 
 ### 3. Configure environment variables
 
-- `AWS_REGION` - region in which benchmarked lambds need to be deployed
-- `SLS_ORG_NAME` & `SLS_ORG_TOKEN`- (optional) Needed to benchmark scenario of reporting to the Console Kinesis server
-- `TEST_UID` - (optional) common name token to be used as part of genered resource names. All generated resource names will be prefixed with `test-oext-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all genereated resources are removed after benchmark is done
+- `AWS_REGION` - region against which benchmarks should be run
+- `SLS_ORG_NAME` & `SLS_ORG_TOKEN`- (optional) Needed to benchmark scenario of reporting to the Console Kinesis server (if not provided, `protoConsole` variant will not be tested)
+- `TEST_UID` - (optional) common name token to be used as part of genered resource names. All generated resource names will be prefixed with `test-oext-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all generated resources are removed after benchmark is done
 - `LOG_LEVEL` - (optional) For more verbose output `LOG_LEVEL=info` can be used
 
-## Run
+### 4. Run
+
+Benchmark for all configured use cases and benchmark variants can be run as:
 
 ```bash
 ./test/scripts/benchmark.js
@@ -75,3 +192,8 @@ Generated benchmark results are output to the console in CSV format. To store th
 ```bash
 ./test/scripts/benchmark.js > benchmark.csv
 ```
+
+What use cases and benchmark variants are tested can be fine tuned with following CLI params:
+
+- `--use-cases` Function use cases to test (e.g. `callback,express`)
+- `--benchmark-variants` Benchmark variants to test (e.g. `bare,externalOnly`)
