@@ -13,9 +13,9 @@ describe('performance', function () {
   before(async () => {
     const resultsMap = await runBenchmarks({
       benchmarkVariants: new Set(['protoConsole']),
-      functionVariants: new Set(['success-callback']),
+      useCases: new Set(['callback']),
     });
-    ({ results } = resultsMap.get('success-callback').get('protoConsole'));
+    ({ results } = resultsMap.get('callback').get('protoConsole'));
   });
 
   // TODO: Reduce acceptable durations once improvements are made
