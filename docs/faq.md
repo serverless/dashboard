@@ -2,7 +2,7 @@
 title: FAQ
 menuText: FAQ
 description: Frequently Asked Questions about Serverless Console
-menuOrder: 4
+menuOrder: 5
 -->
 
 # FAQ
