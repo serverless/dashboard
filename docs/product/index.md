@@ -2,7 +2,7 @@
 title: Product
 menuText: Product
 description: An overview of Serverless Console
-menuOrder: 1
+menuOrder: 0
 -->
 
 # Overview
