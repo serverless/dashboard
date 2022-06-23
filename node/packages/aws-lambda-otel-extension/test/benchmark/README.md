@@ -9,7 +9,7 @@ No-op Node.js function. Handler takes callback and immediately invokes it with d
 ### Node.js + Express function ([`express`](../../fixtures/lambdas/express.js))
 
 Simple express app with two endpoints which respond with dummy payload.
-Function is invoked with payload that reflecxts one that function will receive if it would be triggered through API Gateway integration
+Function is invoked with payload that reflects one that function will receive if it would be triggered through API Gateway integration
 
 ### Node.js 250ms function ([`250ms`](../../fixtures/lambdas/250ms.js))
 
@@ -43,7 +43,7 @@ Just external extension which processes lambda event cycle. As no internal exten
 
 Difference from `bare` is that external extension process is initialized by AWS, and its that process that monitors and queues lambda invocation event cycle.
 
-This additional process managment introduces natural duration overhead which is best calculated by reading duration as reported by AWS for this variant and subtracting from it a `bare` variant duration _(current numbers show ca 100ms overhead for initialization, ca 60ms for first invocation , and ca 30ms for every following invocation)_
+This additional process management introduces natural duration overhead which is best calculated by reading duration as reported by AWS for this variant and subtracting from it a `bare` variant duration _(current numbers show ca 100ms overhead for initialization, ca 60ms for first invocation , and ca 30ms for every following invocation)_
 
 There's no time spent here on processing reports and propagating them to the ingestion server (as none are to be send from the internal extension). So internally measured invocation duration overhead of external extension is also reported as not existing
 
@@ -52,7 +52,7 @@ There's no time spent here on processing reports and propagating them to the ing
 External & internal extensions are loaded. Internal extension operates fully, while in external extension from obtained reports just payloads are generated and logged into `stdout` (there's no conversion to Protobuf and not reporting to the remote ingestion server).
 
 Difference from `externalOnly` is purely that internal extension is loaded and fully active and that it sends reports to the external extension.
-While external extension prepares the payloads and logs them to the console (in JSON form) overhead of that is neglible (internal ovehead measurements are expected to show `0`).
+While external extension prepares the payloads and logs them to the console (in JSON form) overhead of that is negligible (internal overhead measurements are expected to show `0`).
 
 Comparing its duration overhead against `externalOnly` shows how much overhead do internal extension introduce.
 
@@ -78,9 +78,9 @@ Internally measured durations are written by the extensions to the `stdout`, and
 
 ### Observed AWS Lambda execution lifecycle phases
 
-#### Ininitialization (`init`)
+#### Initialization (`init`)
 
-Lambda instance initilization
+Lambda instance initialization
 
 ##### Observed metrics
 
@@ -100,7 +100,7 @@ This initialization is synchronous, but internal extension may propagate some as
 Due to how otel libraries are designed, internal extension issues an asynchronous task, still it's very minimal and shouldn't introduce any notable overhead.
 
 As internal extension runs in very same process as lambda, there's we don't deal with other process initialization overhead. Still as this extension is handled by AWS runtime logic which otherwise is not triggered, and pollutes process memory with its objects, we still can observe some extra overhead not covered by this metric.
-_Currently through benchmark reports, we can see that internal extension initialization (for noop lambda) takes ca 150ms, while internally measured iintialization takes ca 120ms_
+_Currently through benchmark reports, we can see that internal extension initialization (for noop lambda) takes ca 150ms, while internally measured initialization takes ca 120ms_
 
 ###### `init:total`
 
@@ -129,7 +129,7 @@ This one is asynchronous, as we propagate the response only after we're certain 
 
 ###### `[first|following]:external`
 
-Time spent in context of external extension process between recieving the `platform.runtimeDone` event (which signals that ongoing invocation have ended) and reporting via AWS Lambda extension API that we're ready to process next invocation )(external extension reports that only after all started ingestion server requests are finalized)
+Time spent in context of external extension process between receiving the `platform.runtimeDone` event (which signals that ongoing invocation have ended) and reporting via AWS Lambda extension API that we're ready to process next invocation )(external extension reports that only after all started ingestion server requests are finalized)
 
 ###### `[first|following]:total`
 
@@ -151,13 +151,13 @@ Max memory used as reported by AWS (with `maxMemoryUsed` metric provided in invo
 
 ### Summary
 
-While overhead durations as measured and reported by the extensions internally help to coin where exactly performance bottlenecks occur, the real extension overhead numbers can only be deducated from durations as reported by the AWS.
+While overhead durations as measured and reported by the extensions internally help to coin where exactly performance bottlenecks occur, the real extension overhead numbers can only be deducted from durations as reported by the AWS.
 
 With benchmark variants, as setup correctly. It's safe to assume that:
 
 - Comparing durations of `externalOnly` vs `bare` expose the overhead of the AWS Lambda event lifecycle handling in the external extension
 - Comparing durations of `jsonLog` vs `externalOnly` expose the overhead of the internal extension
-- Comparing durations of `protoLog` vs `jsonLog` expose the overhead of the Protobuf conversion that happens in external exteneion
+- Comparing durations of `protoLog` vs `jsonLog` expose the overhead of the Protobuf conversion that happens in external extension
 - Comparing durations of `protoConsole` vs `protoBuf` expose the overhead of the communication with ingestion server that happens in external extension
 
 ## Setup & Run
@@ -176,7 +176,7 @@ Run `npm install` in following folders:
 
 - `AWS_REGION` - region against which benchmarks should be run
 - `SLS_ORG_NAME` & `SLS_ORG_TOKEN`- (optional) Needed to benchmark scenario of reporting to the Console Kinesis server (if not provided, `protoConsole` variant will not be tested)
-- `TEST_UID` - (optional) common name token to be used as part of genered resource names. All generated resource names will be prefixed with `test-oext-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all generated resources are removed after benchmark is done
+- `TEST_UID` - (optional) common name token to be used as part of generated resource names. All generated resource names will be prefixed with `test-oext-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all generated resources are removed after benchmark is done
 - `LOG_LEVEL` - (optional) For more verbose output `LOG_LEVEL=info` can be used
 
 ### 4. Run
