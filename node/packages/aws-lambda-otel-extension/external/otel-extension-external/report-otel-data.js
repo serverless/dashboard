@@ -102,9 +102,7 @@ module.exports = async (name, data) => {
   debugLog(`Report ${name}:`, JSON.stringify(data));
   const settings = userSettings[name];
   if (protobufConfigs[name]) {
-    data = await prepareReport(data, settings, {
-      protobuf: protobufConfigs[name],
-    });
+    data = await prepareReport(data, settings, { protobuf: protobufConfigs[name] });
   }
   if (settings.destination && isUrl(settings.destination)) {
     await sendReport(data, settings);
