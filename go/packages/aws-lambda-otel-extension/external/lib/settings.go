@@ -2,7 +2,6 @@ package lib
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -28,8 +27,12 @@ type UserSettings struct {
 
 func GetUserSettings() (UserSettings, error) {
 	var userSettings UserSettings
-	fmt.Printf("User settings: %s\n", userSettingsText)
 	err := json.Unmarshal([]byte(userSettingsText), &userSettings)
+	// TODO: remove this, used for development only
+	customSettingsText := os.Getenv("SLS_OTEL_DEBUG_USER_SETTINGS")
+	if customSettingsText != "" {
+		err = json.Unmarshal([]byte(customSettingsText), &userSettings)
+	}
 	if err != nil {
 		return UserSettings{}, err
 	}

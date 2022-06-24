@@ -102,8 +102,7 @@ type HttpAgent struct {
 
 // NewLogsApiAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
-func NewLogsApiAgent(reportAgent *reporter.HttpClient) (*HttpAgent, error) {
-	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
+func NewLogsApiAgent(reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) (*HttpAgent, error) {
 	logsApiListener := NewLogsApiHttpListener(reportAgent, currentRequestData)
 
 	return &HttpAgent{

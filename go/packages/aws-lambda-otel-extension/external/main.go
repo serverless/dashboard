@@ -37,9 +37,16 @@ func main() {
 	logger.Info("Starting external extension")
 
 	reportAgent := reporter.NewHttpClient(&userSettings)
+	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
 
-	// Start listening metrics
-	metricsApiListener := metrics.NewInternalHttpListener(reportAgent)
+	// Create Logs API agent
+	logsApiAgent, err := logs.NewLogsApiAgent(reportAgent, currentRequestData)
+	if err != nil {
+		logger.Fatal("couldnt create logs api agent", zap.Error(err))
+	}
+
+	// Create metrics agent/listener
+	metricsApiListener := metrics.NewInternalHttpListener(reportAgent, currentRequestData)
 	metricsApiListener.Start()
 
 	sigs := make(chan os.Signal, 1)
@@ -54,12 +61,6 @@ func main() {
 	_, err = extensionClient.Register(ctx)
 	if err != nil {
 		panic(err)
-	}
-
-	// Create Logs API agent
-	logsApiAgent, err := logs.NewLogsApiAgent(reportAgent)
-	if err != nil {
-		logger.Fatal("couldnt create logs api agent", zap.Error(err))
 	}
 
 	// Subscribe to logs API

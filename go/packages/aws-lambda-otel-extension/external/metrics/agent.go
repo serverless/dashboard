@@ -3,15 +3,14 @@ package metrics
 import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/reporter"
-	"aws-lambda-otel-extension/external/types"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 const OTEL_SERVER_PORT = "2772"
@@ -24,15 +23,17 @@ type TelemetryPayload struct {
 type InternalHttpListener struct {
 	httpServer *http.Server
 	// metricsQueue is a synchronous queue and is used to put the received metrics to be consumed later (see main)
-	reportAgent *reporter.HttpClient
-	logger      *lib.Logger
+	reportAgent        *reporter.HttpClient
+	currentRequestData *reporter.CurrentRequestData
+	logger             *lib.Logger
 }
 
-func NewInternalHttpListener(reportAgent *reporter.HttpClient) *InternalHttpListener {
+func NewInternalHttpListener(reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) *InternalHttpListener {
 	return &InternalHttpListener{
-		httpServer:  nil,
-		reportAgent: reportAgent,
-		logger:      lib.NewLogger(),
+		httpServer:         nil,
+		reportAgent:        reportAgent,
+		logger:             lib.NewLogger(),
+		currentRequestData: currentRequestData,
 	}
 }
 
@@ -77,19 +78,31 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 
 	switch payload.RecordType {
 	case "eventData":
-		var eventData *types.EventDataPayload
-		err = json.Unmarshal(payload.Record, &eventData)
+		eventData, err := parseEventDataPayload(payload.Record)
 		if err != nil {
 			l.logger.Error("Error parsing payload", zap.Error(err))
 			return
 		}
+		l.currentRequestData.SetUniqueName("request")
+		l.currentRequestData.SetEventData(eventData)
 		if eventData.RequestEventPayload != nil {
 			l.reportAgent.PostRequest(*eventData.RequestEventPayload)
 		}
 		return
 
 	case "telemetryData":
-		l.reportAgent.PostMetric(string(body))
+		telemetryData, err := parseTelemetryDataPayload(payload.Record)
+		if err != nil {
+			l.logger.Error("Error parsing payload", zap.Error(err))
+			return
+		}
+		if telemetryData.ResponseEventPayload != nil {
+			l.reportAgent.PostResponse(*telemetryData.ResponseEventPayload)
+		}
+		metrics := createMetricsPayload(telemetryData.RequestID, telemetryData.Function, false)
+		data, err := proto.Marshal(metrics)
+		l.reportAgent.PostMetric(data)
+		// l.reportAgent.PostMetric(string(body))
 	}
 }
 

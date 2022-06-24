@@ -132,15 +132,21 @@ func (c *HttpClient) PostLogs(transformData transformDataType) {
 	})
 }
 
-func (c *HttpClient) PostMetric(metrics string) {
+func (c *HttpClient) PostMetric(metrics []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Metrics.Destination, []byte(metrics))
+		return c.Post(c.settings.Metrics.Destination, metrics)
 	})
 }
 
 func (c *HttpClient) PostRequest(request []byte) {
 	c.eg.Go(func() error {
 		return c.Post(c.settings.Request.Destination, request)
+	})
+}
+
+func (c *HttpClient) PostResponse(response []byte) {
+	c.eg.Go(func() error {
+		return c.Post(c.settings.Response.Destination, response)
 	})
 }
 

@@ -18,6 +18,13 @@ type Span struct {
 	TraceID string `json:"traceId"`
 }
 
+type TelemetryDataPayload struct {
+	RequestID            string                 `json:"requestId"`
+	Span                 *Span                  `json:"span"`
+	Function             map[string]interface{} `json:"function"`
+	ResponseEventPayload *json.RawMessage       `json:"responseEventPayload"`
+}
+
 /*
 eventDataPayload.record.requestEventPayload = {
 	traceId: span.spanContext().traceId,
