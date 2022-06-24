@@ -142,16 +142,29 @@ const retrieveReports = async (testConfig) => {
   let processesData;
   do {
     const events = await retrieveAllEvents();
-    log.debug('Events for %s: %o', testConfig.name, events);
     processesData = [];
     invocationsData = [];
+    if (!events.length) continue;
+    if (
+      !events[0].message.startsWith('START RequestId: ') &&
+      !events[0].message.startsWith('Extension: Ready for an event')
+    ) {
+      // Workaound AWS bug, where on some occasion only batch of later events is returned
+      log.error(
+        'Retry, due to unexpected CW events (for start time %d): %o',
+        testConfig.invokeStartTime,
+        events
+      );
+      continue;
+    }
+    log.debug('Events for %s: %o', testConfig.name, events);
     let currentInvocationData;
     let currentProcessData;
     let startedMessage;
     const getCurrentInvocationData = () => {
       if (!currentInvocationData) {
         log.error(
-          'Not normative CW events (for start time %d): %o',
+          'Reject due to unexpected CW events (for start time %d): %o',
           testConfig.invokeStartTime,
           events
         );
@@ -242,6 +255,7 @@ const retrieveReports = async (testConfig) => {
           currentProcessData.initDuration = Number(reportData.initDuration);
         }
         invocationsData.push(currentInvocationData);
+        currentInvocationData = null;
       }
     }
   } while (invocationsData.length < 2);
