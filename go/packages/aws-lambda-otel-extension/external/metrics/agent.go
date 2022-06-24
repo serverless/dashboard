@@ -3,7 +3,9 @@ package metrics
 import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/reporter"
+	"aws-lambda-otel-extension/external/types"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -67,12 +69,27 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 
 	// fmt.Println("Internal API event received:", string(body))
 
-	// Puts the message into the queue
-	// err = l.queue.Put(string(body))
-
-	l.reportAgent.PostMetric(string(body))
+	payload, err := parseInternalPayload(body)
 	if err != nil {
-		l.logger.Error("Can't push logs to destination", zap.Error(err))
+		l.logger.Error("Error parsing payload", zap.Error(err))
+		return
+	}
+
+	switch payload.RecordType {
+	case "eventData":
+		var eventData *types.EventDataPayload
+		err = json.Unmarshal(payload.Record, &eventData)
+		if err != nil {
+			l.logger.Error("Error parsing payload", zap.Error(err))
+			return
+		}
+		if eventData.RequestEventPayload != nil {
+			l.reportAgent.PostRequest(*eventData.RequestEventPayload)
+		}
+		return
+
+	case "telemetryData":
+		l.reportAgent.PostMetric(string(body))
 	}
 }
 

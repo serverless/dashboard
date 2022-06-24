@@ -75,7 +75,7 @@ func main() {
 
 	// Will block until shutdown event is received or cancelled via the context.
 	logger.Info("Going to process events loop")
-	processEvents(ctx, logger)
+	processEvents(ctx, logger, reportAgent)
 
 	logger.Info("Exiting")
 	logsApiAgent.Shutdown(ctx)
@@ -88,14 +88,16 @@ func main() {
 	return
 }
 
-func processEvents(ctx context.Context, logger *lib.Logger) {
+func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.HttpClient) {
 	for {
 		select {
 		case <-ctx.Done():
 			logger.Debug("Context cancelled, exiting")
 			return
 		default:
+			logger.Debug("Waiting for an event...")
 			res, err := extensionClient.NextEvent(ctx)
+			reportAgent.Flush()
 			if err != nil {
 				logger.Error(fmt.Sprintf("Error event: %s, Exiting", err))
 				return

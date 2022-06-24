@@ -1,7 +1,8 @@
-package logs
+package reporter
 
 import (
 	"aws-lambda-otel-extension/external/lib"
+	"aws-lambda-otel-extension/external/types"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -180,7 +181,7 @@ func createStringRecordForReportLog(l *logMessage) string {
 	return stringRecord
 }
 
-func CreateLogPayload(eventType EventType, subEventType SubEventType, data interface{}) (payload []byte, err error) {
+func CreateLogPayload(eventType types.LogEventType, subEventType types.SubEventType, data interface{}) (payload []byte, err error) {
 	payload, err = json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -209,15 +210,16 @@ func parseLogsAPIPayload(data []byte) ([]logMessage, error) {
 	return messages, nil
 }
 
-func readLogs(data []byte) (logs []LogJson, err error) {
+func readLogs(data []byte) (logs []types.LogJson, err error) {
 	msgs, err := parseLogsAPIPayload(data)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, msg := range msgs {
-		logs = append(logs, LogJson{
-			Body: &msg.stringRecord,
+	// for loop needs to use index since it's all reference, otherwise we get only last obj
+	for i := range msgs {
+		logs = append(logs, types.LogJson{
+			Body: &msgs[i].stringRecord,
 			// TODO: fill with metric request data
 		})
 	}

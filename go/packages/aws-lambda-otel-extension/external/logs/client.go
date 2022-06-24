@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"aws-lambda-otel-extension/external/types"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -25,23 +26,9 @@ func NewClient(logsApiBaseUrl string) (*Client, error) {
 	}, nil
 }
 
-// EventType represents the type of logs in Lambda
-type EventType string
-
-const (
-	// Platform is to receive logs emitted by the platform
-	Platform EventType = "platform"
-	// Function is to receive logs emitted by the function
-	Function EventType = "function"
-	// Extension is to receive logs emitted by the extension
-	Extension EventType = "extension"
-)
-
-type SubEventType string
-
 const (
 	// RuntimeDone event is sent when lambda function is finished it's execution
-	RuntimeDone SubEventType = "platform.runtimeDone"
+	RuntimeDone types.SubEventType = "platform.runtimeDone"
 )
 
 // BufferingCfg is the configuration set for receiving logs from Logs API. Whichever of the conditions below is met first, the logs will be sent
@@ -98,10 +85,10 @@ const (
 
 // SubscribeRequest is the request body that is sent to Logs API on subscribe
 type SubscribeRequest struct {
-	SchemaVersion SchemaVersion `json:"schemaVersion"`
-	EventTypes    []EventType   `json:"types"`
-	BufferingCfg  BufferingCfg  `json:"buffering"`
-	Destination   Destination   `json:"destination"`
+	SchemaVersion SchemaVersion        `json:"schemaVersion"`
+	EventTypes    []types.LogEventType `json:"types"`
+	BufferingCfg  BufferingCfg         `json:"buffering"`
+	Destination   Destination          `json:"destination"`
 }
 
 // SubscribeResponse is the response body that is received from Logs API on subscribe
@@ -110,7 +97,7 @@ type SubscribeResponse struct {
 }
 
 // Subscribe calls the Logs API to subscribe for the log events.
-func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destination Destination, extensionId string) (*SubscribeResponse, error) {
+func (c *Client) Subscribe(types []types.LogEventType, bufferingCfg BufferingCfg, destination Destination, extensionId string) (*SubscribeResponse, error) {
 
 	data, err := json.Marshal(
 		&SubscribeRequest{
@@ -144,6 +131,7 @@ func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destina
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
 
 	return &SubscribeResponse{string(body)}, nil
 }

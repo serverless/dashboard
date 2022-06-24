@@ -1,4 +1,4 @@
-package logs
+package types
 
 type Attributes struct {
 	HttpStatusCode       *int64  `json:"http.status_code"`
@@ -27,3 +27,17 @@ type LogJson struct {
 	ProcessingOrderId *string    `json:"processingOrderId"`
 	Body              *string    `json:"body"`
 }
+
+// EventType represents the type of logs in Lambda
+type LogEventType string
+
+const (
+	// Platform is to receive logs emitted by the platform
+	LogPlatform LogEventType = "platform"
+	// Function is to receive logs emitted by the function
+	LogFunction LogEventType = "function"
+	// Extension is to receive logs emitted by the extension
+	LogExtension LogEventType = "extension"
+)
+
+type SubEventType string

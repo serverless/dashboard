@@ -3,8 +3,8 @@ package logs
 import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/reporter"
+	"aws-lambda-otel-extension/external/types"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -21,16 +21,18 @@ const LOGS_SERVER_PORT = "4243"
 type LogsApiHttpListener struct {
 	httpServer *http.Server
 	// logQueue is a synchronous queue and is used to put the received logs to be consumed later (see main)
-	logger      *lib.Logger
-	reportAgent *reporter.HttpClient
+	logger             *lib.Logger
+	reportAgent        *reporter.HttpClient
+	currentRequestData *reporter.CurrentRequestData
 }
 
 // NewLogsApiHttpListener returns a LogsApiHttpListener with the given log queue
-func NewLogsApiHttpListener(reportAgent *reporter.HttpClient) *LogsApiHttpListener {
+func NewLogsApiHttpListener(reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) *LogsApiHttpListener {
 	return &LogsApiHttpListener{
-		httpServer:  nil,
-		logger:      lib.NewLogger(),
-		reportAgent: reportAgent,
+		httpServer:         nil,
+		logger:             lib.NewLogger(),
+		reportAgent:        reportAgent,
+		currentRequestData: currentRequestData,
 	}
 }
 
@@ -68,17 +70,12 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	fmt.Println("Logs API event received:", string(body))
+	s.currentRequestData.SendLog(body)
+
+	// fmt.Println("Logs API event received:", string(body))
 
 	// Send all transform process to run in a go routine
-	s.reportAgent.PostLogs(func() ([]byte, error) {
-		var b []byte
-		messages, err := readLogs(body)
-		if err != nil {
-			return b, err
-		}
-		return json.Marshal(messages)
-	})
+
 	if err != nil {
 		s.logger.Error("Can't push logs to destination", zap.Error(err))
 	}
@@ -98,19 +95,21 @@ func (s *LogsApiHttpListener) Shutdown(ctx context.Context) {
 
 // HttpAgent has the listener that receives the logs and the logger that handles the received logs
 type HttpAgent struct {
-	listener *LogsApiHttpListener
-	logger   *lib.Logger
+	listener           *LogsApiHttpListener
+	logger             *lib.Logger
+	CurrentRequestData *reporter.CurrentRequestData
 }
 
 // NewLogsApiAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
 func NewLogsApiAgent(reportAgent *reporter.HttpClient) (*HttpAgent, error) {
-
-	logsApiListener := NewLogsApiHttpListener(reportAgent)
+	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
+	logsApiListener := NewLogsApiHttpListener(reportAgent, currentRequestData)
 
 	return &HttpAgent{
-		listener: logsApiListener,
-		logger:   lib.NewLogger(),
+		listener:           logsApiListener,
+		logger:             lib.NewLogger(),
+		CurrentRequestData: currentRequestData,
 	}, nil
 }
 
@@ -130,7 +129,7 @@ func (h HttpAgent) Init(agentID string) error {
 
 	_ = h.listener.Start()
 
-	eventTypes := []EventType{Platform, Function}
+	eventTypes := []types.LogEventType{types.LogPlatform, types.LogFunction}
 	bufferingCfg := BufferingCfg{
 		MaxItems:  10000,
 		MaxBytes:  262144,
