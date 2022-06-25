@@ -70,7 +70,7 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 
 	// fmt.Println("Internal API event received:", string(body))
 
-	payload, err := parseInternalPayload(body)
+	payload, err := reporter.ParseInternalPayload(body)
 	if err != nil {
 		l.logger.Error("Error parsing payload", zap.Error(err))
 		return
@@ -78,7 +78,7 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 
 	switch payload.RecordType {
 	case "eventData":
-		eventData, err := parseEventDataPayload(payload.Record)
+		eventData, err := reporter.ParseEventDataPayload(payload.Record)
 		if err != nil {
 			l.logger.Error("Error parsing payload", zap.Error(err))
 			return
@@ -91,7 +91,7 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 		return
 
 	case "telemetryData":
-		telemetryData, err := parseTelemetryDataPayload(payload.Record)
+		telemetryData, err := reporter.ParseTelemetryDataPayload(payload.Record)
 		if err != nil {
 			l.logger.Error("Error parsing payload", zap.Error(err))
 			return
@@ -99,10 +99,14 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 		if telemetryData.ResponseEventPayload != nil {
 			l.reportAgent.PostResponse(*telemetryData.ResponseEventPayload)
 		}
-		metrics := createMetricsPayload(telemetryData.RequestID, telemetryData.Function, false)
+		metrics := reporter.CreateMetricsPayload(telemetryData.RequestID, telemetryData.Function, nil)
 		data, err := proto.Marshal(metrics)
+		if err != nil {
+			l.logger.Error("Error marshalling metrics", zap.Error(err))
+		}
 		l.reportAgent.PostMetric(data)
-		// l.reportAgent.PostMetric(string(body))
+
+		// TODO: send Traces
 	}
 }
 

@@ -1,7 +1,8 @@
-package metrics
+package reporter
 
 import (
 	"aws-lambda-otel-extension/external/lib"
+	"aws-lambda-otel-extension/external/protoc"
 	"fmt"
 )
 
@@ -168,4 +169,81 @@ var MeasureAttributes []AttributeHelper = []AttributeHelper{
 		key:    "faas.error_type",
 		source: "errorType",
 	},
+}
+
+// Logs helpers
+var LogsMetricAttributeNames map[string]bool = map[string]bool{
+	"faas.arch":                   true,
+	"faas.api_gateway_request_id": true,
+	"faas.event_source":           true,
+	"faas.api_gateway_app_id":     true,
+}
+
+var LogsResourceAttributeNames map[string]bool = map[string]bool{
+	"faas.id":                true,
+	"faas.name":              true,
+	"cloud.region":           true,
+	"sls.app_uid":            true,
+	"service.namespace":      true,
+	"deployment.environment": true,
+	"service.name":           true,
+	"telemetry.sdk.language": true,
+	"telemetry.sdk.name":     true,
+	"telemetry.sdk.version":  true,
+	"cloud.provider":         true,
+	"cloud.account.id":       true,
+	"cloud.platform":         true,
+	"faas.collector_version": true,
+}
+
+var LogsSeverityNumber map[string]int = map[string]int{
+	"TRACE": 1,
+	"DEBUG": 5,
+	"INFO":  9,
+	"WARN":  13,
+	"ERROR": 17,
+	"FATAL": 21,
+}
+
+// Protobuf helpers
+
+func getAnyValue(value interface{}) *protoc.AnyValue {
+	switch value.(type) {
+	case string:
+		return &protoc.AnyValue{
+			Value: &protoc.AnyValue_StringValue{
+				StringValue: value.(string),
+			},
+		}
+	case int64:
+	case int32:
+	case int:
+		return &protoc.AnyValue{
+			Value: &protoc.AnyValue_IntValue{
+				IntValue: value.(int64),
+			},
+		}
+	case bool:
+		return &protoc.AnyValue{
+			Value: &protoc.AnyValue_BoolValue{
+				BoolValue: value.(bool),
+			},
+		}
+	}
+	return nil
+}
+
+func getJsonValue(pv *protoc.AnyValue) interface{} {
+	if pv == nil {
+		return nil
+	}
+	switch pv.Value.(type) {
+	case *protoc.AnyValue_StringValue:
+		return pv.GetStringValue()
+	case *protoc.AnyValue_IntValue:
+		return pv.GetIntValue()
+	case *protoc.AnyValue_BoolValue:
+		return pv.GetBoolValue()
+	}
+	return nil
 }

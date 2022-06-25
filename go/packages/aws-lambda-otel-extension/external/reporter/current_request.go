@@ -23,7 +23,7 @@ func NewCurrentRequestData(reportAgent *HttpClient) *CurrentRequestData {
 func (c *CurrentRequestData) postLog(log []byte) {
 	c.reportAgent.PostLogs(func() ([]byte, error) {
 		var b []byte
-		messages, err := readLogs(log)
+		messages, err := readLogs(log, c.EventData)
 		if err != nil {
 			return b, err
 		}

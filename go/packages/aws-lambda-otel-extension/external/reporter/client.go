@@ -14,12 +14,13 @@ import (
 )
 
 type PostData struct {
-	body   []byte
-	path   string
-	trying bool
-	lock   *sync.Mutex
-	next   *PostData
-	prev   *PostData
+	body       []byte
+	path       string
+	isProtobuf bool
+	trying     bool
+	lock       *sync.Mutex
+	next       *PostData
+	prev       *PostData
 }
 
 type HttpClient struct {
@@ -57,11 +58,18 @@ func (c *HttpClient) Flush() {
 	}
 }
 
-func (c *HttpClient) Post(path string, body []byte) error {
+func (c *HttpClient) Post(path string, body []byte, isProtobuf bool) error {
 	c.stackLock.Lock()
 	defer c.Flush()
 	defer c.stackLock.Unlock()
-	data := PostData{body: body, path: path, lock: &sync.Mutex{}, trying: false, prev: c.stackLast}
+	data := PostData{
+		body:       body,
+		path:       path,
+		lock:       &sync.Mutex{},
+		trying:     false,
+		prev:       c.stackLast,
+		isProtobuf: isProtobuf,
+	}
 	c.stackLast = &data
 	return nil
 }
@@ -95,7 +103,14 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
+
+	req.Header.Set("accept-encoding", "gzip")
+
+	if postData.isProtobuf {
+		req.Header.Set("Content-Type", "application/x-protobuf")
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	extraParams, err := url.ParseQuery(c.settings.Common.Destination.RequestHeaders)
 	if err != nil {
 		return err
@@ -127,26 +142,25 @@ func (c *HttpClient) PostLogs(transformData transformDataType) {
 		if err != nil {
 			return err
 		}
-		// fmt.Printf("sending body '%s\n'", body)
-		return c.Post(c.settings.Logs.Destination, body)
+		return c.Post(c.settings.Logs.Destination, body, false)
 	})
 }
 
 func (c *HttpClient) PostMetric(metrics []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Metrics.Destination, metrics)
+		return c.Post(c.settings.Metrics.Destination, metrics, true)
 	})
 }
 
 func (c *HttpClient) PostRequest(request []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Request.Destination, request)
+		return c.Post(c.settings.Request.Destination, request, false)
 	})
 }
 
 func (c *HttpClient) PostResponse(response []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Response.Destination, response)
+		return c.Post(c.settings.Response.Destination, response, false)
 	})
 }
 

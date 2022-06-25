@@ -1,4 +1,4 @@
-package metrics
+package reporter
 
 import (
 	"aws-lambda-otel-extension/external/protoc"
@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-func parseInternalPayload(data []byte) (*types.RecordPayload, error) {
+func ParseInternalPayload(data []byte) (*types.RecordPayload, error) {
 	var payload *types.RecordPayload
 	err := json.Unmarshal(data, &payload)
 	if err != nil {
@@ -16,7 +16,7 @@ func parseInternalPayload(data []byte) (*types.RecordPayload, error) {
 	return payload, nil
 }
 
-func parseEventDataPayload(data json.RawMessage) (*types.EventDataPayload, error) {
+func ParseEventDataPayload(data json.RawMessage) (*types.EventDataPayload, error) {
 	var payload *types.EventDataPayload
 	err := json.Unmarshal(data, &payload)
 	if err != nil {
@@ -25,7 +25,7 @@ func parseEventDataPayload(data json.RawMessage) (*types.EventDataPayload, error
 	return payload, nil
 }
 
-func parseTelemetryDataPayload(data json.RawMessage) (*types.TelemetryDataPayload, error) {
+func ParseTelemetryDataPayload(data json.RawMessage) (*types.TelemetryDataPayload, error) {
 	var payload *types.TelemetryDataPayload
 	err := json.Unmarshal(data, &payload)
 	if err != nil {
@@ -34,33 +34,7 @@ func parseTelemetryDataPayload(data json.RawMessage) (*types.TelemetryDataPayloa
 	return payload, nil
 }
 
-func getAnyValue(value interface{}) *protoc.AnyValue {
-	switch value.(type) {
-	case string:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_StringValue{
-				StringValue: value.(string),
-			},
-		}
-	case int64:
-	case int32:
-	case int:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_IntValue{
-				IntValue: value.(int64),
-			},
-		}
-	case bool:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_BoolValue{
-				BoolValue: value.(bool),
-			},
-		}
-	}
-	return nil
-}
-
-func createMetricAttributes(fun map[string]interface{}, report bool) []*protoc.KeyValue {
+func createMetricAttributes(fun map[string]interface{}, record *types.LogPlatformRecord) []*protoc.KeyValue {
 	var attributes []*protoc.KeyValue
 
 	// for loop to iterate MeasureAttributes
@@ -87,39 +61,18 @@ func createMetricAttributes(fun map[string]interface{}, report bool) []*protoc.K
 		Value: getAnyValue(fun["error"]),
 	})
 
-	if report {
-		//TODO: use real report
-		/*
-		   {
-		     key: 'faas.duration',
-		     value: {
-		       doubleValue: report.record.metrics.durationMs,
-		     },
-		   },
-		   {
-		     key: 'faas.billed_duration',
-		     value: {
-		       intValue: report.record.metrics.billedDurationMs,
-		     },
-		   },
-		   {
-		     key: 'faas.max_memory_used_mb',
-		     value: {
-		       intValue: report.record.metrics.maxMemoryUsedMB,
-		     },
-		   }
-		*/
+	if record != nil {
 		attributes = append(attributes, &protoc.KeyValue{
 			Key:   "faas.duration",
-			Value: getAnyValue(fun["duration"]),
+			Value: getAnyValue(record.Metrics.DurationMs),
 		})
 		attributes = append(attributes, &protoc.KeyValue{
 			Key:   "faas.billed_duration",
-			Value: getAnyValue(fun["billedDuration"]),
+			Value: getAnyValue(record.Metrics.BilledDurationMs),
 		})
 		attributes = append(attributes, &protoc.KeyValue{
 			Key:   "faas.max_memory_used_mb",
-			Value: getAnyValue(fun["maxMemoryUsedMB"]),
+			Value: getAnyValue(record.Metrics.MaxMemoryUsedMB),
 		})
 	}
 
@@ -164,15 +117,14 @@ func createResourceAttributes(fun map[string]interface{}) []*protoc.KeyValue {
 }
 
 func createHistogramMetric(count uint64, sum float64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Histogram {
-
-	histogram := &protoc.Metric_Histogram{
-
+	return &protoc.Metric_Histogram{
 		Histogram: &protoc.Histogram{
 			DataPoints: []*protoc.HistogramDataPoint{
 				{
-					Count: count,
-					Sum:   sum,
 					// StartTimeUnixNano: ,
+					// TimeUnixNano: ,
+					Count:          count,
+					Sum:            sum,
 					BucketCounts:   []uint64{1, 0},
 					ExplicitBounds: []float64{math.Inf(1)},
 					Attributes:     attributes,
@@ -180,13 +132,26 @@ func createHistogramMetric(count uint64, sum float64, record map[string]interfac
 			},
 		},
 	}
-	return histogram
-
 }
 
-func createMetricsPayload(requestId string, fun map[string]interface{}, report bool) *protoc.MetricsData {
+func createCountMetric(count uint64, asInt int64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Sum {
+	return &protoc.Metric_Sum{
+		Sum: &protoc.Sum{
+			DataPoints: []*protoc.NumberDataPoint{
+				{
+					// StartTimeUnixNano: ,
+					// TimeUnixNano: ,
+					Attributes: attributes,
+					Value:      &protoc.NumberDataPoint_AsInt{asInt},
+				},
+			},
+		},
+	}
+}
 
-	metricAttributes := createMetricAttributes(fun, report)
+func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *types.LogPlatformRecord) *protoc.MetricsData {
+
+	metricAttributes := createMetricAttributes(fun, record)
 
 	metricAttributes = append(metricAttributes, &protoc.KeyValue{
 		Key:   "faas.execution",
@@ -209,17 +174,39 @@ func createMetricsPayload(requestId string, fun map[string]interface{}, report b
 
 	metrics := []*protoc.Metric{}
 
-	if report {
+	if record == nil {
+		metrics = append(metrics, &protoc.Metric{
+			Name: "faas.invoke",
+			Unit: "1",
+			Data: createCountMetric(1, 1, fun, metricAttributes),
+		})
 
 	} else {
+		// TODO: use real reports
 		metrics = append(metrics, &protoc.Metric{
 			Name: "faas.duration",
 			Unit: "1",
-			Data: createHistogramMetric(1, 1, fun, metricAttributes),
+			Data: createHistogramMetric(1, record.Metrics.DurationMs, fun, metricAttributes),
 		})
+
+		memory := (float64(record.Metrics.MaxMemoryUsedMB) / float64(record.Metrics.MemorySizeMB)) * 100
+
+		metrics = append(metrics, &protoc.Metric{
+			Name: "faas.memory",
+			Unit: "1",
+			Data: createHistogramMetric(1, memory, fun, metricAttributes),
+		})
+
+		if record.Metrics.InitDurationMs > 0 {
+			metrics = append(metrics, &protoc.Metric{
+				Name: "faas.coldstart_duration",
+				Unit: "1",
+				Data: createHistogramMetric(1, record.Metrics.InitDurationMs, fun, metricAttributes),
+			})
+		}
 	}
 
-	metricsData := &protoc.MetricsData{
+	return &protoc.MetricsData{
 		ResourceMetrics: []*protoc.ResourceMetrics{
 			{
 				Resource: &protoc.Resource{
@@ -228,7 +215,8 @@ func createMetricsPayload(requestId string, fun map[string]interface{}, report b
 				InstrumentationLibraryMetrics: []*protoc.InstrumentationLibraryMetrics{
 					{
 						InstrumentationLibrary: &protoc.InstrumentationLibrary{
-							Name: "serverless-meter",
+							Name:    "serverless-meter",
+							Version: "1.0.0",
 						},
 						Metrics: metrics,
 					},
@@ -236,7 +224,4 @@ func createMetricsPayload(requestId string, fun map[string]interface{}, report b
 			},
 		},
 	}
-
-	return metricsData
-
 }

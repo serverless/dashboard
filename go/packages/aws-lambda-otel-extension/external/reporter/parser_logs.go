@@ -68,10 +68,11 @@ type logMessage struct {
 	// stringRecord is a string representation of the message's contents. It can be either received directly
 	// from the logs API or added by the extension after receiving it.
 	stringRecord string
+	// object record is the platform log object record
 	objectRecord platformObjectRecord
 }
 
-// UnmarshalJSON unmarshals the given bytes in a LogMessage object.
+// UnmarshalJSON unmarshals the given bytes in a custom LogMessage object.
 func (l *logMessage) UnmarshalJSON(data []byte) error {
 	log := lib.NewLogger()
 
@@ -210,17 +211,63 @@ func parseLogsAPIPayload(data []byte) ([]logMessage, error) {
 	return messages, nil
 }
 
-func readLogs(data []byte) (logs []types.LogJson, err error) {
+func readLogs(data []byte, eventData *types.EventDataPayload) (logs []types.LogJson, err error) {
 	msgs, err := parseLogsAPIPayload(data)
 	if err != nil {
 		return nil, err
 	}
 
+	// Get first / unique key from EventData
+	var key string
+	for k := range eventData.EventData {
+		key = k
+		break
+	}
+
+	fun, ok := eventData.EventData[key].(map[string]interface{})
+	if !ok {
+		fmt.Printf(">> ReadLogs not MAPPING!: %+v\n", eventData.EventData[key])
+		return
+	}
+
+	metricsAtt := map[string]interface{}{}
+	for _, kv := range createMetricAttributes(fun, nil) {
+		if LogsMetricAttributeNames[kv.Key] {
+			metricsAtt[kv.Key] = getJsonValue(kv.Value)
+		}
+	}
+
+	resourcesAtt := map[string]interface{}{}
+	for _, kv := range createResourceAttributes(fun) {
+		if LogsResourceAttributeNames[kv.Key] {
+			resourcesAtt[kv.Key] = getJsonValue(kv.Value)
+		}
+	}
+
 	// for loop needs to use index since it's all reference, otherwise we get only last obj
 	for i := range msgs {
+		if msgs[i].logType != logTypeFunction {
+			continue
+		}
+		var severityText string
+		var severityNumber int64
+		parts := strings.Split(msgs[i].stringRecord, "\t")
+		if len(parts) > 2 {
+			severityText = parts[2]
+			severityNumber = int64(LogsSeverityNumber[severityText])
+		}
+		timestamp := msgs[i].time.UnixMilli()
+		orderId := fmt.Sprint(time.Now().UnixNano())
 		logs = append(logs, types.LogJson{
-			Body: &msgs[i].stringRecord,
-			// TODO: fill with metric request data
+			Body:              &msgs[i].stringRecord,
+			Attributes:        resourcesAtt,
+			Resource:          metricsAtt,
+			Timestamp:         &timestamp,
+			TraceId:           &eventData.Span.TraceID,
+			SpanId:            &eventData.Span.SpanID,
+			SeverityNumber:    &severityNumber,
+			SeverityText:      &severityText,
+			ProcessingOrderId: &orderId,
 		})
 	}
 
