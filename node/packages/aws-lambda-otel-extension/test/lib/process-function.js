@@ -104,7 +104,7 @@ const invoke = async (testConfig) => {
   }
   if (result.FunctionError) {
     if (expectedOutcome.startsWith('error')) return duration;
-    throw new Error(`Invocation errored: ${result.FunctionError}`);
+    throw new Error(`Invocation of ${testConfig.name} errored: ${result.FunctionError}`);
   }
   return duration;
 };
