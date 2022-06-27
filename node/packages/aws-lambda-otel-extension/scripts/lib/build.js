@@ -1,7 +1,6 @@
 'use strict';
 
 const path = require('path');
-const fsp = require('fs').promises;
 const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
 const mkdir = require('fs2/mkdir');
@@ -12,7 +11,6 @@ const { version } = require('../../package');
 const rootDir = path.resolve(__dirname, '../../');
 const esbuildFilename = path.resolve(rootDir, 'node_modules/.bin/esbuild');
 const externalDir = path.resolve(rootDir, 'external');
-const externalProtoRelativeDirname = 'otel-extension-external/proto';
 const externalRuntimeAgnosticDir = path.resolve(rootDir, 'external-runtime-agnostic');
 const internalDir = path.resolve(rootDir, 'internal');
 
@@ -51,14 +49,6 @@ module.exports = async (distFilename, options = {}) => {
             ])
           ).stdoutBuffer
         );
-        for (const relativeFilename of await fsp.readdir(
-          path.resolve(externalDir, externalProtoRelativeDirname)
-        )) {
-          zip.addLocalFile(
-            path.resolve(externalDir, externalProtoRelativeDirname, relativeFilename),
-            externalProtoRelativeDirname
-          );
-        }
         zip.addFile(
           'otel-extension-external/version.json',
           Buffer.from(JSON.stringify(version), 'utf8')

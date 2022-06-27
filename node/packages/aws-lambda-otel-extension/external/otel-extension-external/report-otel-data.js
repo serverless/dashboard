@@ -14,8 +14,6 @@ const extraRequestHeaders = userSettings.common.destination.requestHeaders
     )
   : {};
 
-const getProtobufLoad = () => require('protobufjs').load;
-
 const s3Client = ['logs', 'metrics', 'request', 'response', 'traces'].some((name) => {
   const destination = userSettings[name].destination;
   return destination && destination.startsWith('s3://');
@@ -26,11 +24,9 @@ const s3Client = ['logs', 'metrics', 'request', 'response', 'traces'].some((name
   : null;
 
 let httpRequestIdTracker = 0;
-const prepareReport = async (data, { outputType }, { protobuf }) => {
+const prepareReport = (data, { outputType }, { protobuf }) => {
   if (outputType !== 'protobuf') return data;
-  const root = await getProtobufLoad()(`${__dirname}${protobuf.path}`);
-  const ServiceRequest = root.lookupType(protobuf.type);
-  return ServiceRequest.encode(data).finish();
+  return protobuf.encode(data).finish();
 };
 
 const sendReport = async (data, { destination, outputType }) => {
@@ -87,24 +83,18 @@ const storeReport = async (data, { destination, outputType }, { s3 }) => {
     .promise();
 };
 
+const proto = require('./proto');
+
 const protobufConfigs = {
-  metrics: {
-    path: '/proto/metric-service.proto',
-    type: 'opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest',
-  },
-  traces: {
-    path: '/proto/trace-service.proto',
-    type: 'opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest',
-  },
+  metrics: proto.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest,
+  traces: proto.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest,
 };
 
 module.exports = async (name, data) => {
   debugLog(`Report ${name}:`, JSON.stringify(data));
   const settings = userSettings[name];
   if (protobufConfigs[name]) {
-    data = await prepareReport(data, settings, {
-      protobuf: protobufConfigs[name],
-    });
+    data = prepareReport(data, settings, { protobuf: protobufConfigs[name] });
   }
   if (settings.destination && isUrl(settings.destination)) {
     await sendReport(data, settings);
