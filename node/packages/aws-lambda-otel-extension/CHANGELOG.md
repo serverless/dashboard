@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.4](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.3...@serverless/aws-lambda-otel-extension@0.4.4) (2022-06-27)
+
+### Bug Fixes
+
+- Fix handling of doubled resolution ([8eacf17](https://github.com/serverless/runtime/commit/8eacf17644a82d1e164a2752aa35a5289becce8b))
+
+### Performance Improvements
+
+- Optimize protobuf encoding by using pre-compiled interface ([70f26e6](https://github.com/serverless/runtime/commit/70f26e6faf1c5315f11e6b3f7dee1b02956b8186))
+- Improve telemetry server response time ([60ae043](https://github.com/serverless/runtime/commit/60ae043d31e5f13594a2743b2365343d47898a72))
+
+### Maintenance Improvements
+
+- Clarify wrapping logic ([2b203f0](https://github.com/serverless/runtime/commit/2b203f0445d1e322b518b91c555446f3fc017e6d))
+- Cleanup invalid _async_ mark ([7423971](https://github.com/serverless/runtime/commit/74239715d008f26639856294dc611f3cd429eb07))
+
 ### [0.4.3](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.2...@serverless/aws-lambda-otel-extension@0.4.3) (2022-06-23)
 
 ### Features
