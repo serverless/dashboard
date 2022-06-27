@@ -40,6 +40,7 @@ const userSettings = require('./user-settings');
 const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
+const telemetryServerUrl = `http://localhost:${OTEL_SERVER_PORT}`;
 
 const tracerProvider = new NodeTracerProvider();
 const memoryExporter = new InMemorySpanExporter();
@@ -118,18 +119,24 @@ const requestHandler = async (span, { event, context }) => {
     };
   }
 
+  const requestBody = JSON.stringify(eventDataPayload);
   debugLog('Internal extension: Send event data');
   if (process.env.TEST_DRY_LOG) {
-    process.stdout.write(`⚡ eventData: ${JSON.stringify(eventDataPayload)}\n`);
+    process.stdout.write(`⚡ eventData: ${requestBody}\n`);
   } else {
     // Send request data to external so that we can attach this data to logs
-    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+    const fetchOptions = {
       method: 'post',
-      body: JSON.stringify(eventDataPayload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      body: requestBody,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    const requestStartTime = process.hrtime.bigint();
+    await fetch(telemetryServerUrl, fetchOptions);
+    debugLog(
+      `Internal extension request [eventData]: ok in: ${Math.round(
+        Number(process.hrtime.bigint() - requestStartTime) / 1000000
+      )}ms`
+    );
   }
 };
 
@@ -337,17 +344,23 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     };
   }
 
+  const requestBody = JSON.stringify(telemetryDataPayload);
   debugLog('Internal extension: Send telemetry data');
   if (process.env.TEST_DRY_LOG) {
-    process.stdout.write(`⚡ telemetryData: ${JSON.stringify(telemetryDataPayload)}\n`);
+    process.stdout.write(`⚡ telemetryData: ${requestBody}\n`);
   } else {
-    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+    const fetchOptions = {
       method: 'post',
-      body: JSON.stringify(telemetryDataPayload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      body: requestBody,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    const requestStartTime = process.hrtime.bigint();
+    await fetch(telemetryServerUrl, fetchOptions);
+    debugLog(
+      `Internal extension request [telemetryData]: ok in: ${Math.round(
+        Number(process.hrtime.bigint() - requestStartTime) / 1000000
+      )}ms`
+    );
   }
 
   // Reset the exporter so we don't see duplicates
