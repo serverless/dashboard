@@ -286,16 +286,29 @@ module.exports = (async () => {
                       createLogPayload(data.record, currentRequestContext.logsQueue)
                     );
                   }
+                  if (currentRequestContext.responseEventPayload) {
+                    sendReport(
+                      'response',
+                      createResponsePayload(currentRequestContext.responseEventPayload, data.record)
+                    );
+                  }
                 }
                 break;
               case 'telemetryData':
                 lastTelemetryData = data;
                 if (data.record.responseEventPayload) {
-                  const { requestData } = getCurrentRequestContext();
-                  sendReport(
-                    'response',
-                    createResponsePayload(data.record.responseEventPayload, requestData)
-                  );
+                  const currentRequestContext = getCurrentRequestContext();
+                  if (!currentRequestContext.requestData) {
+                    currentRequestContext.responseEventPayload = data.record.responseEventPayload;
+                  } else {
+                    sendReport(
+                      'response',
+                      createResponsePayload(
+                        data.record.responseEventPayload,
+                        currentRequestContext.requestData
+                      )
+                    );
+                  }
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
                 for (const tracePayload of createTracePayload(
