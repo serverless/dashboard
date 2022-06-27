@@ -118,12 +118,10 @@ const requestHandler = async (span, { event, context }) => {
     };
   }
 
+  debugLog('Internal extension: Send event data');
   if (process.env.TEST_DRY_LOG) {
-    process._rawDebug(
-      `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
-    );
+    process.stdout.write(`⚡ eventData: ${JSON.stringify(eventDataPayload)}\n`);
   } else {
-    debugLog('Internal extension: Send event data');
     // Send request data to external so that we can attach this data to logs
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
@@ -339,12 +337,10 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     };
   }
 
+  debugLog('Internal extension: Send telemetry data');
   if (process.env.TEST_DRY_LOG) {
-    process._rawDebug(
-      `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
-    );
+    process.stdout.write(`⚡ telemetryData: ${JSON.stringify(telemetryDataPayload)}\n`);
   } else {
-    debugLog('Internal extension: Send telemetry data');
     await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
       method: 'post',
       body: JSON.stringify(telemetryDataPayload),
