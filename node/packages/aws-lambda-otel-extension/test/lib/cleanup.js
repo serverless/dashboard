@@ -31,8 +31,8 @@ const deleteFunctions = async () => {
   );
 };
 
-const deleteLayers = async () => {
-  const layerVersions = (await awsRequest(Lambda, 'listLayerVersions', { LayerName: basename }))
+const deleteLayers = async (layerName) => {
+  const layerVersions = (await awsRequest(Lambda, 'listLayerVersions', { LayerName: layerName }))
     .LayerVersions;
   if (!layerVersions.length) return;
 
@@ -41,14 +41,18 @@ const deleteLayers = async () => {
     Array.from(Array(lastLayerVersion).keys()).map(async (index) => {
       const versionNumber = index + 1;
       await awsRequest(Lambda, 'deleteLayerVersion', {
-        LayerName: basename,
+        LayerName: layerName,
         VersionNumber: versionNumber,
       });
     })
   );
 
-  log.notice('Deleted all versions of layer %s', basename);
+  log.notice('Deleted all versions of layer %s', layerName);
 };
+
+const deleteDefaultLayers = () => deleteLayers(basename);
+const deleteInternalLayers = () => deleteLayers(`${basename}-internal`);
+const deleteAllLayers = () => Promise.all([deleteDefaultLayers(), deleteInternalLayers()]);
 
 const deleteRole = async () => {
   const policyArn = `arn:aws:iam::${
@@ -86,5 +90,5 @@ const deleteRole = async () => {
 module.exports = async (options = {}) => {
   log.notice('Cleanup %s', basename);
   if (!options.skipFunctionsCleanup) await deleteFunctions();
-  await Promise.all([deleteLayers(), deleteRole()]);
+  await Promise.all([deleteAllLayers(), deleteRole()]);
 };

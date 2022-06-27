@@ -160,6 +160,7 @@ const retrieveReports = async (testConfig) => {
     let currentInvocationData;
     let currentProcessData;
     let startedMessage;
+    let isExternalExtensionLoaded = false;
     const getCurrentInvocationData = () => {
       if (!currentInvocationData) {
         log.error(
@@ -173,6 +174,7 @@ const retrieveReports = async (testConfig) => {
     };
     for (const { message } of events) {
       if (message.startsWith('Extension overhead duration: external initialization')) {
+        isExternalExtensionLoaded = true;
         processesData.push(
           (currentProcessData = {
             extensionOverheadDurations: {
@@ -180,6 +182,10 @@ const retrieveReports = async (testConfig) => {
             },
           })
         );
+        continue;
+      }
+      if (!isExternalExtensionLoaded && message.startsWith('Internal extension: Init')) {
+        processesData.push((currentProcessData = { extensionOverheadDurations: {} }));
         continue;
       }
       if (message.startsWith('Extension overhead duration: internal initialization')) {
