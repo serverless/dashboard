@@ -27,7 +27,7 @@ const create = async (testConfig, coreConfig) => {
   try {
     await awsRequest(Lambda, 'createFunction', {
       Role: coreConfig.roleArn,
-      Runtime: 'nodejs14.x',
+      Runtime: 'nodejs16.x',
       Code: {
         ZipFile: await resolveDirZipBuffer(fixturesDirname),
       },
@@ -142,21 +142,20 @@ const retrieveReports = async (testConfig) => {
   let processesData;
   do {
     const events = await retrieveAllEvents();
+
+    let startEventsCount = 0;
+    let reportEventsCount = 0;
+    for (const { message } of events) {
+      if (message.startsWith('START RequestId: ')) ++startEventsCount;
+      else if (message.startsWith('REPORT RequestId: ')) ++reportEventsCount;
+    }
+
     processesData = [];
     invocationsData = [];
-    if (!events.length) continue;
-    if (
-      !events[0].message.startsWith('START RequestId: ') &&
-      !events[0].message.startsWith('Extension: Ready for an event')
-    ) {
-      // Workaound AWS bug, where on some occasion only batch of later events is returned
-      log.error(
-        'Retry, due to unexpected CW events (for start time %d): %o',
-        testConfig.invokeStartTime,
-        events
-      );
+    if (startEventsCount < testConfig.invokeCount || reportEventsCount < testConfig.invokeCount) {
       continue;
     }
+
     log.debug('Events for %s: %o', testConfig.name, events);
     let currentInvocationData;
     let currentProcessData;
