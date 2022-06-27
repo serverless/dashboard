@@ -7,7 +7,7 @@ menuOrder: 5
 
 # FAQ
 
-## Configuring apps and services
+## Configuring your apps and services
 
 **How do I start using Serverless Console with my app?**
 
