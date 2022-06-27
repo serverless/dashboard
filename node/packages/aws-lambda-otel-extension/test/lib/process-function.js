@@ -258,7 +258,7 @@ const retrieveReports = async (testConfig) => {
         currentInvocationData = null;
       }
     }
-  } while (invocationsData.length < 2);
+  } while (invocationsData.length < testConfig.invokeCount);
 
   if (processesData.length !== 1 && handledOutcomes.has(testConfig.expectedOutcome)) {
     throw new Error(
