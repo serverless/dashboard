@@ -15,31 +15,26 @@ The following definitions provide context on how these terms are used
 in the documentation and serves as a starting point for learning
 about the Serverless Console.
 
-## Serverless
+# Serverless
 Serverless Console is optimized for use in Function as a Service (FAAS) platforms, specifically
 [AWS Lambda](#aws-lambda). That said, we define Serverless as any pay-for-usage
-managed service and plan to offer more platforms and services in the near future.
+managed service and plan to offer more platforms and services in the near future. [Contact Sales](https://www.serverless.com/sales) if you'd like to learn more about our Road Map.
 
-[Contact Sales](https://www.serverless.com/sales) if you'd like to learn more about our Road Map.
-
-
-## Logs
+# Logs
 [Logs](product/logs.md) are collected directly from your application and
 are avialble both streaming and in [Traces](product/traces.md) within Serverless
 Console. All logs include a set of [Tags](product/tags.md) for searching and filtering
 within the [Explorer](product/explorer.md) but are ingested and 
 stored seperate from Traces and Metrics.
 
-
-## Metrics
+# Metrics
 [Metrics](product/metrics.md) are numerical data about the 
 performance of your applications or its underlying infrastructure.
 These metrics are collected by the [Serverless Runtime OTEL extension](product/runtime.md)
 during an invocation but are ingested and store seperately from a Traces,
 and Logs. For more details about Metrics see the [product/metrics.md] section.
 
-
-## Traces
+# Traces
 All the observability details about your apps and services are
 captured as [Traces](products/traces.md). The Trace brings together
 the Metrics, Tags, and Spans associated to an event within your system.
@@ -53,7 +48,35 @@ all of these affect the end-user experience or your bill.
 A more detailed description of what is incldued for each duration is included
 in our [duration guide](product/duration.md).
 
-### Initialization
+# Tags
+All Traces, Logs and Metrics share a specific set of [Semantic Tags](tags.md)
+added by our [Serverless Runtime Extension](runtime.md). These tags are used
+for filtering and navigating within Serverless Console.
+
+# Scopes
+A [Scope](product/scopes.md) is a set of tags used to identify patterns as use-cases that
+are handled by Serverless Console. All metrics, logs, and traces must
+match a recognized scope to be ingested into Serverless Console.
+
+# Serverless Runtime
+[Serverless Runtime](runtime.md) is a collection of Libraries, Extensions,
+and executables for instrumenting FAAS platforms. 
+
+# Organization
+An organization is a unique tenant within the Serverless suite of 
+products (including Serverless Dashboard, Serverless Cloud, and 
+Serverless Console). 
+
+# AWS Lambda
+The following are AWS specific terms which are helpful in understanding how 
+Serevrless Console applies specific AWS Lambda Functionality.
+
+## Handler
+The handler of an AWS Lambda function is where your business logic resides.
+Fore more details about what duration accounted for in the Handler see the
+[duration guide](product/duration.md#extensions-and-the-invocation-phase)
+
+## Initialization
 The initilization phase of a Trace includes any setup time associated
 with the event. This will include one time occurences like an
 [AWS Cold-Start](#cold-start), as well as initatlizing runtime requirements. 
@@ -63,60 +86,31 @@ users and customers as well as affect cost.
 More details about optimizing initialization performance are in the 
 [Duration Guide](product/duration.md#optimizing-initlization-in-aws).
 
-### Invocation 
+## Invocation 
 An invocation referes to the execution of a function in a Serverless
 FAAS such as AWS Lambda. This only includes the specific execution
 of your bussines logic and code you control directly. Because it does
 not include all of the initlization time, it does not represent the
 duration end users experience, or used to calculate cost. 
 
-### Shutdown
+## Shutdown
 Most FAAS platforms utilize some sort of shutdown process that can
 impact [Initilization](#initialization) behavior and timeouts. These
 details are not collected or represented in Serverless Console and
 does not usually affect cost or end user experience directly.
 
-## Tags
-All Traces, Logs and Metrics share a specific set of [Semantic Tags](tags.md)
-added by our [Serverless Runtime Extension](runtime.md). These tags are used
-for filtering and navigating within Serverless Console.
-
-## Scopes
-A [Scope](product/scopes.md) is a set of tags used to identify patterns as use-cases that
-are handled by Serverless Console. All metrics, logs, and traces must
-match a recognized scope to be ingested into Serverless Console.
-
-## Serverless Runtime
-[Serverless Runtime](runtime.md) is a collection of Libraries, Extensions,
-and executables for instrumenting FAAS platforms. 
-
-## Orginization
-An organization is a unique tenant within the Serverless suite of 
-products (including Serverless Dashboard, Serverless Cloud, and 
-Serverless Console). 
-
-## AWS Lambda
-The following are AWS specific terms which are helpful in understanding how 
-Serevrless Console applies specific AWS Lambda Functionality.
-
-### Handler
-The handler of an AWS Lambda function is where your business logic resides.
-Fore more details about what duration accounted for in the Handler see the
-[duration guide](product/duration.md#extensions-and-the-invocation-phase)
-
-### Cold-Starts
+## Cold-Start
 When an AWS Lambda function recieves a request, and it has not been used before, or for several minutes, its environment and code must first be Initialized.  This process is known as an AWS Lambda Cold-Start.  This process adds latency to the overall invocation duration.
 
 After the execution completes, the execution environment is frozen. To improve resource management and performance, the Lambda service retains the execution environment for a non-deterministic period of time. During this time, if another request arrives for the same function, the service may reuse the environment. This second request typically finishes more quickly, since the execution environment already exists and it’s not necessary to download the code and run the initialization code. This is called a Warm-Start.
 
 According to an analysis of production Lambda workloads, cold starts typically occur in under 1% of invocations. The duration of a cold start varies from under 100 ms to over 1 second.
 
-#### Warm Start
+## Warm-Start
 When an AWS Lambda function instance receives a request after having received previous requests within the last few minutes.  The Initialization phase does not happen and this is known as a Warm-Start.
 
-#### Time Outs
+## Timeout
 A timeout is a [configurable limit for the duration of your AWS Lambda](product/duration.md#configuring-timeouts-in-aws-lambda).
-
 
 <!--
 # Benchmark
