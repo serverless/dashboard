@@ -44,6 +44,9 @@ const resolveIngestionData = async () => {
 };
 
 module.exports = async (options = {}) => {
+  const coreConfig = {};
+  await createCoreResources(coreConfig, { layerTypes: ['nodeAll', 'nodeInternal'] });
+
   const allBenchmarkVariantsConfig = new Map([
     [
       'bare',
@@ -62,6 +65,21 @@ module.exports = async (options = {}) => {
             Variables: {
               SLS_OTEL_USER_SETTINGS: JSON.stringify({ logs: { disabled: true } }),
               DEBUG_SLS_OTEL_LAYER: '1',
+            },
+          },
+        },
+      },
+    ],
+    [
+      'internalOnly',
+      {
+        configuration: {
+          Layers: [coreConfig.layerInternalArn],
+          Environment: {
+            Variables: {
+              AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
+              DEBUG_SLS_OTEL_LAYER: '1',
+              TEST_DRY_LOG: '1',
             },
           },
         },
@@ -297,8 +315,6 @@ module.exports = async (options = {}) => {
 
   if (!useCasesConfig.size) throw new Error('No matching use case');
 
-  const coreConfig = {};
-  await createCoreResources(coreConfig);
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig, { multiplyBy: 5 });
   for (const testConfig of testVariantsConfig) {
     testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({

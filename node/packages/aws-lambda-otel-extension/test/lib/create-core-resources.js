@@ -10,24 +10,55 @@ const buildLayer = require('../../scripts/lib/build');
 const awsRequest = require('../utils/aws-request');
 const basename = require('./basename');
 
-const layerFilename = path.resolve(__dirname, '../../dist/extension.zip');
-
-const createLayer = async (config) => {
-  if (!process.env.TEST_LAYER_FILENAME) {
+const createLayer = async (config, { layerName, filename, skipBuild, buildConfig }) => {
+  if (!skipBuild) {
     log.info('Building layer');
-    await buildLayer(layerFilename);
+    await buildLayer(filename, buildConfig);
   }
 
-  log.info('Publishing layer (%s) to AWS', process.env.TEST_LAYER_FILENAME || layerFilename);
+  log.info('Publishing layer (%s) to AWS', filename);
   await awsRequest(Lambda, 'publishLayerVersion', {
-    LayerName: basename,
-    Content: { ZipFile: await fsp.readFile(process.env.TEST_LAYER_FILENAME || layerFilename) },
+    LayerName: layerName,
+    Content: { ZipFile: await fsp.readFile(filename) },
   });
   log.info('Resolving layer ARN');
-  config.layerArn = (
-    await awsRequest(Lambda, 'listLayerVersions', { LayerName: basename })
+  const arn = (
+    await awsRequest(Lambda, 'listLayerVersions', { LayerName: layerName })
   ).LayerVersions.shift().LayerVersionArn;
-  log.info('Layer ready %s', config.layerArn);
+  log.info('Layer ready %s', arn);
+  return arn;
+};
+
+const createLayers = async (config, layerTypes) => {
+  return Promise.all(
+    Array.from(layerTypes, async (layerType) => {
+      switch (layerType) {
+        case 'nodeAll':
+          if (process.env.TEST_LAYER_FILENAME) {
+            config.layerArn = await createLayer(config, {
+              layerName: basename,
+              filename: process.env.TEST_LAYER_FILENAME,
+              skipBuild: true,
+            });
+            return;
+          }
+          config.layerArn = await createLayer(config, {
+            layerName: basename,
+            filename: path.resolve(__dirname, '../../dist/extension.zip'),
+          });
+          return;
+        case 'nodeInternal':
+          config.layerInternalArn = await createLayer(config, {
+            layerName: `${basename}-internal`,
+            filename: path.resolve(__dirname, '../../dist/extension.internal.zip'),
+            buildConfig: { mode: 1 },
+          });
+          return;
+        default:
+          throw new Error(`Unrecognized layer type: ${layerType}`);
+      }
+    })
+  );
 };
 
 const createRole = async (config) => {
@@ -91,9 +122,9 @@ const createRole = async (config) => {
   config.policyArn = policyArn;
 };
 
-module.exports = async (config) => {
+module.exports = async (config, options = {}) => {
   log.notice('Creating core resources %s', basename);
   config.accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
 
-  await Promise.all([createLayer(config), createRole(config)]);
+  await Promise.all([createLayers(config, options.layerTypes || ['nodeAll']), createRole(config)]);
 };
