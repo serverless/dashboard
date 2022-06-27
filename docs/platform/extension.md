@@ -2,7 +2,7 @@
 title: Serverless Console Lambda Extension
 menuText: Lambda Extension
 description: An overview of the Serverles Runtime
-menuOrder: 4
+menuOrder: 6
 -->
 
 # Serverless Console Extension

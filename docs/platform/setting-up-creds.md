@@ -2,7 +2,7 @@
 title: Setting up Credentials
 menuText: Setting up Credentials
 description: Setting up AWS Credentials for Serverless Framework
-menuOrder: 5
+menuOrder: 4
 -->
 
 # Setting up AWS Credentials
