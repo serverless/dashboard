@@ -9,6 +9,7 @@ const debugLog = (...args) => {
 };
 debugLog('Internal extension: Init');
 
+const http = require('http');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
@@ -32,7 +33,6 @@ const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis')
 const { FastifyInstrumentation } = require('@opentelemetry/instrumentation-fastify');
 const AwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
-const fetch = require('node-fetch');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
 const userSettings = require('./user-settings');
@@ -125,13 +125,29 @@ const requestHandler = async (span, { event, context }) => {
     process.stdout.write(`⚡ eventData: ${requestBody}\n`);
   } else {
     // Send request data to external so that we can attach this data to logs
-    const fetchOptions = {
-      method: 'post',
-      body: requestBody,
-      headers: { 'Content-Type': 'application/json' },
-    };
     const requestStartTime = process.hrtime.bigint();
-    await fetch(telemetryServerUrl, fetchOptions);
+    await new Promise((resolve, reject) => {
+      const request = http.request(
+        telemetryServerUrl,
+        {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(requestBody),
+          },
+        },
+        (response) => {
+          if (response.statusCode === 200) {
+            resolve();
+          } else {
+            reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+          }
+        }
+      );
+      request.on('error', reject);
+      request.write(requestBody);
+      request.end();
+    });
     debugLog(
       `Internal extension request [eventData]: ok in: ${Math.round(
         Number(process.hrtime.bigint() - requestStartTime) / 1000000
@@ -349,13 +365,29 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
   if (process.env.TEST_DRY_LOG) {
     process.stdout.write(`⚡ telemetryData: ${requestBody}\n`);
   } else {
-    const fetchOptions = {
-      method: 'post',
-      body: requestBody,
-      headers: { 'Content-Type': 'application/json' },
-    };
     const requestStartTime = process.hrtime.bigint();
-    await fetch(telemetryServerUrl, fetchOptions);
+    await new Promise((resolve, reject) => {
+      const request = http.request(
+        telemetryServerUrl,
+        {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(requestBody),
+          },
+        },
+        (response) => {
+          if (response.statusCode === 200) {
+            resolve();
+          } else {
+            reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+          }
+        }
+      );
+      request.on('error', reject);
+      request.write(requestBody);
+      request.end();
+    });
     debugLog(
       `Internal extension request [telemetryData]: ok in: ${Math.round(
         Number(process.hrtime.bigint() - requestStartTime) / 1000000
