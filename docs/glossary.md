@@ -30,7 +30,7 @@ stored seperate from Traces and Metrics.
 # Metrics
 [Metrics](product/metrics.md) are numerical data about the 
 performance of your applications or its underlying infrastructure.
-These metrics are collected by the [Serverless Runtime OTEL extension](product/runtime.md)
+These metrics are collected by the [Serverless Console Extension](platform/extension.md)
 during an invocation but are ingested and store seperately from a Traces,
 and Logs. For more details about Metrics see the [product/metrics.md] section.
 
@@ -50,7 +50,7 @@ in our [duration guide](product/duration.md).
 
 # Tags
 All Traces, Logs and Metrics share a specific set of [Semantic Tags](tags.md)
-added by our [Serverless Runtime Extension](runtime.md). These tags are used
+added by our [Serverless Console Extension](platform/extension.md). These tags are used
 for filtering and navigating within Serverless Console.
 
 # Scopes
@@ -58,9 +58,9 @@ A [Scope](product/scopes.md) is a set of tags used to identify patterns as use-c
 are handled by Serverless Console. All metrics, logs, and traces must
 match a recognized scope to be ingested into Serverless Console.
 
-# Serverless Runtime
-[Serverless Runtime](runtime.md) is a collection of Libraries, Extensions,
-and executables for instrumenting FAAS platforms. 
+# Serverless Console Extension
+The [Serverless Console Extension](platform/extension.md) is a AWS Lambda extension
+for collecting logs, metrics, and trace data from your AWS Lambda functions. 
 
 # Organization
 An organization is a unique tenant within the Serverless suite of 
