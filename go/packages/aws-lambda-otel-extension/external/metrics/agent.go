@@ -111,13 +111,19 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 			l.logger.Error("Error creating traces", zap.Error(err))
 			return
 		}
-		data, err = proto.Marshal(traces)
-		if err != nil {
-			l.logger.Error("Error marshalling traces", zap.Error(err))
+
+		for _, trace := range traces {
+			data, err = proto.Marshal(trace)
+			if err != nil {
+				l.logger.Error("Error marshalling traces", zap.Error(err))
+				return
+			}
+
+			l.reportAgent.PostTrace(data)
 		}
 
-		l.reportAgent.PostTrace(data)
-
+	default:
+		l.logger.Error("Unknown payload type", zap.String("payload", string(body)))
 	}
 }
 

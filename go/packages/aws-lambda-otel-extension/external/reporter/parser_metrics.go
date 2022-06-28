@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+const MaxSpansPerBatch = 100
+
 func ParseInternalPayload(data []byte) (*types.RecordPayload, error) {
 	var payload *types.RecordPayload
 	err := json.Unmarshal(data, &payload)
@@ -228,7 +230,44 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 	}
 }
 
-func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) (*protoc.TracesData, error) {
+// Traces logic
+
+func batchOverflowSpans(traces *protoc.TracesData) []*protoc.TracesData {
+	var batches []*protoc.TracesData
+
+	for _, libSpans := range traces.ResourceSpans[0].InstrumentationLibrarySpans {
+		var cutSpans []*protoc.Span
+		lenSpans := len(libSpans.Spans)
+		iSpan := 0
+		for (lenSpans - iSpan) > 0 {
+			if (lenSpans - iSpan) > MaxSpansPerBatch {
+				cutSpans = libSpans.Spans[iSpan : iSpan+MaxSpansPerBatch]
+				iSpan += MaxSpansPerBatch
+			} else {
+				cutSpans = libSpans.Spans[iSpan:]
+				iSpan += len(cutSpans)
+			}
+			batches = append(batches, &protoc.TracesData{
+				ResourceSpans: []*protoc.ResourceSpans{
+					{
+						Resource: traces.ResourceSpans[0].Resource,
+						InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
+							{
+								InstrumentationLibrary: libSpans.InstrumentationLibrary,
+								Spans:                  cutSpans,
+							},
+						},
+					},
+				},
+			})
+
+		}
+	}
+
+	return batches
+}
+
+func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) ([]*protoc.TracesData, error) {
 
 	if traces == nil {
 		return nil, nil
@@ -299,8 +338,8 @@ func CreateTracePayload(requestId string, fun map[string]interface{}, traces *ty
 			InstrumentationLibrarySpans: instLibSpans,
 		},
 	}
-	return &protoc.TracesData{
+	return batchOverflowSpans(&protoc.TracesData{
 		ResourceSpans: resourceSpans,
-	}, nil
+	}), nil
 
 }

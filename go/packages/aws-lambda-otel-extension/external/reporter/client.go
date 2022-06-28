@@ -177,7 +177,7 @@ func (c *HttpClient) Shutdown() error {
 			break
 		}
 		c.Flush()
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 	c.HttpClient.CloseIdleConnections()
 	return c.eg.Wait()
