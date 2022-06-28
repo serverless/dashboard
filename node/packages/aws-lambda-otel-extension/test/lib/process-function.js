@@ -87,10 +87,7 @@ const invoke = async (testConfig) => {
       Payload: Buffer.from(JSON.stringify(invokePayload), 'utf8'),
     });
   } catch (error) {
-    if (
-      error.message.includes('The role defined for the function cannot be assumed by Lambda') ||
-      error.message.includes('Lambda was unable to decrypt the environment variables')
-    ) {
+    if (error.message.includes('The role defined for the function cannot be assumed by Lambda')) {
       // Occassional race condition issue on AWS side, retry
       log.error('Approached error, retying ivocation: %o', error);
       await wait(100);
@@ -296,7 +293,16 @@ module.exports = async (testConfig, coreConfig) => {
   do {
     await wait(3000);
     log.info('Invoke function #%d %s', counter, testConfig.name);
-    invokeDurations.push(await invoke(testConfig));
+    try {
+      invokeDurations.push(await invoke(testConfig));
+    } catch (error) {
+      if (error.message.includes('Lambda was unable to decrypt the environment variables')) {
+        // Rare error on AWS side, which we can recover from only by re-creating the lambda
+        log.error('Approached not-recoverable error, re-creating lambda: %o', error);
+        return module.exports(testConfig, coreConfig);
+      }
+      throw error;
+    }
   } while (++counter <= testConfig.invokeCount);
 
   log.info('Delete function %s', testConfig.name);
