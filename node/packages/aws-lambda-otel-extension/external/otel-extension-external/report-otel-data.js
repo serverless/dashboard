@@ -2,7 +2,7 @@
 
 const createHttpRequest = require('http').request;
 const createHttpsRequest = require('https').request;
-const { debugLog } = require('./helper');
+const { debugLog, keepAliveAgents } = require('./helper');
 const userSettings = require('./user-settings');
 
 const isUrl = RegExp.prototype.test.bind(/^https?:\/\//);
@@ -39,32 +39,37 @@ const sendReport = async (data, { destination, outputType }) => {
   };
   await new Promise((resolve, reject) => {
     const httpRequestId = ++httpRequestIdTracker;
-    const createRequest = destination.startsWith('https') ? createHttpsRequest : createHttpRequest;
+    const isHttps = destination.startsWith('https');
+    const createRequest = isHttps ? createHttpsRequest : createHttpRequest;
     debugLog(`Request [${httpRequestId}]:`, destination);
     const requestStartTime = process.hrtime.bigint();
-    const request = createRequest(destination, { method: 'post', headers }, (response) => {
-      if (response.statusCode === 200) {
-        debugLog(
-          `Request [${httpRequestId}]: ok in: ${Math.round(
-            Number(process.hrtime.bigint() - requestStartTime) / 1000000
-          )}ms`
-        );
-        resolve();
-        return;
+    const request = createRequest(
+      destination,
+      { agent: isHttps ? keepAliveAgents.https : keepAliveAgents.http, method: 'post', headers },
+      (response) => {
+        if (response.statusCode === 200) {
+          debugLog(
+            `Request [${httpRequestId}]: ok in: ${Math.round(
+              Number(process.hrtime.bigint() - requestStartTime) / 1000000
+            )}ms`
+          );
+          resolve();
+          return;
+        }
+        let responseText = '';
+        response.on('data', (chunk) => {
+          responseText += String(chunk);
+        });
+        response.on('end', () => {
+          debugLog(
+            `Request [${httpRequestId}]: failed in: ${Math.round(
+              Number(process.hrtime.bigint() - requestStartTime) / 1000000
+            )}ms with: [${response.status}] ${responseText}`
+          );
+          resolve();
+        });
       }
-      let responseText = '';
-      response.on('data', (chunk) => {
-        responseText += String(chunk);
-      });
-      response.on('end', () => {
-        debugLog(
-          `Request [${httpRequestId}]: failed in: ${Math.round(
-            Number(process.hrtime.bigint() - requestStartTime) / 1000000
-          )}ms with: [${response.status}] ${responseText}`
-        );
-        resolve();
-      });
-    });
+    );
     request.on('error', reject);
     request.write(body);
     request.end();
