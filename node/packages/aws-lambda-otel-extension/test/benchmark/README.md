@@ -43,18 +43,23 @@ Just external extension which processes lambda event cycle. As no internal exten
 
 Difference from `bare` is that external extension process is initialized by AWS, and its that process that monitors and queues lambda invocation event cycle.
 
-This additional process management introduces natural duration overhead which is best calculated by reading duration as reported by AWS for this variant and subtracting from it a `bare` variant duration _(current numbers show ca 100ms overhead for initialization, ca 60ms for first invocation , and ca 30ms for every following invocation)_
+This additional process management introduces natural duration overhead which is best calculated by reading duration as reported by AWS for this variant and subtracting from it a `bare` variant duration
 
 There's no time spent here on processing reports and propagating them to the ingestion server (as none are to be send from the internal extension). So internally measured invocation duration overhead of external extension is also reported as not existing
 
+### `internalOnly`
+
+Just internal extension which generates telemetry reports and logs them to the console (when external extension is loaded those would be send to the external extension)
+
+Difference from `bare` is that original lambda logic is additionally wrapped with internal extension log. Measured difference simply show what overhead is produced by gathering telemetry in context of the lambda handler process.
+
 ### `jsonLog`
 
-External & internal extensions are loaded. Internal extension operates fully, while in external extension from obtained reports just payloads are generated and logged into `stdout` (there's no conversion to Protobuf and not reporting to the remote ingestion server).
+External & internal extensions are loaded. Internal extension operates fully (generates telemetry and sends it to external extension), while in external extension just report payloads are generated and logged into `stdout` (there's no conversion to Protobuf and not reporting to the remote ingestion server).
 
 Difference from `externalOnly` is purely that internal extension is loaded and fully active and that it sends reports to the external extension.
-While external extension prepares the payloads and logs them to the console (in JSON form) overhead of that is negligible (internal overhead measurements are expected to show `0`).
 
-Comparing its duration overhead against `externalOnly` shows how much overhead do internal extension introduce.
+Comparing its duration overhead against `externalOnly` and subtracting overehead of `internalOnly` shows how much overhead is introduced by sending telemetry payloads to the external extension and processing it in its scope
 
 ### `protoLog`
 
@@ -156,7 +161,8 @@ While overhead durations as measured and reported by the extensions internally h
 With benchmark variants, as setup correctly. It's safe to assume that:
 
 - Comparing durations of `externalOnly` vs `bare` expose the overhead of the AWS Lambda event lifecycle handling in the external extension
-- Comparing durations of `jsonLog` vs `externalOnly` expose the overhead of the internal extension
+- Comparing durations of `internalOnly` vs `bare` expose the overhead of the internal extension telemetry generation
+- Comparing durations of `jsonLog` vs `externalOnly` and subtracting overhead as observed with `internalOnly` informs us of overhead introduced by sending telemetry payloads from internal to the external extension and processing it in its scope
 - Comparing durations of `protoLog` vs `jsonLog` expose the overhead of the Protobuf conversion that happens in external extension
 - Comparing durations of `protoConsole` vs `protoBuf` expose the overhead of the communication with ingestion server that happens in external extension
 
@@ -171,6 +177,8 @@ Run `npm install` in following folders:
 - `test/fixtures/lambdas`
 
 ### 2. Ensure AWS credentials
+
+_In same manner as for AWS CLI_
 
 ### 3. Configure environment variables
 
@@ -193,7 +201,8 @@ Generated benchmark results are output to the console in CSV format. To store th
 ./test/scripts/benchmark.js > benchmark.csv
 ```
 
-What use cases and benchmark variants are tested can be fine tuned with following CLI params:
+Benchmark run can additionally be configured with following CLI params
 
 - `--use-cases` Function use cases to test (e.g. `callback,express`)
 - `--benchmark-variants` Benchmark variants to test (e.g. `bare,externalOnly`)
+- `--memory-size` Memory size to provide to lambdas (by default it's 128MB).
