@@ -87,8 +87,13 @@ const invoke = async (testConfig) => {
       Payload: Buffer.from(JSON.stringify(invokePayload), 'utf8'),
     });
   } catch (error) {
-    if (error.message.includes('The role defined for the function cannot be assumed by Lambda')) {
+    if (
+      error.message.includes('The role defined for the function cannot be assumed by Lambda') ||
+      error.message.includes('Lambda was unable to decrypt the environment variables')
+    ) {
       // Occassional race condition issue on AWS side, retry
+      log.error('Approached error, retying ivocation: %o', error);
+      await wait(100);
       return invoke(testConfig);
     }
     error.message = `"${testConfig.configuration.FunctionName}" invocation failed: ${error.message}`;
