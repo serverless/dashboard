@@ -38,7 +38,7 @@ Resources:
       Path: "/"
       RoleName: ServerlessRole
       Policies:
-        - PolicyName: serverless-policy
+        - PolicyName: "serverless-read-policy-1"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -54,1423 +54,480 @@ Resources:
 
                   #
                   ## API Gateway V1
-                  #
+                  # https://docs.aws.amazon.com/apigateway/latest/api/API_Operations.html
 
-                  # Gets information about the current Account resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAccount.html
                   - "apigateway:GetAccount"
-                  # Describe an existing Authorizer resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAuthorizer.html
                   - "apigateway:GetAuthorizer"
-                  # Describe an existing Authorizers resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAuthorizers.html
                   - "apigateway:GetAuthorizers"
-                  # Describe a BasePathMapping resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetBasePathMapping.html
                   - "apigateway:GetBasePathMapping"
-                  # Represents a collection of BasePathMapping resources.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetBasePathMappings.html
                   - "apigateway:GetBasePathMappings"
-                  # Gets information about the current ClientCertificate resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetClientCertificate.html
                   - "apigateway:GetClientCertificate"
-                  # Gets a collection of ClientCertificate resources.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetClientCertificates.html
                   - "apigateway:GetClientCertificates"
-                  # Gets information about a Deployment resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDeployment.html
                   - "apigateway:GetDeployment"
-                  # Gets information about a Deployments collection.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDeployments.html
                   - "apigateway:GetDeployments"
-                  # Gets a documentation part.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDocumentationPart.html
                   - "apigateway:GetDocumentationPart"
-                  # Gets documentation parts.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDocumentationParts.html
                   - "apigateway:GetDocumentationParts"
-                  # Gets a documentation version.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDocumentationVersion.html
                   - "apigateway:GetDocumentationVersion"
-                  # Gets documentation versions.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDocumentationVersions.html
                   - "apigateway:GetDocumentationVersions"
-                  # Represents a domain name that is contained in a simpler, more intuitive URL that can be called.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDomainName.html
                   - "apigateway:GetDomainName"
-                  # Represents a collection of DomainName resources.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDomainNames.html
                   - "apigateway:GetDomainNames"
-                  # Exports a deployed version of a RestApi in a specified format.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetExport.html
                   - "apigateway:GetExport"
-                  # Gets a GatewayResponse of a specified response type on the given RestApi.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetGatewayResponse.html
                   - "apigateway:GetGatewayResponse"
-                  # Gets the GatewayResponses collection on the given RestApi. If an API developer has not added any definitions for gateway responses, the result will be the API Gateway-generated default GatewayResponses collection for the supported response types.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetGatewayResponses.html
                   - "apigateway:GetGatewayResponses"
-                  # Get the integration settings.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetIntegration.html
                   - "apigateway:GetIntegration"
-                  # Represents a get integration response.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetIntegrationResponse.html
                   - "apigateway:GetIntegrationResponse"
-                  # Describe an existing Method resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetMethod.html
                   - "apigateway:GetMethod"
-                  # Describes a MethodResponse resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetMethodResponse.html
                   - "apigateway:GetMethodResponse"
-                  # Describes an existing model defined for a RestApi resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetModel.html
                   - "apigateway:GetModel"
-                  # Describes existing Models defined for a RestApi resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetModels.html
                   - "apigateway:GetModels"
-                  # Generates a sample mapping template that can be used to transform a payload into the structure of a model.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetModelTemplate.html
                   - "apigateway:GetModelTemplate"
-                  # Gets a RequestValidator of a given RestApi.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRequestValidator.html
                   - "apigateway:GetRequestValidator"
-                  # Gets the RequestValidators collection of a given RestApi.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRequestValidators.html
                   - "apigateway:GetRequestValidators"
-                  # Lists information about a resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetResource.html
                   - "apigateway:GetResource"
-                  # Lists information about a collection of Resource resources.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetResources.html
                   - "apigateway:GetResources"
-                  # Lists the RestApi resource in the collection.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRestApi.html
                   - "apigateway:GetRestApi"
-                  # Lists the RestApis resources for your collection.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRestApis.html
                   - "apigateway:GetRestApis"
-                  # Gets information about a Stage resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetStage.html
                   - "apigateway:GetStage"
-                  # Gets information about one or more Stage resources.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetStages.html
                   - "apigateway:GetStages"
-                  # Gets the Tags collection for a given resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetTags.html
                   - "apigateway:GetTags"
-                  # Gets the usage data of a usage plan in a specified time interval.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetUsage.html
                   - "apigateway:GetUsage"
-                  # Gets a usage plan of a given plan identifier.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetUsagePlan.html
                   - "apigateway:GetUsagePlan"
-                  # Gets all the usage plans of the caller's account.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetUsagePlans.html
                   - "apigateway:GetUsagePlans"
-                  # Gets a specified VPC link under the caller's account in a region.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetVpcLink.html
                   - "apigateway:GetVpcLink"
-                  # Gets the VpcLinks collection under the caller's account in a selected region.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_GetVpcLinks.html
-                  - "apigateway:GetVpcLinks"
 
                   #
                   ## API Gateway V2
-                  #
+                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/operations.html
                   # Serverless Inc. Comments: API Gateway V1 & V2 have overlapping IAM Actions.  However, V2 (AKA HTTP API) has additional IAM Actions, and we cover those here.
-                  #
 
-                  # Gets an Api resource.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid.html#GetApi
                   - "apigateway:GetApi"
-                  # Gets a collection of Api resources.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis.html#GetApis
                   - "apigateway:GetApis"
-                  # Gets an API mapping.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/domainnames-domainname-apimappings-apimappingid.html#GetApiMapping
                   - "apigateway:GetApiMapping"
-                  # Gets the IntegrationResponses for an Integration.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations-integrationid-integrationresponses.html#GetIntegrationResponses
                   - "apigateway:GetIntegrationResponses"
-                  # Gets the Integrations for an API.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations.html#GetIntegrations
                   - "apigateway:GetIntegrations"
-                  # Gets the Integrations for an API.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations.html#GetIntegrations
                   - "apigateway:GetIntegrations"
-                  # Gets a Route.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid.html#GetRoute
                   - "apigateway:GetRoute"
-                  # Gets the Routes for an API.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes.html#GetRoutes
                   - "apigateway:GetRoutes"
-                  # Gets a RouteResponse.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid-routeresponses-routeresponseid.html#GetRouteResponse
                   - "apigateway:GetRouteResponse"
-                  # Gets the RouteResponses for a Route.
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid-routeresponses.html#GetRouteResponses
                   - "apigateway:GetRouteResponses"
 
                   #
                   ## App Runner
-                  #
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_Operations.html
 
-                  # Retrieve the description of an AWS App Runner automatic scaling configuration resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeAutoScalingConfiguration.html
                   - "apprunner:DescribeAutoScalingConfiguration"
-                  # Retrieve descriptions of custom domain names associated with an AWS App Runner service.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeCustomDomains.html
                   - "apprunner:DescribeCustomDomains"
-                  # Retrieve the description of an AWS App Runner observability configuration resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeObservabilityConfiguration.html
                   - "apprunner:DescribeObservabilityConfiguration"
-                  # Retrieve the description of an operation that occurred on an AWS App Runner service.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeOperation.html
                   - "apprunner:DescribeOperation"
-                  # Retrieve the description of an AWS App Runner service.
-                  # https://docs.aws.amazon.com/zh_cn/apprunner/latest/api/API_DescribeService.html
                   - "apprunner:DescribeService"
-                  # Retrieve the description of an AWS App Runner VPC connector resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeVpcConnector.html
                   - "apprunner:DescribeVpcConnector"
-                  # Retrieve a list of AWS App Runner automatic scaling configurations in your AWS account.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_ListAutoScalingConfigurations.html
                   - "apprunner:ListAutoScalingConfigurations"
-                  # Retrieve a list of AWS App Runner connections in your AWS account.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_ListConnections.html
                   - "apprunner:ListConnections"
-                  # Retrieve a list of AWS App Runner observability configurations in your AWS account.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_ListObservabilityConfigurations.html
                   - "apprunner:ListObservabilityConfigurations"
-                  # Retrieve a list of operations that occurred on an AWS App Runner service resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_ListOperations.html
                   - "apprunner:ListOperations"
-                  # Retrieve a list of running AWS App Runner services.
-                  # https://docs.aws.amazon.com/zh_cn/apprunner/latest/api/API_ListServices.html
                   - "apprunner:ListServices"
-                  # List tags associated with an AWS App Runner resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_ListTagsForResource.html
                   - "apprunner:ListTagsForResource"
-                  # Retrieve a list of AWS App Runner VPC connectors in your AWS account.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_ListVpcConnectors.html
                   - "apprunner:ListVpcConnectors"
 
                   #
                   ## AppSync
-                  #
+                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_Operations.html
 
-                  # Read custom domain name - GraphQL API association details in AppSync.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetApiAssociation.html
                   - "appsync:GetApiAssociation"
-                  # Retrieve a data source.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetDataSource.html
                   - "appsync:GetDataSource"
-                  # Read information about a custom domain name in AppSync.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetDomainName.html
                   - "appsync:GetDomainName"
-                  # Retrieve a function.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetFunction.html
                   - "appsync:GetFunction"
-                  # Retretrieve a GraphQL API.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetGraphqlApi.html
                   - "appsync:GetGraphqlApi"
-                  # Retrieve the introspection schema for a GraphQL API.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetGraphqlApi.html
                   - "appsync:GetIntrospectionSchema"
-                  # Retrieves a Resolver object.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetResolver.html
                   - "appsync:GetResolver"
-                  # Retrieves the current status of a schema creation operation.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
                   - "appsync:GetSchemaCreationStatus"
-                  # Enumerate custom domain names in AppSync.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListDomainNames.html
                   - "appsync:ListDataSources"
-                  # List the data sources for a given API.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListDataSources.html
                   - "appsync:ListDomainNames"
-                  # List multiple functions.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListFunctions.html
                   - "appsync:ListFunctions"
-                  # Lists GraphQL APIs.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListGraphqlApis.html
                   - "appsync:ListGraphqlApis"
-                  # Lists the resolvers for a given API and type.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListResolvers.html
-                  - "appsync:ListResolvers"
-                  # List the resolvers that are associated with a specific function.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListResolversByFunction.html
-                  - "appsync:ListResolversByFunction"
-                  # List the tags for a resource.
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListTagsForResource.html
+                  - "appsync:ListResolvers*"
                   - "appsync:ListTagsForResource"
 
                   #
                   ## Autoscaling
-                  #
+                  # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_Operations.html
 
-                  # Describes the scalable resources in the specified scaling plan.
-                  # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_DescribeScalingPlanResources.html
-                  - "autoscaling:DescribeScalingPlanResources"
-                  # Describes the specified scaling plans or all of your scaling plans.
-                  # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_DescribeScalingPlans.html
-                  - "autoscaling:DescribeScalingPlans"
+                  - "autoscaling:DescribeScalingPlan*"
 
                   #
                   ## Backup
-                  #
+                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_Operations.html
 
-                  # List backup plans.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListBackupPlans.html
-                  - "backup:ListBackupPlans"
-                  # list backup plan versions.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListBackupPlanVersions.html
-                  - "backup:ListBackupPlanVersions"
-                  # List resource assignments for a specific backup plan.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListBackupSelections.html
-                  - "backup:ListBackupSelections"
-                  # List backup vaults.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListBackupVaults.html
+                  - "backup:ListBackupPlan*"
                   - "backup:ListBackupVaults"
-                  # list frameworks.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListFrameworks.html
                   - "backup:ListFrameworks"
-                  # List protected resources by AWS Backup.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListProtectedResources.html
                   - "backup:ListProtectedResources"
-                  # List tags for a resource.
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_ListTags.html
                   - "backup:ListTags"
 
                   #
                   ## Cloudfront
-                  #
+                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
 
-                  # Get a CloudFront function summary.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_DescribeFunction.html
                   - "cloudfront:DescribeFunction"
-                  # Get the cache policy.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetCachePolicy.html
-                  - "cloudfront:GetCachePolicy"
-                  # Get the cache policy configuration.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetCachePolicyConfig.html
-                  - "cloudfront:GetCachePolicyConfig"
-                  # Get the information about a web distribution.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetDistribution.html
-                  - "cloudfront:GetDistribution"
-                  # Get the configuration information about a distribution.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetDistributionConfig.html
-                  - "cloudfront:GetDistributionConfig"
-                  # List the distributions associated with your AWS account.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListDistributions.html
-                  - "cloudfront:ListDistributions"
-                  # List distribution IDs for distributions that have a cache behavior that's associated with the specified cache policy.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListDistributionsByCachePolicyId.html
-                  - "cloudfront:ListDistributionsByCachePolicyId"
-                  # List of CloudFront functions.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListFunctions.html
+                  - "cloudfront:GetCachePolicy*"
+                  - "cloudfront:GetDistribution*"
+                  - "cloudfront:ListDistributions*"
                   - "cloudfront:ListFunctions"
-                  # list tags for a CloudFront resource.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListTagsForResource.html
                   - "cloudfront:ListTagsForResource"
 
                   #
                   ## CloudTrail
-                  #
+                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_Operations.html
 
-                  # List settings for the trails associated with the current region.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html
                   - "cloudtrail:DescribeTrails"
-                  # List of information about the specified trail.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_GetTrailStatus.html
                   - "cloudtrail:GetTrailStatus"
-                  # List the tags for trails or event data stores in the current region.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_ListTags.html
                   - "cloudtrail:ListTags"
-                  # List trails associated with the current region for your account.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_ListTrails.html
                   - "cloudtrail:ListTrails"
-                  # Look up API activity events captured by CloudTrail.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html
                   - "cloudtrail:LookupEvents"
 
                   #
                   ## Cloudwatch
-                  #
+                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Operations.html
 
-                  # Retrieve the history for the specified alarm.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarmHistory.html
-                  - "cloudwatch:DescribeAlarmHistory"
-                  # Describe all alarms, currently owned by the user's account.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html
-                  - "cloudwatch:DescribeAlarms"
-                  # Describe all alarms configured on the specified metric, currently owned by the user's account.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarmsForMetric.html
-                  - "cloudwatch:DescribeAlarmsForMetric"
-                  # List the anomaly detection models that you have created in your account.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAnomalyDetectors.html
+                  - "cloudwatch:DescribeAlarm*"
                   - "cloudwatch:DescribeAnomalyDetectors"
-                  # Get all insight rules.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeInsightRules.html
                   - "cloudwatch:DescribeInsightRules"
-                  # Display the details of the CloudWatch dashboard you specify.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetDashboard.html
                   - "cloudwatch:GetDashboard"
-                  # Return the top-N report of unique contributors over a time range for a given insight rule.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetInsightRuleReport.html
                   - "cloudwatch:GetInsightRuleReport"
-                  # Retrieve batch amounts of CloudWatch metric data and perform metric math on retrieved data.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricData.html
-                  - "cloudwatch:GetMetricData"
-                  # Retrieve statistics for the specified metric.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStatistics.html
-                  - "cloudwatch:GetMetricStatistics"
-                  # Return the details of a CloudWatch metric stream.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStream.html
-                  - "cloudwatch:GetMetricStream"
-                  # Retrieve snapshots of metric widgets.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricWidgetImage.html
-                  - "cloudwatch:GetMetricWidgetImage"
-                  # List of all CloudWatch dashboards in your account.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListDashboards.html
+                  - "cloudwatch:GetMetric*"
                   - "cloudwatch:ListDashboards"
-                  # List of all CloudWatch metric streams.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListMetricStreams.html
-                  - "cloudwatch:ListMetricStreams"
-                  # List of valid metrics stored.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListMetrics.html
-                  - "cloudwatch:ListMetrics"
-                  # List tags for an Amazon CloudWatch resource.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListTagsForResource.html
+                  - "cloudwatch:ListMetric*"
                   - "cloudwatch:ListTagsForResource"
 
                   #
                   ## Cloudwatch Logs
-                  #
+                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
 
-                  # Return all the log groups that are associated with the AWS account making the request.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeLogGroups.html
-                  - "logs:DescribeLogGroups"
-                  # Return all the log streams that are associated with the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeLogStreams.html
-                  - "logs:DescribeLogStreams"
-                  # Return all the subscription filters associated with the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeSubscriptionFilters.html
+                  - "logs:DescribeLog*"
                   - "logs:DescribeSubscriptionFilters"
-                  # Retrieve log events, optionally filtered by a filter pattern from the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_FilterLogEvents.html
                   - "logs:FilterLogEvents"
-                  # List the tags for the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_ListTagsLogGroup.html
                   - "logs:ListTagsLogGroup"
-                  # Test the filter pattern of a metric filter against a sample of log event messages.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_TestMetricFilter.html
                   - "logs:TestMetricFilter"
 
                   #
                   ## CodeBuild
-                  #
+                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_Operations.html
 
-                  # Get information about one or more build batches.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_BatchGetBuildBatches.html
-                  - "codebuild:BatchGetBuildBatches"
-                  # Get information about one or more builds.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_BatchGetBuilds.html
-                  - "codebuild:BatchGetBuilds"
-                  # Get information about one or more build projects.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_BatchGetProjects.html
+                  - "codebuild:BatchGetBuild*"
                   - "codebuild:BatchGetProjects"
-                  # List of build batch IDs, with each build batch ID representing a single build batch.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListBuildBatches.html
-                  - "codebuild:ListBuildBatches"
-                  # List of build batch IDs for the specified build project, with each build batch ID representing a single build batch.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListBuildBatchesForProject.html
-                  - "codebuild:ListBuildBatchesForProject"
-                  # List of build IDs, with each build ID representing a single build.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListBuilds.html
-                  - "codebuild:ListBuilds"
-                  # List of build IDs for the specified build project, with each build ID representing a single build.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListBuildsForProject.html
-                  - "codebuild:ListBuildsForProject"
-                  # List of build project names, with each build project name representing a single build project.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListProjects.html
+                  - "codebuild:ListBuild*"
                   - "codebuild:ListProjects"
-                  # List of project ARNs that have been shared with the requester. Each project ARN represents one project.
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListSharedProjects.html
                   - "codebuild:ListSharedProjects"
 
                   #
                   ## CodeDeploy
-                  #
+                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_Operations.html
 
-                  # Get information about one or more application revisions.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_BatchGetApplicationRevisions.html
-                  - "codedeploy:BatchGetApplicationRevisions"
-                  # Get information about multiple applications associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_BatchGetApplications.html
-                  - "codedeploy:BatchGetApplications"
-                  # Get information about one or more deployment groups.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_BatchGetDeploymentGroups.html
-                  - "codedeploy:BatchGetDeploymentGroups"
-                  # Get information about one or more instance that are part of a deployment group.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_BatchGetDeploymentInstances.html
-                  - "codedeploy:BatchGetDeploymentInstances"
-                  # List of one or more targets associated with a deployment. This method works with all compute types and should be used instead of the deprecated BatchGetDeploymentInstances. The maximum number of targets that can be returned is 25.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_BatchGetDeploymentTargets.html
-                  - "codedeploy:BatchGetDeploymentTargets"
-                  # Get information about multiple deployments associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_BatchGetDeployments.html
-                  - "codedeploy:BatchGetDeployments"
-                  # Get information about a single application associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetApplication.html
-                  - "codedeploy:GetApplication"
-                  # Get information about a single application revision for an application associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetApplicationRevision.html
-                  - "codedeploy:GetApplicationRevision"
-                  # Get information about a single deployment to a deployment group for an application associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetDeployment.html
-                  - "codedeploy:GetDeployment"
-                  # Get information about a single deployment configuration associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetDeploymentConfig.html
-                  - "codedeploy:GetDeploymentConfig"
-                  # Get information about a single deployment group for an application associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetDeploymentGroup.html
-                  - "codedeploy:GetDeploymentGroup"
-                  # Get information about a single instance in a deployment associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetDeploymentInstance.html
-                  - "codedeploy:GetDeploymentInstance"
-                  # Return information about a deployment target.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_GetDeploymentTarget.html
-                  - "codedeploy:GetDeploymentTarget"
-                  # Get information about all application revisions for an application associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListApplicationRevisions.html
-                  - "codedeploy:ListApplicationRevisions"
-                  # Get information about all applications associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListApplications.html
-                  - "codedeploy:ListApplications"
-                  # Get information about all deployment configurations associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListDeploymentConfigs.html
-                  - "codedeploy:ListDeploymentConfigs"
-                  # Get information about all deployment groups for an application associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListDeploymentGroups.html
-                  - "codedeploy:ListDeploymentGroups"
-                  # Get information about all instances in a deployment associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListDeploymentInstances.html
-                  - "codedeploy:ListDeploymentInstances"
-                  # Return an array of target IDs that are associated a deployment.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListDeploymentTargets.html
-                  - "codedeploy:ListDeploymentTargets"
-                  # Get information about all deployments to a deployment group associated with the IAM user, or to get all deployments associated with the IAM user.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListDeployments.html
-                  - "codedeploy:ListDeployments"
-                  # List of tags for the resource identified by a specified ARN. Tags are used to organize and categorize your CodeDeploy resources.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_ListTagsForResource.html
+                  - "codedeploy:BatchGetApplication*"
+                  - "codedeploy:BatchGetDeployment*"
+                  - "codedeploy:GetApplication*"
+                  - "codedeploy:GetDeployment*"
+                  - "codedeploy:ListApplication*"
+                  - "codedeploy:ListDeployment*"
                   - "codedeploy:ListTagsForResource"
 
                   #
                   ## Cost Explorer
-                  #
+                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Operations_AWS_Cost_Explorer_Service.html
 
-                  # Retrieve descriptions such as the name, ARN, rules, definition, and effective dates of a Cost Category.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_DescribeCostCategoryDefinition.html
                   - "ce:DescribeCostCategoryDefinition"
-                  # Retrieve the cost and usage metrics for your account.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetCostAndUsage.html
-                  - "ce:GetCostAndUsage"
-                  # Retrieve the cost and usage metrics with resources for your account.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetCostAndUsageWithResources.html
-                  - "ce:GetCostAndUsageWithResources"
-                  # Query Cost Catagory names and values for a specified time period.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetCostCategories.html
+                  - "ce:GetCostAndUsage*"
                   - "ce:GetCostCategories"
-                  # Query tags for a specified time period.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetTags.html
                   - "ce:GetTags"
-                  # List Cost Allocation Tags.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_ListCostAllocationTags.html
                   - "ce:ListCostAllocationTags"
-                  # Retrieve names, ARN, and effective dates for all Cost Categories.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_ListCostCategoryDefinitions.html
                   - "ce:ListCostCategoryDefinitions"
-                  # List tags for a Cost Explorer resource.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_ListTagsForResource.html
                   - "ce:ListTagsForResource"
 
                   #
                   ## DynamoDB
-                  #
+                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations_Amazon_DynamoDB.html
 
-                  # Describe an existing backup of a table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeBackup.html
                   - "dynamodb:DescribeBackup"
-                  # Check the status of the backup restore settings on the specified table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeContinuousBackups.html
                   - "dynamodb:DescribeContinuousBackups"
-                  # Describe the contributor insights status and related details for a given table or global secondary index.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeContributorInsights.html
                   - "dynamodb:DescribeContributorInsights"
-                  # Describe an existing Export of a table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeExport.html
                   - "dynamodb:DescribeExport"
-                  # Return information about the specified global table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeGlobalTable.html
-                  - "dynamodb:DescribeGlobalTable"
-                  # Return settings information about the specified global table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeGlobalTableSettings.html
-                  - "dynamodb:DescribeGlobalTableSettings"
-                  # Describe the status of Kinesis streaming and related details for a given table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeKinesisStreamingDestination.html
+                  - "dynamodb:DescribeGlobalTable*"
                   - "dynamodb:DescribeKinesisStreamingDestination"
-                  # Return the current provisioned-capacity limits for your AWS account in a region, both for the region as a whole and for any one DynamoDB table that you create there.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeLimits.html
                   - "dynamodb:DescribeLimits"
-                  # Describe one or more of the Reserved Capacity purchased.
-                  - "dynamodb:DescribeReservedCapacity"
-                  # Describe Reserved Capacity offerings that are available for purchase.
-                  - "dynamodb:DescribeReservedCapacityOfferings"
-                  # Return information about a stream, including the current status of the stream, its Amazon Resource Name (ARN), the composition of its shards, and its corresponding DynamoDB table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeStream.html
+                  - "dynamodb:DescribeReservedCapacity*"
                   - "dynamodb:DescribeStream"
-                  # Return information about the table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html
-                  - "dynamodb:DescribeTable"
-                  # Describe the auto scaling settings across all replicas of the global table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTableReplicaAutoScaling.html
-                  - "dynamodb:DescribeTableReplicaAutoScaling"
-                  # Description of the Time to Live (TTL) status on the specified table.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTimeToLive.html
+                  - "dynamodb:DescribeTable*"
                   - "dynamodb:DescribeTimeToLive"
-                  # List backups associated with the account and endpoint.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListBackups.html
                   - "dynamodb:ListBackups"
-                  # List the ContributorInsightsSummary for all tables and global secondary indexes associated with the current account and endpoint.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListContributorInsights.html
                   - "dynamodb:ListContributorInsights"
-                  # List exports associated with the account and endpoint.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListExports.html
                   - "dynamodb:ListExports"
-                  # List all global tables that have a replica in the specified region.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListGlobalTables.html
                   - "dynamodb:ListGlobalTables"
-                  # Return an array of stream ARNs associated with the current account and endpoint.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListStreams.html
                   - "dynamodb:ListStreams"
-                  # Return an array of table names associated with the current account and endpoint.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html
                   - "dynamodb:ListTables"
-                  # List all tags on an Amazon DynamoDB resource.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTagsOfResource.html
                   - "dynamodb:ListTagsOfResource"
 
                   #
                   ## ECS
-                  #
+                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
 
-                  # Describe one or more Amazon ECS capacity providers.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeCapacityProviders.html
                   - "ecs:DescribeCapacityProviders"
-                  # Describes one or more of your clusters.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeClusters.html
                   - "ecs:DescribeClusters"
-                  # Describes Amazon ECS container instances.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeContainerInstances.html
                   - "ecs:DescribeContainerInstances"
-                  # Describe the specified services running in your cluster.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeServices.html
                   - "ecs:DescribeServices"
-                  # Describe a task definition. You can specify a family and revision to find information about a specific task definition, or you can simply specify the family to find the latest ACTIVE revision in that family.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTaskDefinition.html
-                  - "ecs:DescribeTaskDefinition"
-                  # Describe Amazon ECS task sets.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTaskSets.html
-                  - "ecs:DescribeTaskSets"
-                  # Describe a specified task or tasks.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTasks.html
-                  - "ecs:DescribeTasks"
-                  # List the account settings for an Amazon ECS resource for a specified principal.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListAccountSettings.html
+                  - "ecs:DescribeTask*"
                   - "ecs:ListAccountSettings"
-                  # Lists the attributes for Amazon ECS resources within a specified target type and cluster.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListAttributes.html
                   - "ecs:ListAttributes"
-                  # Get a list of existing clusters.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListClusters.html
                   - "ecs:ListClusters"
-                  # List of container instances in a specified cluster.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListContainerInstances.html
                   - "ecs:ListContainerInstances"
-                  # Get a list of services that are running in a specified cluster.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListServices.html
                   - "ecs:ListServices"
-                  # List of tags for the specified resource.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTagsForResource.html
                   - "ecs:ListTagsForResource"
-                  # List of task definition families that are registered to your account (which may include task definition families that no longer have any ACTIVE task definitions).
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListServices.html
-                  - "ecs:ListTaskDefinitionFamilies"
-                  # List of task definitions that are registered to your account.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTaskDefinitions.html
-                  - "ecs:ListTaskDefinitions"
-                  # List of tasks for a specified cluster.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTasks.html
+                  - "ecs:ListTaskDefinition*"
                   - "ecs:ListTasks"
 
                   #
                   ## ElastiCache
-                  #
+                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_Operations.html
 
-                  # List information about provisioned cache clusters.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheClusters.html
-                  - "elasticache:DescribeCacheClusters"
-                  # List available cache engines and their versions.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheEngineVersions.html
-                  - "elasticache:DescribeCacheEngineVersions"
-                  # List cache parameter group descriptions.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheParameterGroups.html
-                  - "elasticache:DescribeCacheParameterGroups"
-                  # Retrieve the detailed parameter list for a particular cache parameter group.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheParameters.html
-                  - "elasticache:DescribeCacheParameters"
-                  # List cache subnet group descriptions.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheSubnetGroups.html
-                  - "elasticache:DescribeCacheSubnetGroups"
-                  # Retrieve the default engine and system parameter information for the specified cache engine.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEngineDefaultParameters.html
+                  - "elasticache:DescribeCache*"
                   - "elasticache:DescribeEngineDefaultParameters"
-                  # List events related to clusters, cache security groups, and cache parameter groups.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEvents.html
                   - "elasticache:DescribeEvents"
-                  # List information about global replication groups.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeGlobalReplicationGroups.html
                   - "elasticache:DescribeGlobalReplicationGroups"
-                  # List information about provisioned replication groups.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeReplicationGroups.html
                   - "elasticache:DescribeReplicationGroups"
-                  # List information about purchased reserved cache nodes.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeReservedCacheNodes.html
                   - "elasticache:DescribeReservedCacheNodes"
-                  # List details of the update actions for a set of clusters or replication groups.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeUpdateActions.html
                   - "elasticache:DescribeUpdateActions"
-                  # List information about Redis user groups.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeUserGroups.html
-                  - "elasticache:DescribeUserGroups"
-                  # List information about Redis users.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeUsers.html
-                  - "elasticache:DescribeUsers"
-                  # List available node type that can be used to scale a particular Redis cluster or replication group.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_ListAllowedNodeTypeModifications.html
+                  - "elasticache:DescribeUser*"
                   - "elasticache:ListAllowedNodeTypeModifications"
-                  # List tags for an ElastiCache resource.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_ListTagsForResource.html
                   - "elasticache:ListTagsForResource"
 
                   #
                   ## ELB (Elastic Load Balancing) V1
-                  #
+                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_Operations.html
 
-                  # Describes the state of the specified instances with respect to the specified load balancer.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeInstanceHealth.html
                   - "elasticloadbalancing:DescribeInstanceHealth"
-                  # Describes the attributes for the specified load balancer.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancerAttributes.html
-                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
-                  # Describes the specified policies.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancerPolicies.html
-                  - "elasticloadbalancing:DescribeLoadBalancerPolicies"
-                  # Describes the specified load balancer policy types.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancerPolicyTypes.html
-                  - "elasticloadbalancing:DescribeLoadBalancerPolicyTypes"
-                  # Describes the specified the load balancers. If no load balancers are specified, the call describes all of your load balancers.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancers.html
-                  - "elasticloadbalancing:DescribeLoadBalancers"
-                  # Describes the tags associated with the specified load balancers.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeTags.html
+                  - "elasticloadbalancing:DescribeLoadBalancer*"
                   - "elasticloadbalancing:DescribeTags"
 
                   #
                   ## ELB (Elastic Load Balancing) V2
-                  #
+                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Operations.html
 
-                  # Describes the Elastic Load Balancing resource limits for the AWS account.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeAccountLimits.html
                   - "elasticloadbalancing:DescribeAccountLimits"
-                  # Describes the specified listeners or the listeners for the specified Application Load Balancer.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeListeners.html
                   - "elasticloadbalancing:DescribeListeners"
-                  # Describes the attributes for the specified load balancer.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancerAttributes.html
-                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
-                  # Describes the specified the load balancers. If no load balancers are specified, the call describes all of your load balancers.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html
-                  - "elasticloadbalancing:DescribeLoadBalancers"
-                  # Describes the specified rules or the rules for the specified listener.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeRules.html
+                  - "elasticloadbalancing:DescribeLoadBalancer*"
                   - "elasticloadbalancing:DescribeRules"
-                  # Describes the tags associated with the specified resource.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTags.html
                   - "elasticloadbalancing:DescribeTags"
-                  # Describes the attributes for the specified target group.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetGroupAttributes.html
-                  - "elasticloadbalancing:DescribeTargetGroupAttributes"
-                  # Describes the specified target groups or all of your target groups.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetGroups.html
-                  - "elasticloadbalancing:DescribeTargetGroups"
-                  # Describes the health of the specified targets or all of your targets.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetHealth.html
+                  - "elasticloadbalancing:DescribeTargetGroup*"
                   - "elasticloadbalancing:DescribeTargetHealth"
 
                   #
                   ## EMR (Elastic Map Reduce)
-                  #
+                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_Operations.html
 
-                  # Get details about a cluster, including status, hardware and software configuration, VPC settings, and so on.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_DescribeCluster.html
                   - "elasticmapreduce:DescribeCluster"
-                  # Get details about a cluster step.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_DescribeStep.html
                   - "elasticmapreduce:DescribeStep"
-                  # View information about an EMR Studio.
-                  # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-studio.html
                   - "elasticmapreduce:DescribeStudio"
-                  # Get details about the bootstrap actions associated with a cluster.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListBootstrapActions.html
                   - "elasticmapreduce:ListBootstrapActions"
-                  # Get the status of accessible clusters.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListClusters.html
                   - "elasticmapreduce:ListClusters"
-                  # Get details of instance fleets in a cluster.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListInstanceFleets.html
-                  - "elasticmapreduce:ListInstanceFleets"
-                  # Get details of instance groups in a cluster.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListInstanceGroups.html
-                  - "elasticmapreduce:ListInstanceGroups"
-                  # Get details about the Amazon EC2 instances in a cluster.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListInstances.html
-                  - "elasticmapreduce:ListInstances"
-                  # List steps associated with a cluster.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListSteps.html
+                  - "elasticmapreduce:ListInstance*"
                   - "elasticmapreduce:ListSteps"
-                  # List summary information about EMR Studio session mappings.
-                  # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-studio.html
-                  - "elasticmapreduce:ListStudioSessionMappings"
-                  # List summary information about EMR Studios.
-                  # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-studio.html
-                  - "elasticmapreduce:ListStudios"
+                  - "elasticmapreduce:ListStudio*"
 
                   #
                   ## ES (ElasticSearch)
-                  #
-
-                  # View a description of the domain configuration for the specified OpenSearch Service domain, including the domain ID, service endpoint, and ARN.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomain
-                  - "es:DescribeDomain"
-                  # View the Auto-Tune configuration of the domain for the specified OpenSearch Service domain, including the Auto-Tune state and maintenance schedules.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describeautotune
-                  - "es:DescribeDomainAutoTunes"
-                  # View a description of the configuration options and status of an OpenSearch Service domain.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomainconfig
-                  - "es:DescribeDomainConfig"
-                  # View a description of the domain configuration for up to five specified OpenSearch Service domains.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomains
-                  - "es:DescribeDomains"
-                  # View a description of the domain configuration for the specified OpenSearch Service domain, including the domain ID, service endpoint, and ARN. This permission is deprecated. Use DescribeDomain instead.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomain
-                  - "es:DescribeElasticsearchDomain"
-                  # View a description of the configuration and status of an OpenSearch Service domain. This permission is deprecated. Use DescribeDomainConfig instead.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomainconfig
-                  - "es:DescribeElasticsearchDomainConfig"
-                  # View a description of the domain configuration for up to five specified Amazon OpenSearch domains. This permission is deprecated. Use DescribeDomains instead.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomains
-                  - "es:DescribeElasticsearchDomains"
-                  # Describe all packages available to OpenSearch Service domains.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describepackages
-                  - "es:DescribePackages"
-                  # Display the names of all OpenSearch Service domains that the current user owns.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listdomainnames
-                  - "es:ListDomainNames"
-                  # List all OpenSearch Service domains that a package is associated with.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listdomainsforpackage
-                  - "es:ListDomainsForPackage"
-                  # List all instance types and available features for a given OpenSearch version. This permission is deprecated. Use ListInstanceTypeDetails instead.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listinstancetypedetails
-                  - "es:ListElasticsearchInstanceTypeDetails"
-                  # List all EC2 instance types that are supported for a given OpenSearch version.
                   # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
-                  - "es:ListElasticsearchInstanceTypes"
-                  # List all instance types and available features for a given OpenSearch or Elasticsearch version.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listinstancetypedetails
+
+                  - "es:DescribeDomain*"
+                  - "es:DescribeElasticsearch*"
+                  - "es:DescribePackages"
+                  - "es:ListDomainNames"
+                  - "es:ListDomainsForPackage"
+                  - "es:ListElasticsearchInstance*"
                   - "es:ListInstanceTypeDetails"
-                  # List all packages associated with the OpenSearch Service domain.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listpackagesfordomain
                   - "es:ListPackagesForDomain"
-                  # Display all resource tags for an OpenSearch Service domain.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listtags
                   - "es:ListTags"
 
                   #
                   ## Health
-                  #
+                  # https://docs.aws.amazon.com/health/latest/APIReference/API_Operations.html
 
-                  # Retrieve a list of accounts that have been affected by the specified events in organization.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedAccountsForOrganization.html
                   - "health:DescribeAffectedAccountsForOrganization"
-                  # Retrieve a list of entities that have been affected by the specified events.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntities.html
-                  - "health:DescribeAffectedEntities"
-                  # Retrieve a list of entities that have been affected by the specified events and accounts in organization.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntitiesForOrganization.html
-                  - "health:DescribeAffectedEntitiesForOrganization"
-                  # Retrieve the number of entities that are affected by each of the specified events.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEntityAggregates.html
+                  - "health:DescribeAffectedEntities*"
                   - "health:DescribeEntityAggregates"
-                  # Retrieve the number of events of each event type (issue, scheduled change, and account notification).
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventAggregates.html
-                  - "health:DescribeEventAggregates"
-                  # Retrieve detailed information about one or more specified events.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventDetails.html
-                  - "health:DescribeEventDetails"
-                  # Retrieve detailed information about one or more specified events for provided accounts in organization.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventDetailsForOrganization.html
-                  - "health:DescribeEventDetailsForOrganization"
-                  # Retrieve the event types that meet the specified filter criteria.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventTypes.html
-                  - "health:DescribeEventTypes"
-                  # Retrieve information about events that meet the specified filter criteria.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEvents.html
-                  - "health:DescribeEvents"
-                  # Retrieve information about events that meet the specified filter criteria in organization.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventsForOrganization.html
-                  - "health:DescribeEventsForOrganization"
-                  # Retrieve the status of enabling or disabling the Organizational View feature.
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeHealthServiceStatusForOrganization.html
+                  - "health:DescribeEvent*"
                   - "health:DescribeHealthServiceStatusForOrganization"
 
                   #
                   ## Kinesis
-                  #
+                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_Operations.html
 
-                  # Describe the specified stream.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStream.html
-                  - "kinesis:DescribeStream"
-                  # Get the description of a registered stream consumer.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStreamConsumer.html
-                  - "kinesis:DescribeStreamConsumer"
-                  # Provide a summarized description of the specified Kinesis data stream without the shard list.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStreamSummary.html
-                  - "kinesis:DescribeStreamSummary"
-                  # List the shards in a stream and provides information about each shard.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListShards.html
+                  - "kinesis:DescribeStream*"
                   - "kinesis:ListShards"
-                  # List the stream consumers registered to receive data from a Kinesis stream using enhanced fan-out, and provides information about each consumer.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListStreamConsumers.html
-                  - "kinesis:ListStreamConsumers"
-                  # List your streams.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListStreams.html
-                  - "kinesis:ListStreams"
-                  # List the tags for the specified Amazon Kinesis stream.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListTagsForStream.html
+                  - "kinesis:ListStream*"
                   - "kinesis:ListTagsForStream"
 
                   #
                   ## Lambda
-                  #
+                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Operations.html
 
-                  # Retrieves details about your account's limits and usage in an AWS Region.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetAccountSettings.html
                   - "lambda:GetAccountSettings"
-                  # Returns details about a Lambda function alias.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetAlias.html
                   - "lambda:GetAlias"
-                  # Returns details about an event source mapping. You can get the identifier of a mapping from the output of ListEventSourceMappings.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetEventSourceMapping.html
                   - "lambda:GetEventSourceMapping"
-                  # View details about the version-specific settings of an AWS Lambda function or version.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionConfiguration.html
                   - "lambda:GetFunctionConfiguration"
-                  # Returns details about the reserved concurrency configuration for a function. To set a concurrency limit for a function, use PutFunctionConcurrency.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionConcurrency.html
                   - "lambda:GetFunctionConcurrency"
-                  # View the configuration for asynchronous invocation for a function, version, or alias.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionEventInvokeConfig.html
                   - "lambda:GetFunctionEventInvokeConfig"
-                  # Read function url configuration for a Lambda function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionUrlConfig.html
                   - "lambda:GetFunctionUrlConfig"
-                  # View details about a version of an AWS Lambda layer. Note this action also supports GetLayerVersionByArn API.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html
-                  - "lambda:GetLayerVersion"
-                  # View the resource-based policy for a version of an AWS Lambda layer.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersionPolicy.html
-                  - "lambda:GetLayerVersionPolicy"
-                  # View the resource-based policy for an AWS Lambda function, version, or alias.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetPolicy.html
+                  - "lambda:GetLayerVersion*"
                   - "lambda:GetPolicy"
-                  # View the provisioned concurrency configuration for an AWS Lambda function's alias or version.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_GetProvisionedConcurrencyConfig.html
                   - "lambda:GetProvisionedConcurrencyConfig"
-                  # Returns a list of aliases for a Lambda function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListAliases.html
                   - "lambda:ListAliases"
-                  # Retrieve a list of AWS Lambda event source mappings.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListEventSourceMappings.html
                   - "lambda:ListCodeSigningConfigs"
-                  # Retrieve a list of AWS Lambda event source mappings.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListEventSourceMappings.html
                   - "lambda:ListEventSourceMappings"
-                  # Retrieve a list of configurations for asynchronous invocation for a function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctionEventInvokeConfigs.html
-                  - "lambda:ListFunctionEventInvokeConfigs"
-                  # Read function url configurations for a function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctionUrlConfigs.html
-                  - "lambda:ListFunctionUrlConfigs"
-                  # Retrieve a list of AWS Lambda functions, with the version-specific configuration of each function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctions.html
-                  - "lambda:ListFunctions"
-                  # Retrieve a list of AWS Lambda functions by the code signing config assigned.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctionsByCodeSigningConfig.html
-                  - "lambda:ListFunctionsByCodeSigningConfig"
-                  # Retrieve a list of versions of an AWS Lambda layer.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListLayerVersions.html
-                  - "lambda:ListLayerVersions"
-                  # Retrieve a list of AWS Lambda layers, with details about the latest version of each layer.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListLayers.html
-                  - "lambda:ListLayers"
-                  # Retrieve a list of provisioned concurrency configurations for an AWS Lambda function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListProvisionedConcurrencyConfigs.html
+                  - "lambda:ListFunction*"
+                  - "lambda:ListLayer*"
                   - "lambda:ListProvisionedConcurrencyConfigs"
-                  # Retrieve a list of tags for an AWS Lambda function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListTags.html
                   - "lambda:ListTags"
-                  # Retrieve a list of versions for an AWS Lambda function.
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_ListVersionsByFunction.html
                   - "lambda:ListVersionsByFunction"
 
                   #
                   ## Organizations
-                  #
+                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_Operations.html
 
-                  # Retrieve Organizations-related details about the specified account.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeAccount.html
                   - "organizations:DescribeAccount"
-                  # Retrieve the effective policy for an account.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeEffectivePolicy.html
                   - "organizations:DescribeEffectivePolicy"
-                  # Retrieves details about the organization that the calling credentials belong to.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganization.html
-                  - "organizations:DescribeOrganization"
-                  # Retrieve details about an organizational unit (OU).
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganizationalUnit.html
-                  - "organizations:DescribeOrganizationalUnit"
-                  # Retrieves details about a policy.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribePolicy.html
+                  - "organizations:DescribeOrganization*"
                   - "organizations:DescribePolicy"
-                  # Retrieve the list of the AWS services for which you enabled integration with your organization.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListAWSServiceAccessForOrganization.html
                   - "organizations:ListAWSServiceAccessForOrganization"
-                  # List all of the the accounts in the organization.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListAccounts.html
-                  - "organizations:ListAccounts"
-                  # List the accounts in an organization that are contained by a root or organizational unit (OU).
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListAccountsForParent.html
-                  - "organizations:ListAccountsForParent"
-                  # List all of the OUs or accounts that are contained in a parent OU or root.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListChildren.html
+                  - "organizations:ListAccounts*"
                   - "organizations:ListChildren"
-                  # List the AWS accounts that are designated as delegated administrators in this organization.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListDelegatedAdministrators.html
                   - "organizations:ListDelegatedAdministrators"
-                  # List the AWS services for which the specified account is a delegated administrator in this organization.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListDelegatedServicesForAccount.html
                   - "organizations:ListDelegatedServicesForAccount"
-                  # Lists all of the organizational units (OUs) in a parent organizational unit or root.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListOrganizationalUnitsForParent.html
                   - "organizations:ListOrganizationalUnitsForParent"
-                  # List the root or organizational units (OUs) that serve as the immediate parent of a child OU or account.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
                   - "organizations:ListParents"
-                  # List all of the policies in an organization.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListPolicies.html
-                  - "organizations:ListPolicies"
-                  # List all of the policies that are directly attached to a root, organizational unit (OU), or account.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListPoliciesForTarget.html
-                  - "organizations:ListPoliciesForTarget"
-                  # List all tags for the specified resource.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListTagsForResource.html
+                  - "organizations:ListPolicies*"
                   - "organizations:ListTagsForResource"
-                  # List all the roots, OUs, and accounts to which a policy is attached.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListTargetsForPolicy.html
                   - "organizations:ListTargetsForPolicy"
 
                   #
                   ## Resource Group Tagging
-                  #
+                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_Operations.html
 
-                  # Return tagged or previously tagged resources in the specified AWS Region for the calling account.
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetResources.html
                   - "tag:GetResources"
-                  # Returns tag keys currently in use in the specified AWS Region for the calling account.
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetTagKeys.html
                   - "tag:GetTagKeys"
-                  # Return tag values for the specified key that are used in the specified AWS Region for the calling account.
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetTagValues.html
                   - "tag:GetTagValues"
 
                   #
                   ## RDS (Relational Database Service)
-                  #
+                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html
 
-                  # Return a list of DBClusterParameterGroup descriptions.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusterParameterGroups.html
-                  - "rds:DescribeDBClusterParameterGroups"
-                  # Return the detailed parameter list for a particular DB cluster parameter group.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusterParameters.html
-                  - "rds:DescribeDBClusterParameters"
-                  # Return information about provisioned Aurora DB clusters.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusters.html
-                  - "rds:DescribeDBClusters"
-                  # Return a list of the available DB engines.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBEngineVersions.html
+                  - "rds:DescribeDBCluster*"
                   - "rds:DescribeDBEngineVersions"
-                  # Return information about provisioned RDS instances.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html
                   - "rds:DescribeDBInstances"
-                  # Return a list of DBParameterGroup descriptions.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBParameterGroups.html
                   - "rds:DescribeDBParameterGroups"
-                  # Return the detailed parameter list for a particular DB parameter group.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBParameters.html
                   - "rds:DescribeDBParameters"
-                  # View proxies.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxies.html
-                  - "rds:DescribeDBProxies"
-                  # View proxy endpoints.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxyEndpoints.html
-                  - "rds:DescribeDBProxyEndpoints"
-                  # View database proxy target group details.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxyTargetGroups.html
-                  - "rds:DescribeDBProxyTargetGroups"
-                  # View database proxy target details.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxyTargets.html
-                  - "rds:DescribeDBProxyTargets"
-                  # Return a list of DBSecurityGroup descriptions.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSecurityGroups.html
+                  - "rds:DescribeDBProx*"
                   - "rds:DescribeDBSecurityGroups"
-                  # Return a list of DBSubnetGroup descriptions.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSubnetGroups.html
                   - "rds:DescribeDBSubnetGroups"
-                  # Display a list of categories for all event source types, or, if specified, for a specified source type.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEventCategories.html
-                  - "rds:DescribeEventCategories"
-                  # List all the subscription descriptions for a customer account.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEventSubscriptions.html
-                  - "rds:DescribeEventSubscriptions"
-                  # Return events related to DB instances, DB security groups, DB snapshots, and DB parameter groups for the past 14 days.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html
-                  - "rds:DescribeEvents"
-                  # Return a list of the source AWS Regions where the current AWS Region can create a Read Replica or copy a DB snapshot from.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeSourceRegions.html
+                  - "rds:DescribeEvent*"
                   - "rds:DescribeSourceRegions"
-                  # Return a list of the source AWS Regions where the current AWS Region can create a Read Replica or copy a DB snapshot from.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeSourceRegions.html
-                  - "rds:DescribeSourceRegions"
-                  # List all tags on an Amazon RDS resource.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_ListTagsForResource.html
                   - "rds:ListTagsForResource"
 
                   #
                   ## Route 53
-                  #
+                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_Operations_Amazon_Route_53.html
 
-                  # Get a list of the CIDR blocks within a specified CIDR collection.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListCidrBlocks.html
-                  - "route53:ListCidrBlocks"
-                  # Get a list of the CIDR collections that are associated with the current AWS account.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListCidrCollections.html
-                  - "route53:ListCidrCollections"
-                  # Get a list of the CIDR locations that belong to a specified CIDR collection.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListCidrLocations.html
-                  - "route53:ListCidrLocations"
-                  # Get a list of geographic locations that Route 53 supports for geolocation.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListGeoLocations.html
+                  - "route53:ListCidr*"
                   - "route53:ListGeoLocations"
-                  # Get a list of the health checks that are associated with the current AWS account.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHealthChecks.html
                   - "route53:ListHealthChecks"
-                  # Get a list of the public and private hosted zones that are associated with the current AWS account.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHostedZones.html
-                  - "route53:ListHostedZones"
-                  # Get a list of your hosted zones in lexicographic order. Hosted zones are sorted by name with the labels reversed, for example, com.example.www.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHostedZonesByName.html
-                  - "route53:ListHostedZonesByName"
-                  # Get a list of all the private hosted zones that a specified VPC is associated with.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHostedZonesByVPC.html
-                  - "route53:ListHostedZonesByVPC"
-                  # List the configurations for DNS query logging that are associated with the current AWS account or the configuration that is associated with a specified hosted zone.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListQueryLoggingConfigs.html
+                  - "route53:ListHostedZones*"
                   - "route53:ListQueryLoggingConfigs"
-                  # List the records in a specified hosted zone.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListResourceRecordSets.html
                   - "route53:ListResourceRecordSets"
-                  # List the reusable delegation sets that are associated with the current AWS account.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListReusableDelegationSets.html
                   - "route53:ListReusableDelegationSets"
-                  # List tags for one health check or hosted zone.
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListTagsForResource.html
                   - "route53:ListTagsForResource"
 
                   #
                   ## S3
-                  #
+                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations_Amazon_Simple_Storage_Service.html
 
-                  # Retrieve the configurations for a multi region access point.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_DescribeMultiRegionAccessPointOperation.html
                   - "s3:DescribeMultiRegionAccessPointOperation"
-                  # Return configuration information about the specified access point.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPoint.html
                   - "s3:GetAccessPoint"
-                  # Retrieve the configuration of the object lambda enabled access point.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPoint.html
-                  - "s3:GetAccessPointConfigurationForObjectLambda"
-                  # Create an object lambda enabled accesspoint.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointForObjectLambda.html
-                  - "s3:GetAccessPointForObjectLambda"
-                  # Return the policy status for a specific access point policy.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointPolicyStatus.html
-                  - "s3:GetAccessPointPolicyStatus"
-                  # Return the policy status for a specific object lambda access point policy.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointPolicyStatusForObjectLambda.html
-                  - "s3:GetAccessPointPolicyStatusForObjectLambda"
-                  # Retrieve the PublicAccessBlock configuration for an AWS account.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetPublicAccessBlock.html
+                  - "s3:GetAccessPoint*"
                   - "s3:GetAccountPublicAccessBlock"
-                  # Use the acl subresource to return the access control list (ACL) of an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketAcl.html
-                  - "s3:GetBucketAcl"
-                  # Return the CORS configuration information set for an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketCors.html
-                  - "s3:GetBucketCORS"
-                  # Return the Region that an Amazon S3 bucket resides in.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html
-                  - "s3:GetBucketLocation"
-                  # Return the logging status of an Amazon S3 bucket and the permissions users have to view or modify that status.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLogging.html
-                  - "s3:GetBucketLogging"
-                  # Get the notification configuration of an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotification.html
-                  - "s3:GetBucketNotification"
-                  # Retrieve ownership controls on a bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketOwnershipControls.html
-                  - "s3:GetBucketOwnershipControls"
-                  # Return the policy of the specified bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketPolicy.html
-                  - "s3:GetBucketPolicy"
-                  # Return the tag set associated with an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html
-                  - "s3:GetBucketTagging"
-                  # Return the versioning state of an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketVersioning.html
-                  - "s3:GetBucketVersioning"
-                  # Return the website configuration for an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketWebsite.html
-                  - "s3:GetBucketWebsite"
-                  # Get a metrics configuration from an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketMetricsConfiguration.html
+                  - "s3:GetBucket*"
                   - "s3:GetMetricsConfiguration"
-                  # Return configuration information about the specified multi region access point.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetMultiRegionAccessPoint.html
-                  - "s3:GetMultiRegionAccessPoint"
-                  # Returns the access point policy associated with the specified multi region access point.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetMultiRegionAccessPointPolicy.html
-                  - "s3:GetMultiRegionAccessPointPolicy"
-                  # List access points.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_ListAccessPoints.html
-                  - "s3:ListAccessPoints"
-                  # List object lambda enabled accesspoints.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_ListAccessPointsForObjectLambda.html
-                  - "s3:ListAccessPointsForObjectLambda"
-                  # List all buckets owned by the authenticated sender of the request.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html
+                  - "s3:GetMultiRegion*"
+                  - "s3:ListAccessPoints*"
                   - "s3:ListAllMyBuckets"
-                  # List metadata about all the versions of objects in an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectVersions.html
                   - "s3:ListBucketVersions"
 
                   #
                   ## SES (Simple Email Service) V1
-                  #
+                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_Operations.html
 
-                  # Return the email sending status of your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetAccountSendingEnabled.html
                   - "ses:GetAccountSendingEnabled"
-                  # Returns the user's sending statistics.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetSendStatistics.html
                   - "ses:GetSendStatistics"
-                  # Return the template object, which includes the subject line, HTML par, and text part for the template you specify.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetTemplate.html
                   - "ses:GetTemplate"
-                  # List the email templates present in your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_ListTemplates.html
                   - "ses:ListTemplates"
-                  # List all of the email addresses that have been verified in your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_ListVerifiedEmailAddresses.html
                   - "ses:ListVerifiedEmailAddresses"
 
                   #
                   ## SES (Simple Email Service) V2
-                  #
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_Operations.html
 
-                  # Get information about the email-sending status and capabilities for your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html
                   - "ses:GetAccount"
-                  # Retrieve the results of a predictive inbox placement test.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDeliverabilityTestReport.html
                   - "ses:GetDeliverabilityTestReport"
-                  # Retrieve all the deliverability data for a specific campaign.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDomainDeliverabilityCampaign.html
                   - "ses:GetDomainDeliverabilityCampaign"
-                  # Retrieve inbox placement and engagement rates for the domains that you use to send email.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDomainStatisticsReport.html
                   - "ses:GetDomainStatisticsReport"
-                  # Return the template object, which includes the subject line, HTML part, and text part for the template you specify.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetEmailTemplate.html
                   - "ses:GetEmailTemplate"
-                  # Retrieve the list of the predictive inbox placement tests that you've performed, regardless of their statuses, for your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDeliverabilityTestReports.html
                   - "ses:ListDeliverabilityTestReports"
-                  # List deliverability data for campaigns that used a specific domain to send email during a specified time range.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDomainDeliverabilityCampaigns.html
                   - "ses:ListDomainDeliverabilityCampaigns"
-                  # List the email identities for your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListEmailIdentities.html
                   - "ses:ListEmailIdentities"
-                  # List all of the email templates for your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListEmailTemplates.html
                   - "ses:ListEmailTemplates"
-                  # Retrieve a list of the tags (keys and values) that are associated with a specific resource for your account.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListTagsForResource.html
                   - "ses:ListTagsForResource"
 
                   #
                   ## SNS (Simple Notification System)
-                  #
+                  # https://docs.aws.amazon.com/sns/latest/api/API_Operations.html
 
-                  # Return a list of the requester's subscriptions.
-                  # https://docs.aws.amazon.com/sns/latest/api/API_ListSubscriptions.html
-                  - "sns:ListSubscriptions"
-                  # Return a list of the subscriptions to a specific topic.
-                  # https://docs.aws.amazon.com/sns/latest/api/API_ListSubscriptionsByTopic.html
-                  - "sns:ListSubscriptionsByTopic"
-                  # List all tags added to the specified Amazon SNS topic.
-                  # https://docs.aws.amazon.com/sns/latest/api/API_ListTagsForResource.html
+                  - "sns:ListSubscriptions*"
                   - "sns:ListTagsForResource"
-                  # Return a list of the requester's topics.
-                  # https://docs.aws.amazon.com/sns/latest/api/API_ListTopics.html
                   - "sns:ListTopics"
 
                   #
                   ## SQS (Simple Queue Service)
-                  #
+                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_Operations.html
 
-                  # Get attributes for the specified queue.
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_GetQueueAttributes.html
                   - "sqs:GetQueueAttributes"
-                  # Return the URL of an existing queue.
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_GetQueueUrl.html
                   - "sqs:GetQueueUrl"
-                  # List of your queues that have the RedrivePolicy queue attribute configured with a dead letter queue
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ListDeadLetterSourceQueues.html
                   - "sqs:ListDeadLetterSourceQueues"
-                  # List tags added to an SQS queue
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ListQueueTags.html
                   - "sqs:ListQueueTags"
-                  # Return a list of your queues
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ListQueues.html
                   - "sqs:ListQueues"
 
                   #
                   ## Step Functions
-                  #
+                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_Operations.html
 
-                  # Describe an activity
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeActivity.html
                   - "states:DescribeActivity"
-                  # Describe an execution
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeExecution.html
                   - "states:DescribeExecution"
-                  # Describe a state machine
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeStateMachine.html
-                  - "states:DescribeStateMachine"
-                  # Describe the state machine for an execution
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeStateMachineForExecution.html
-                  - "states:DescribeStateMachineForExecution"
-                  # Retrieve a task (with the specified activity ARN) which has been scheduled for execution by a running state machine
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_GetActivityTask.html
+                  - "states:DescribeStateMachine*"
                   - "states:GetActivityTask"
-                  # Return the history of the specified execution as a list of events
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_GetExecutionHistory.html
                   - "states:GetExecutionHistory"
-                  # List the existing activities
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListActivities.html
                   - "states:ListActivities"
-                  # List the executions of a state machine
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListExecutions.html
                   - "states:ListExecutions"
-                  # Lists the existing state machines
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachines.html
                   - "states:ListStateMachines"
-                  # List tags for an AWS Step Functions resource
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListTagsForResource.html
                   - "states:ListTagsForResource"
 
                   #
                   ## X-Ray
-                  #
+                  # https://docs.aws.amazon.com/xray/latest/api/API_Operations.html
 
-                  # Retrieve a list of traces specified by ID. Each trace is a collection of segment documents that originates from a single request. Use GetTraceSummaries to get a list of trace IDs.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_BatchGetTraces.html
                   - "xray:BatchGetTraces"
-                  # Retrieve group resource details.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetGroup.html
-                  - "xray:GetGroup"
-                  # Retrieve all active group details.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetGroups.html
-                  - "xray:GetGroups"
-                  # Retrieve the details of a specific insight.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetInsight.html
-                  - "xray:GetInsight"
-                  # Retrieve the events of a specific insight.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetInsightEvents.html
-                  - "xray:GetInsightEvents"
-                  # Retrieve the part of the service graph which is impacted for a specific insight.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetInsightImpactGraph.html
-                  - "xray:GetInsightImpactGraph"
-                  # Retrieve the summary of all insights for a group and time range with optional filters.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetInsightSummaries.html
-                  - "xray:GetInsightSummaries"
-                  # Retrieve all sampling rules.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingRules.html
-                  - "xray:GetSamplingRules"
-                  # Retrieve information about recent sampling results for all sampling rules.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingStatisticSummaries.html
-                  - "xray:GetSamplingStatisticSummaries"
-                  # Request a sampling quota for rules that the service is using to sample requests.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingTargets.html
-                  - "xray:GetSamplingTargets"
-                  # Retrieve a document that describes services that process incoming requests, and downstream services that they call as a result.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetServiceGraph.html
+                  - "xray:GetGroup*"
+                  - "xray:GetInsight*"
+                  - "xray:GetSampling*"
                   - "xray:GetServiceGraph"
-                  # Retrieve an aggregation of service statistics defined by a specific time range bucketed into time intervals.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetTimeSeriesServiceStatistics.html
                   - "xray:GetTimeSeriesServiceStatistics"
-                  # Retrieve a service graph for one or more specific trace IDs.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetTraceGraph.html
                   - "xray:GetTraceGraph"
-                  # Retrieve IDs and metadata for traces available for a specified time frame using an optional filter. To get the full traces, pass the trace IDs to BatchGetTraces.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_GetTraceSummaries.html
                   - "xray:GetTraceSummaries"
-                  # List tags for an X-Ray resource.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_ListTagsForResource.html
                   - "xray:ListTagsForResource"
 
                   #
@@ -1483,313 +540,197 @@ Resources:
 
                   #
                   ## API Gateway
-                  #
+                  # https://docs.aws.amazon.com/apigateway/latest/api/API_Operations.html
 
                   # Serverless Inc. Comments: This enables us to automatically configure and continuously verify configuration exists for enabling logging from API Gateway and ingesting those logs.
                   # Changes information about a Stage resource.
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_UpdateStage.html
                   - "apigateway:UpdateStage"
 
                   #
                   ## App Runner
-                  #
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_Operations.html
 
-                  # Add tags to, or update tag values of, an AWS App Runner resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_TagResource.html
                   - "apprunner:TagResource"
-                  # Remove tags from an AWS App Runner resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_UntagResource.html
                   - "apprunner:UntagResource"
 
                   #
                   ## AppSync
-                  #
+                  # https://docs.aws.amazon.com/apprunner/latest/api/API_Operations.html
 
-                  # Tag a resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_TagResource.html
                   - "appsync:TagResource"
-                  # Untag a resource.
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_UntagResource.html
                   - "appsync:UntagResource"
 
                   #
                   ## Cloudfront
-                  #
+                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
 
-                  # Add tags to a CloudFront resource.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_TagResource.html
                   - "cloudfront:TagResource"
-                  # Remove tags from a CloudFront resource.
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UntagResource.html
                   - "cloudfront:UntagResource"
 
                   #
                   ## CloudTrail
-                  #
+                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_Operations.html
 
-                  # Add one or more tags to a trail, up to a limit of 10.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html
                   - "cloudtrail:AddTags"
-                  # Remove tags from a trail.
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_RemoveTags.html
                   - "cloudtrail:RemoveTags"
 
                   #
                   ## Cloudwatch
-                  #
+                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Operations.html
 
-                  # Add tags to an Amazon CloudWatch resource.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_TagResource.html
                   - "cloudwatch:TagResource"
-                  # Remove a tag from an Amazon CloudWatch resource.
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_UntagResource.html
                   - "cloudwatch:UntagResource"
 
                   ##
                   ## Cloudwatch Logs
-                  #
-
+                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
                   # Serverless Inc. Comments: These enables us to automatically configure and continuously verify configuration exists Subscription filters for Cloudwatch.
                   # Creates or updates a destination. This operation is used only to create destinations for cross-account subscriptions.
                   # A destination encapsulates a physical resource (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time stream of log events for a different account, ingested using PutLogEvents.
                   # Through an access policy, a destination controls what is written to it. By default, PutDestination does not set any access policy with the destination, which means a cross-account user cannot call PutSubscriptionFilter against this destination. To enable this, the destination owner must call PutDestinationPolicy after PutDestination.
-                  # To perform a PutDestination operation, you must also have the iam:PassRole permission.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestination.html
+
                   - "logs:PutDestination"
-                  # Creates or updates an access policy associated with an existing destination. An access policy is an IAM policy document that is used to authorize claims to register a subscription filter against a given destination.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestinationPolicy.html
                   - "logs:PutDestinationPolicy"
-                  # Create or update a subscription filter and associates it with the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html
                   - "logs:PutSubscriptionFilter"
-                  # Delete a subscription filter associated with the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteSubscriptionFilter.html
                   - "logs:DeleteSubscriptionFilter"
-                  # Add or update the specified tags for the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_TagLogGroup.html
                   - "logs:TagLogGroup"
-                  # Remove the specified tags from the specified log group.
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_UntagLogGroup.html
                   - "logs:UntagLogGroup"
 
                   #
                   ## CodeDeploy
-                  #
+                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_Operations.html
 
-                  # Associate the list of tags in the input Tags parameter with the resource identified by the ResourceArn input parameter.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_TagResource.html
                   - "codedeploy:TagResource"
-                  # Disassociate a resource from a list of tags. The resource is identified by the ResourceArn input parameter. The tags are identfied by the list of keys in the TagKeys input parameter.
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_UntagResource.html
                   - "codedeploy:UntagResource"
 
                   #
                   ## Cost Explorer
-                  #
+                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Operations_AWS_Cost_Explorer_Service.html
 
-                  # Tag a Cost Explorer resource.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_TagResource.html
                   - "ce:TagResource"
-                  # Remove tags from a Cost Explorer resource.
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_UntagResource.html
                   - "ce:UntagResource"
 
                   #
                   ## DynamoDB
-                  #
+                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations_Amazon_DynamoDB.html
 
-                  # Associate a set of tags with an Amazon DynamoDB resource.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TagResource.html
                   - "dynamodb:TagResource"
-                  # Remove the association of tags from an Amazon DynamoDB resource.
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UntagResource.html
                   - "dynamodb:UntagResource"
 
                   #
                   ## ECS
-                  #
+                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
 
-                  # Tag the specified resource.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TagResource.html
                   - "ecs:TagResource"
-                  # Untag the specified resource.
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeCapacityProviders.html
                   - "ecs:UntagResource"
 
                   #
                   ## ElastiCache
-                  #
+                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_Operations.html
 
-                  # Add tags to an ElastiCache resource.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_AddTagsToResource.html
                   - "elasticache:AddTagsToResource"
-                  # Remove tags from a ElastiCache resource.
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_RemoveTagsFromResource.html
                   - "elasticache:RemoveTagsFromResource"
 
                   #
                   ## ELB (Elastic Load Balancing) V1
-                  #
+                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_Operations.html
 
-                  # Adds the specified tags to the specified load balancer. Each load balancer can have a maximum of 10 tags.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_AddTags.html
                   - "elasticloadbalancing:AddTags"
-                  # Removes one or more tags from the specified load balancer.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_RemoveTags.html
                   - "elasticloadbalancing:RemoveTags"
 
                   #
                   ## ELB (Elastic Load Balancing) V2
-                  #
+                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Operations.html
 
-                  # Adds the specified tags to the specified load balancer. Each load balancer can have a maximum of 10 tags.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_AddTags.html
                   - "elasticloadbalancing:AddTags"
-                  # Removes one or more tags from the specified load balancer.
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_RemoveTags.html
                   - "elasticloadbalancing:RemoveTags"
 
                   #
                   ## EMR (Elastic Map Reduce)
-                  #
+                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_Operations.html
 
-                  # Add tags to an Amazon EMR resource.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_AddTags.html
                   - "elasticmapreduce:AddTags"
-                  # Remove tags from an Amazon EMR resource.
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_RemoveTags.html
                   - "elasticmapreduce:RemoveTags"
 
                   #
                   ## ES (ElasticSearch)
-                  #
+                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
 
-                  # Attach resource tags to an OpenSearch Service domain.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-addtags
                   - "es:AddTags"
-                  # Remove resource tags from an OpenSearch Service domain.
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-removetags
                   - "es:RemoveTags"
 
                   #
                   ## Kinesis
-                  #
+                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_Operations.html
 
-                  # Add or update tags for the specified Amazon Kinesis stream. Each stream can have up to 10 tags.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_AddTagsToStream.html
                   - "kinesis:AddTagsToStream"
-                  # Remove tags from the specified Kinesis data stream. Removed tags are deleted and cannot be recovered after this operation successfully completes.
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_RemoveTagsFromStream.html
                   - "kinesis:RemoveTagsFromStream"
 
                   #
                   ## Lambda
-                  #
+                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Operations.html
 
-                  # Modify the version-specific settings of an AWS Lambda function
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_UpdateFunctionConfiguration.html
                   - "lambda:UpdateFunctionConfiguration"
-                  # Invoke a function asynchronously
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_InvokeAsync.html
                   - "lambda:InvokeAsync"
-                  # Invoke an AWS Lambda function
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
                   - "lambda:InvokeFunction"
-                  # Add tags to an AWS Lambda function
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_TagResources.html
                   - "lambda:TagResource"
-                  # Remove tags from an AWS Lambda function
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_UntagResource.html
                   - "lambda:UntagResource"
 
                   #
                   ## Organizations
-                  #
+                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_Operations.html
 
-                  # Add one or more tags to the specified resource.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_TagResource.html
                   - "organizations:TagResource"
-                  # Remove one or more tags from the specified resource.
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_UntagResource.html
                   - "organizations:UntagResource"
 
                   #
                   ## Resource Group Tagging
-                  #
+                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_Operations.html
 
-                  # Apply one or more tags to the specified resources.
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_TagResources.html
                   - "tag:TagResources"
-                  # Remove the specified tags from the specified resources.
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_UntagResources.html
                   - "tag:TagResources"
 
                   #
                   ## RDS (Relational Database Service)
-                  #
+                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html
 
-                  # Add metadata tags to an Amazon RDS resource.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_AddTagsToResource.html
                   - "rds:AddTagsToResource"
-                  # Remove metadata tags from an Amazon RDS resource.
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RemoveTagsFromResource.html
                   - "rds:RemoveTagsFromResource"
 
                   #
                   ## S3
-                  #
+                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations_Amazon_Simple_Storage_Service.html
 
-                  # Grants permission to receive notifications when certain events happen in an Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotification.html
                   - "s3:PutBucketNotification"
-                  # Add a set of tags to an existing Amazon S3 bucket.
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketTagging.html
                   - "s3:PutBucketTagging"
 
                   #
                   ## SES (Simple Email Service) V2
-                  #
+                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_Operations.html
 
-                  # Add one or more tags (keys and values) to a specified resource.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_TagResource.html
                   - "ses:TagResource"
-                  # Remove one or more tags (keys and values) from a specified resource.
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_UntagResource.html
                   - "ses:UntagResource"
 
                   #
                   ## SQS (Simple Queue Service)
-                  #
+                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_Operations.html
 
-                  # Add tags to the specified SQS queue.
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_TagQueue.html
                   - "sqs:TagQueue"
-                  # Remove tags from the specified SQS queue.
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_UntagQueue.html
                   - "sqs:UntagQueue"
 
                   #
                   ## Step Functions
-                  #
+                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_Operations.html
 
-                  # Tag an AWS Step Functions resource.
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_TagResource.html
                   - "states:TagResource"
-                  # Remove a tag from an AWS Step Functions resource.
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_UntagResource.html
                   - "states:UntagResource"
 
                   #
                   ## X-Ray
-                  #
+                  # https://docs.aws.amazon.com/xray/latest/api/API_Operations.html
 
-                  # Add tags to an X-Ray resource.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_TagResource.html
                   - "xray:TagResource"
-                  # Remove tags from an X-Ray resource.
-                  # https://docs.aws.amazon.com/xray/latest/api/API_UntagResource.html
                   - "xray:UntagResource"
-
                 Resource: "*"
 Parameters:
   ExternalId:
