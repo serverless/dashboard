@@ -145,20 +145,24 @@ Resources:
                   - "appsync:ListDomainNames"
                   - "appsync:ListFunctions"
                   - "appsync:ListGraphqlApis"
-                  - "appsync:ListResolvers*"
+                  - "appsync:ListResolvers"
+                  - "appsync:ListResolversByFunction"
                   - "appsync:ListTagsForResource"
 
                   #
                   ## Autoscaling
                   # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_Operations.html
 
-                  - "autoscaling:DescribeScalingPlan*"
+                  - "autoscaling:DescribeScalingPlanResources"
+                  - "autoscaling:DescribeScalingPlans"
 
                   #
                   ## Backup
                   # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_Operations.html
 
-                  - "backup:ListBackupPlan*"
+                  - "backup:ListBackupPlans"
+                  - "backup:ListBackupPlanVersions"
+                  - "backup:ListBackupSelections"
                   - "backup:ListBackupVaults"
                   - "backup:ListFrameworks"
                   - "backup:ListProtectedResources"
@@ -169,9 +173,12 @@ Resources:
                   # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
 
                   - "cloudfront:DescribeFunction"
-                  - "cloudfront:GetCachePolicy*"
-                  - "cloudfront:GetDistribution*"
-                  - "cloudfront:ListDistributions*"
+                  - "cloudfront:GetCachePolicy"
+                  - "cloudfront:GetCachePolicyConfig"
+                  - "cloudfront:GetDistribution"
+                  - "cloudfront:GetDistributionConfig"
+                  - "cloudfront:ListDistributions"
+                  - "cloudfront:ListDistributionsByCachePolicyId"
                   - "cloudfront:ListFunctions"
                   - "cloudfront:ListTagsForResource"
 
@@ -189,21 +196,28 @@ Resources:
                   ## Cloudwatch
                   # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Operations.html
 
-                  - "cloudwatch:DescribeAlarm*"
+                  - "cloudwatch:DescribeAlarmHistory"
+                  - "cloudwatch:DescribeAlarms"
+                  - "cloudwatch:DescribeAlarmsForMetric"
                   - "cloudwatch:DescribeAnomalyDetectors"
                   - "cloudwatch:DescribeInsightRules"
                   - "cloudwatch:GetDashboard"
                   - "cloudwatch:GetInsightRuleReport"
-                  - "cloudwatch:GetMetric*"
+                  - "cloudwatch:GetMetricData"
+                  - "cloudwatch:GetMetricStatistics"
+                  - "cloudwatch:GetMetricStream"
+                  - "cloudwatch:GetMetricWidgetImage"
                   - "cloudwatch:ListDashboards"
-                  - "cloudwatch:ListMetric*"
+                  - "cloudwatch:ListMetricStreams"
+                  - "cloudwatch:ListMetrics"
                   - "cloudwatch:ListTagsForResource"
 
                   #
                   ## Cloudwatch Logs
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
 
-                  - "logs:DescribeLog*"
+                  - "logs:DescribeLogGroups"
+                  - "logs:DescribeLogStreams"
                   - "logs:DescribeSubscriptionFilters"
                   - "logs:FilterLogEvents"
                   - "logs:ListTagsLogGroup"
@@ -213,9 +227,13 @@ Resources:
                   ## CodeBuild
                   # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_Operations.html
 
-                  - "codebuild:BatchGetBuild*"
+                  - "codebuild:BatchGetBuildBatches"
+                  - "codebuild:BatchGetBuilds"
                   - "codebuild:BatchGetProjects"
-                  - "codebuild:ListBuild*"
+                  - "codebuild:ListBuildBatches"
+                  - "codebuild:ListBuildBatchesForProject"
+                  - "codebuild:ListBuilds"
+                  - "codebuild:ListBuildsForProject"
                   - "codebuild:ListProjects"
                   - "codebuild:ListSharedProjects"
 
@@ -223,12 +241,26 @@ Resources:
                   ## CodeDeploy
                   # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_Operations.html
 
-                  - "codedeploy:BatchGetApplication*"
-                  - "codedeploy:BatchGetDeployment*"
-                  - "codedeploy:GetApplication*"
-                  - "codedeploy:GetDeployment*"
-                  - "codedeploy:ListApplication*"
-                  - "codedeploy:ListDeployment*"
+                  - "codedeploy:BatchGetApplicationRevisions"
+                  - "codedeploy:BatchGetApplications"
+                  - "codedeploy:BatchGetDeploymentGroups"
+                  - "codedeploy:BatchGetDeploymentInstances"
+                  - "codedeploy:BatchGetDeploymentTargets"
+                  - "codedeploy:BatchGetDeployments"
+                  - "codedeploy:GetApplication"
+                  - "codedeploy:GetApplicationRevision"
+                  - "codedeploy:GetDeployment"
+                  - "codedeploy:GetDeploymentConfig"
+                  - "codedeploy:GetDeploymentGroup"
+                  - "codedeploy:GetDeploymentInstance"
+                  - "codedeploy:GetDeploymentTarget"
+                  - "codedeploy:ListApplicationRevisions"
+                  - "codedeploy:ListApplications"
+                  - "codedeploy:ListDeploymentConfigs"
+                  - "codedeploy:ListDeploymentGroups"
+                  - "codedeploy:ListDeploymentInstances"
+                  - "codedeploy:ListDeploymentTargets"
+                  - "codedeploy:ListDeployments"
                   - "codedeploy:ListTagsForResource"
 
                   #
@@ -236,7 +268,8 @@ Resources:
                   # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Operations_AWS_Cost_Explorer_Service.html
 
                   - "ce:DescribeCostCategoryDefinition"
-                  - "ce:GetCostAndUsage*"
+                  - "ce:GetCostAndUsage"
+                  - "ce:GetCostAndUsageWithResources"
                   - "ce:GetCostCategories"
                   - "ce:GetTags"
                   - "ce:ListCostAllocationTags"
@@ -251,12 +284,15 @@ Resources:
                   - "dynamodb:DescribeContinuousBackups"
                   - "dynamodb:DescribeContributorInsights"
                   - "dynamodb:DescribeExport"
-                  - "dynamodb:DescribeGlobalTable*"
+                  - "dynamodb:DescribeGlobalTable"
+                  - "dynamodb:DescribeGlobalTableSettings"
                   - "dynamodb:DescribeKinesisStreamingDestination"
                   - "dynamodb:DescribeLimits"
-                  - "dynamodb:DescribeReservedCapacity*"
+                  - "dynamodb:DescribeReservedCapacity"
+                  - "dynamodb:DescribeReservedCapacityOfferings"
                   - "dynamodb:DescribeStream"
-                  - "dynamodb:DescribeTable*"
+                  - "dynamodb:DescribeTable"
+                  - "dynamodb:DescribeTableReplicaAutoScaling"
                   - "dynamodb:DescribeTimeToLive"
                   - "dynamodb:ListBackups"
                   - "dynamodb:ListContributorInsights"
@@ -274,28 +310,36 @@ Resources:
                   - "ecs:DescribeClusters"
                   - "ecs:DescribeContainerInstances"
                   - "ecs:DescribeServices"
-                  - "ecs:DescribeTask*"
+                  - "ecs:DescribeTaskDefinition"
+                  - "ecs:DescribeTaskSets"
+                  - "ecs:DescribeTasks"
                   - "ecs:ListAccountSettings"
                   - "ecs:ListAttributes"
                   - "ecs:ListClusters"
                   - "ecs:ListContainerInstances"
                   - "ecs:ListServices"
                   - "ecs:ListTagsForResource"
-                  - "ecs:ListTaskDefinition*"
+                  - "ecs:ListTaskDefinitionFamilies"
+                  - "ecs:ListTaskDefinitions"
                   - "ecs:ListTasks"
 
                   #
                   ## ElastiCache
                   # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_Operations.html
 
-                  - "elasticache:DescribeCache*"
+                  - "elasticache:DescribeCacheClusters"
+                  - "elasticache:DescribeCacheEngineVersions"
+                  - "elasticache:DescribeCacheParameterGroups"
+                  - "elasticache:DescribeCacheParameters"
+                  - "elasticache:DescribeCacheSubnetGroups"
                   - "elasticache:DescribeEngineDefaultParameters"
                   - "elasticache:DescribeEvents"
                   - "elasticache:DescribeGlobalReplicationGroups"
                   - "elasticache:DescribeReplicationGroups"
                   - "elasticache:DescribeReservedCacheNodes"
                   - "elasticache:DescribeUpdateActions"
-                  - "elasticache:DescribeUser*"
+                  - "elasticache:DescribeUserGroups"
+                  - "elasticache:DescribeUsers"
                   - "elasticache:ListAllowedNodeTypeModifications"
                   - "elasticache:ListTagsForResource"
 
@@ -304,7 +348,10 @@ Resources:
                   # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_Operations.html
 
                   - "elasticloadbalancing:DescribeInstanceHealth"
-                  - "elasticloadbalancing:DescribeLoadBalancer*"
+                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
+                  - "elasticloadbalancing:DescribeLoadBalancerPolicies"
+                  - "elasticloadbalancing:DescribeLoadBalancerPolicyTypes"
+                  - "elasticloadbalancing:DescribeLoadBalancers"
                   - "elasticloadbalancing:DescribeTags"
 
                   #
@@ -313,10 +360,12 @@ Resources:
 
                   - "elasticloadbalancing:DescribeAccountLimits"
                   - "elasticloadbalancing:DescribeListeners"
-                  - "elasticloadbalancing:DescribeLoadBalancer*"
+                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
+                  - "elasticloadbalancing:DescribeLoadBalancers"
                   - "elasticloadbalancing:DescribeRules"
                   - "elasticloadbalancing:DescribeTags"
-                  - "elasticloadbalancing:DescribeTargetGroup*"
+                  - "elasticloadbalancing:DescribeTargetGroupAttributes"
+                  - "elasticloadbalancing:DescribeTargetGroups"
                   - "elasticloadbalancing:DescribeTargetHealth"
 
                   #
@@ -328,20 +377,29 @@ Resources:
                   - "elasticmapreduce:DescribeStudio"
                   - "elasticmapreduce:ListBootstrapActions"
                   - "elasticmapreduce:ListClusters"
-                  - "elasticmapreduce:ListInstance*"
+                  - "elasticmapreduce:ListInstanceFleets"
+                  - "elasticmapreduce:ListInstanceGroups"
+                  - "elasticmapreduce:ListInstances"
                   - "elasticmapreduce:ListSteps"
-                  - "elasticmapreduce:ListStudio*"
+                  - "elasticmapreduce:ListStudioSessionMappings"
+                  - "elasticmapreduce:ListStudios"
 
                   #
                   ## ES (ElasticSearch)
                   # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
 
-                  - "es:DescribeDomain*"
-                  - "es:DescribeElasticsearch*"
+                  - "es:DescribeDomain"
+                  - "es:DescribeDomainAutoTunes"
+                  - "es:DescribeDomainConfig"
+                  - "es:DescribeDomains"
+                  - "es:DescribeElasticsearchDomain"
+                  - "es:DescribeElasticsearchDomainConfig"
+                  - "es:DescribeElasticsearchDomains"
                   - "es:DescribePackages"
                   - "es:ListDomainNames"
                   - "es:ListDomainsForPackage"
-                  - "es:ListElasticsearchInstance*"
+                  - "es:ListElasticsearchInstanceTypeDetails"
+                  - "es:ListElasticsearchInstanceTypes"
                   - "es:ListInstanceTypeDetails"
                   - "es:ListPackagesForDomain"
                   - "es:ListTags"
@@ -351,18 +409,27 @@ Resources:
                   # https://docs.aws.amazon.com/health/latest/APIReference/API_Operations.html
 
                   - "health:DescribeAffectedAccountsForOrganization"
-                  - "health:DescribeAffectedEntities*"
+                  - "health:DescribeAffectedEntities"
+                  - "health:DescribeAffectedEntitiesForOrganization"
                   - "health:DescribeEntityAggregates"
-                  - "health:DescribeEvent*"
+                  - "health:DescribeEventAggregates"
+                  - "health:DescribeEventDetails"
+                  - "health:DescribeEventDetailsForOrganization"
+                  - "health:DescribeEventTypes"
+                  - "health:DescribeEvents"
+                  - "health:DescribeEventsForOrganization"
                   - "health:DescribeHealthServiceStatusForOrganization"
 
                   #
                   ## Kinesis
                   # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_Operations.html
 
-                  - "kinesis:DescribeStream*"
+                  - "kinesis:DescribeStream"
+                  - "kinesis:DescribeStreamConsumer"
+                  - "kinesis:DescribeStreamSummary"
                   - "kinesis:ListShards"
-                  - "kinesis:ListStream*"
+                  - "kinesis:ListStreamConsumers"
+                  - "kinesis:ListStreams"
                   - "kinesis:ListTagsForStream"
 
                   #
@@ -376,14 +443,19 @@ Resources:
                   - "lambda:GetFunctionConcurrency"
                   - "lambda:GetFunctionEventInvokeConfig"
                   - "lambda:GetFunctionUrlConfig"
-                  - "lambda:GetLayerVersion*"
+                  - "lambda:GetLayerVersion"
+                  - "lambda:GetLayerVersionPolicy"
                   - "lambda:GetPolicy"
                   - "lambda:GetProvisionedConcurrencyConfig"
                   - "lambda:ListAliases"
                   - "lambda:ListCodeSigningConfigs"
                   - "lambda:ListEventSourceMappings"
-                  - "lambda:ListFunction*"
-                  - "lambda:ListLayer*"
+                  - "lambda:ListFunctionEventInvokeConfigs"
+                  - "lambda:ListFunctionUrlConfigs"
+                  - "lambda:ListFunctions"
+                  - "lambda:ListFunctionsByCodeSigningConfig"
+                  - "lambda:ListLayerVersions"
+                  - "lambda:ListLayers"
                   - "lambda:ListProvisionedConcurrencyConfigs"
                   - "lambda:ListTags"
                   - "lambda:ListVersionsByFunction"
@@ -394,16 +466,19 @@ Resources:
 
                   - "organizations:DescribeAccount"
                   - "organizations:DescribeEffectivePolicy"
-                  - "organizations:DescribeOrganization*"
+                  - "organizations:DescribeOrganization"
+                  - "organizations:DescribeOrganizationalUnit"
                   - "organizations:DescribePolicy"
                   - "organizations:ListAWSServiceAccessForOrganization"
-                  - "organizations:ListAccounts*"
+                  - "organizations:ListAccounts"
+                  - "organizations:ListAccountsForParent"
                   - "organizations:ListChildren"
                   - "organizations:ListDelegatedAdministrators"
                   - "organizations:ListDelegatedServicesForAccount"
                   - "organizations:ListOrganizationalUnitsForParent"
                   - "organizations:ListParents"
-                  - "organizations:ListPolicies*"
+                  - "organizations:ListPolicies"
+                  - "organizations:ListPoliciesForTarget"
                   - "organizations:ListTagsForResource"
                   - "organizations:ListTargetsForPolicy"
 
@@ -419,15 +494,22 @@ Resources:
                   ## RDS (Relational Database Service)
                   # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html
 
-                  - "rds:DescribeDBCluster*"
+                  - "rds:DescribeDBClusterParameterGroups"
+                  - "rds:DescribeDBClusterParameters"
+                  - "rds:DescribeDBClusters"
                   - "rds:DescribeDBEngineVersions"
                   - "rds:DescribeDBInstances"
                   - "rds:DescribeDBParameterGroups"
                   - "rds:DescribeDBParameters"
-                  - "rds:DescribeDBProx*"
+                  - "rds:DescribeDBProxies"
+                  - "rds:DescribeDBProxyEndpoints"
+                  - "rds:DescribeDBProxyTargetGroups"
+                  - "rds:DescribeDBProxyTargets"
                   - "rds:DescribeDBSecurityGroups"
                   - "rds:DescribeDBSubnetGroups"
-                  - "rds:DescribeEvent*"
+                  - "rds:DescribeEventCategories"
+                  - "rds:DescribeEventSubscriptions"
+                  - "rds:DescribeEvents"
                   - "rds:DescribeSourceRegions"
                   - "rds:ListTagsForResource"
 
@@ -435,10 +517,14 @@ Resources:
                   ## Route 53
                   # https://docs.aws.amazon.com/Route53/latest/APIReference/API_Operations_Amazon_Route_53.html
 
-                  - "route53:ListCidr*"
+                  - "route53:ListCidrBlocks"
+                  - "route53:ListCidrCollections"
+                  - "route53:ListCidrLocations"
                   - "route53:ListGeoLocations"
                   - "route53:ListHealthChecks"
-                  - "route53:ListHostedZones*"
+                  - "route53:ListHostedZones"
+                  - "route53:ListHostedZonesByName"
+                  - "route53:ListHostedZonesByVPC"
                   - "route53:ListQueryLoggingConfigs"
                   - "route53:ListResourceRecordSets"
                   - "route53:ListReusableDelegationSets"
@@ -450,12 +536,26 @@ Resources:
 
                   - "s3:DescribeMultiRegionAccessPointOperation"
                   - "s3:GetAccessPoint"
-                  - "s3:GetAccessPoint*"
+                  - "s3:GetAccessPointConfigurationForObjectLambda"
+                  - "s3:GetAccessPointForObjectLambda"
+                  - "s3:GetAccessPointPolicyStatus"
+                  - "s3:GetAccessPointPolicyStatusForObjectLambda"
                   - "s3:GetAccountPublicAccessBlock"
-                  - "s3:GetBucket*"
+                  - "s3:GetBucketAcl"
+                  - "s3:GetBucketCORS"
+                  - "s3:GetBucketLocation"
+                  - "s3:GetBucketLogging"
+                  - "s3:GetBucketNotification"
+                  - "s3:GetBucketOwnershipControls"
+                  - "s3:GetBucketPolicy"
+                  - "s3:GetBucketTagging"
+                  - "s3:GetBucketVersioning"
+                  - "s3:GetBucketWebsite"
                   - "s3:GetMetricsConfiguration"
-                  - "s3:GetMultiRegion*"
-                  - "s3:ListAccessPoints*"
+                  - "s3:GetMultiRegionAccessPoint"
+                  - "s3:GetMultiRegionAccessPointPolicy"
+                  - "s3:ListAccessPoints"
+                  - "s3:ListAccessPointsForObjectLambda"
                   - "s3:ListAllMyBuckets"
                   - "s3:ListBucketVersions"
 
@@ -488,7 +588,8 @@ Resources:
                   ## SNS (Simple Notification System)
                   # https://docs.aws.amazon.com/sns/latest/api/API_Operations.html
 
-                  - "sns:ListSubscriptions*"
+                  - "sns:ListSubscriptions"
+                  - "sns:ListSubscriptionsByTopic"
                   - "sns:ListTagsForResource"
                   - "sns:ListTopics"
 
@@ -508,7 +609,8 @@ Resources:
 
                   - "states:DescribeActivity"
                   - "states:DescribeExecution"
-                  - "states:DescribeStateMachine*"
+                  - "states:DescribeStateMachine"
+                  - "states:DescribeStateMachineForExecution"
                   - "states:GetActivityTask"
                   - "states:GetExecutionHistory"
                   - "states:ListActivities"
@@ -521,9 +623,15 @@ Resources:
                   # https://docs.aws.amazon.com/xray/latest/api/API_Operations.html
 
                   - "xray:BatchGetTraces"
-                  - "xray:GetGroup*"
-                  - "xray:GetInsight*"
-                  - "xray:GetSampling*"
+                  - "xray:GetGroup"
+                  - "xray:GetGroups"
+                  - "xray:GetInsight"
+                  - "xray:GetInsightEvents"
+                  - "xray:GetInsightImpactGraph"
+                  - "xray:GetInsightSummaries"
+                  - "xray:GetSamplingRules"
+                  - "xray:GetSamplingStatisticSummaries"
+                  - "xray:GetSamplingTargets"
                   - "xray:GetServiceGraph"
                   - "xray:GetTimeSeriesServiceStatistics"
                   - "xray:GetTraceGraph"
