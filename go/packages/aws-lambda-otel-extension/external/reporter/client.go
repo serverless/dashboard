@@ -152,6 +152,12 @@ func (c *HttpClient) PostMetric(metrics []byte) {
 	})
 }
 
+func (c *HttpClient) PostTrace(trace []byte) {
+	c.eg.Go(func() error {
+		return c.Post(c.settings.Traces.Destination, trace, true)
+	})
+}
+
 func (c *HttpClient) PostRequest(request []byte) {
 	c.eg.Go(func() error {
 		return c.Post(c.settings.Request.Destination, request, false)

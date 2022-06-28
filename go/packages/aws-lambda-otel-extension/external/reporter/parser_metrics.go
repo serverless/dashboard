@@ -3,8 +3,11 @@ package reporter
 import (
 	"aws-lambda-otel-extension/external/protoc"
 	"aws-lambda-otel-extension/external/types"
+	b64 "encoding/base64"
 	"encoding/json"
+	"errors"
 	"math"
+	"strconv"
 )
 
 func ParseInternalPayload(data []byte) (*types.RecordPayload, error) {
@@ -182,7 +185,6 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 		})
 
 	} else {
-		// TODO: use real reports
 		metrics = append(metrics, &protoc.Metric{
 			Name: "faas.duration",
 			Unit: "1",
@@ -224,4 +226,81 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 			},
 		},
 	}
+}
+
+func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) (*protoc.TracesData, error) {
+
+	if traces == nil {
+		return nil, nil
+	}
+	metrics := createMetricAttributes(fun, nil)
+
+	if len(traces.ResourceSpans) == 0 {
+		return nil, errors.New("no resource spans found")
+	}
+
+	instLibSpans := make([]*protoc.InstrumentationLibrarySpans, len(traces.ResourceSpans[0].InstrumentationLibrarySpans))
+
+	for libIndex, librarySpans := range traces.ResourceSpans[0].InstrumentationLibrarySpans {
+		if librarySpans.Spans == nil {
+			return nil, errors.New("no spans found")
+		}
+		cSpans := make([]*protoc.Span, len(librarySpans.Spans))
+
+		for spanIndex, span := range librarySpans.Spans {
+			// finally convert spans to key-value format
+			var attribs []*protoc.KeyValue
+			existingAttribs := map[string]bool{}
+			for k, v := range span.Attributes {
+				attribs = append(attribs, &protoc.KeyValue{
+					Key:   k,
+					Value: getAnyValue(v),
+				})
+				existingAttribs[k] = true
+			}
+			for _, kv := range metrics {
+				if _, ok := existingAttribs[kv.Key]; !ok {
+					attribs = append(attribs, kv)
+				}
+			}
+
+			traceId, _ := b64.StdEncoding.DecodeString(span.TraceID)
+			spanId, _ := b64.StdEncoding.DecodeString(span.SpanID)
+			parentSpanId, _ := b64.StdEncoding.DecodeString(span.ParentSpanID)
+			startTime, _ := strconv.ParseInt(span.StartTimeUnixNano, 10, 64)
+			endTime, _ := strconv.ParseInt(span.EndTimeUnixNano, 10, 64)
+
+			cSpans[spanIndex] = &protoc.Span{
+				Attributes:        attribs,
+				TraceId:           traceId,
+				SpanId:            spanId,
+				ParentSpanId:      parentSpanId,
+				Name:              span.Name,
+				StartTimeUnixNano: uint64(startTime),
+				EndTimeUnixNano:   uint64(endTime),
+			}
+		}
+
+		instLibSpans[libIndex] = &protoc.InstrumentationLibrarySpans{
+
+			InstrumentationLibrary: &protoc.InstrumentationLibrary{
+				Name:    librarySpans.InstrumentationLibrary.Name,
+				Version: librarySpans.InstrumentationLibrary.Version,
+			},
+			Spans: cSpans,
+		}
+	}
+
+	resourceSpans := []*protoc.ResourceSpans{
+		{
+			Resource: &protoc.Resource{
+				Attributes: createResourceAttributes(fun),
+			},
+			InstrumentationLibrarySpans: instLibSpans,
+		},
+	}
+	return &protoc.TracesData{
+		ResourceSpans: resourceSpans,
+	}, nil
+
 }

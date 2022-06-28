@@ -16,6 +16,7 @@ type UserSettingsEndpoint struct {
 type UserSettings struct {
 	Metrics  UserSettingsEndpoint `json:"metrics"`
 	Logs     UserSettingsEndpoint `json:"logs"`
+	Traces   UserSettingsEndpoint `json:"traces"`
 	Request  UserSettingsEndpoint `json:"request"`
 	Response UserSettingsEndpoint `json:"response"`
 	Common   struct {

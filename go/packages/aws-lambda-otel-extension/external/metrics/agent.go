@@ -106,7 +106,18 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 		}
 		l.reportAgent.PostMetric(data)
 
-		// TODO: send Traces
+		traces, err := reporter.CreateTracePayload(telemetryData.RequestID, telemetryData.Function, telemetryData.Traces)
+		if err != nil {
+			l.logger.Error("Error creating traces", zap.Error(err))
+			return
+		}
+		data, err = proto.Marshal(traces)
+		if err != nil {
+			l.logger.Error("Error marshalling traces", zap.Error(err))
+		}
+
+		l.reportAgent.PostTrace(data)
+
 	}
 }
 
