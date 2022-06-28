@@ -5,7 +5,7 @@ from serverless.aws_lambda_otel_extension.utilities import default_if_none, spli
 
 # Merge in settings from JSON packed environment variables.
 sls_otel_user_settings = {
-    # TODO: Add support for file based configuration.
+    # TODO: Add support for file or realtime configuration.
     # **(
     #     json.load(open("/var/task/.serverless-otel-user-settings"))
     #     if os.path.exists("/var/task/.serverless-otel-user-settings")
@@ -54,8 +54,6 @@ aws_lambda_function_memory_size = default_if_none(
 )
 
 # Process enabled/disabled instrumentation list
-
-
 otel_python_enabled_instrumentations = default_if_none(
     split_string_on_commas_or_none(environment.OTEL_PYTHON_ENABLED_INSTRUMENTATIONS),
     defaults.OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,

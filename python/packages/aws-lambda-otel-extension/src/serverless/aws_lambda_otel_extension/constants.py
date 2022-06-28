@@ -8,6 +8,7 @@ _package_distribution = get_distribution("serverless-aws-lambda-otel-extension")
 PACKAGE_NAME = _package_distribution.project_name
 PACKAGE_NAMESPACE = "serverless.aws_lambda_otel_extension"
 PACKAGE_VERSION = _package_distribution.version
+
 PACKAGE_COMPATIBLE_WRAPPER_MODULE = (
     "serverless_aws_lambda_otel_extension_internal_wrapper_handler.auto_instrumenting_handler"
 )
@@ -60,8 +61,6 @@ INSTRUMENTATION_TILDE_MAP = {
         "urllib",
     ],
 }
-
-EXEC_WRAPPER_START_UNIX_NANO_ENV_VAR = "EXEC_WRAPPER_START_UNIX_NANO"
 
 _HANDLER_ENV_VAR = "_HANDLER"
 ORIG_HANDLER_ENV_VAR = "ORIG_HANDLER"
