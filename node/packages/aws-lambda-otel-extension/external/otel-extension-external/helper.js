@@ -1,5 +1,8 @@
 'use strict';
 
+const http = require('http');
+const https = require('https');
+
 const isObject = (value) => value && typeof value === 'object';
 
 const extensionVersion = (() => {
@@ -246,4 +249,8 @@ module.exports = {
   resourceAttributes,
   measureAttributes,
   stripResponseBlobData,
+  keepAliveAgents: {
+    http: new http.Agent({ keepAlive: true }),
+    https: new https.Agent({ keepAlive: true }),
+  },
 };

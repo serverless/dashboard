@@ -20,7 +20,10 @@ module.exports = (async () => {
   const servers = new Set();
 
   const userSettings = require('./user-settings');
-  const { debugLog } = require('./helper');
+  const {
+    debugLog,
+    keepAliveAgents: { http: keepAliveAgent },
+  } = require('./helper');
   const reportOtelData = require('./report-otel-data');
   const {
     createMetricsPayload,
@@ -168,6 +171,7 @@ module.exports = (async () => {
       const request = http.request(
         `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-08-15/logs`,
         {
+          agent: keepAliveAgent,
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -212,6 +216,7 @@ module.exports = (async () => {
         const request = http.request(
           `${baseUrl}/event/next`,
           {
+            agent: keepAliveAgent,
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -334,6 +339,7 @@ module.exports = (async () => {
     const request = http.request(
       `${baseUrl}/register`,
       {
+        agent: keepAliveAgent,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

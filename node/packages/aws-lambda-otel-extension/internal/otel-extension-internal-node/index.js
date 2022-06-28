@@ -41,6 +41,7 @@ const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
 const telemetryServerUrl = `http://localhost:${OTEL_SERVER_PORT}`;
+const keepAliveAgent = new http.Agent({ keepAlive: true });
 
 const tracerProvider = new NodeTracerProvider();
 const memoryExporter = new InMemorySpanExporter();
@@ -126,28 +127,35 @@ const requestHandler = async (span, { event, context }) => {
   } else {
     // Send request data to external so that we can attach this data to logs
     const requestStartTime = process.hrtime.bigint();
-    await new Promise((resolve, reject) => {
-      const request = http.request(
-        telemetryServerUrl,
-        {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(requestBody),
+    let requestSocket;
+    try {
+      await new Promise((resolve, reject) => {
+        const request = http.request(
+          telemetryServerUrl,
+          {
+            agent: keepAliveAgent,
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(requestBody),
+            },
           },
-        },
-        (response) => {
-          if (response.statusCode === 200) {
-            resolve();
-          } else {
-            reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+          (response) => {
+            if (response.statusCode === 200) {
+              resolve();
+            } else {
+              reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+            }
           }
-        }
-      );
-      request.on('error', reject);
-      request.write(requestBody);
-      request.end();
-    });
+        );
+        request.on('error', reject);
+        request.on('socket', (socket) => (requestSocket = socket));
+        request.write(requestBody);
+        request.end();
+      });
+    } finally {
+      if (requestSocket) requestSocket.unref();
+    }
     debugLog(
       `Internal extension request [eventData]: ok in: ${Math.round(
         Number(process.hrtime.bigint() - requestStartTime) / 1000000
@@ -366,28 +374,35 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     process.stdout.write(`⚡ telemetryData: ${requestBody}\n`);
   } else {
     const requestStartTime = process.hrtime.bigint();
-    await new Promise((resolve, reject) => {
-      const request = http.request(
-        telemetryServerUrl,
-        {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(requestBody),
+    let requestSocket;
+    try {
+      await new Promise((resolve, reject) => {
+        const request = http.request(
+          telemetryServerUrl,
+          {
+            agent: keepAliveAgent,
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(requestBody),
+            },
           },
-        },
-        (response) => {
-          if (response.statusCode === 200) {
-            resolve();
-          } else {
-            reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+          (response) => {
+            if (response.statusCode === 200) {
+              resolve();
+            } else {
+              reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+            }
           }
-        }
-      );
-      request.on('error', reject);
-      request.write(requestBody);
-      request.end();
-    });
+        );
+        request.on('error', reject);
+        request.on('socket', (socket) => (requestSocket = socket));
+        request.write(requestBody);
+        request.end();
+      });
+    } finally {
+      if (requestSocket) requestSocket.unref();
+    }
     debugLog(
       `Internal extension request [telemetryData]: ok in: ${Math.round(
         Number(process.hrtime.bigint() - requestStartTime) / 1000000
