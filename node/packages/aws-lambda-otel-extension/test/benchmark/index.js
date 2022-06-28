@@ -47,11 +47,13 @@ module.exports = async (options = {}) => {
   const coreConfig = {};
   await createCoreResources(coreConfig, { layerTypes: ['nodeAll', 'nodeInternal'] });
 
+  const memorySize = options.memorySize || 128;
   const allBenchmarkVariantsConfig = new Map([
     [
       'bare',
       {
         configuration: {
+          MemorySize: memorySize,
           Layers: [],
           Environment: { Variables: {} },
         },
@@ -61,6 +63,7 @@ module.exports = async (options = {}) => {
       'externalOnly',
       {
         configuration: {
+          MemorySize: memorySize,
           Environment: {
             Variables: {
               SLS_OTEL_USER_SETTINGS: JSON.stringify({ logs: { disabled: true } }),
@@ -74,6 +77,7 @@ module.exports = async (options = {}) => {
       'internalOnly',
       {
         configuration: {
+          MemorySize: memorySize,
           Layers: [coreConfig.layerInternalArn],
           Environment: {
             Variables: {
@@ -89,6 +93,7 @@ module.exports = async (options = {}) => {
       'jsonLog',
       {
         configuration: {
+          MemorySize: memorySize,
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
@@ -107,6 +112,7 @@ module.exports = async (options = {}) => {
       'protoLog',
       {
         configuration: {
+          MemorySize: memorySize,
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
@@ -125,6 +131,7 @@ module.exports = async (options = {}) => {
   if (token) {
     allBenchmarkVariantsConfig.set('protoConsole', {
       configuration: {
+        MemorySize: memorySize,
         Environment: {
           Variables: {
             AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
