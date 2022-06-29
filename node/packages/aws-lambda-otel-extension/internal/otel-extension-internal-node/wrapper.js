@@ -23,6 +23,7 @@ const wrapOriginalHandler = (originalHandler) => {
   const debugLog = (...args) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
   };
+  let contextDone;
 
   const otelHandler = awsLambdaInstrumentation._instance._getPatchHandler(
     (event, context, otelCallback) => {
@@ -42,10 +43,10 @@ const wrapOriginalHandler = (originalHandler) => {
           if (!responseStartTime) responseStartTime = process.hrtime.bigint();
           someOtelCallback(...args);
         };
-      const done = wrapOtelCallback(context.done);
-      context.done = done;
-      context.succeed = (result) => done(null, result);
-      context.fail = (err) => done(err == null ? 'handled' : err);
+      contextDone = wrapOtelCallback(context.done);
+      context.done = contextDone;
+      context.succeed = (result) => contextDone(null, result);
+      context.fail = (err) => contextDone(err == null ? 'handled' : err);
       const result = originalHandler(event, context, wrapOtelCallback(otelCallback));
       if (!result) return result;
       if (typeof result.then !== 'function') return result;
@@ -89,20 +90,26 @@ const wrapOriginalHandler = (originalHandler) => {
           logResponseDuration();
         });
       };
-    const done = wrapAwsCallback(context.done);
-    context.done = done;
-    context.succeed = (result) => done(null, result);
-    context.fail = (err) => done(err == null ? 'handled' : err);
+    const originalDone = context.done;
+    contextDone = wrapAwsCallback(originalDone);
+    context.done = contextDone;
+    context.succeed = (result) => contextDone(null, result);
+    context.fail = (err) => contextDone(err == null ? 'handled' : err);
     const result = otelHandler(event, context, wrapAwsCallback(awsCallback));
     if (!result) return result;
     if (typeof result.then !== 'function') return result;
-    return Promise.resolve(result).finally(() => {
-      // Otel response hook triggered, passing result to AWS
-      return Promise.all([
-        EvalError.$serverlessRequestHandlerPromise,
-        EvalError.$serverlessResponseHandlerPromise,
-      ]).finally(logResponseDuration);
-    });
+    return Promise.resolve(result)
+      .finally(() => {
+        // Otel response hook triggered, passing result to AWS
+        return Promise.all([
+          EvalError.$serverlessRequestHandlerPromise,
+          EvalError.$serverlessResponseHandlerPromise,
+        ]).finally(logResponseDuration);
+      })
+      .finally(() => {
+        // AWS internally uses context methods to resolve promise result
+        contextDone = originalDone;
+      });
   };
 };
 
