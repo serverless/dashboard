@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.6](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.5...@serverless/aws-lambda-otel-extension@0.4.6) (2022-06-29)
+
+### Bug Fixes
+
+- Fix handling of promise resolution ([867b3bc](https://github.com/serverless/runtime/commit/867b3bc59e73bcda99f8e30a008fadd98b9c0f52))
+
+### Maintenance Improvements
+
+- Improve resolution handling ([938ce98](https://github.com/serverless/runtime/commit/938ce98fe03900739f9a1c9b1765e3f242d5c657))
+- Simplify stale callback handling ([fb2885a](https://github.com/serverless/runtime/commit/fb2885a9004c06e31db3eec2d2bab83f2fa39617))
+
 ### [0.4.5](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.4...@serverless/aws-lambda-otel-extension@0.4.5) (2022-06-29)
 
 ### Bug Fixes
