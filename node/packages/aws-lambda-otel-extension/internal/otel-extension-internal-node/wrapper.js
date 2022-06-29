@@ -80,10 +80,7 @@ const wrapOriginalHandler = (orignalHandler) => {
       (someAwsCallback) =>
       (...args) => {
         // Callback invoked by Otel instrumentation after triggering response hook
-        if (invocationId !== currentInvocationId) {
-          someAwsCallback(...args);
-          return;
-        }
+        if (invocationId !== currentInvocationId) return;
         Promise.all([
           EvalError.$serverlessRequestHandlerPromise,
           EvalError.$serverlessResponseHandlerPromise,
