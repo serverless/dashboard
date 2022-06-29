@@ -1,7 +1,7 @@
 <!--
 title: AWS Lambda
-menuText: Lambda Extension
-description: An overview of the Serverless Runtime
+menuText: AWS Lambda
+description: An overview of the AWS Lamba Integration
 menuOrder: 6
 -->
 
