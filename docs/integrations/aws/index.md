@@ -43,7 +43,7 @@ Before you get started make sure you have the [AWS CLI](https://docs.aws.amazon.
 and a recent version of [Node.js](https://nodejs.dev/learn/how-to-install-nodejs) and a 
 [Serverless Console Organization](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) and [jq]().
 
-### Clone Repo and Install Node Modules
+### 1.Clone the repo and install Node modules
 Once you have everything you need you'll need to clone this repo
 and install node modules.
 
@@ -53,7 +53,7 @@ cd console
 npm install
 ```
 
-### Build the extension locally
+### 2.Build the extension locally
 Next you'll need to run a set of build commands to build
 the internal and external extensions.
 
@@ -67,7 +67,7 @@ npm run build
 ```
 This will generate an artifact in `dist/extension.zip`
 
-### Publish the extension to your AWS Account
+### 3.Publish the extension to your AWS Account
 Once you have built the extension, you can publish it 
 to your AWS account.
 
@@ -78,13 +78,13 @@ aws lambda publish-layer-version \
    --region us-east-1 
 ```
 
-### Request an ingest token
+### 4.Request an ingest token
 Next you'll need to request an ingest token based on your 
 organization id, service name, and environment you wish to
 deploy to. It's helpful to set these as environment variables.
 
-1. Go to your org settings page to get your org id and org token
-1. Set the following environment variables (used later)
+* Go to your org settings page to get your org id and org token
+* Set the following environment variables (used later)
 
 ```text
 ORG_ID=<your-org-id> 
@@ -95,7 +95,7 @@ ENVIRONMENT=dev
 REGION=us-east-1
 ```
 
-1. Curl the following endpoint to get an ingest token.
+*  Curl the following endpoint to get an ingest token.
 ```
 curl -X POST \
   'https://core.serverless-dev.com/ingestion/kinesis/token' \
@@ -110,7 +110,7 @@ curl -X POST \
 }'
 
 ```
-### Configure necessary environment variables and tags
+### 5.Configure necessary environment variables and tags
 
 Configure the AWS environment variables using the AWS CLI
 
