@@ -112,12 +112,14 @@ curl -X POST \
 ```
 ### Configure necessary environment variables and tags
 
-Configure the AWS environment variables 
+Configure the AWS environment variables using the AWS CLI
 
+(syntax not correct here yet)
 ```
 aws lambda   update-function-configuration --function-name $FUNCTION_NAME --region us-east-1 --environment Variables=\
 "
 {
+   OTEL_RESOURCE_ATTRIBUTES : {}
   "common": { "destination": { "requestHeaders": "serverless_token=#YOUR INGEST TOKEN" } },
   "logs": { "destination": "https://core.serverless.com/v1/logs" },
   "metrics": { "destination": "https://core.serverless.com/v1/metrics" },
