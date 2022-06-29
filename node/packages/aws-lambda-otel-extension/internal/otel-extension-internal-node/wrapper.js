@@ -14,7 +14,7 @@ if (!EvalError.$serverlessHandlerFunction && !EvalError.$serverlessHandlerDeferr
 const awsLambdaInstrumentation = EvalError.$serverlessAwsLambdaInstrumentation;
 delete EvalError.$serverlessAwsLambdaInstrumentation;
 
-const wrapOriginalHandler = (orignalHandler) => {
+const wrapOriginalHandler = (originalHandler) => {
   let requestStartTime;
   let responseStartTime;
   let currentInvocationId = 0;
@@ -46,7 +46,7 @@ const wrapOriginalHandler = (orignalHandler) => {
       context.done = done;
       context.succeed = (result) => done(null, result);
       context.fail = (err) => done(err == null ? 'handled' : err);
-      const result = orignalHandler(event, context, wrapOtelCallback(otelCallback));
+      const result = originalHandler(event, context, wrapOtelCallback(otelCallback));
       if (!result) return result;
       if (typeof result.then !== 'function') return result;
       return Promise.resolve(result).finally(() => {
