@@ -25,7 +25,7 @@ in order to stream logs.
 ## Trace Logs
 Logs are also especially useful when troubleshooting specific
 errors. When you find an invocation that results in an error
-and click on the Trace, you can find details about the exection
+and click on the Trace, you can find details about the execution
 under the Logs section of the Trace Detail view. 
 
 ## Disabling log collection

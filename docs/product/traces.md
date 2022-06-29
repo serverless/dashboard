@@ -15,8 +15,8 @@ To do this we provided a set of tools for analyzing Traces
 
 ## Spans
 
-A Trace contains a set of Spans associated with and displated in the style of a 
-Gant Chart. This chartprovides you with context for when, and 
+A Trace contains a set of Spans associated with and displayed in the style of a 
+Gant Chart. This chart provides you with context for when, and 
 how long various subsequent interactions took. 
 
 For more details about Spans see our [Example Trace](#example-trace).
@@ -31,9 +31,9 @@ Detail view.
 ## Explorer View
 
 Similar to our [Metrics View](metrics.md) the Trace Explorer provides you a
-starting point for discovering errors, or slowness across your Orginization.
+starting point for discovering errors, or slowness across your Organization.
 Similar to metrics views you can apply filters to narrow in on errors, slowness
-or usage patterns across your orginization. 
+or usage patterns across your organization. 
 
 Traces share the same set of filters from our [Metrics View](metrics.md) but are
 not saved.

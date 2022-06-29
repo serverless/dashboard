@@ -1,7 +1,7 @@
 <!--
 title: Serverless Console Lambda Extension
 menuText: Lambda Extension
-description: An overview of the Serverles Runtime
+description: An overview of the Serverless Runtime
 menuOrder: 6
 -->
 
@@ -17,7 +17,7 @@ a set of Node.js modules is used. This is referred to as the Internal Instrument
 Additional language support will require language specific Open Telemetry Libraries.
 
 ## External Extension
-In additional to runtime libraries installed by the Severless Extension, an extrnal
+In additional to runtime libraries installed by the Serverless Extension, an external
 Lambda Extension is used to forward logs, metrics, and traces to
 Serverless Console. This component is independent from the language runtime.
 
@@ -25,5 +25,5 @@ Serverless Console. This component is independent from the language runtime.
 [Serverless Framework](../index.md) is the easiest way to instrument your app or
 service with the Serverless Console Extension. Additionally, 
 it is possible to configure the Serverless Console Extension without 
-Serverless Framework. Details about configuring the environemnt variables can
-be found in [AWS OTEL Lambda Extension](../../node/packages/aws-lambda-otel-extension/README.md)
+Serverless Framework. Details about configuring the environment variables can
+be found in [AWS OTEL Lambda Extension](https://github.com/serverless/console/tree/main/node/packages/aws-lambda-otel-extension)

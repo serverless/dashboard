@@ -42,8 +42,8 @@ so your desired organization name may not be available.
 ## Using Serverless Dashboard Orgs
 If you have an existing Serverless Dashboard org and you log into 
 Serverless Console you will automatically start using your existing 
-organization. Additionally if you are a member of a Serevrless Dashboard
-orginization you will automatically made a member of that org in 
+organization. Additionally if you are a member of a Serverless Dashboard
+organization you will automatically made a member of that org in 
 Serverless Console.  
 
 **Note:** if you change your org name in Console, you’ll need to specify the dashboard name separately to take advantage of dashboard features like Parameters and Providers. This can be done by including the console specific name in the console section of your configuration, as in the example below.
