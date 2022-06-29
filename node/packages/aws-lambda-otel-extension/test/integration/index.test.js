@@ -83,10 +83,13 @@ describe('integration', function () {
           },
           isBase64Encoded: false,
         },
-        test: ({ instrumentationSpans }) => {
+        test: ({ instrumentationSpans, invocationsData }) => {
           expect(
             instrumentationSpans['@opentelemetry/instrumentation-express'].length
           ).to.be.at.least(4);
+          expect(
+            invocationsData.map(({ responsePayload }) => responsePayload.bodyJson)
+          ).to.deep.equal([{ message: 'Hello from /foo!' }, { message: 'Hello from /foo!' }]);
         },
       },
     ],
