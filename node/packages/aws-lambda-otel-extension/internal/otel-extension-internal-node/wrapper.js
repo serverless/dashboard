@@ -19,6 +19,7 @@ const wrapOriginalHandler = (orignalHandler) => {
   let responseStartTime;
   let currentInvocationId = 0;
   let isResolved = false;
+  const unresolvedPromise = new Promise(() => {});
   const debugLog = (...args) => {
     if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
   };
@@ -50,10 +51,11 @@ const wrapOriginalHandler = (orignalHandler) => {
       if (typeof result.then !== 'function') return result;
       return Promise.resolve(result).finally(() => {
         // Lambda logic resolved, passing result to otel wrapper
-        if (invocationId !== currentInvocationId) return;
-        if (isResolved) return;
+        if (invocationId !== currentInvocationId) return unresolvedPromise;
+        if (isResolved) return unresolvedPromise;
         isResolved = true;
         if (!responseStartTime) responseStartTime = process.hrtime.bigint();
+        return null;
       });
     }
   );
@@ -63,9 +65,8 @@ const wrapOriginalHandler = (orignalHandler) => {
     EvalError.$serverlessInvocationStart = Date.now();
     debugLog('Internal extension: Invocation');
     isResolved = false;
-    const invocationId = ++currentInvocationId;
+    ++currentInvocationId;
     const logResponseDuration = () => {
-      if (invocationId !== currentInvocationId) return;
       delete EvalError.$serverlessRequestHandlerPromise;
       delete EvalError.$serverlessResponseHandlerPromise;
       if (responseStartTime) {
@@ -80,7 +81,6 @@ const wrapOriginalHandler = (orignalHandler) => {
       (someAwsCallback) =>
       (...args) => {
         // Callback invoked by Otel instrumentation after triggering response hook
-        if (invocationId !== currentInvocationId) return;
         Promise.all([
           EvalError.$serverlessRequestHandlerPromise,
           EvalError.$serverlessResponseHandlerPromise,
@@ -98,7 +98,6 @@ const wrapOriginalHandler = (orignalHandler) => {
     if (typeof result.then !== 'function') return result;
     return Promise.resolve(result).finally(() => {
       // Otel response hook triggered, passing result to AWS
-      if (invocationId !== currentInvocationId) return null;
       return Promise.all([
         EvalError.$serverlessRequestHandlerPromise,
         EvalError.$serverlessResponseHandlerPromise,
