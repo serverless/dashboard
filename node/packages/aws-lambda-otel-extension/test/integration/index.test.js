@@ -173,6 +173,7 @@ describe('integration', function () {
       log.debug('instrumentationSpans %o', instrumentationSpans);
       if (testConfig.test) {
         testConfig.test({
+          invocationsData,
           metricsReport,
           tracesReport,
           resourceMetrics,

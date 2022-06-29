@@ -97,10 +97,12 @@ const invoke = async (testConfig) => {
     throw error;
   }
   const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+  const payload = { raw: String(Buffer.from(result.Payload)) };
   try {
-    const responsePayload = JSON.parse(Buffer.from(result.Payload));
-    log.debug('invoke response payload %O', responsePayload);
-    log.debug('invoke response parsed payload %O', JSON.parse(responsePayload.body));
+    payload.json = JSON.parse(payload.raw);
+    log.debug('invoke response payload %O', payload.json);
+    payload.bodyJson = JSON.parse(payload.json.body);
+    log.debug('invoke response parsed payload %O', payload.bodyJson);
   } catch {
     /* ignore */
   }
@@ -108,7 +110,7 @@ const invoke = async (testConfig) => {
     if (expectedOutcome.startsWith('error')) return duration;
     throw new Error(`Invocation of ${testConfig.name} errored: ${result.FunctionError}`);
   }
-  return duration;
+  return { duration, payload };
 };
 
 const deleteFunction = async (testConfig) => {
@@ -286,7 +288,7 @@ module.exports = async (testConfig, coreConfig) => {
   log.info('Ensure function is active %s', testConfig.name);
   await ensureIsActive(testConfig);
 
-  const invokeDurations = [];
+  const invocationsMeta = [];
   // Provide extra time room, in case local clock is not perfectly in sync
   testConfig.invokeStartTime = Date.now() - 5000;
   let counter = 1;
@@ -294,7 +296,7 @@ module.exports = async (testConfig, coreConfig) => {
     await wait(3000);
     log.info('Invoke function #%d %s', counter, testConfig.name);
     try {
-      invokeDurations.push(await invoke(testConfig));
+      invocationsMeta.push(await invoke(testConfig));
     } catch (error) {
       if (error.message.includes('Lambda was unable to decrypt the environment variables')) {
         // Rare error on AWS side, which we can recover from only by re-creating the lambda
@@ -311,7 +313,11 @@ module.exports = async (testConfig, coreConfig) => {
   log.info('Retrieve list of written reports %s', testConfig.name);
   const reports = await retrieveReports(testConfig);
   for (let i = 0; i < reports.invocationsData.length; i++) {
-    reports.invocationsData[i].localDuration = invokeDurations[i];
+    const invocationMeta = invocationsMeta[i];
+    Object.assign(reports.invocationsData[i], {
+      localDuration: invocationMeta.duration,
+      responsePayload: invocationMeta.payload,
+    });
   }
   log.info('Obtained reports %s %o', testConfig.name, reports);
   return reports;
