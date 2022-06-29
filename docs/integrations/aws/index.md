@@ -114,7 +114,7 @@ curl -X POST \
 
 Configure the AWS environment variables 
 
-
+```
 aws lambda   update-function-configuration --function-name $FUNCTION_NAME --region us-east-1 --environment Variables=\
 "
 {
@@ -126,3 +126,4 @@ aws lambda   update-function-configuration --function-name $FUNCTION_NAME --regi
   "traces": { "destination": "https://core.serverless.com/v1/traces' },
 }
 "
+```
