@@ -1,5 +1,5 @@
 <!--
-title: AWS Lambda 
+title: Integrations 
 menuText: Integrations
 description: Compatible Serverless Console Platform
 menuOrder: 3
