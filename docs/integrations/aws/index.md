@@ -5,7 +5,7 @@ description: An overview of the AWS Lamba Integration
 menuOrder: 6
 -->
 
-# Serverless Console for AWS Lambda
+# AWS Lambda
 
 Serverless Console is optimized to work with AWS Lambda, and has planned integration
 for further AWS Service integration. This guide provides instructions
