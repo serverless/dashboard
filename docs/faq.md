@@ -134,9 +134,11 @@ for Durations higher than those metrics will lead you to your slowest requests.
 ## Pricing and Costs
 
 **How much does Serverless Console cost?**
-Serverless Console is free for the first 1,000 transactions!
+Serverless Console is free to start but has a limited number of
+transactions. You can track your progress while using the app
+in the sidebar.
 
-After that Serverless Console is priced per 100,000 Transactions 
+After the free trial Serverless Console is priced per 100,000 Transactions 
 for the Pro Tier, and per Million transactions for the Enterprise tier. 
 
 Got to your settings page to sign up today. 
@@ -148,8 +150,8 @@ large number of logs, or spans. In most cases overages don't apply
 and your transaction count will closely match your invocation count.
 
 Overages only apply when a Trace has
-* > 10kb of logs - a transaction is added for each additional 10kb
-* > 100 spans - a transaction is added for each additional 100 spans
+* Greater than 10kb of logs - a transaction is added for each additional 10kb
+* Greater than 100 spans - a transaction is added for each additional 100 spans
 
 **I receive an email saying my org will be shutoff, what happens next?**
 After you have reached the free tier limit of 1,000 transactions we provide
