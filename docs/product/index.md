@@ -18,8 +18,8 @@ getting started.
 ## Follow our Getting Started Guide for Serverless Framework
 The easiest way to get started is using our [Serverless Framework Guide](../index.md).
 
-## Signup or log in at console.serverless.com
-[Create your orginization](create-org.md) and learn how to deploy by logging into [Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link)
+## Sign up or log in at console.serverless.com
+[Create your organization](create-org.md) and learn how to deploy by logging into [Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link)
 
 ## Find or Submit a Question to our FAQ
 If your looking for an answer to a specific question find it on our [../faq.md]

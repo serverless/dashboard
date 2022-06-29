@@ -25,7 +25,7 @@ Should be set to `lambda`.
 **Deployment** - Deployment tags identify details about your specific
 deployment.
 - `deployment.environment` This is the environment an app is deployed to. It can
-be defined as `stage` in `serverlss.yaml` file `prod`.
+be defined as `stage` in `serverless.yaml` file `prod`.
 
 **FAAS Tags** - FAAS tags identify details function as a service platforms like
 AWS Lambda.
@@ -38,7 +38,7 @@ with `aws.sqs`
 - `faas.name` - This the name of the single function that was invoked. 
 `console-node-http-api-hello`
 - `faas.error_message` The error message if one is captured.
-`Exception occured`
+`Exception occurred`
 
 **HTTP Tags** - HTTP tags identify details for HTTP based API's
 - `http.path` - This is the http path with the path that includes path param
@@ -50,11 +50,11 @@ place holders `/test/{id}`
 **Service Tags** - Service tags identify naming details about the underlying
 resources of your service. 
 - `service.name` This a resource name for the service that your function or
-container is running in. For Serverless Framwork users this will combine your
+container is running in. For Serverless Framework users this will combine your
 stage, service name, and function name. `console-node-http-api`
 - `service.namespace` The serverless organization app service name assigned to
 this code. This can be specified as the service name in the `serverless.yaml`
-file or will be inherited based in your compute envirionment.
+file or will be inherited based in your compute environment.
 `console-node-http-api`
 
 ## Filters
