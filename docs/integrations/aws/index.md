@@ -9,8 +9,8 @@ menuOrder: 6
 
 Serverless Console is optimized to work with AWS Lambda, and has planned integration
 for further AWS Service integration. This guide provides instructions
-for [instrumenting AWS Lambda functions using the Serveless Console Extension](extension.md) 
-and [details about supported frameworks](frameworks.md).
+for instrumenting AWS Lambda functions about support and details for the
+AWS Lambda Integration.
 
 ## Runtime Support
 We're working to expand our runtime support. 
