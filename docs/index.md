@@ -50,3 +50,4 @@ but will speed up considerably from there. Each time you invoke
 one of your instrumented functions, we receive [Traces](./product//traces.md) in Console. 
 
 For more details see our [product section](./product) or learn about using [Serverless Console on AWS](./integrations/aws/).
+
