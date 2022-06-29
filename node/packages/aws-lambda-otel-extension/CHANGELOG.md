@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.5](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.4...@serverless/aws-lambda-otel-extension@0.4.5) (2022-06-29)
+
+### Bug Fixes
+
+- Fix handling of a case where `telemetryData` arrives before `eventData` ([26991ee](https://github.com/serverless/runtime/commit/26991ee530110901ec1de1a945351a7d42ec4166))
+
+### Maintenance Improvements
+
+- Add debug logs on internal extension requests timing ([2d2c2db](https://github.com/serverless/runtime/commit/2d2c2dbfe2b5fe99cd13a262031ae1d0b81be688))
+- Ensure to reuse HTTP(S) connection sockets ([82d295a](https://github.com/serverless/runtime/commit/82d295ac6f1ab7255ba6c67a890c4153b220d25c))
+- Remove `node-fetch` dependency ([688e24d](https://github.com/serverless/runtime/commit/688e24d08e94219df23038fc90b8325616d50de7))
+
 ### [0.4.4](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.3...@serverless/aws-lambda-otel-extension@0.4.4) (2022-06-27)
 
 ### Bug Fixes
