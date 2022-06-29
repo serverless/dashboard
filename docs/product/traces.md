@@ -42,7 +42,7 @@ not saved.
 
 Trace details provide the specifics about an event happening in your system. The
 Trace has a set of Metrics we collect, Tags, used for filtering, and Spans
-for all events instrumented using our [Serverless Console Extension](../platform/extension.mdd)
+for all events instrumented using our [Serverless Console Extension](../integrations/extension.mdd)
 collectors. 
 
 

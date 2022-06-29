@@ -105,7 +105,7 @@ Dashboard and/or Serverless Cloud.
 **I am not seeing all my details from API-Gateway?**
 At this time some details from API gateway are not collected. This means
 some errors are not recorded in a Trace. We recommend using a framework
-like [Express](platform/frameworks.md) to assist with capturing a errors.
+like [Express](integrations/frameworks.md) to assist with capturing a errors.
 
 **What languages and runtimes are supported?**
 
@@ -134,9 +134,12 @@ for Durations higher than those metrics will lead you to your slowest requests.
 ## Pricing and Costs
 
 **How much does Serverless Console cost?**
-Serverless Console is priced per 100,000 Transactions for the Pro Tier, and per Million
-transactions for the Enterprise tier. Got to your settings page
-to sign up today. 
+Serverless Console is free for the first 1,000 transactions!
+
+After that Serverless Console is priced per 100,000 Transactions 
+for the Pro Tier, and per Million transactions for the Enterprise tier. 
+
+Got to your settings page to sign up today. 
 
 **What is a Transaction?**
 A Transaction includes all elements of a [Trace](../product/traces.md) with
@@ -148,6 +151,10 @@ Overages only apply when a Trace has
 * > 10kb of logs - a transaction is added for each additional 10kb
 * > 100 spans - a transaction is added for each additional 100 spans
 
+**I receive an email saying my org will be shutoff, what happens next?**
+After you have reached the free tier limit of 1,000 transactions we provide
+an undisclosed grace period for you to upgrade before cutting off data being ingested. 
+To avoid loosing data upgrade your organization. 
 
 **How can I use console to analyze and predict costs?**
 We display a cost metric based on the duration and memory used by your Lambda 

@@ -26,8 +26,6 @@ outliers, filter for status codes, and spot usage trends across your endpoints.
 **Functions** - Functions provide a view to see all your instrumented Lambda
 functions holistically across your organization. 
 
-Fore more details about how we recognize these Traces see our [Scopes concept.](scopes.md)
-
 ## Collected Metrics
 Currently the following metrics are supported for ingestion.
 

@@ -23,7 +23,26 @@ Serverless Console. This component is independent from the language runtime.
 
 ## Configuring the Serverless Console Extension
 [Serverless Framework](../index.md) is the easiest way to instrument your app or
-service with the Serverless Console Extension. Additionally, 
-it is possible to configure the Serverless Console Extension without 
-Serverless Framework. Details about configuring the environment variables can
-be found in [AWS OTEL Lambda Extension](https://github.com/serverless/console/tree/main/node/packages/aws-lambda-otel-extension)
+service with the Serverless Console Extension. If your not using 
+Serverless Framework you'll need to build, and deploy the extension 
+yourself for each of your Lambdas functions. 
+
+<!--
+### Pre-requisites
+Before you get started make sure you have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+and a recent version of [Node.js](https://nodejs.dev/learn/how-to-install-nodejs) and a 
+[Serverless Console Organization](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F).
+
+### Clone Repo and Install Node Modules
+
+### Build the extension locally
+
+### Publish the extension to your AWS Account
+
+### Request an ingest token
+
+### Configure necessary environment variables and tags
+
+### Re-Deploy your Lambda Function?
+-->
+
