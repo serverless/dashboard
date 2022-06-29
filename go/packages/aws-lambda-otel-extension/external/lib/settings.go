@@ -30,10 +30,10 @@ func GetUserSettings() (UserSettings, error) {
 	var userSettings UserSettings
 	err := json.Unmarshal([]byte(userSettingsText), &userSettings)
 	// TODO: remove this, used for development only
-	customSettingsText := os.Getenv("SLS_OTEL_DEBUG_USER_SETTINGS")
-	if customSettingsText != "" {
-		err = json.Unmarshal([]byte(customSettingsText), &userSettings)
-	}
+	// customSettingsText := os.Getenv("SLS_OTEL_DEBUG_USER_SETTINGS")
+	// if customSettingsText != "" {
+	// 	err = json.Unmarshal([]byte(customSettingsText), &userSettings)
+	// }
 	if err != nil {
 		return UserSettings{}, err
 	}

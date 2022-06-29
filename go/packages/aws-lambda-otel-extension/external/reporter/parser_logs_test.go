@@ -141,7 +141,7 @@ func Test_readLogs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := readLogs(tt.args.data)
+			got, err := readLogs(tt.args.data, &types.EventDataPayload{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readLogs() error = %v, wantErr %v", err, tt.wantErr)
 				return
