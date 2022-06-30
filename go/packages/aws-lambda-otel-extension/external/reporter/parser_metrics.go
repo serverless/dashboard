@@ -6,6 +6,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -121,22 +122,18 @@ func createResourceAttributes(fun map[string]interface{}) []*protoc.KeyValue {
 	return attributes
 }
 
-func getTimeUnixNano(record map[string]interface{}) (uint64, uint64) {
-	startTime, ok := record["startTime"].(uint64)
-	if !ok {
+func getTimeUnixNanoInterval(record map[string]interface{}) (uint64, uint64) {
+	startTimeUnixNano := getTimeUnixNano(record["startTime"])
+	if startTimeUnixNano == 0 {
+		fmt.Printf(">> startTime is not valid (%v)", record["startTime"])
 		return 0, 0
 	}
-	startTimeUnixNano := startTime * 1000000
-	endTime, ok := record["endTime"].(uint64)
-	if !ok {
-		return startTimeUnixNano, startTimeUnixNano
-	}
-	endTimeUnixNano := endTime * 1000000
+	endTimeUnixNano := getTimeUnixNano(record["endTime"])
 	return startTimeUnixNano, endTimeUnixNano
 }
 
 func createHistogramMetric(count uint64, sum float64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Histogram {
-	startTime, endTime := getTimeUnixNano(record)
+	startTime, endTime := getTimeUnixNanoInterval(record)
 	return &protoc.Metric_Histogram{
 		Histogram: &protoc.Histogram{
 			DataPoints: []*protoc.HistogramDataPoint{
@@ -155,7 +152,7 @@ func createHistogramMetric(count uint64, sum float64, record map[string]interfac
 }
 
 func createCountMetric(count uint64, asInt int64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Sum {
-	startTime, endTime := getTimeUnixNano(record)
+	startTime, endTime := getTimeUnixNanoInterval(record)
 	return &protoc.Metric_Sum{
 		Sum: &protoc.Sum{
 			DataPoints: []*protoc.NumberDataPoint{

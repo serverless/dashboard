@@ -4,6 +4,7 @@ import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/protoc"
 	"fmt"
+	"time"
 )
 
 type AttributeHelper struct {
@@ -256,4 +257,28 @@ func getJsonValue(pv *protoc.AnyValue) interface{} {
 		return pv.GetBoolValue()
 	}
 	return nil
+}
+
+func getTimeUnixNano(value interface{}) uint64 {
+	switch value.(type) {
+	case string:
+		t, err := time.Parse(time.RFC3339Nano, value.(string))
+		if err != nil {
+			return 0
+		}
+		return uint64(t.UnixNano()) * 1000000
+	case int64:
+		return uint64(value.(int64)) * 1000000
+	case int32:
+		return uint64(value.(int32)) * 1000000
+	case int:
+		return uint64(value.(int)) * 1000000
+	case float32:
+		return uint64(value.(float32)) * 1000000
+	case float64:
+		return uint64(value.(float64)) * 1000000
+	default:
+		fmt.Printf("Unknown time type %T\n", value)
+	}
+	return uint64(0)
 }
