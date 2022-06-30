@@ -34,7 +34,7 @@ func main() {
 		return
 	}
 
-	logger.Info("Starting external extension")
+	logger.Debug("Starting external extension")
 
 	reportAgent := reporter.NewHttpClient(&userSettings)
 	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
@@ -45,10 +45,7 @@ func main() {
 		logger.Fatal("couldnt create logs api agent", zap.Error(err))
 	}
 
-	// Create metrics agent/listener
-	metricsApiListener := metrics.NewInternalHttpListener(reportAgent, currentRequestData)
-	metricsApiListener.Start()
-
+	// Track OS signals to gracefully shutdown
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
@@ -57,8 +54,12 @@ func main() {
 		logger.Debug(fmt.Sprintf("Received signal: %s, Exiting", s))
 	}()
 
+	// Create metrics agent/listener
+	metricsApiListener := metrics.NewInternalHttpListener(reportAgent, currentRequestData)
+	metricsApiListener.Start()
+
 	// Register the extension
-	_, err = extensionClient.Register(ctx)
+	err = extensionClient.Register(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -66,19 +67,19 @@ func main() {
 	// Subscribe to logs API
 	// Logs start being delivered only after the subscription happens.
 	// go func() {
-	agentID := extensionClient.ExtensionID
-	logger.Info("Subscribing to logs API", zap.String("agentID", agentID))
-	err = logsApiAgent.Init(agentID)
+	err = logsApiAgent.Init(extensionClient.ExtensionID)
 	if err != nil {
 		logger.Fatal("couldnt init logs api agent", zap.Error(err))
 	}
 	// }()
 
 	// Will block until shutdown event is received or cancelled via the context.
-	logger.Info("Going to process events loop")
+	logger.Debug("Going to process events loop")
+
+	// first call init next/event
 	processEvents(ctx, logger, reportAgent)
 
-	logger.Info("Exiting")
+	logger.Debug("Exiting")
 	logsApiAgent.Shutdown(ctx)
 	metricsApiListener.Shutdown()
 	err = reportAgent.Shutdown()
@@ -90,26 +91,40 @@ func main() {
 }
 
 func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.HttpClient) {
+
+	next := func() error {
+		res, err := extensionClient.NextEvent(ctx)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error event: %s, Exiting", err))
+			return err
+		}
+		// Exit if we receive a SHUTDOWN event
+		if res.EventType == extension.Shutdown {
+			logger.Debug("Received SHUTDOWN event, Exiting")
+			return err
+		} else {
+			logger.Debug(fmt.Sprintf("Received generic event: %s", lib.PrettyPrint(res)))
+		}
+		return nil
+	}
+
+	// first next to flag we're ready
+	if err := next(); err != nil {
+		return
+	}
+
 	for {
-		reportAgent.Flush()
+		// block until we receive runtimeDone
+		reportAgent.WaitDone()
 		reportAgent.WaitRequests()
 		select {
 		case <-ctx.Done():
 			logger.Debug("Context cancelled, exiting")
 			return
 		default:
-			logger.Debug("Waiting for an event...")
-			res, err := extensionClient.NextEvent(ctx)
-			if err != nil {
-				logger.Error(fmt.Sprintf("Error event: %s, Exiting", err))
+			logger.Debug("Reading next event...")
+			if err := next(); err != nil {
 				return
-			}
-			// Exit if we receive a SHUTDOWN event
-			if res.EventType == extension.Shutdown {
-				logger.Debug("Received SHUTDOWN event, Exiting")
-				return
-			} else {
-				logger.Debug(fmt.Sprintf("Received generic event: %s", lib.PrettyPrint(res)))
 			}
 		}
 	}

@@ -69,45 +69,45 @@ func NewClient(awsLambdaRuntimeAPI string) *Client {
 }
 
 // Register will register the extension with the Extensions API
-func (e *Client) Register(ctx context.Context) (*RegisterResponse, error) {
+func (e *Client) Register(ctx context.Context) error {
 	url := e.baseURL + "/register"
 
 	reqBody, err := json.Marshal(map[string]interface{}{
 		"events": []EventType{Invoke, Shutdown},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	httpReq.Header.Set(extensionNameHeader, ExtensionName)
 	httpRes, err := e.httpClient.Do(httpReq)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if httpRes.StatusCode != 200 {
 		defer httpRes.Body.Close()
 		body, _ := ioutil.ReadAll(httpRes.Body)
 		e.logger.Error("Error details", zap.String("body", lib.PrettyPrint(body)))
-		return nil, fmt.Errorf("request failed with status %s", httpRes.Status)
+		return fmt.Errorf("request failed with status %s", httpRes.Status)
 	}
 	defer httpRes.Body.Close()
 	body, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	res := RegisterResponse{}
 	err = json.Unmarshal(body, &res)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	e.ExtensionID = httpRes.Header.Get(extensionIdentiferHeader)
 
 	e.logger.Debug("Registered extension", zap.String("extensionID", e.ExtensionID), zap.String("response", lib.PrettyPrint(res)))
 
-	return &res, nil
+	return nil
 }
 
 // NextEvent blocks while long polling for the next lambda invoke or shutdown

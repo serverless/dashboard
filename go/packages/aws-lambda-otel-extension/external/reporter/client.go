@@ -4,7 +4,6 @@ import (
 	"aws-lambda-otel-extension/external/lib"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sync"
@@ -24,21 +23,31 @@ type PostData struct {
 }
 
 type HttpClient struct {
-	HttpClient *http.Client
-	settings   *lib.UserSettings
-	eg         *errgroup.Group
-	stackLast  *PostData
-	stackLock  *sync.Mutex
+	HttpClient     *http.Client
+	settings       *lib.UserSettings
+	eg             *errgroup.Group
+	continueEvents chan bool
+	stackLast      *PostData
+	stackLock      *sync.Mutex
+	extraParams    url.Values
 }
 
 type transformDataType func() ([]byte, error)
 
 func NewHttpClient(settings *lib.UserSettings) *HttpClient {
+
+	extraParams, err := url.ParseQuery(settings.Common.Destination.RequestHeaders)
+	if err != nil {
+		fmt.Printf(">> error parsing request headers: %s\n", err)
+	}
+
 	return &HttpClient{
-		HttpClient: &http.Client{},
-		settings:   settings,
-		eg:         &errgroup.Group{},
-		stackLock:  &sync.Mutex{},
+		HttpClient:     &http.Client{},
+		settings:       settings,
+		eg:             &errgroup.Group{},
+		stackLock:      &sync.Mutex{},
+		extraParams:    extraParams,
+		continueEvents: make(chan bool),
 	}
 }
 
@@ -92,12 +101,9 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	start := time.Now()
 	postData.trying = true
 	defer func() {
-		if err == nil {
-			c.removeStack(postData)
-		} else {
+		c.removeStack(postData)
+		if err != nil {
 			fmt.Printf(">> error for '%s' - %s\n", postData.path, err)
-			postData.trying = false
-			postData.lock.Unlock()
 		}
 	}()
 	fmt.Printf(">> sending post '%s'\n", postData.path)
@@ -113,12 +119,8 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	extraParams, err := url.ParseQuery(c.settings.Common.Destination.RequestHeaders)
-	if err != nil {
-		return err
-	}
 
-	for key, value := range extraParams {
+	for key, value := range c.extraParams {
 		req.Header.Set(key, value[0])
 	}
 
@@ -130,10 +132,10 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("request failed with status %s", resp.Status)
 	}
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	// _, err = ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return err
+	// }
 	fmt.Printf(">> post sent '%s' (%s)\n", postData.path, time.Now().Sub(start))
 	return nil
 }
@@ -168,12 +170,21 @@ func (c *HttpClient) PostResponse(response []byte) {
 	})
 }
 
+func (c *HttpClient) SetDone() {
+	c.continueEvents <- true
+}
+
+func (c *HttpClient) WaitDone() {
+	<-c.continueEvents
+}
+
 func (c *HttpClient) WaitRequests() error {
-	return c.eg.Wait()
+	c.Flush()
+	err := c.eg.Wait()
+	return err
 }
 
 func (c *HttpClient) Shutdown() error {
-	c.Flush()
 	err := c.WaitRequests()
 	c.HttpClient.CloseIdleConnections()
 	return err

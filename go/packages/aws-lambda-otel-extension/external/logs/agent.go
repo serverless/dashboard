@@ -108,6 +108,8 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 				defer file.Close()
 				file.Write(*s.currentRequestData.GetBinaryLastTelemetryData())
 			}
+			s.logger.Debug("Logs api agent received runtime done", zap.String("runtime_done_item", msg.ObjectRecord.RuntimeDoneItem))
+			s.reportAgent.SetDone()
 			break
 		case types.LogTypePlatformReport:
 			if lastTelemetryData == nil {
