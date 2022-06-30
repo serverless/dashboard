@@ -33,12 +33,28 @@ type LogJson struct {
 type LogEventType string
 
 const (
-	// Platform is to receive logs emitted by the platform
-	LogPlatform LogEventType = "platform"
-	// Function is to receive logs emitted by the function
-	LogFunction LogEventType = "function"
-	// Extension is to receive logs emitted by the extension
-	LogExtension LogEventType = "extension"
+	LogTypePlatform = "platform"
+
+	// LogTypeExtension is used to represent logs messages emitted by extensions
+	LogTypeExtension = "extension"
+
+	// LogTypeFunction is used to represent logs messages emitted by the function
+	LogTypeFunction = "function"
+
+	// LogTypePlatformStart is used for the log message about the platform starting
+	LogTypePlatformStart = "platform.start"
+	// LogTypePlatformEnd is used for the log message about the platform shutting down
+	LogTypePlatformEnd = "platform.end"
+	// LogTypePlatformReport is used for the log messages containing a report of the last invocation.
+	LogTypePlatformReport = "platform.report"
+	// LogTypePlatformLogsDropped is used when AWS has dropped logs because we were unable to consume them fast enough.
+	LogTypePlatformLogsDropped = "platform.logsDropped"
+	// LogTypePlatformLogsSubscription is used for the log messages about Logs API registration
+	LogTypePlatformLogsSubscription = "platform.logsSubscription"
+	// LogTypePlatformExtension is used for the log messages about Extension API registration
+	LogTypePlatformExtension = "platform.extension"
+	// LogTypePlatformRuntimeDone is received when the runtime (customer's code) has returned (success or error)
+	LogTypePlatformRuntimeDone = "platform.runtimeDone"
 )
 
 type SubEventType string
@@ -63,17 +79,38 @@ if v, ok := metrics["initDurationMs"].(float64); ok {
 log.Debug(fmt.Sprintf("Enhanced metrics: %+v\n", l.objectRecord.reportLogItem))
 }
 */
-type LogPlatformRecordMetrics struct {
-	DurationMs       float64 `json:"durationMs"`
-	BilledDurationMs int     `json:"billedDurationMs"`
-	MemorySizeMB     int     `json:"memorySizeMB"`
-	MaxMemoryUsedMB  int     `json:"maxMemoryUsedMB"`
-	InitDurationMs   float64 `json:"initDurationMs"`
+// type LogPlatformRecordMetrics struct {
+// 	DurationMs       float64 `json:"durationMs"`
+// 	BilledDurationMs int     `json:"billedDurationMs"`
+// 	MemorySizeMB     int     `json:"memorySizeMB"`
+// 	MaxMemoryUsedMB  int     `json:"maxMemoryUsedMB"`
+// 	InitDurationMs   float64 `json:"initDurationMs"`
+// }
+
+// type LogPlatformRecord struct {
+// 	RequestID string                   `json:"requestId"`
+// 	Metrics   LogPlatformRecordMetrics `json:"metrics"`
+// 	Version   string                   `json:"version"`
+// 	Status    string                   `json:"status"`
+// }
+
+// PlatformObjectRecord contains additional information found in Platform log messages
+type PlatformObjectRecord struct {
+	RequestID       string           // uuid; present in types.LogTypePlatform{Start,End,Report}
+	StartLogItem    StartLogItem     // present in types.LogTypePlatformStart only
+	ReportLogItem   ReportLogMetrics // present in types.LogTypePlatformReport only
+	RuntimeDoneItem string           // present in types.LogTypePlatformRuntimeDone only
 }
 
-type LogPlatformRecord struct {
-	RequestID string                   `json:"requestId"`
-	Metrics   LogPlatformRecordMetrics `json:"metrics"`
-	Version   string                   `json:"version"`
-	Status    string                   `json:"status"`
+// ReportLogMetrics contains metrics found in a types.LogTypePlatformReport log
+type ReportLogMetrics struct {
+	DurationMs       float64
+	BilledDurationMs int
+	MemorySizeMB     int
+	MaxMemoryUsedMB  int
+	InitDurationMs   float64
+}
+
+type StartLogItem struct {
+	Version string
 }

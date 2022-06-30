@@ -89,11 +89,13 @@ func (c *HttpClient) removeStack(postData *PostData) {
 
 func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	postData.lock.Lock()
+	start := time.Now()
 	postData.trying = true
 	defer func() {
 		if err == nil {
 			c.removeStack(postData)
 		} else {
+			fmt.Printf(">> error for '%s' - %s\n", postData.path, err)
 			postData.trying = false
 			postData.lock.Unlock()
 		}
@@ -132,17 +134,13 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Printf(">> post sent '%s'\n", postData.path)
+	fmt.Printf(">> post sent '%s' (%s)\n", postData.path, time.Now().Sub(start))
 	return nil
 }
 
-func (c *HttpClient) PostLogs(transformData transformDataType) {
+func (c *HttpClient) PostLogs(logs []byte) {
 	c.eg.Go(func() error {
-		body, err := transformData()
-		if err != nil {
-			return err
-		}
-		return c.Post(c.settings.Logs.Destination, body, false)
+		return c.Post(c.settings.Logs.Destination, logs, false)
 	})
 }
 
@@ -170,15 +168,13 @@ func (c *HttpClient) PostResponse(response []byte) {
 	})
 }
 
-func (c *HttpClient) Shutdown() error {
-	for {
-		// TODO: implement a timeout for this loop, less than a second
-		if c.stackLast == nil {
-			break
-		}
-		c.Flush()
-		time.Sleep(5 * time.Millisecond)
-	}
-	c.HttpClient.CloseIdleConnections()
+func (c *HttpClient) WaitRequests() error {
 	return c.eg.Wait()
+}
+
+func (c *HttpClient) Shutdown() error {
+	c.Flush()
+	err := c.WaitRequests()
+	c.HttpClient.CloseIdleConnections()
+	return err
 }

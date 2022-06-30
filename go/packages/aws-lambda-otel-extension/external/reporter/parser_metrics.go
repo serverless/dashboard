@@ -39,7 +39,7 @@ func ParseTelemetryDataPayload(data json.RawMessage) (*types.TelemetryDataPayloa
 	return payload, nil
 }
 
-func createMetricAttributes(fun map[string]interface{}, record *types.LogPlatformRecord) []*protoc.KeyValue {
+func createMetricAttributes(fun map[string]interface{}, record *types.PlatformObjectRecord) []*protoc.KeyValue {
 	var attributes []*protoc.KeyValue
 
 	// for loop to iterate MeasureAttributes
@@ -69,15 +69,15 @@ func createMetricAttributes(fun map[string]interface{}, record *types.LogPlatfor
 	if record != nil {
 		attributes = append(attributes, &protoc.KeyValue{
 			Key:   "faas.duration",
-			Value: getAnyValue(record.Metrics.DurationMs),
+			Value: getAnyValue(record.ReportLogItem.DurationMs),
 		})
 		attributes = append(attributes, &protoc.KeyValue{
 			Key:   "faas.billed_duration",
-			Value: getAnyValue(record.Metrics.BilledDurationMs),
+			Value: getAnyValue(record.ReportLogItem.BilledDurationMs),
 		})
 		attributes = append(attributes, &protoc.KeyValue{
 			Key:   "faas.max_memory_used_mb",
-			Value: getAnyValue(record.Metrics.MaxMemoryUsedMB),
+			Value: getAnyValue(record.ReportLogItem.MaxMemoryUsedMB),
 		})
 	}
 
@@ -121,18 +121,33 @@ func createResourceAttributes(fun map[string]interface{}) []*protoc.KeyValue {
 	return attributes
 }
 
+func getTimeUnixNano(record map[string]interface{}) (uint64, uint64) {
+	startTime, ok := record["startTime"].(uint64)
+	if !ok {
+		return 0, 0
+	}
+	startTimeUnixNano := startTime * 1000000
+	endTime, ok := record["endTime"].(uint64)
+	if !ok {
+		return startTimeUnixNano, startTimeUnixNano
+	}
+	endTimeUnixNano := endTime * 1000000
+	return startTimeUnixNano, endTimeUnixNano
+}
+
 func createHistogramMetric(count uint64, sum float64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Histogram {
+	startTime, endTime := getTimeUnixNano(record)
 	return &protoc.Metric_Histogram{
 		Histogram: &protoc.Histogram{
 			DataPoints: []*protoc.HistogramDataPoint{
 				{
-					// StartTimeUnixNano: ,
-					// TimeUnixNano: ,
-					Count:          count,
-					Sum:            sum,
-					BucketCounts:   []uint64{1, 0},
-					ExplicitBounds: []float64{math.Inf(1)},
-					Attributes:     attributes,
+					StartTimeUnixNano: startTime,
+					TimeUnixNano:      endTime,
+					Count:             count,
+					Sum:               sum,
+					BucketCounts:      []uint64{1, 0},
+					ExplicitBounds:    []float64{math.Inf(1)},
+					Attributes:        attributes,
 				},
 			},
 		},
@@ -140,21 +155,22 @@ func createHistogramMetric(count uint64, sum float64, record map[string]interfac
 }
 
 func createCountMetric(count uint64, asInt int64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Sum {
+	startTime, endTime := getTimeUnixNano(record)
 	return &protoc.Metric_Sum{
 		Sum: &protoc.Sum{
 			DataPoints: []*protoc.NumberDataPoint{
 				{
-					// StartTimeUnixNano: ,
-					// TimeUnixNano: ,
-					Attributes: attributes,
-					Value:      &protoc.NumberDataPoint_AsInt{asInt},
+					StartTimeUnixNano: startTime,
+					TimeUnixNano:      endTime,
+					Attributes:        attributes,
+					Value:             &protoc.NumberDataPoint_AsInt{AsInt: asInt},
 				},
 			},
 		},
 	}
 }
 
-func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *types.LogPlatformRecord) *protoc.MetricsData {
+func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *types.PlatformObjectRecord) *protoc.MetricsData {
 
 	metricAttributes := createMetricAttributes(fun, record)
 
@@ -190,10 +206,10 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 		metrics = append(metrics, &protoc.Metric{
 			Name: "faas.duration",
 			Unit: "1",
-			Data: createHistogramMetric(1, record.Metrics.DurationMs, fun, metricAttributes),
+			Data: createHistogramMetric(1, record.ReportLogItem.DurationMs, fun, metricAttributes),
 		})
 
-		memory := (float64(record.Metrics.MaxMemoryUsedMB) / float64(record.Metrics.MemorySizeMB)) * 100
+		memory := (float64(record.ReportLogItem.MaxMemoryUsedMB) / float64(record.ReportLogItem.MemorySizeMB)) * 100
 
 		metrics = append(metrics, &protoc.Metric{
 			Name: "faas.memory",
@@ -201,11 +217,11 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 			Data: createHistogramMetric(1, memory, fun, metricAttributes),
 		})
 
-		if record.Metrics.InitDurationMs > 0 {
+		if record.ReportLogItem.InitDurationMs > 0 {
 			metrics = append(metrics, &protoc.Metric{
 				Name: "faas.coldstart_duration",
 				Unit: "1",
-				Data: createHistogramMetric(1, record.Metrics.InitDurationMs, fun, metricAttributes),
+				Data: createHistogramMetric(1, record.ReportLogItem.InitDurationMs, fun, metricAttributes),
 			})
 		}
 	}

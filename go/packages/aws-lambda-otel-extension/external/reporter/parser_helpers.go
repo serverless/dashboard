@@ -216,11 +216,21 @@ func getAnyValue(value interface{}) *protoc.AnyValue {
 			},
 		}
 	case int64:
-	case int32:
-	case int:
 		return &protoc.AnyValue{
 			Value: &protoc.AnyValue_IntValue{
 				IntValue: value.(int64),
+			},
+		}
+	case int32:
+		return &protoc.AnyValue{
+			Value: &protoc.AnyValue_IntValue{
+				IntValue: int64(value.(int32)),
+			},
+		}
+	case int:
+		return &protoc.AnyValue{
+			Value: &protoc.AnyValue_IntValue{
+				IntValue: int64(value.(int)),
 			},
 		}
 	case bool:

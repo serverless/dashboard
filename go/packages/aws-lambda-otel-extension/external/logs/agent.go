@@ -70,7 +70,61 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	s.currentRequestData.SendLog(body)
+	// s.currentRequestData.SendLog(body)
+	msgs, err := reporter.ParseLogsAPIPayload(body)
+	if err != nil {
+		s.logger.Error("Error parsing logs api payload", zap.Error(err))
+		return
+	}
+
+	var typeFunctions []reporter.LogMessage
+	for _, msg := range msgs {
+		if msg.LogType == types.LogTypeFunction {
+			typeFunctions = append(typeFunctions, msg)
+		}
+	}
+	if len(typeFunctions) > 0 {
+		s.currentRequestData.SendLogs(typeFunctions)
+	}
+
+	lastTelemetryData, err := s.currentRequestData.GetLastTelemetryData()
+	if err != nil {
+		s.logger.Error("Error getting last telemetry data", zap.Error(err))
+	}
+
+	for _, msg := range msgs {
+
+		switch msg.LogType {
+		case types.LogTypePlatformStart:
+			s.currentRequestData.SetUniqueName("start")
+			break
+		case types.LogTypePlatformRuntimeDone:
+			if msg.ObjectRecord.RuntimeDoneItem != "success" && lastTelemetryData != nil {
+				file, err := ioutil.TempFile("", "sls-otel-extension-storage")
+				if err != nil {
+					s.logger.Error("Error creating temporary file", zap.Error(err))
+					return
+				}
+				defer file.Close()
+				file.Write(*s.currentRequestData.GetBinaryLastTelemetryData())
+			}
+			break
+		case types.LogTypePlatformReport:
+			if lastTelemetryData == nil {
+				file, _ := ioutil.TempFile("", "sls-otel-extension-storage")
+				var b []byte
+				i, err := file.Read(b)
+				if i > 0 && err != nil {
+					s.currentRequestData.SetBinaryLastTelemetryData(&b)
+					lastTelemetryData, _ = s.currentRequestData.GetLastTelemetryData()
+				}
+			}
+			if lastTelemetryData != nil {
+				reporter.CreateMetricsPayload(msg.ObjectRecord.RequestID, *lastTelemetryData, &msg.ObjectRecord)
+			}
+			break
+		}
+	}
 
 	// fmt.Println("Logs API event received:", string(body))
 
@@ -128,7 +182,7 @@ func (h HttpAgent) Init(agentID string) error {
 
 	_ = h.listener.Start()
 
-	eventTypes := []types.LogEventType{types.LogPlatform, types.LogFunction}
+	eventTypes := []types.LogEventType{types.LogTypePlatform, types.LogTypeFunction}
 	bufferingCfg := BufferingCfg{
 		MaxItems:  10000,
 		MaxBytes:  262144,

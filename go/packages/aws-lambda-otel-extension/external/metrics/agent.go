@@ -99,11 +99,14 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 		if telemetryData.ResponseEventPayload != nil {
 			l.reportAgent.PostResponse(*telemetryData.ResponseEventPayload)
 		}
+		l.currentRequestData.SetLastTelemetryData(&telemetryData.Function)
 		metrics := reporter.CreateMetricsPayload(telemetryData.RequestID, telemetryData.Function, nil)
 		data, err := proto.Marshal(metrics)
+		// data, err := json.Marshal(metrics)
 		if err != nil {
 			l.logger.Error("Error marshalling metrics", zap.Error(err))
 		}
+
 		l.reportAgent.PostMetric(data)
 
 		traces, err := reporter.CreateTracePayload(telemetryData.RequestID, telemetryData.Function, telemetryData.Traces)
@@ -114,6 +117,7 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 
 		for _, trace := range traces {
 			data, err = proto.Marshal(trace)
+			// data, err = json.Marshal(trace)
 			if err != nil {
 				l.logger.Error("Error marshalling traces", zap.Error(err))
 				return

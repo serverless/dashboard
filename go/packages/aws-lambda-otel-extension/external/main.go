@@ -92,6 +92,7 @@ func main() {
 func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.HttpClient) {
 	for {
 		reportAgent.Flush()
+		reportAgent.WaitRequests()
 		select {
 		case <-ctx.Done():
 			logger.Debug("Context cancelled, exiting")
@@ -99,7 +100,6 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 		default:
 			logger.Debug("Waiting for an event...")
 			res, err := extensionClient.NextEvent(ctx)
-			reportAgent.Flush()
 			if err != nil {
 				logger.Error(fmt.Sprintf("Error event: %s, Exiting", err))
 				return

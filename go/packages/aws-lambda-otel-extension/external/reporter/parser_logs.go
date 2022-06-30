@@ -10,70 +10,24 @@ import (
 	"time"
 )
 
-const (
-	// logTypeExtension is used to represent logs messages emitted by extensions
-	logTypeExtension = "extension"
+const ()
 
-	// logTypeFunction is used to represent logs messages emitted by the function
-	logTypeFunction = "function"
+// LogMessageTimeLayout is the layout string used to format timestamps from logs
+const LogMessageTimeLayout = "2006-01-02T15:04:05.999Z"
 
-	// logTypePlatformStart is used for the log message about the platform starting
-	logTypePlatformStart = "platform.start"
-	// logTypePlatformEnd is used for the log message about the platform shutting down
-	logTypePlatformEnd = "platform.end"
-	// logTypePlatformReport is used for the log messages containing a report of the last invocation.
-	logTypePlatformReport = "platform.report"
-	// logTypePlatformLogsDropped is used when AWS has dropped logs because we were unable to consume them fast enough.
-	logTypePlatformLogsDropped = "platform.logsDropped"
-	// logTypePlatformLogsSubscription is used for the log messages about Logs API registration
-	logTypePlatformLogsSubscription = "platform.logsSubscription"
-	// logTypePlatformExtension is used for the log messages about Extension API registration
-	logTypePlatformExtension = "platform.extension"
-	// logTypePlatformRuntimeDone is received when the runtime (customer's code) has returned (success or error)
-	logTypePlatformRuntimeDone = "platform.runtimeDone"
-)
-
-// platformObjectRecord contains additional information found in Platform log messages
-type platformObjectRecord struct {
-	requestID       string           // uuid; present in LogTypePlatform{Start,End,Report}
-	startLogItem    startLogItem     // present in LogTypePlatformStart only
-	reportLogItem   reportLogMetrics // present in LogTypePlatformReport only
-	runtimeDoneItem runtimeDoneItem  // present in LogTypePlatformRuntimeDone only
-}
-
-// reportLogMetrics contains metrics found in a LogTypePlatformReport log
-type reportLogMetrics struct {
-	durationMs       float64
-	billedDurationMs int
-	memorySizeMB     int
-	maxMemoryUsedMB  int
-	initDurationMs   float64
-}
-
-type runtimeDoneItem struct {
-	status string
-}
-
-type startLogItem struct {
-	version string
-}
-
-// logMessageTimeLayout is the layout string used to format timestamps from logs
-const logMessageTimeLayout = "2006-01-02T15:04:05.999Z"
-
-// logMessage is a log message sent by the AWS API.
-type logMessage struct {
-	time    time.Time
-	logType string
+// LogMessage is a log message sent by the AWS API.
+type LogMessage struct {
+	Time    time.Time
+	LogType string
 	// stringRecord is a string representation of the message's contents. It can be either received directly
 	// from the logs API or added by the extension after receiving it.
-	stringRecord string
+	StringRecord string
 	// object record is the platform log object record
-	objectRecord platformObjectRecord
+	ObjectRecord types.PlatformObjectRecord
 }
 
 // UnmarshalJSON unmarshals the given bytes in a custom LogMessage object.
-func (l *logMessage) UnmarshalJSON(data []byte) error {
+func (l *LogMessage) UnmarshalJSON(data []byte) error {
 	log := lib.NewLogger()
 
 	var j map[string]interface{}
@@ -93,65 +47,65 @@ func (l *logMessage) UnmarshalJSON(data []byte) error {
 	// time
 
 	if timeStr, ok := j["time"].(string); ok {
-		if time, err := time.Parse(logMessageTimeLayout, timeStr); err == nil {
-			l.time = time
+		if time, err := time.Parse(LogMessageTimeLayout, timeStr); err == nil {
+			l.Time = time
 		}
 	}
 
 	// the rest
 
 	switch typ {
-	case logTypePlatformLogsSubscription, logTypePlatformExtension:
-		l.logType = typ
-	case logTypeFunction, logTypeExtension:
-		l.logType = typ
-		l.stringRecord = j["record"].(string)
-	case logTypePlatformStart, logTypePlatformEnd, logTypePlatformReport, logTypePlatformRuntimeDone:
-		l.logType = typ
+	case types.LogTypePlatformLogsSubscription, types.LogTypePlatformExtension:
+		l.LogType = typ
+	case types.LogTypeFunction, types.LogTypeExtension:
+		l.LogType = typ
+		l.StringRecord = j["record"].(string)
+	case types.LogTypePlatformStart, types.LogTypePlatformEnd, types.LogTypePlatformReport, types.LogTypePlatformRuntimeDone:
+		l.LogType = typ
 		if objectRecord, ok := j["record"].(map[string]interface{}); ok {
 			// all of these have the requestId
 			if requestID, ok := objectRecord["requestId"].(string); ok {
-				l.objectRecord.requestID = requestID
+				l.ObjectRecord.RequestID = requestID
 			}
 
 			switch typ {
-			case logTypePlatformStart:
+			case types.LogTypePlatformStart:
 				if version, ok := objectRecord["version"].(string); ok {
-					l.objectRecord.startLogItem.version = version
+					l.ObjectRecord.StartLogItem.Version = version
 				}
-				l.stringRecord = fmt.Sprintf("START RequestId: %s Version: %s",
-					l.objectRecord.requestID,
-					l.objectRecord.startLogItem.version,
+				l.StringRecord = fmt.Sprintf("START RequestId: %s Version: %s",
+					l.ObjectRecord.RequestID,
+					l.ObjectRecord.StartLogItem.Version,
 				)
-			case logTypePlatformEnd:
-				l.stringRecord = fmt.Sprintf("END RequestId: %s",
-					l.objectRecord.requestID,
+			case types.LogTypePlatformEnd:
+				l.StringRecord = fmt.Sprintf("END RequestId: %s",
+					l.ObjectRecord.RequestID,
 				)
-			case logTypePlatformReport:
+			case types.LogTypePlatformReport:
 				if metrics, ok := objectRecord["metrics"].(map[string]interface{}); ok {
 					if v, ok := metrics["durationMs"].(float64); ok {
-						l.objectRecord.reportLogItem.durationMs = v
+						l.ObjectRecord.ReportLogItem.DurationMs = v
 					}
 					if v, ok := metrics["billedDurationMs"].(float64); ok {
-						l.objectRecord.reportLogItem.billedDurationMs = int(v)
+						l.ObjectRecord.ReportLogItem.BilledDurationMs = int(v)
 					}
 					if v, ok := metrics["memorySizeMB"].(float64); ok {
-						l.objectRecord.reportLogItem.memorySizeMB = int(v)
+						l.ObjectRecord.ReportLogItem.MemorySizeMB = int(v)
 					}
 					if v, ok := metrics["maxMemoryUsedMB"].(float64); ok {
-						l.objectRecord.reportLogItem.maxMemoryUsedMB = int(v)
+						l.ObjectRecord.ReportLogItem.MaxMemoryUsedMB = int(v)
 					}
 					if v, ok := metrics["initDurationMs"].(float64); ok {
-						l.objectRecord.reportLogItem.initDurationMs = v
+						l.ObjectRecord.ReportLogItem.InitDurationMs = v
 					}
-					log.Debug(fmt.Sprintf("Enhanced metrics: %+v\n", l.objectRecord.reportLogItem))
+					log.Debug(fmt.Sprintf("Enhanced metrics: %+v\n", l.ObjectRecord.ReportLogItem))
 				} else {
 					log.Error("LogMessage.UnmarshalJSON: can't read the metrics object")
 				}
-				l.stringRecord = createStringRecordForReportLog(l)
-			case logTypePlatformRuntimeDone:
+				l.StringRecord = createStringRecordForReportLog(l)
+			case types.LogTypePlatformRuntimeDone:
 				if status, ok := objectRecord["status"].(string); ok {
-					l.objectRecord.runtimeDoneItem.status = status
+					l.ObjectRecord.RuntimeDoneItem = status
 				} else {
 					log.Debug("Can't read the status from runtimeDone log message")
 				}
@@ -166,15 +120,15 @@ func (l *logMessage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func createStringRecordForReportLog(l *logMessage) string {
+func createStringRecordForReportLog(l *LogMessage) string {
 	stringRecord := fmt.Sprintf("REPORT RequestId: %s\tDuration: %.2f ms\tBilled Duration: %d ms\tMemory Size: %d MB\tMax Memory Used: %d MB",
-		l.objectRecord.requestID,
-		l.objectRecord.reportLogItem.durationMs,
-		l.objectRecord.reportLogItem.billedDurationMs,
-		l.objectRecord.reportLogItem.memorySizeMB,
-		l.objectRecord.reportLogItem.maxMemoryUsedMB,
+		l.ObjectRecord.RequestID,
+		l.ObjectRecord.ReportLogItem.DurationMs,
+		l.ObjectRecord.ReportLogItem.BilledDurationMs,
+		l.ObjectRecord.ReportLogItem.MemorySizeMB,
+		l.ObjectRecord.ReportLogItem.MaxMemoryUsedMB,
 	)
-	initDurationMs := l.objectRecord.reportLogItem.initDurationMs
+	initDurationMs := l.ObjectRecord.ReportLogItem.InitDurationMs
 	if initDurationMs > 0 {
 		stringRecord = stringRecord + fmt.Sprintf("\tInit Duration: %.2f ms", initDurationMs)
 	}
@@ -195,10 +149,10 @@ func removeInvalidTracingItem(data []byte) []byte {
 	return []byte(strings.ReplaceAll(string(data), ",\"tracing\":}", ""))
 }
 
-// parseLogsAPIPayload transforms the payload received from the Logs API to an array of LogMessage
-func parseLogsAPIPayload(data []byte) ([]logMessage, error) {
+// ParseLogsAPIPayload transforms the payload received from the Logs API to an array of LogMessage
+func ParseLogsAPIPayload(data []byte) ([]LogMessage, error) {
 	log := lib.NewLogger()
-	var messages []logMessage
+	var messages []LogMessage
 	if err := json.Unmarshal(data, &messages); err != nil {
 		// Temporary fix to handle malformed JSON tracing object : retry with sanitization
 		log.Debug("Can't read log message, retry with sanitization")
@@ -211,12 +165,7 @@ func parseLogsAPIPayload(data []byte) ([]logMessage, error) {
 	return messages, nil
 }
 
-func readLogs(data []byte, eventData *types.EventDataPayload) (logs []types.LogJson, err error) {
-	msgs, err := parseLogsAPIPayload(data)
-	if err != nil {
-		return nil, err
-	}
-
+func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs []types.LogJson, err error) {
 	// Get first / unique key from EventData
 	var key string
 	for k := range eventData.EventData {
@@ -246,20 +195,20 @@ func readLogs(data []byte, eventData *types.EventDataPayload) (logs []types.LogJ
 
 	// for loop needs to use index since it's all reference, otherwise we get only last obj
 	for i := range msgs {
-		if msgs[i].logType != logTypeFunction {
+		if msgs[i].LogType != types.LogTypeFunction {
 			continue
 		}
 		var severityText string
 		var severityNumber int64
-		parts := strings.Split(msgs[i].stringRecord, "\t")
+		parts := strings.Split(msgs[i].StringRecord, "\t")
 		if len(parts) > 2 {
 			severityText = parts[2]
 			severityNumber = int64(LogsSeverityNumber[severityText])
 		}
-		timestamp := msgs[i].time.UnixMilli()
+		timestamp := msgs[i].Time.UnixMilli()
 		orderId := fmt.Sprint(time.Now().UnixNano())
 		logs = append(logs, types.LogJson{
-			Body:              &msgs[i].stringRecord,
+			Body:              &msgs[i].StringRecord,
 			Attributes:        resourcesAtt,
 			Resource:          metricsAtt,
 			Timestamp:         &timestamp,

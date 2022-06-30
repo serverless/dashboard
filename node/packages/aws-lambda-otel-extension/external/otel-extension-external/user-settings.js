@@ -6,13 +6,13 @@
 module.exports = {
   common: { destination: {} },
   logs: {},
-  metrics: { outputType: 'protobuf' },
+  metrics: {},
   request: {},
   response: {},
-  traces: { outputType: 'protobuf' },
+  traces: {},
 };
 
-const userSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
+const userSettingsText = process.env.SLS_OTEL_DEBUG_USER_SETTINGS;
 
 if (!userSettingsText) return;
 
