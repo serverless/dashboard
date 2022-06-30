@@ -282,6 +282,9 @@ module.exports = async (testConfig, coreConfig) => {
   testConfig.configuration.FunctionName = `${basename}-${testConfig.name}`;
 
   log.notice('Process function %s', testConfig.name);
+
+  if (testConfig.hooks.beforeCreate) await testConfig.hooks.beforeCreate(testConfig, coreConfig);
+
   log.info('Create function %s', testConfig.name);
   await create(testConfig, coreConfig);
 
