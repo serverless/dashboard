@@ -288,7 +288,10 @@ module.exports = async (testConfig, coreConfig) => {
   log.info('Ensure function is active %s', testConfig.name);
   await ensureIsActive(testConfig);
 
+  if (testConfig.hooks.afterCreate) await testConfig.hooks.afterCreate(testConfig, coreConfig);
+
   const invocationsMeta = [];
+
   // Provide extra time room, in case local clock is not perfectly in sync
   testConfig.invokeStartTime = Date.now() - 5000;
   let counter = 1;
