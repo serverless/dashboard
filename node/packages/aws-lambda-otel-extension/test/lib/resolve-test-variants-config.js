@@ -30,6 +30,7 @@ module.exports = (functionVariantsConfig, options = {}) => {
         expectedOutcome: 'success',
         invokeCount: 2,
         invokePayload: {},
+        hooks: {},
       },
       options.commonTestConfig
     );
