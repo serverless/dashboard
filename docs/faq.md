@@ -154,9 +154,9 @@ Overages only apply when a Trace has
 * Greater than 100 spans - a transaction is added for each additional 100 spans
 
 **I receive an email saying my org will be shutoff, what happens next?**
-After you have reached the free tier limit of 1,000 transactions we provide
-an undisclosed grace period for you to upgrade before cutting off data being ingested. 
-To avoid loosing data upgrade your organization. 
+After you have reached the free tier limit we provide an undisclosed grace 
+period for you to upgrade before cutting off data being ingested. To avoid 
+loosing data upgrade your organization. 
 
 **How can I use console to analyze and predict costs?**
 We display a cost metric based on the duration and memory used by your Lambda 
