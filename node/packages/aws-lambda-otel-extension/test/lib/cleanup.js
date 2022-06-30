@@ -31,23 +31,29 @@ const deleteFunctions = async () => {
   );
 };
 
-const deleteLayers = async (layerName) => {
-  const layerVersions = (await awsRequest(Lambda, 'listLayerVersions', { LayerName: layerName }))
-    .LayerVersions;
-  if (!layerVersions.length) return;
+const listLayerVersions = async (layerName, nextMarker = undefined) => {
+  const response = await awsRequest(Lambda, 'listLayerVersions', {
+    LayerName: layerName,
+    Marker: nextMarker,
+  });
+  const result = response.LayerVersions.map(({ Version }) => Version);
+  if (response.NextMarker) {
+    return [...result, await listLayerVersions(layerName, response.NextMarker)];
+  }
+  return result;
+};
 
-  const lastLayerVersion = layerVersions[0].Version;
+const deleteLayers = async (layerName) => {
+  const layerVersions = await listLayerVersions(layerName);
   await Promise.all(
-    Array.from(Array(lastLayerVersion).keys()).map(async (index) => {
-      const versionNumber = index + 1;
+    layerVersions.map(async (versionNumber) => {
       await awsRequest(Lambda, 'deleteLayerVersion', {
         LayerName: layerName,
         VersionNumber: versionNumber,
       });
+      log.notice('Deleted %d version of the layer %s', versionNumber, layerName);
     })
   );
-
-  log.notice('Deleted all versions of layer %s', layerName);
 };
 
 const deleteDefaultLayers = () => deleteLayers(basename);
