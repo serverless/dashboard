@@ -139,10 +139,11 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("request failed with status %s", resp.Status)
+		err = fmt.Errorf("request failed with status %s", resp.Status)
+		return err
 	}
 	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
-	return nil
+	return err
 }
 
 func (c *HttpClient) PostLogs(logs []byte) {
