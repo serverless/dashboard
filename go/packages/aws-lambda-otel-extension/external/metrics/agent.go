@@ -52,8 +52,6 @@ func (l *InternalHttpListener) Start() bool {
 func (l *InternalHttpListener) http_handler(ctx *fasthttp.RequestCtx) {
 	body := ctx.Request.Body()
 
-	l.logger.Debug("Received metrics", zap.String("body", string(body)))
-
 	// fmt.Println("Internal API event received:", string(body))
 
 	payload, err := reporter.ParseInternalPayload(body)
