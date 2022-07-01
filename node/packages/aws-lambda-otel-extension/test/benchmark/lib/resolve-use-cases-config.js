@@ -8,6 +8,8 @@ const resolveFileZipBuffer = require('../../utils/resolve-file-zip-buffer');
 const fixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
 const ingestionServerUrl = `${backendUrl}/ingestion/kinesis`;
 
+const cloneMap = (map) => new Map(Array.from(map, ([key, value]) => [key, _.merge({}, value)]));
+
 module.exports = (benchmarkVariantsConfig, options) => {
   const allUseCasesConfig = new Map([
     [
@@ -20,7 +22,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
             },
           },
         },
-        variants: benchmarkVariantsConfig,
+        variants: cloneMap(benchmarkVariantsConfig),
       },
     ],
     [
@@ -74,7 +76,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
             isBase64Encoded: false,
           },
         },
-        variants: benchmarkVariantsConfig,
+        variants: cloneMap(benchmarkVariantsConfig),
       },
     ],
     [
@@ -87,7 +89,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
             },
           },
         },
-        variants: benchmarkVariantsConfig,
+        variants: cloneMap(benchmarkVariantsConfig),
       },
     ],
     [
@@ -100,7 +102,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
             },
           },
         },
-        variants: benchmarkVariantsConfig,
+        variants: cloneMap(benchmarkVariantsConfig),
       },
     ],
     [
