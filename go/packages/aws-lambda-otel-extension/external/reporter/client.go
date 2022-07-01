@@ -3,13 +3,12 @@ package reporter
 import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/protoc"
-	"bytes"
 	"fmt"
-	"net/http"
 	"net/url"
 	"sync"
 	"time"
 
+	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
@@ -25,8 +24,8 @@ type PostData struct {
 	prev       *PostData
 }
 
-type HttpClient struct {
-	HttpClient     *http.Client
+type ReporterClient struct {
+	ReporterClient *fasthttp.Client
 	settings       *lib.UserSettings
 	eg             *errgroup.Group
 	continueEvents chan bool
@@ -38,7 +37,7 @@ type HttpClient struct {
 
 type transformDataType func() ([]byte, error)
 
-func NewHttpClient(settings *lib.UserSettings) *HttpClient {
+func NewReporterClient(settings *lib.UserSettings) *ReporterClient {
 	logger := lib.NewLogger()
 
 	extraParams, err := url.ParseQuery(settings.Common.Destination.RequestHeaders)
@@ -46,8 +45,8 @@ func NewHttpClient(settings *lib.UserSettings) *HttpClient {
 		logger.Error("Parsing request headers", zap.Error(err))
 	}
 
-	return &HttpClient{
-		HttpClient:     &http.Client{},
+	return &ReporterClient{
+		ReporterClient: &fasthttp.Client{},
 		settings:       settings,
 		eg:             &errgroup.Group{},
 		stackLock:      &sync.Mutex{},
@@ -57,7 +56,7 @@ func NewHttpClient(settings *lib.UserSettings) *HttpClient {
 	}
 }
 
-func (c *HttpClient) Flush() {
+func (c *ReporterClient) Flush() {
 	current := c.stackLast
 	for {
 		if current == nil {
@@ -73,7 +72,7 @@ func (c *HttpClient) Flush() {
 	}
 }
 
-func (c *HttpClient) Post(path string, body []byte, isProtobuf bool) error {
+func (c *ReporterClient) Post(path string, body []byte, isProtobuf bool) error {
 	c.stackLock.Lock()
 	data := PostData{
 		body:       body,
@@ -91,7 +90,7 @@ func (c *HttpClient) Post(path string, body []byte, isProtobuf bool) error {
 	return nil
 }
 
-func (c *HttpClient) removeStack(postData *PostData) {
+func (c *ReporterClient) removeStack(postData *PostData) {
 	c.stackLock.Lock()
 	defer c.stackLock.Unlock()
 	if postData.prev == nil {
@@ -104,7 +103,7 @@ func (c *HttpClient) removeStack(postData *PostData) {
 	}
 }
 
-func (c *HttpClient) syncPost(postData *PostData) (err error) {
+func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 	postData.lock.Lock()
 	start := time.Now()
 	postData.trying = true
@@ -116,43 +115,45 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 		postData.lock.Unlock()
 	}()
 	// c.logger.Debug("Sending post", zap.String("path", postData.path))
-	req, err := http.NewRequest("POST", postData.path, bytes.NewBuffer(postData.body))
-	if err != nil {
-		return err
-	}
+
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	req.Header.SetMethod("POST")
+	req.SetRequestURI(postData.path)
 
 	req.Header.Set("accept-encoding", "gzip")
-
 	if postData.isProtobuf {
-		req.Header.Set("Content-Type", "application/x-protobuf")
+		req.Header.SetContentType("application/x-protobuf")
 	} else {
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.SetContentType("application/json")
 	}
 
 	for key, value := range c.extraParams {
 		req.Header.Set(key, value[0])
 	}
 
-	resp, err := c.HttpClient.Do(req)
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	err = c.ReporterClient.Do(req, resp)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("request failed with status %s", resp.Status)
+	if resp.StatusCode() != 200 {
+		err = fmt.Errorf("request failed with status %s", resp.StatusCode)
 		return err
 	}
 	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
 	return err
 }
 
-func (c *HttpClient) PostLogs(logs []byte) {
+func (c *ReporterClient) PostLogs(logs []byte) {
 	c.eg.Go(func() error {
 		return c.Post(c.settings.Logs.Destination, logs, false)
 	})
 }
 
-func (c *HttpClient) PostMetrics(metrics *protoc.MetricsData) {
+func (c *ReporterClient) PostMetrics(metrics *protoc.MetricsData) {
 	data, err := proto.Marshal(metrics)
 	// data, err := json.Marshal(metrics)
 	if err != nil {
@@ -164,7 +165,7 @@ func (c *HttpClient) PostMetrics(metrics *protoc.MetricsData) {
 	})
 }
 
-func (c *HttpClient) PostTrace(trace *protoc.TracesData) {
+func (c *ReporterClient) PostTrace(trace *protoc.TracesData) {
 	data, err := proto.Marshal(trace)
 	// data, err := json.Marshal(trace)
 	if err != nil {
@@ -177,27 +178,27 @@ func (c *HttpClient) PostTrace(trace *protoc.TracesData) {
 	})
 }
 
-func (c *HttpClient) PostRequest(request []byte) {
+func (c *ReporterClient) PostRequest(request []byte) {
 	c.eg.Go(func() error {
 		return c.Post(c.settings.Request.Destination, request, false)
 	})
 }
 
-func (c *HttpClient) PostResponse(response []byte) {
+func (c *ReporterClient) PostResponse(response []byte) {
 	c.eg.Go(func() error {
 		return c.Post(c.settings.Response.Destination, response, false)
 	})
 }
 
-func (c *HttpClient) SetDone() {
+func (c *ReporterClient) SetDone() {
 	c.continueEvents <- true
 }
 
-func (c *HttpClient) WaitDone() {
+func (c *ReporterClient) WaitDone() {
 	<-c.continueEvents
 }
 
-func (c *HttpClient) WaitRequests(waitTime time.Duration) error {
+func (c *ReporterClient) WaitRequests(waitTime time.Duration) error {
 	c.Flush()
 	done := make(chan struct{})
 	var err error
@@ -214,8 +215,8 @@ func (c *HttpClient) WaitRequests(waitTime time.Duration) error {
 	}
 }
 
-func (c *HttpClient) Shutdown() error {
+func (c *ReporterClient) Shutdown() error {
 	err := c.WaitRequests(time.Second * 2)
-	c.HttpClient.CloseIdleConnections()
+	c.ReporterClient.CloseIdleConnections()
 	return err
 }

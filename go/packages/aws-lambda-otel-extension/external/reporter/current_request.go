@@ -13,12 +13,12 @@ type CurrentRequestData struct {
 	LogsQueue         []LogMessage
 	UniqueNames       map[string]bool
 	EventData         *types.EventDataPayload
-	reportAgent       *HttpClient
+	reportAgent       *ReporterClient
 	lastTelemetryData *[]byte
 	logger            *lib.Logger
 }
 
-func NewCurrentRequestData(reportAgent *HttpClient) *CurrentRequestData {
+func NewCurrentRequestData(reportAgent *ReporterClient) *CurrentRequestData {
 	return &CurrentRequestData{
 		LogsQueue:   []LogMessage{},
 		UniqueNames: map[string]bool{},

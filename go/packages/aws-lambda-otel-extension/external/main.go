@@ -37,7 +37,7 @@ func main() {
 
 	logger.Debug("Starting external extension")
 
-	reportAgent := reporter.NewHttpClient(&userSettings)
+	reportAgent := reporter.NewReporterClient(&userSettings)
 	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
 
 	// Create Logs API agent
@@ -91,7 +91,7 @@ func main() {
 	return
 }
 
-func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) {
+func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData) {
 
 	next := func() error {
 		res, err := extensionClient.NextEvent(ctx)

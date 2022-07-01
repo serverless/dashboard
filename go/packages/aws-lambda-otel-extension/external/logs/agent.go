@@ -7,10 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 
+	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 )
 
@@ -19,17 +18,16 @@ const LOGS_SERVER_PORT = "4243"
 
 // LogsApiHttpListener is used to listen to the Logs API using HTTP
 type LogsApiHttpListener struct {
-	httpServer *http.Server
 	// logQueue is a synchronous queue and is used to put the received logs to be consumed later (see main)
+	server             *fasthttp.Server
 	logger             *lib.Logger
-	reportAgent        *reporter.HttpClient
+	reportAgent        *reporter.ReporterClient
 	currentRequestData *reporter.CurrentRequestData
 }
 
 // NewLogsApiHttpListener returns a LogsApiHttpListener with the given log queue
-func NewLogsApiHttpListener(reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) *LogsApiHttpListener {
+func NewLogsApiHttpListener(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData) *LogsApiHttpListener {
 	return &LogsApiHttpListener{
-		httpServer:         nil,
 		logger:             lib.NewLogger(),
 		reportAgent:        reportAgent,
 		currentRequestData: currentRequestData,
@@ -39,20 +37,16 @@ func NewLogsApiHttpListener(reportAgent *reporter.HttpClient, currentRequestData
 // Start initiates the server in a goroutine where the logs will be sent
 func (s *LogsApiHttpListener) Start() bool {
 	address := fmt.Sprintf("sandbox:%s", LOGS_SERVER_PORT)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.http_handler)
-	s.httpServer = &http.Server{Addr: address, Handler: mux}
+	s.server = &fasthttp.Server{
+		Handler: s.http_handler,
+		Name:    "LogsApiHttpListener",
+		ErrorHandler: func(ctx *fasthttp.RequestCtx, err error) {
+			s.logger.Error("Error while handling logs", zap.Error(err))
+		},
+	}
 
-	go func() {
-		s.logger.Info("Serving logsapi agent on address: " + address)
-		err := s.httpServer.ListenAndServe()
-		if err != http.ErrServerClosed {
-			s.logger.Error("Unexpected stop on Logsapi Http Server", zap.Error(err))
-			s.Shutdown(context.Background())
-		} else {
-			s.logger.Debug("Http Server closed", zap.Error(err))
-		}
-	}()
+	go s.server.ListenAndServe(address)
+	s.logger.Debug("Started logs HTTP agent", zap.String("address", address))
 	return true
 }
 
@@ -61,16 +55,9 @@ func (s *LogsApiHttpListener) Start() bool {
 // and put them into a synchronous queue to be read by the main goroutine.
 // Logging or printing besides the error cases below is not recommended if you have subscribed to receive extension logs.
 // Otherwise, logging here will cause Logs API to send new logs for the printed lines which will create an infinite loop.
-func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+func (s *LogsApiHttpListener) http_handler(ctx *fasthttp.RequestCtx) {
+	body := ctx.Request.Body()
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		s.logger.Error("Error reading body", zap.Error(err))
-		return
-	}
-
-	// s.currentRequestData.SendLog(body)
 	msgs, err := reporter.ParseLogsAPIPayload(body)
 	if err != nil {
 		s.logger.Error("Error parsing logs api payload", zap.Error(err))
@@ -126,12 +113,12 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 
 // Shutdown terminates the HTTP server listening for logs
 func (s *LogsApiHttpListener) Shutdown(ctx context.Context) {
-	if s.httpServer != nil {
-		err := s.httpServer.Shutdown(ctx)
+	if s.server != nil {
+		err := s.server.Shutdown()
 		if err != nil {
 			s.logger.Error("Failed to shutdown http server gracefully ", zap.Error(err))
 		} else {
-			s.httpServer = nil
+			s.server = nil
 		}
 	}
 }
@@ -145,7 +132,7 @@ type HttpAgent struct {
 
 // NewLogsApiAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
-func NewLogsApiAgent(reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) (*HttpAgent, error) {
+func NewLogsApiAgent(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData) (*HttpAgent, error) {
 	logsApiListener := NewLogsApiHttpListener(reportAgent, currentRequestData)
 
 	return &HttpAgent{
@@ -193,10 +180,6 @@ func (h HttpAgent) Init(agentID string) error {
 
 // Shutdown finalizes the logging and terminates the listener
 func (a *HttpAgent) Shutdown(ctx context.Context) {
-	// err := a.logger.Shutdown()
-	// if err != nil {
-	// 	a.logger.Errorf("Error when trying to shutdown logger: %v", err)
-	// }
-
+	a.logger.Sync()
 	a.listener.Shutdown(ctx)
 }
