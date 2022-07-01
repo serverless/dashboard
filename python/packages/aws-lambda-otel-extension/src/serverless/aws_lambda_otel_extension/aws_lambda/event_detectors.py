@@ -1,10 +1,9 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
-from serverless.aws_lambda_otel_extension.enums import LambdaEventType
-from serverless.aws_lambda_otel_extension.types import LambdaContext
+from serverless.aws_lambda_otel_extension.shared.enums import LambdaEventType
 
 
-def is_event_alexa_skill(event: Dict, context: LambdaContext) -> bool:
+def is_event_alexa_skill(event: Dict, context: Any) -> bool:
     event_session = event.get("session", {})
     event_context = event.get("context", {})
     event_request = event.get("request", {})
@@ -18,7 +17,7 @@ def is_event_alexa_skill(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_api_gateway_v2(event: Dict, context: LambdaContext) -> bool:
+def is_event_api_gateway_v2(event: Dict, context: Any) -> bool:
     event_version = event.get("version")
     return all(
         [
@@ -31,7 +30,7 @@ def is_event_api_gateway_v2(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_api_gateway(event: Dict, context: LambdaContext) -> bool:
+def is_event_api_gateway(event: Dict, context: Any) -> bool:
     return all(
         [
             "path" in event,
@@ -43,7 +42,7 @@ def is_event_api_gateway(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_cloudfront(event: Dict, context: LambdaContext) -> bool:
+def is_event_cloudfront(event: Dict, context: Any) -> bool:
     event_first_record = (event.get("records") or [{}])[0]
     return all(
         [
@@ -52,7 +51,7 @@ def is_event_cloudfront(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_cloudwatch_event(event: Dict, context: LambdaContext) -> bool:
+def is_event_cloudwatch_event(event: Dict, context: Any) -> bool:
     return all(
         [
             "source" in event,
@@ -61,7 +60,7 @@ def is_event_cloudwatch_event(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_cloudwatch_logs(event: Dict, context: LambdaContext) -> bool:
+def is_event_cloudwatch_logs(event: Dict, context: Any) -> bool:
     return all(
         [
             "data" in event.get("awslogs", {}),
@@ -69,7 +68,7 @@ def is_event_cloudwatch_logs(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_custom_authorizer(event: Dict, context: LambdaContext) -> bool:
+def is_event_custom_authorizer(event: Dict, context: Any) -> bool:
     event_type = event.get("type")
     return all(
         [
@@ -79,7 +78,7 @@ def is_event_custom_authorizer(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_dynamodb(event: Dict, context: LambdaContext) -> bool:
+def is_event_dynamodb(event: Dict, context: Any) -> bool:
     event_first_record_event_source = (event.get("Records") or [{}])[0].get("eventSource")
     return all(
         [
@@ -88,7 +87,7 @@ def is_event_dynamodb(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_kinesis(event: Dict, context: LambdaContext) -> bool:
+def is_event_kinesis(event: Dict, context: Any) -> bool:
     event_first_record_event_source = (event.get("Records") or [{}])[0].get("eventSource")
     return all(
         [
@@ -97,7 +96,7 @@ def is_event_kinesis(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_firehose(event: Dict, context: LambdaContext) -> bool:
+def is_event_firehose(event: Dict, context: Any) -> bool:
     return all(
         [
             "deliveryStreamArn" in event,
@@ -106,7 +105,7 @@ def is_event_firehose(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_s3(event: Dict, context: LambdaContext) -> bool:
+def is_event_s3(event: Dict, context: Any) -> bool:
     event_first_record_event_source = (event.get("Records") or [{}])[0].get("eventSource")
     return all(
         [
@@ -115,7 +114,7 @@ def is_event_s3(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_ses(event: Dict, context: LambdaContext) -> bool:
+def is_event_ses(event: Dict, context: Any) -> bool:
     event_first_record_event_source = (event.get("Records") or [{}])[0].get("eventSource")
     return all(
         [
@@ -124,7 +123,7 @@ def is_event_ses(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_sns(event: Dict, context: LambdaContext) -> bool:
+def is_event_sns(event: Dict, context: Any) -> bool:
     event_first_record_event_source = (event.get("Records") or [{}])[0].get("eventSource")
     return all(
         [
@@ -133,7 +132,7 @@ def is_event_sns(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_sqs(event: Dict, context: LambdaContext) -> bool:
+def is_event_sqs(event: Dict, context: Any) -> bool:
     event_first_record_event_source = (event.get("Records") or [{}])[0].get("eventSource")
     return all(
         [
@@ -142,7 +141,7 @@ def is_event_sqs(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def is_event_scheduled(event: Dict, context: LambdaContext) -> bool:
+def is_event_scheduled(event: Dict, context: Any) -> bool:
     event_source = event.get("source")
     return all(
         [
@@ -151,7 +150,7 @@ def is_event_scheduled(event: Dict, context: LambdaContext) -> bool:
     )
 
 
-def detect_lambda_event_type(event: Dict, context: LambdaContext) -> Optional[LambdaEventType]:
+def detect_lambda_event_type(event: Dict, context: Any) -> Optional[LambdaEventType]:
 
     if is_event_alexa_skill(event, context):
         return LambdaEventType.AlexaSkill
