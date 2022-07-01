@@ -45,18 +45,21 @@ module.exports = (functionVariantsConfig, options = {}) => {
     testVariants.push(_.merge(currentTestConfig, testConfigInput));
   }
 
-  const result = testVariants.flat(Infinity);
-  if (!options.multiplyBy) return result;
-  return result
-    .map((testScenario) => {
-      const multipliedResult = [];
-      let counter = 1;
-      do {
-        multipliedResult.push(
-          _.merge({}, testScenario, { name: `${testScenario.name}-${counter}` })
-        );
-      } while (++counter <= options.multiplyBy);
-      return multipliedResult;
-    })
-    .flat();
+  let result = testVariants.flat(Infinity);
+  if (options.multiplyBy) {
+    result = result
+      .map((testScenario) => {
+        const multipliedResult = [];
+        let counter = 1;
+        do {
+          multipliedResult.push(
+            merge({}, testScenario, { name: `${testScenario.name}-${counter}` })
+          );
+        } while (++counter <= options.multiplyBy);
+        return multipliedResult;
+      })
+      .flat();
+  }
+  log.debug('Target test cases %o', result);
+  return result;
 };
