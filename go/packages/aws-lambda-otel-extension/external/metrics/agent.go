@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 )
 
 const OTEL_SERVER_PORT = "2772"
@@ -101,30 +100,15 @@ func (l *InternalHttpListener) http_handler(w http.ResponseWriter, r *http.Reque
 		}
 		l.currentRequestData.SetLastTelemetryData(&telemetryData.Function)
 		metrics := reporter.CreateMetricsPayload(telemetryData.RequestID, telemetryData.Function, nil)
-		data, err := proto.Marshal(metrics)
-		// data, err := json.Marshal(metrics)
-		if err != nil {
-			l.logger.Error("Error marshalling metrics", zap.Error(err))
-		}
 
-		l.reportAgent.PostMetric(data)
+		l.reportAgent.PostMetrics(metrics)
 
 		traces, err := reporter.CreateTracePayload(telemetryData.RequestID, telemetryData.Function, telemetryData.Traces)
 		if err != nil {
 			l.logger.Error("Error creating traces", zap.Error(err))
 			return
 		}
-
-		for _, trace := range traces {
-			data, err = proto.Marshal(trace)
-			// data, err = json.Marshal(trace)
-			if err != nil {
-				l.logger.Error("Error marshalling traces", zap.Error(err))
-				return
-			}
-
-			l.reportAgent.PostTrace(data)
-		}
+		l.reportAgent.PostTrace(traces)
 
 	default:
 		l.logger.Error("Unknown payload type", zap.String("payload", string(body)))

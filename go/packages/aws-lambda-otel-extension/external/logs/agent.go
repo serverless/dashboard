@@ -93,38 +93,25 @@ func (s *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 	}
 
 	for _, msg := range msgs {
-
 		switch msg.LogType {
 		case types.LogTypePlatformStart:
 			s.currentRequestData.SetUniqueName("start")
-			break
 		case types.LogTypePlatformRuntimeDone:
 			if msg.ObjectRecord.RuntimeDoneItem != "success" && lastTelemetryData != nil {
-				file, err := ioutil.TempFile("", "sls-otel-extension-storage")
-				if err != nil {
-					s.logger.Error("Error creating temporary file", zap.Error(err))
-					return
-				}
-				defer file.Close()
-				file.Write(*s.currentRequestData.GetBinaryLastTelemetryData())
+				s.currentRequestData.SaveLastTelemetryData()
 			}
 			s.logger.Debug("Logs api agent received runtime done", zap.String("runtime_done_item", msg.ObjectRecord.RuntimeDoneItem))
 			s.reportAgent.SetDone()
-			break
 		case types.LogTypePlatformReport:
 			if lastTelemetryData == nil {
-				file, _ := ioutil.TempFile("", "sls-otel-extension-storage")
-				var b []byte
-				i, err := file.Read(b)
-				if i > 0 && err != nil {
-					s.currentRequestData.SetBinaryLastTelemetryData(&b)
-					lastTelemetryData, _ = s.currentRequestData.GetLastTelemetryData()
-				}
+				s.currentRequestData.LoadLastTelemetryData()
+				lastTelemetryData, _ = s.currentRequestData.GetLastTelemetryData()
 			}
+			s.logger.Debug(fmt.Sprintf("LogTypePlatformReport to send report (%v)", lastTelemetryData))
 			if lastTelemetryData != nil {
-				reporter.CreateMetricsPayload(msg.ObjectRecord.RequestID, *lastTelemetryData, &msg.ObjectRecord)
+				metrics := reporter.CreateMetricsPayload(msg.ObjectRecord.RequestID, *lastTelemetryData, &msg.ObjectRecord)
+				s.reportAgent.PostMetrics(metrics)
 			}
-			break
 		}
 	}
 
@@ -188,7 +175,7 @@ func (h HttpAgent) Init(agentID string) error {
 	bufferingCfg := BufferingCfg{
 		MaxItems:  10000,
 		MaxBytes:  262144,
-		TimeoutMS: 1000,
+		TimeoutMS: 25,
 	}
 	if err != nil {
 		return err

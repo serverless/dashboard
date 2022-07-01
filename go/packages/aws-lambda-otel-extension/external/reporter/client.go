@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"aws-lambda-otel-extension/external/lib"
+	"aws-lambda-otel-extension/external/protoc"
 	"bytes"
 	"fmt"
 	"net/http"
@@ -9,7 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/proto"
 )
 
 type PostData struct {
@@ -30,15 +33,17 @@ type HttpClient struct {
 	stackLast      *PostData
 	stackLock      *sync.Mutex
 	extraParams    url.Values
+	logger         *lib.Logger
 }
 
 type transformDataType func() ([]byte, error)
 
 func NewHttpClient(settings *lib.UserSettings) *HttpClient {
+	logger := lib.NewLogger()
 
 	extraParams, err := url.ParseQuery(settings.Common.Destination.RequestHeaders)
 	if err != nil {
-		fmt.Printf(">> error parsing request headers: %s\n", err)
+		logger.Error("Parsing request headers", zap.Error(err))
 	}
 
 	return &HttpClient{
@@ -48,6 +53,7 @@ func NewHttpClient(settings *lib.UserSettings) *HttpClient {
 		stackLock:      &sync.Mutex{},
 		extraParams:    extraParams,
 		continueEvents: make(chan bool),
+		logger:         logger,
 	}
 }
 
@@ -69,8 +75,6 @@ func (c *HttpClient) Flush() {
 
 func (c *HttpClient) Post(path string, body []byte, isProtobuf bool) error {
 	c.stackLock.Lock()
-	defer c.Flush()
-	defer c.stackLock.Unlock()
 	data := PostData{
 		body:       body,
 		path:       path,
@@ -80,6 +84,10 @@ func (c *HttpClient) Post(path string, body []byte, isProtobuf bool) error {
 		isProtobuf: isProtobuf,
 	}
 	c.stackLast = &data
+	c.stackLock.Unlock()
+	c.eg.Go(func() error {
+		return c.syncPost(&data)
+	})
 	return nil
 }
 
@@ -98,15 +106,15 @@ func (c *HttpClient) removeStack(postData *PostData) {
 
 func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	postData.lock.Lock()
-	start := time.Now()
+	// start := time.Now()
 	postData.trying = true
 	defer func() {
-		c.removeStack(postData)
 		if err != nil {
-			fmt.Printf(">> error for '%s' - %s\n", postData.path, err)
+			c.logger.Error("Post error", zap.Error(err))
 		}
+		c.removeStack(postData)
 	}()
-	fmt.Printf(">> sending post '%s'\n", postData.path)
+	// c.logger.Debug("Sending post", zap.String("path", postData.path))
 	req, err := http.NewRequest("POST", postData.path, bytes.NewBuffer(postData.body))
 	if err != nil {
 		return err
@@ -132,11 +140,7 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("request failed with status %s", resp.Status)
 	}
-	// _, err = ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	return err
-	// }
-	fmt.Printf(">> post sent '%s' (%s)\n", postData.path, time.Now().Sub(start))
+	// c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
 	return nil
 }
 
@@ -146,15 +150,28 @@ func (c *HttpClient) PostLogs(logs []byte) {
 	})
 }
 
-func (c *HttpClient) PostMetric(metrics []byte) {
+func (c *HttpClient) PostMetrics(metrics *protoc.MetricsData) {
+	data, err := proto.Marshal(metrics)
+	// data, err := json.Marshal(metrics)
+	if err != nil {
+		c.logger.Error("Error marshalling metrics", zap.Error(err))
+	}
+
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Metrics.Destination, metrics, true)
+		return c.Post(c.settings.Metrics.Destination, data, true)
 	})
 }
 
-func (c *HttpClient) PostTrace(trace []byte) {
+func (c *HttpClient) PostTrace(trace *protoc.TracesData) {
+	data, err := proto.Marshal(trace)
+	// data, err := json.Marshal(trace)
+	if err != nil {
+		c.logger.Error("Error marshalling traces", zap.Error(err))
+		return
+	}
+
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Traces.Destination, trace, true)
+		return c.Post(c.settings.Traces.Destination, data, true)
 	})
 }
 
@@ -180,8 +197,19 @@ func (c *HttpClient) WaitDone() {
 
 func (c *HttpClient) WaitRequests() error {
 	c.Flush()
-	err := c.eg.Wait()
-	return err
+	done := make(chan struct{})
+	var err error
+	go func() {
+		defer close(done)
+		err = c.eg.Wait()
+	}()
+	select {
+	case <-done:
+		return err
+	// dont wait more than 500ms for requests to finish
+	case <-time.After(time.Millisecond * 500):
+		return err
+	}
 }
 
 func (c *HttpClient) Shutdown() error {

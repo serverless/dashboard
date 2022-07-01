@@ -77,7 +77,7 @@ func main() {
 	logger.Debug("Going to process events loop")
 
 	// first call init next/event
-	processEvents(ctx, logger, reportAgent)
+	processEvents(ctx, logger, reportAgent, currentRequestData)
 
 	logger.Debug("Exiting")
 	logsApiAgent.Shutdown(ctx)
@@ -90,7 +90,7 @@ func main() {
 	return
 }
 
-func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.HttpClient) {
+func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporter.HttpClient, currentRequestData *reporter.CurrentRequestData) {
 
 	next := func() error {
 		res, err := extensionClient.NextEvent(ctx)
@@ -102,8 +102,8 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 		if res.EventType == extension.Shutdown {
 			logger.Debug("Received SHUTDOWN event, Exiting")
 			return err
-		} else {
-			logger.Debug(fmt.Sprintf("Received generic event: %s", lib.PrettyPrint(res)))
+		} else if res.EventType == extension.Invoke {
+			currentRequestData.SetUniqueName("invoke")
 		}
 		return nil
 	}

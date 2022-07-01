@@ -1,8 +1,12 @@
 package reporter
 
 import (
+	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/types"
 	"encoding/json"
+	"io/ioutil"
+
+	"go.uber.org/zap"
 )
 
 type CurrentRequestData struct {
@@ -11,6 +15,7 @@ type CurrentRequestData struct {
 	EventData         *types.EventDataPayload
 	reportAgent       *HttpClient
 	lastTelemetryData *[]byte
+	logger            *lib.Logger
 }
 
 func NewCurrentRequestData(reportAgent *HttpClient) *CurrentRequestData {
@@ -18,6 +23,7 @@ func NewCurrentRequestData(reportAgent *HttpClient) *CurrentRequestData {
 		LogsQueue:   []LogMessage{},
 		UniqueNames: map[string]bool{},
 		reportAgent: reportAgent,
+		logger:      lib.NewLogger(),
 	}
 }
 
@@ -86,10 +92,6 @@ func (c *CurrentRequestData) GetLastTelemetryData() (*map[string]interface{}, er
 	return &data, nil
 }
 
-func (c *CurrentRequestData) GetBinaryLastTelemetryData() *[]byte {
-	return c.lastTelemetryData
-}
-
 func (c *CurrentRequestData) SetLastTelemetryData(data *map[string]interface{}) {
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -98,6 +100,22 @@ func (c *CurrentRequestData) SetLastTelemetryData(data *map[string]interface{}) 
 	c.lastTelemetryData = &b
 }
 
-func (c *CurrentRequestData) SetBinaryLastTelemetryData(data *[]byte) {
-	c.lastTelemetryData = data
+func (c *CurrentRequestData) SaveLastTelemetryData() {
+	file, err := ioutil.TempFile("", "sls-otel-extension-storage")
+	if err != nil {
+		c.logger.Error("Error creating temporary file", zap.Error(err))
+		return
+	}
+	defer file.Close()
+	file.Write(*c.lastTelemetryData)
+}
+
+func (c *CurrentRequestData) LoadLastTelemetryData() {
+	file, _ := ioutil.TempFile("", "sls-otel-extension-storage")
+	defer file.Close()
+	var b []byte
+	_, err := file.Read(b)
+	if err != nil {
+		c.lastTelemetryData = &b
+	}
 }

@@ -245,8 +245,8 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 
 // Traces logic
 
-func batchOverflowSpans(traces *protoc.TracesData) []*protoc.TracesData {
-	var batches []*protoc.TracesData
+func batchOverflowSpans(traces *protoc.TracesData) *protoc.TracesData {
+	var batches []*protoc.InstrumentationLibrarySpans
 
 	for _, libSpans := range traces.ResourceSpans[0].InstrumentationLibrarySpans {
 		var cutSpans []*protoc.Span
@@ -260,27 +260,25 @@ func batchOverflowSpans(traces *protoc.TracesData) []*protoc.TracesData {
 				cutSpans = libSpans.Spans[iSpan:]
 				iSpan += len(cutSpans)
 			}
-			batches = append(batches, &protoc.TracesData{
-				ResourceSpans: []*protoc.ResourceSpans{
-					{
-						Resource: traces.ResourceSpans[0].Resource,
-						InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
-							{
-								InstrumentationLibrary: libSpans.InstrumentationLibrary,
-								Spans:                  cutSpans,
-							},
-						},
-					},
-				},
+			batches = append(batches, &protoc.InstrumentationLibrarySpans{
+				InstrumentationLibrary: libSpans.InstrumentationLibrary,
+				Spans:                  cutSpans,
 			})
 
 		}
 	}
 
-	return batches
+	return &protoc.TracesData{
+		ResourceSpans: []*protoc.ResourceSpans{
+			{
+				Resource:                    traces.ResourceSpans[0].Resource,
+				InstrumentationLibrarySpans: batches,
+			},
+		},
+	}
 }
 
-func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) ([]*protoc.TracesData, error) {
+func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) (*protoc.TracesData, error) {
 
 	if traces == nil {
 		return nil, nil

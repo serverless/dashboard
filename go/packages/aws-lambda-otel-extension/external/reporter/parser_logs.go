@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 const ()
@@ -114,7 +116,7 @@ func (l *LogMessage) UnmarshalJSON(data []byte) error {
 			log.Error("LogMessage.UnmarshalJSON: can't read the record object")
 		}
 	default:
-		log.Debug("Unknown message")
+		log.Debug("Unknown message", zap.String("type", typ))
 	}
 
 	return nil
