@@ -117,7 +117,7 @@ module.exports = async (coreConfig, options) => {
 
   const { token, orgId } = await resolveIngestionData();
   if (token) {
-    allBenchmarkVariantsConfig.set('protoConsole', {
+    allBenchmarkVariantsConfig.set('console', {
       configuration: {
         MemorySize: memorySize,
         Environment: {

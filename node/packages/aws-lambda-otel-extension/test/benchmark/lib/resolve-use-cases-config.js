@@ -137,7 +137,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
                     }),
                   ];
                 }
-                case 'protoConsole': {
+                case 'console': {
                   const userSettings = JSON.parse(
                     caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
                   );
