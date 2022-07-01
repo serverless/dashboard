@@ -6,7 +6,8 @@ import os
 import platform
 import sys
 from importlib import import_module
-from typing import Any, Collection, Dict, List, Optional
+from traceback import TracebackException
+from typing import Any, Collection, Dict, List, Optional, cast
 
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
@@ -21,18 +22,8 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import (
-    NonRecordingSpan,
-    SpanContext,
-    SpanKind,
-    Status,
-    StatusCode,
-    TraceFlags,
-    TracerProvider,
-    get_tracer,
-    get_tracer_provider,
-)
-from opentelemetry.trace.propagation import get_current_span, set_span_in_context
+from opentelemetry.trace import SpanKind, Status, StatusCode, TracerProvider, get_tracer, get_tracer_provider
+from opentelemetry.trace.propagation import get_current_span
 from wrapt import wrap_function_wrapper  # type: ignore
 
 from serverless.aws_lambda_otel_extension.aws_lambda.event_detectors import detect_lambda_event_type
@@ -56,14 +47,17 @@ from serverless.aws_lambda_otel_extension.shared.settings import sls_otel_extens
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_attributes.overloaded import OverloadedSpanAttributes
 
+from serverless.aws_lambda_otel_extension.shared.utilities import filter_dict_values_is_not_none
+
 logger = logging.getLogger(__name__)
 
 
-def _filtered_dict(d: Dict) -> Dict:
-    return {k: v for k, v in d.items() if v is not None}
+def _filtered_attributes_dict(attributes: Dict) -> Dict:
+    attributes = filter_dict_values_is_not_none(attributes)
+    return attributes
 
 
-def _extract_handler_parent_context(event: Dict, context: Any) -> Optional[Context]:
+def _extract_handler_span_parent_context(event: Dict, context: Any) -> Optional[Context]:
 
     handler_parent_context = None
 
@@ -107,7 +101,7 @@ def _create_base_attributes(
         "eventType": event_type.value if event_type else None,
         "functionName": ENV_AWS_LAMBDA_FUNCTION_NAME,
     }
-    return BoundedAttributes(attributes=_filtered_dict(attributes))
+    return BoundedAttributes(attributes=_filtered_attributes_dict(attributes))
 
 
 def _create_http_attributes(
@@ -140,7 +134,7 @@ def _create_http_attributes(
         }
     elif event_type == LambdaEventType.APIGatewayV2:
 
-        routeKey = event["requestContext"]["routeKey"]
+        routeKey = cast(str, event["requestContext"]["routeKey"])
 
         if " " in routeKey:
             http_path = routeKey.split(" ")[1]
@@ -156,12 +150,13 @@ def _create_http_attributes(
             "rawHttpPath": event["rawPath"],
         }
 
-    return BoundedAttributes(attributes=_filtered_dict(attributes))
+    return BoundedAttributes(attributes=_filtered_attributes_dict(attributes))
 
 
 def _create_wrapper_attributes(
     event: Dict, context: Any, is_cold_start: bool, event_type: LambdaEventType
 ) -> BoundedAttributes:
+    # Right now this is all there is. We may want to this at a later point.
     return BoundedAttributes(attributes={})
 
 
@@ -180,7 +175,13 @@ def _instrument(
 
         # Operate off of the following variable from now on when referencing the tracer provider.  This is a workaround
         # to deal with some typing related issues.
-        _tracer_provider = tracer_provider or get_tracer_provider()
+        _tracer_provider = cast(_TracerProvider, tracer_provider or get_tracer_provider())
+
+        def _force_flush():
+            if flush_timeout is not None:
+                _tracer_provider.force_flush(flush_timeout)
+            else:
+                _tracer_provider.force_flush()
 
         # Snapshot the cold start value.  Empty aws_request_ids means no events have been handled yet and this
         # invocation should be considered a cold start.
@@ -199,34 +200,35 @@ def _instrument(
 
         span_kind = None
 
-        if isinstance(_tracer_provider, _TracerProvider):
-            resource_attributes = _tracer_provider.resource.attributes
-        else:
-            resource_attributes = BoundedAttributes()
+        resource_attributes = _tracer_provider.resource.attributes
 
         handler_tracer = get_tracer(HANDLER_INSTRUMENTATION_NAME, PACKAGE_VERSION, _tracer_provider)
         internal_tracer = get_tracer(__name__, PACKAGE_VERSION, _tracer_provider)
 
         # This is the outermost span that will be used to trace the entire instrumentation process.
         with internal_tracer.start_as_current_span(name="wrapper") as wrapper_span:  # noqa: F841
+            wrapper_span = cast(_Span, wrapper_span)
 
             event_type: Optional[LambdaEventType] = None
             parent_context = None
 
             with internal_tracer.start_as_current_span(name="start") as start_span:
+                start_span = cast(_Span, start_span)
 
                 try:
-                    with internal_tracer.start_as_current_span(name="detect") as detect_span:  # noqa: F841
+                    with internal_tracer.start_as_current_span(name="detect") as detect_span:
+                        detect_span = cast(_Span, detect_span)
                         event_type = detect_lambda_event_type(event, context)
                 except Exception:
-                    logger.exception("Failure while detecting event type")
+                    logger.exception("Exception while detecting event type")
 
                 try:
-                    with internal_tracer.start_as_current_span(name="extract") as extract_span:  # noqa: F841
-                        parent_context = _extract_handler_parent_context(event, context) or empty_context
+                    with internal_tracer.start_as_current_span(name="extract") as extract_span:
+                        extract_span = cast(_Span, extract_span)
+                        parent_context = _extract_handler_span_parent_context(event, context) or empty_context
 
                 except Exception:
-                    logger.exception("Failure while extracting parent context")
+                    logger.exception("Exception while extracting parent context")
 
                 base_attributes = _create_base_attributes(event, context, is_cold_start, event_type)
                 http_attributes = _create_http_attributes(event, context, is_cold_start, event_type)
@@ -236,7 +238,7 @@ def _instrument(
                     start_span.add_event(
                         name="event",
                         attributes=BoundedAttributes(
-                            attributes=_filtered_dict(
+                            attributes=_filtered_attributes_dict(
                                 {
                                     **base_attributes,
                                     **http_attributes,
@@ -249,20 +251,16 @@ def _instrument(
                         name="request",
                         attributes=BoundedAttributes(
                             attributes={
-                                SlsExtensionSpanAttributes.SLS_HANDLER_REQUEST: bytes(json.dumps(event), "utf-8"),
+                                SlsExtensionSpanAttributes.SLS_HANDLER_REQUEST_JSON: bytes(json.dumps(event), "utf-8"),
                             }
                         ),
                     )
 
             # Flush the above finished span to make sure the event data is transmitted.
             try:
-                if isinstance(_tracer_provider, _TracerProvider):
-                    if flush_timeout is not None:
-                        _tracer_provider.force_flush(flush_timeout)
-                    else:
-                        _tracer_provider.force_flush()
+                _force_flush()
             except Exception:
-                logger.exception("Failure while flushing event data")
+                logger.exception("Exception while flushing event data")
 
             if event_type in set(
                 [
@@ -294,6 +292,8 @@ def _instrument(
                     name=lambda_handler, context=parent_context, kind=span_kind, links=[wrapper_span]
                 ) as handler_span:
 
+                    handler_span = cast(_Span, handler_span)
+
                     if handler_span.is_recording():
                         if context_invoked_function_arn:
                             handler_span.set_attribute(ResourceAttributes.FAAS_ID, context_invoked_function_arn)
@@ -311,20 +311,19 @@ def _instrument(
                     in_memory_span_exporter = InMemorySpanExporter()
                     simple_span_processor = SimpleSpanProcessor(in_memory_span_exporter)
 
-                    if isinstance(_tracer_provider, _TracerProvider):
-                        _tracer_provider.add_span_processor(simple_span_processor)
+                    _tracer_provider.add_span_processor(simple_span_processor)
 
                     # Call the original function.
                     result = call_wrapped(*args, **kwargs)
 
                     simple_span_processor.shutdown()
 
-                    for _finished_span in in_memory_span_exporter.get_finished_spans():
-                        if isinstance(_finished_span, ReadableSpan):
-                            if _finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django":
-                                if _finished_span.attributes:
-                                    overloaded_http_path = _finished_span.attributes.get(SpanAttributes.HTTP_ROUTE)
-                                    http_status_code = _finished_span.attributes.get(SpanAttributes.HTTP_STATUS_CODE)
+                    for finished_span in in_memory_span_exporter.get_finished_spans():
+                        finished_span = cast(ReadableSpan, finished_span)
+                        if finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django":
+                            if finished_span.attributes:
+                                overloaded_http_path = finished_span.attributes.get(SpanAttributes.HTTP_ROUTE)
+                                http_status_code = finished_span.attributes.get(SpanAttributes.HTTP_STATUS_CODE)
 
                     in_memory_span_exporter.clear()
 
@@ -340,7 +339,7 @@ def _instrument(
                 result = exception
 
             http_attributes = BoundedAttributes(
-                attributes=_filtered_dict(
+                attributes=_filtered_attributes_dict(
                     {
                         **http_attributes,
                         OverloadedSpanAttributes.HTTP_PATH: overloaded_http_path,
@@ -350,20 +349,38 @@ def _instrument(
             )
 
             wrapper_attributes = BoundedAttributes(
-                attributes=_filtered_dict(
+                attributes=_filtered_attributes_dict(
                     {
                         **wrapper_attributes,
                         "error": isinstance(result, Exception),
+                        # Javascript timestamps are in milliseconds (convert from nanoseconds).
+                        "startTime": int(getattr(handler_span, "start_time", 0) / 1000000) or None,
+                        "endTime": int(getattr(handler_span, "end_time", 0) / 1000000) or None,
                     }
                 )
             )
 
+            if isinstance(result, Exception):
+                wrapper_attributes = BoundedAttributes(
+                    attributes=_filtered_attributes_dict(
+                        {
+                            **wrapper_attributes,
+                            "errorCulprit": str(result),
+                            "errorExceptionMessage": str(result),
+                            "errorExceptionType": "handled",  # FIXME: Verify this is normal
+                            "errorExceptionStacktrace": "".join(TracebackException.from_exception(result).format()),
+                        }
+                    )
+                )
+
             with internal_tracer.start_as_current_span(name="finish") as finish_span:
+                finish_span = cast(_Span, finish_span)
+
                 if finish_span.is_recording():
                     finish_span.add_event(
                         name="telemetry",
                         attributes=BoundedAttributes(
-                            attributes=_filtered_dict(
+                            attributes=_filtered_attributes_dict(
                                 {
                                     **base_attributes,
                                     **http_attributes,
@@ -373,26 +390,35 @@ def _instrument(
                             )
                         ),
                     )
-                    if isinstance(result, dict):
-                        finish_span.add_event(
-                            name="response",
-                            attributes=BoundedAttributes(
-                                attributes={
-                                    SlsExtensionSpanAttributes.SLS_HANDLER_RESPONSE: json.dumps(result).encode(),
-                                }
-                            ),
-                        )
-                    else:
-                        finish_span.add_event(
-                            name="response",
-                            attributes=BoundedAttributes(attributes={}),
-                        )
 
-        if isinstance(_tracer_provider, _TracerProvider):
-            if flush_timeout is not None:
-                _tracer_provider.force_flush(flush_timeout)
-            else:
-                _tracer_provider.force_flush()
+                    result_json: Optional[bytes] = None
+                    result_representation: Optional[bytes] = None
+
+                    try:
+                        # Serialize the result to JSON to include into a telemetry event.  This will be loaded by the
+                        # exporter and passed to the extension service.
+                        result_json = bytes(json.dumps(result), "utf-8")
+                    except Exception:
+                        # If for any reason result_json can't be assigned then we should attempt to provide a
+                        # representation in the event instead.
+                        result_representation = bytes(repr(result), "utf-8")
+
+                    finish_span.add_event(
+                        name="response",
+                        attributes=BoundedAttributes(
+                            attributes=_filtered_attributes_dict(
+                                {
+                                    SlsExtensionSpanAttributes.SLS_HANDLER_RESPONSE_JSON: result_json,
+                                    SlsExtensionSpanAttributes.SLS_HANDLER_RESPONSE_REPRESENTATION: result_representation,
+                                }
+                            )
+                        ),
+                    )
+
+        try:
+            _force_flush
+        except Exception:
+            logger.exception("Exception while flushing telemetry data")
 
         if isinstance(result, Exception):
             raise result

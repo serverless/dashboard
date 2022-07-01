@@ -37,12 +37,14 @@ from opentelemetry.trace import (
     get_current_span,
     get_tracer,
     get_tracer_provider,
-    set_tracer_provider,
 )
 from pkg_resources import iter_entry_points
 from typeguard import typechecked
 
-from serverless.aws_lambda_otel_extension.shared import settings
+from serverless.aws_lambda_otel_extension.event import detect_lambda_event_type
+from serverless.aws_lambda_otel_extension.resource import SlsResourceDetector
+from serverless.aws_lambda_otel_extension.semconv.trace import OverloadedSpanAttributes, SlsSpanAttributes
+from serverless.aws_lambda_otel_extension.shared import defaults, settings
 from serverless.aws_lambda_otel_extension.shared.constants import (
     _HANDLER_ENV_VAR,
     _X_AMZN_TRACE_ID_ENV_VAR,
@@ -64,10 +66,6 @@ from serverless.aws_lambda_otel_extension.shared.environment import (
     ENV_AWS_REGION,
     ENV_ORIG_HANDLER,
 )
-from serverless.aws_lambda_otel_extension.event import detect_lambda_event_type
-from serverless.aws_lambda_otel_extension.resource import SlsResourceDetector
-from serverless.aws_lambda_otel_extension.semconv.trace import OverloadedSpanAttributes, SlsSpanAttributes
-from serverless.aws_lambda_otel_extension.shared import defaults
 from serverless.aws_lambda_otel_extension.trace.export import LoggingSpanExporter
 from serverless.aws_lambda_otel_extension.types import LambdaContext
 

@@ -1,27 +1,25 @@
 import http.client
-import time
-import urllib.request
-
 import json
 import logging
 import threading
+import urllib.request
 from json import JSONDecodeError
-from typing import Any, Dict, List, Mapping, Optional, Sequence
-from opentelemetry.attributes import BoundedAttributes  # type: ignore
+from typing import Dict, List, Mapping, Optional, Sequence
 
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.sdk.trace import ReadableSpan, Event, Resource
+from opentelemetry.attributes import BoundedAttributes  # type: ignore
+from opentelemetry.sdk.trace import Event, ReadableSpan, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import format_span_id, format_trace_id
 
-from serverless.aws_lambda_otel_extension.shared.settings import extension_otel_http_url
-from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.shared.constants import (
     HTTP_CONTENT_TYPE_APPLICATION_JSON,
     HTTP_CONTENT_TYPE_HEADER,
     HTTP_METHOD_POST,
     WRAPPER_INSTRUMENTATION_NAME,
 )
+from serverless.aws_lambda_otel_extension.shared.settings import extension_otel_http_url
+from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_formatters.extension import telemetry_formatted_span
 
 logger = logging.getLogger(__name__)
@@ -63,7 +61,7 @@ class SlsExtensionSpanExporter(SpanExporter):
         event = None
 
         if isinstance(request_span_event.attributes, Mapping):
-            _event = request_span_event.attributes.get(SlsExtensionSpanAttributes.SLS_HANDLER_REQUEST)
+            _event = request_span_event.attributes.get(SlsExtensionSpanAttributes.SLS_HANDLER_REQUEST_JSON)
 
         if isinstance(_event, (str, bytes)):
             try:
@@ -128,7 +126,7 @@ class SlsExtensionSpanExporter(SpanExporter):
         result = None
 
         if isinstance(response_span_event.attributes, Mapping):
-            _result = response_span_event.attributes.get(SlsExtensionSpanAttributes.SLS_HANDLER_RESPONSE)
+            _result = response_span_event.attributes.get(SlsExtensionSpanAttributes.SLS_HANDLER_RESPONSE_JSON)
 
         if isinstance(_result, (str, bytes)):
             try:
@@ -262,9 +260,9 @@ class SlsExtensionSpanExporter(SpanExporter):
                 if span.name == "wrapper":
                     wrapper_trace_id = span.context.trace_id
 
-        # if wrapper_trace_id:
-        #     print(self._request_span_event_by_trace_id)
-        #     print(self._response_span_event_by_trace_id)
+        if wrapper_trace_id:
+            print(self._request_span_event_by_trace_id)
+            print(self._response_span_event_by_trace_id)
 
         return SpanExportResult.SUCCESS
 

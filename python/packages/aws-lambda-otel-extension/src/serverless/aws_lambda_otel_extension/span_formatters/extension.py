@@ -1,6 +1,6 @@
 from typing import Dict
 
-from opentelemetry.sdk.trace import Span, ReadableSpan
+from opentelemetry.sdk.trace import ReadableSpan, Span
 from opentelemetry.trace import SpanContext, format_span_id, format_trace_id
 
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
