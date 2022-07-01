@@ -106,8 +106,8 @@ type PlatformObjectRecord struct {
 type ReportLogMetrics struct {
 	DurationMs       float64
 	BilledDurationMs int
-	MemorySizeMB     int
-	MaxMemoryUsedMB  int
+	MemorySizeMB     float64
+	MaxMemoryUsedMB  float64
 	InitDurationMs   float64
 }
 

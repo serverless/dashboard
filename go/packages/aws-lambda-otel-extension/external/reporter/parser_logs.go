@@ -12,8 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const ()
-
 // LogMessageTimeLayout is the layout string used to format timestamps from logs
 const LogMessageTimeLayout = "2006-01-02T15:04:05.999Z"
 
@@ -92,19 +90,19 @@ func (l *LogMessage) UnmarshalJSON(data []byte) error {
 						l.ObjectRecord.ReportLogItem.BilledDurationMs = int(v)
 					}
 					if v, ok := metrics["memorySizeMB"].(float64); ok {
-						l.ObjectRecord.ReportLogItem.MemorySizeMB = int(v)
+						l.ObjectRecord.ReportLogItem.MemorySizeMB = v
 					}
 					if v, ok := metrics["maxMemoryUsedMB"].(float64); ok {
-						l.ObjectRecord.ReportLogItem.MaxMemoryUsedMB = int(v)
+						l.ObjectRecord.ReportLogItem.MaxMemoryUsedMB = v
 					}
 					if v, ok := metrics["initDurationMs"].(float64); ok {
 						l.ObjectRecord.ReportLogItem.InitDurationMs = v
 					}
-					log.Debug(fmt.Sprintf("Enhanced metrics: %+v\n", l.ObjectRecord.ReportLogItem))
+					// log.Debug(fmt.Sprintf("Enhanced metrics: %+v\n", l.ObjectRecord.ReportLogItem))
 				} else {
 					log.Error("LogMessage.UnmarshalJSON: can't read the metrics object")
 				}
-				l.StringRecord = createStringRecordForReportLog(l)
+				// l.StringRecord = createStringRecordForReportLog(l)
 			case types.LogTypePlatformRuntimeDone:
 				if status, ok := objectRecord["status"].(string); ok {
 					l.ObjectRecord.RuntimeDoneItem = status
@@ -122,21 +120,21 @@ func (l *LogMessage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func createStringRecordForReportLog(l *LogMessage) string {
-	stringRecord := fmt.Sprintf("REPORT RequestId: %s\tDuration: %.2f ms\tBilled Duration: %d ms\tMemory Size: %d MB\tMax Memory Used: %d MB",
-		l.ObjectRecord.RequestID,
-		l.ObjectRecord.ReportLogItem.DurationMs,
-		l.ObjectRecord.ReportLogItem.BilledDurationMs,
-		l.ObjectRecord.ReportLogItem.MemorySizeMB,
-		l.ObjectRecord.ReportLogItem.MaxMemoryUsedMB,
-	)
-	initDurationMs := l.ObjectRecord.ReportLogItem.InitDurationMs
-	if initDurationMs > 0 {
-		stringRecord = stringRecord + fmt.Sprintf("\tInit Duration: %.2f ms", initDurationMs)
-	}
+// func createStringRecordForReportLog(l *LogMessage) string {
+// 	stringRecord := fmt.Sprintf("REPORT RequestId: %s\tDuration: %.2f ms\tBilled Duration: %d ms\tMemory Size: %d MB\tMax Memory Used: %d MB",
+// 		l.ObjectRecord.RequestID,
+// 		l.ObjectRecord.ReportLogItem.DurationMs,
+// 		l.ObjectRecord.ReportLogItem.BilledDurationMs,
+// 		l.ObjectRecord.ReportLogItem.MemorySizeMB,
+// 		l.ObjectRecord.ReportLogItem.MaxMemoryUsedMB,
+// 	)
+// 	initDurationMs := l.ObjectRecord.ReportLogItem.InitDurationMs
+// 	if initDurationMs > 0 {
+// 		stringRecord = stringRecord + fmt.Sprintf("\tInit Duration: %.2f ms", initDurationMs)
+// 	}
 
-	return stringRecord
-}
+// 	return stringRecord
+// }
 
 func CreateLogPayload(eventType types.LogEventType, subEventType types.SubEventType, data interface{}) (payload []byte, err error) {
 	payload, err = json.Marshal(data)

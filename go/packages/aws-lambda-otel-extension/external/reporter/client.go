@@ -106,13 +106,14 @@ func (c *HttpClient) removeStack(postData *PostData) {
 
 func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	postData.lock.Lock()
-	// start := time.Now()
+	start := time.Now()
 	postData.trying = true
 	defer func() {
 		if err != nil {
 			c.logger.Error("Post error", zap.Error(err))
 		}
 		c.removeStack(postData)
+		postData.lock.Unlock()
 	}()
 	// c.logger.Debug("Sending post", zap.String("path", postData.path))
 	req, err := http.NewRequest("POST", postData.path, bytes.NewBuffer(postData.body))
@@ -140,7 +141,7 @@ func (c *HttpClient) syncPost(postData *PostData) (err error) {
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("request failed with status %s", resp.Status)
 	}
-	// c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
+	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
 	return nil
 }
 
@@ -195,7 +196,7 @@ func (c *HttpClient) WaitDone() {
 	<-c.continueEvents
 }
 
-func (c *HttpClient) WaitRequests() error {
+func (c *HttpClient) WaitRequests(waitTime time.Duration) error {
 	c.Flush()
 	done := make(chan struct{})
 	var err error
@@ -207,13 +208,13 @@ func (c *HttpClient) WaitRequests() error {
 	case <-done:
 		return err
 	// dont wait more than 500ms for requests to finish
-	case <-time.After(time.Millisecond * 500):
+	case <-time.After(waitTime):
 		return err
 	}
 }
 
 func (c *HttpClient) Shutdown() error {
-	err := c.WaitRequests()
+	err := c.WaitRequests(time.Second * 2)
 	c.HttpClient.CloseIdleConnections()
 	return err
 }

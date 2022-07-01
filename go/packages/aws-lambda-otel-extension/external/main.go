@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"aws-lambda-otel-extension/external/extension"
 	"aws-lambda-otel-extension/external/lib"
@@ -116,7 +117,7 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 	for {
 		// block until we receive runtimeDone
 		reportAgent.WaitDone()
-		reportAgent.WaitRequests()
+		reportAgent.WaitRequests(time.Millisecond * 500)
 		select {
 		case <-ctx.Done():
 			logger.Debug("Context cancelled, exiting")
