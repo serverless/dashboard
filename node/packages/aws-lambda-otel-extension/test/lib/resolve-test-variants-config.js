@@ -2,17 +2,30 @@
 
 const path = require('path');
 const _ = require('lodash');
+const log = require('log').get('test');
+
+const merge = (...objects) => {
+  // _.merge breeks Buffers.
+  // This patch ensures that we take expected configuration.Code.ZipFile buffer as is
+  let configurationCode;
+  for (const object of objects) {
+    if (_.get(object, 'configuration.Code')) configurationCode = object.configuration.Code;
+  }
+  _.merge(...objects);
+  if (configurationCode) objects[0].configuration.Code = configurationCode;
+  return objects[0];
+};
 
 const resolveNestedTestConfig = (parentTestConfig, [name, config]) => {
   if (config.variants) {
-    const currentTestConfig = _.merge({}, parentTestConfig, config.config, {
+    const currentTestConfig = merge({}, parentTestConfig, config.config, {
       name: `${parentTestConfig.name}-${name}`,
     });
     return Array.from(config.variants, (child) =>
       resolveNestedTestConfig(currentTestConfig, child)
     );
   }
-  return _.merge({}, parentTestConfig, config, { name: `${parentTestConfig.name}-${name}` });
+  return merge({}, parentTestConfig, config, { name: `${parentTestConfig.name}-${name}` });
 };
 
 module.exports = (functionVariantsConfig, options = {}) => {
@@ -23,7 +36,7 @@ module.exports = (functionVariantsConfig, options = {}) => {
       ? path.dirname(handlerModuleName)
       : handlerModuleName;
 
-    const currentTestConfig = _.merge(
+    const currentTestConfig = merge(
       {
         name: currentName,
         configuration: { Handler: `${handlerModuleName}.handler` },
@@ -36,13 +49,13 @@ module.exports = (functionVariantsConfig, options = {}) => {
     );
     const variants = testConfigInput.variants;
     if (variants) {
-      _.merge(currentTestConfig, testConfigInput.config);
+      merge(currentTestConfig, testConfigInput.config);
       testVariants.push(
         Array.from(variants, (child) => resolveNestedTestConfig(currentTestConfig, child))
       );
       continue;
     }
-    testVariants.push(_.merge(currentTestConfig, testConfigInput));
+    testVariants.push(merge(currentTestConfig, testConfigInput));
   }
 
   let result = testVariants.flat(Infinity);
