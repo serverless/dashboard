@@ -1,7 +1,13 @@
 import json
 
-from serverless.aws_lambda_otel_extension.shared import defaults
 from serverless.aws_lambda_otel_extension.shared.constants import INSTRUMENTATION_TILDE_MAP, LOG_LEVEL_MAP, TRUTHY
+from serverless.aws_lambda_otel_extension.shared.defaults import (
+    DEF_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+    DEF_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,
+    DEF_SLS_OPENTELEMETRY_SERVER_URL,
+    DEF_SLS_OTEL_METRICS_ENABLED,
+    DEF_SLS_WRAPPER_LOG_LEVEL,
+)
 from serverless.aws_lambda_otel_extension.shared.environment import (
     ENV_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
     ENV_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,
@@ -26,13 +32,13 @@ sls_otel_user_settings = {
 }
 
 # Used by wrapper to send events.
-extension_otel_http_url = defaults.DEF_SLS_OPENTELEMETRY_SERVER_URL
+extension_otel_http_url = DEF_SLS_OPENTELEMETRY_SERVER_URL
 
 # Used by SLS Resource Detector.
 sls_otel_resource_attributes = {}
 
 # Flag for enabling/disabling OpenTelemetry metrics collection
-sls_otel_metrics_enabled = defaults.DEF_SLS_OTEL_METRICS_ENABLED
+sls_otel_metrics_enabled = DEF_SLS_OTEL_METRICS_ENABLED
 
 # A walrus operator would be nice here... but we want to support < 3.8...
 if "extension" in sls_otel_user_settings:
@@ -54,12 +60,12 @@ if "opentelemetry" in sls_otel_user_settings:
 # Process enabled/disabled instrumentation list
 otel_python_enabled_instrumentations = default_if_none(
     split_string_on_commas_or_none(ENV_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS),
-    defaults.DEF_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,
+    DEF_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,
 )
 
 otel_python_disabled_instrumentations = default_if_none(
     split_string_on_commas_or_none(ENV_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS),
-    defaults.DEF_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+    DEF_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
 )
 
 # Iterate through a copy of the list and expand the tidle strings.
@@ -83,9 +89,9 @@ otel_python_disabled_instrumentations = sorted(set(otel_python_disabled_instrume
 otel_python_log_correlation = ENV_OTEL_PYTHON_LOG_CORRELATION in TRUTHY
 
 sls_aws_lambda_otel_extension_log_level = (
-    LOG_LEVEL_MAP.get(ENV_SLS_OTEL_EXTENSION_LOG_LEVEL.lower(), defaults.DEF_SLS_WRAPPER_LOG_LEVEL)
+    LOG_LEVEL_MAP.get(ENV_SLS_OTEL_EXTENSION_LOG_LEVEL.lower(), DEF_SLS_WRAPPER_LOG_LEVEL)
     if ENV_SLS_OTEL_EXTENSION_LOG_LEVEL
-    else defaults.DEF_SLS_WRAPPER_LOG_LEVEL
+    else DEF_SLS_WRAPPER_LOG_LEVEL
 )
 
 test_dry_log = ENV_TEST_DRY_LOG in TRUTHY

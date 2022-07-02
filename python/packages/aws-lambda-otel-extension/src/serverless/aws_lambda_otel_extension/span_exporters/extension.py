@@ -13,12 +13,12 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import format_span_id, format_trace_id
 
 from serverless.aws_lambda_otel_extension.shared.constants import (
+    HANDLER_INSTRUMENTATION_NAME,
     HTTP_CONTENT_TYPE_APPLICATION_JSON,
     HTTP_CONTENT_TYPE_HEADER,
     HTTP_METHOD_POST,
-    WRAPPER_INSTRUMENTATION_NAME,
 )
-from serverless.aws_lambda_otel_extension.shared.settings import extension_otel_http_url
+from serverless.aws_lambda_otel_extension.shared.settings import extension_otel_http_url, test_dry_log_pretty
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_formatters.extension import telemetry_formatted_span
 
@@ -40,7 +40,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             self._event_span_event_by_trace_id.pop(trace_id, None)
             self._telemetry_span_event_by_trace_id.pop(trace_id, None)
 
-    def _send_event_data_for_trace_id(self, trace_id: int, span_id: int):
+    def _send_event_data_for_wrapper_span(self, trace_id: int, span_id: int):
 
         event_span_event = self._event_span_event_by_trace_id.get(trace_id)
         request_span_event = self._request_span_event_by_trace_id.get(trace_id)
@@ -105,7 +105,15 @@ class SlsExtensionSpanExporter(SpanExporter):
         except Exception:
             logger.exception("Failed to send handler eventData")
 
-    def _send_telemetry_data_for_trace_id(self, trace_id: int, span_id: int):
+        logger.debug(
+            json.dumps(
+                {"extension": {"send": event_data}},
+                indent=4 if test_dry_log_pretty else None,
+                sort_keys=True,
+            )
+        )
+
+    def _send_telemetry_data_for_wrapper_span(self, trace_id: int, span_id: int):
 
         telemetry_span_event = self._telemetry_span_event_by_trace_id.get(trace_id)
         response_span_event = self._response_span_event_by_trace_id.get(trace_id)
@@ -134,7 +142,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             except JSONDecodeError:
                 pass
 
-        instrumentation_spans_by_resource: Dict[Resource, Dict[InstrumentationScope, List[ReadableSpan]]] = {}
+        instrumentation_library_spans_by_resource: Dict[Resource, Dict[InstrumentationScope, List[ReadableSpan]]] = {}
 
         trace_ids = [trace_id]
 
@@ -150,19 +158,19 @@ class SlsExtensionSpanExporter(SpanExporter):
         for spans in self._spans_by_trace_id.values():
             for span in spans:
                 if span.context.trace_id in trace_ids:
-                    instrumentation_spans_by_resource.setdefault(span.resource, {})
-                    instrumentation_spans_by_resource[span.resource].setdefault(span.instrumentation_scope, [])
-                    instrumentation_spans_by_resource[span.resource][span.instrumentation_scope].append(span)
+                    instrumentation_library_spans_by_resource.setdefault(span.resource, {})
+                    instrumentation_library_spans_by_resource[span.resource].setdefault(span.instrumentation_scope, [])
+                    instrumentation_library_spans_by_resource[span.resource][span.instrumentation_scope].append(span)
 
         resource_spans = []
 
         # Pivot instrumentation scope and spans into place.
-        for resource, instrumentation_spans_by_scope in instrumentation_spans_by_resource.items():
+        for resource, instrumentation_library_spans_by_scope in instrumentation_library_spans_by_resource.items():
 
-            instrumentation_spans = []
+            instrumentation_library_spans = []
 
-            for instrumentation_scope, spans in instrumentation_spans_by_scope.items():
-                instrumentation_spans.append(
+            for instrumentation_scope, spans in instrumentation_library_spans_by_scope.items():
+                instrumentation_library_spans.append(
                     {
                         "instrumentationLibrary": {
                             "name": instrumentation_scope.name,
@@ -181,7 +189,7 @@ class SlsExtensionSpanExporter(SpanExporter):
                             }
                         ),
                     },
-                    "instrumentationSpans": instrumentation_spans,
+                    "instrumentationLibrarySpans": instrumentation_library_spans,
                 }
             )
 
@@ -224,19 +232,27 @@ class SlsExtensionSpanExporter(SpanExporter):
         except Exception:
             logger.exception("Failed to send handler eventData")
 
+        logger.debug(
+            json.dumps(
+                {"extension": {"send": telemetry_data}},
+                indent=4 if test_dry_log_pretty else None,
+                sort_keys=True,
+            )
+        )
+
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
 
         if self._stopped:
             return SpanExportResult.FAILURE
 
-        wrapper_trace_id: Optional[int] = None
+        wrapper_span: Optional[ReadableSpan] = None
 
         for span in spans:
 
             with self._lock:
                 self._spans_by_trace_id.setdefault(span.context.trace_id, []).append(span)
 
-            if span.instrumentation_scope.name == WRAPPER_INSTRUMENTATION_NAME:
+            if span.instrumentation_scope.name == HANDLER_INSTRUMENTATION_NAME:
                 if span.name == "start":
                     for event in span.events:
                         if event.name == "event":
@@ -246,7 +262,7 @@ class SlsExtensionSpanExporter(SpanExporter):
                             with self._lock:
                                 self._request_span_event_by_trace_id[span.context.trace_id] = event
                         if span.parent:
-                            self._send_event_data_for_trace_id(span.parent.trace_id, span.parent.span_id)
+                            self._send_event_data_for_wrapper_span(span.parent.trace_id, span.parent.span_id)
                 if span.name == "finish":
                     for event in span.events:
                         if event.name == "telemetry":
@@ -255,14 +271,11 @@ class SlsExtensionSpanExporter(SpanExporter):
                         elif event.name == "response":
                             with self._lock:
                                 self._response_span_event_by_trace_id[span.context.trace_id] = event
-                        if span.parent:
-                            self._send_telemetry_data_for_trace_id(span.parent.trace_id, span.parent.span_id)
                 if span.name == "wrapper":
-                    wrapper_trace_id = span.context.trace_id
+                    wrapper_span = span
 
-        if wrapper_trace_id:
-            print(self._request_span_event_by_trace_id)
-            print(self._response_span_event_by_trace_id)
+        if wrapper_span:
+            self._send_telemetry_data_for_wrapper_span(wrapper_span.context.trace_id, wrapper_span.context.span_id)
 
         return SpanExportResult.SUCCESS
 

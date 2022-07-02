@@ -12,10 +12,6 @@ PACKAGE_VERSION = _package_distribution.version
 HANDLER_INSTRUMENTATION_NAME = "serverless.aws_lambda_otel_extension"
 WRAPPER_INSTRUMENTATION_NAME = "serverless.aws_lambda_otel_extension.aws_lambda.instrumentor"
 
-PACKAGE_COMPATIBLE_WRAPPER_MODULE = (
-    "serverless_aws_lambda_otel_extension_internal_wrapper_handler.auto_instrumenting_handler"
-)
-
 _X_AMZN_TRACE_ID_ENV_VAR = "_X_AMZN_TRACE_ID"
 
 AWS_DEFAULT_REGION_ENV_VAR = "AWS_DEFAULT_REGION"

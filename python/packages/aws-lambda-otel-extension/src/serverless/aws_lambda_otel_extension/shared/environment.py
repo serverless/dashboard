@@ -7,7 +7,6 @@ ENV_AWS_LAMBDA_FUNCTION_NAME = os.getenv(constants.AWS_LAMBDA_FUNCTION_NAME_ENV_
 ENV_AWS_LAMBDA_FUNCTION_VERSION = os.getenv(constants.AWS_LAMBDA_FUNCTION_VERSION_ENV_VAR)
 ENV_AWS_LAMBDA_LOG_GROUP_NAME = os.getenv(constants.AWS_LAMBDA_LOG_GROUP_NAME_ENV_VAR)
 ENV_AWS_LAMBDA_LOG_STREAM_NAME = os.getenv(constants.AWS_LAMBDA_LOG_STREAM_NAME_ENV_VAR)
-ENV_AWS_LAMBDA_RUNTIME_API = os.getenv(constants.AWS_LAMBDA_RUNTIME_API_ENV_VAR)
 
 # We may want to alter this to fetch from a boto3.Session instance instead of environment variables to enable better
 # local testing.
@@ -27,8 +26,6 @@ ENV_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = os.getenv(constants.OTEL_PYTHON_DISA
 ENV_SLS_OTEL_EXTENSION_FLUSH_TIMEOUT = os.getenv(constants.SLS_OTEL_EXTENSION_FLUSH_TIMEOUT_ENV_VAR)
 
 ENV_OTEL_PYTHON_LOG_CORRELATION = os.getenv(constants.OTEL_PYTHON_LOG_CORRELATION_ENV_VAR)
-
-ENV__X_AMZN_TRACE_ID = os.getenv(constants._X_AMZN_TRACE_ID_ENV_VAR)
 
 ENV__HANDLER = os.getenv(constants._HANDLER_ENV_VAR)
 ENV_ORIG_HANDLER = os.getenv(constants.ORIG_HANDLER_ENV_VAR)

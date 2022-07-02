@@ -15,10 +15,14 @@ class SlsLoggingSpanExporter(SpanExporter):
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
-            if not self.pretty_print:
-                logger.debug({"export": json.loads(span.to_json())})
-            else:
-                # No comment...
-                logger.debug(json.dumps(json.loads(span.to_json()), indent=4, sort_keys=True))
+            logger.debug(
+                json.dumps(
+                    {
+                        "export": json.loads(span.to_json()),
+                    },
+                    indent=4 if self.pretty_print else None,
+                    sort_keys=True,
+                )
+            )
 
         return SpanExportResult.SUCCESS

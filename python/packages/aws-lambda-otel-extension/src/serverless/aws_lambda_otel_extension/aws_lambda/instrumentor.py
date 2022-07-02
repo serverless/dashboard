@@ -1,5 +1,3 @@
-# This is a now mostly unrecognizable module based on:
-#
 import json
 import logging
 import os
@@ -35,6 +33,7 @@ from serverless.aws_lambda_otel_extension.shared.constants import (
 from serverless.aws_lambda_otel_extension.shared.enums import LambdaEventType
 from serverless.aws_lambda_otel_extension.shared.environment import (
     ENV__HANDLER,
+    ENV_AWS_DEFAULT_REGION,
     ENV_AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
     ENV_AWS_LAMBDA_FUNCTION_NAME,
     ENV_AWS_LAMBDA_FUNCTION_VERSION,
@@ -44,10 +43,9 @@ from serverless.aws_lambda_otel_extension.shared.environment import (
     ENV_ORIG_HANDLER,
 )
 from serverless.aws_lambda_otel_extension.shared.settings import sls_otel_extension_flush_timeout
+from serverless.aws_lambda_otel_extension.shared.utilities import filter_dict_values_is_not_none
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_attributes.overloaded import OverloadedSpanAttributes
-
-from serverless.aws_lambda_otel_extension.shared.utilities import filter_dict_values_is_not_none
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +86,7 @@ def _create_base_attributes(
         "computeIsColdStart": is_cold_start,
         "computeMemorySize": ENV_AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
         "computeRequestId": context_aws_request_id,
-        "computeRegion": ENV_AWS_REGION,
+        "computeRegion": ENV_AWS_REGION or ENV_AWS_DEFAULT_REGION,
         "computeRuntime": "aws.lambda.python.{}.{}.{}".format(
             sys.version_info.major,
             sys.version_info.minor,
@@ -202,33 +200,52 @@ def _instrument(
 
         resource_attributes = _tracer_provider.resource.attributes
 
-        handler_tracer = get_tracer(HANDLER_INSTRUMENTATION_NAME, PACKAGE_VERSION, _tracer_provider)
-        internal_tracer = get_tracer(__name__, PACKAGE_VERSION, _tracer_provider)
+        _tracer = get_tracer(HANDLER_INSTRUMENTATION_NAME, PACKAGE_VERSION, _tracer_provider)
 
         # This is the outermost span that will be used to trace the entire instrumentation process.
-        with internal_tracer.start_as_current_span(name="wrapper") as wrapper_span:  # noqa: F841
-            wrapper_span = cast(_Span, wrapper_span)
+        with _tracer.start_as_current_span(name=lambda_handler) as instrumentation_span:
+            instrumentation_span = cast(_Span, instrumentation_span)
 
             event_type: Optional[LambdaEventType] = None
             parent_context = None
 
-            with internal_tracer.start_as_current_span(name="start") as start_span:
+            with _tracer.start_as_current_span(name="start") as start_span:
                 start_span = cast(_Span, start_span)
 
                 try:
-                    with internal_tracer.start_as_current_span(name="detect") as detect_span:
+                    with _tracer.start_as_current_span(name="detect") as detect_span:
                         detect_span = cast(_Span, detect_span)
                         event_type = detect_lambda_event_type(event, context)
                 except Exception:
                     logger.exception("Exception while detecting event type")
 
+                if event_type:
+                    instrumentation_span.set_attribute(SlsExtensionSpanAttributes.SLS_EVENT_TYPE, event_type.value)
+
                 try:
-                    with internal_tracer.start_as_current_span(name="extract") as extract_span:
+                    with _tracer.start_as_current_span(name="extract") as extract_span:
                         extract_span = cast(_Span, extract_span)
                         parent_context = _extract_handler_span_parent_context(event, context) or empty_context
-
                 except Exception:
                     logger.exception("Exception while extracting parent context")
+
+                if event_type in set(
+                    [
+                        LambdaEventType.CloudWatchEvent,
+                        LambdaEventType.CloudWatchLog,
+                        LambdaEventType.DynamoDB,
+                        LambdaEventType.Kinesis,
+                        LambdaEventType.S3,
+                        LambdaEventType.Scheduled,
+                        LambdaEventType.SES,
+                        LambdaEventType.SNS,
+                        LambdaEventType.SQS,
+                        # TODO: Add more here.
+                    ]
+                ):
+                    span_kind = SpanKind.CONSUMER
+                else:
+                    span_kind = SpanKind.SERVER
 
                 base_attributes = _create_base_attributes(event, context, is_cold_start, event_type)
                 http_attributes = _create_http_attributes(event, context, is_cold_start, event_type)
@@ -262,34 +279,12 @@ def _instrument(
             except Exception:
                 logger.exception("Exception while flushing event data")
 
-            if event_type in set(
-                [
-                    LambdaEventType.CloudWatchEvent,
-                    LambdaEventType.CloudWatchLog,
-                    LambdaEventType.DynamoDB,
-                    LambdaEventType.Kinesis,
-                    LambdaEventType.S3,
-                    LambdaEventType.Scheduled,
-                    LambdaEventType.SES,
-                    LambdaEventType.SNS,
-                    LambdaEventType.SQS,
-                    # TODO: Add more here.
-                ]
-            ):
-                span_kind = SpanKind.CONSUMER
-            else:
-                span_kind = SpanKind.SERVER
-
             overloaded_http_path: Optional[str] = None
             http_status_code: Optional[str] = None
 
-            if wrapper_span.is_recording():
-                if event_type:
-                    wrapper_span.set_attribute(SlsExtensionSpanAttributes.SLS_EVENT_TYPE, event_type.value)
-
             try:
-                with handler_tracer.start_as_current_span(
-                    name=lambda_handler, context=parent_context, kind=span_kind, links=[wrapper_span]
+                with _tracer.start_as_current_span(
+                    name="handler", context=parent_context, kind=span_kind
                 ) as handler_span:
 
                     handler_span = cast(_Span, handler_span)
@@ -373,7 +368,7 @@ def _instrument(
                     )
                 )
 
-            with internal_tracer.start_as_current_span(name="finish") as finish_span:
+            with _tracer.start_as_current_span(name="finish") as finish_span:
                 finish_span = cast(_Span, finish_span)
 
                 if finish_span.is_recording():
@@ -394,14 +389,21 @@ def _instrument(
                     result_json: Optional[bytes] = None
                     result_representation: Optional[bytes] = None
 
+                    max_attribute_length = _tracer_provider._span_limits.max_attribute_length
+
                     try:
                         # Serialize the result to JSON to include into a telemetry event.  This will be loaded by the
                         # exporter and passed to the extension service.
                         result_json = bytes(json.dumps(result), "utf-8")
+                        if max_attribute_length is not None:
+                            if len(result_json) > max_attribute_length:
+                                raise ValueError(
+                                    "JSON serialized result is too large - reverting to truncated string representation."
+                                )
                     except Exception:
                         # If for any reason result_json can't be assigned then we should attempt to provide a
                         # representation in the event instead.
-                        result_representation = bytes(repr(result), "utf-8")
+                        result_representation = bytes(repr(result)[:max_attribute_length], "utf-8")
 
                     finish_span.add_event(
                         name="response",
