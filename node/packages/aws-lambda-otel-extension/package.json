@@ -9,6 +9,7 @@
     "esbuild": "^0.14.47",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9",
+    "memoizee": "^0.4.15",
     "protobufjs": "^6.11.3",
     "semver": "^7.3.7",
     "yargs-parser": "^21.0.1"
