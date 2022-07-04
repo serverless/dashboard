@@ -224,6 +224,7 @@ module.exports = (async () => {
             },
           },
           (response) => {
+            debugLog('Extension: Received event/next response');
             if (response.statusCode !== 200) {
               reject(new Error(`Unexpected register response status code: ${response.statusCode}`));
               return;
