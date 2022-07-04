@@ -8,8 +8,7 @@ const requireUncached = require('ncjsm/require-uncached');
 describe('test/unit/external/user-settings.test.js', () => {
   let defaultConfig;
 
-  const getUserConfig = () =>
-    requireUncached(() => require('../../../external/otel-extension-external/user-settings'));
+  const getUserConfig = () => requireUncached(() => require('../../../lib/user-settings'));
 
   before(() => {
     defaultConfig = getUserConfig();
@@ -20,9 +19,7 @@ describe('test/unit/external/user-settings.test.js', () => {
   it('should handle gently no data', () => {
     process.env.SLS_OTEL_USER_SETTINGS = JSON.stringify({
       common: { destination: { foo: 'bar' } },
-      logs: 12,
       metrics: { destination: 'foo' },
-      response: null,
     });
     expect(getUserConfig()).to.deep.equal(
       _.merge({}, defaultConfig, {
