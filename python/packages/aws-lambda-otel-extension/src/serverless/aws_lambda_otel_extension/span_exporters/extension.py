@@ -3,22 +3,25 @@ import json
 import logging
 import threading
 import urllib.request
-from json import JSONDecodeError
-from typing import Dict, List, Mapping, Optional, Sequence
+from typing import Dict, List, Sequence
 
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.sdk.trace import Event, ReadableSpan, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import format_span_id, format_trace_id
+from opentelemetry.trace import SpanContext, format_span_id, format_trace_id
 
 from serverless.aws_lambda_otel_extension.shared.constants import (
-    HANDLER_INSTRUMENTATION_NAME,
     HTTP_CONTENT_TYPE_APPLICATION_JSON,
     HTTP_CONTENT_TYPE_HEADER,
     HTTP_METHOD_POST,
 )
-from serverless.aws_lambda_otel_extension.shared.settings import extension_otel_http_url, test_dry_log_pretty
+from serverless.aws_lambda_otel_extension.shared.settings import (
+    extension_otel_http_url,
+    test_dry_log,
+    test_dry_log_pretty,
+)
+from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_formatters.extension import telemetry_formatted_span
 
@@ -29,23 +32,23 @@ class SlsExtensionSpanExporter(SpanExporter):
     def __init__(self):
         self._stopped = False
         self._lock = threading.Lock()
-        self._spans_by_trace_id: Dict[int, List[ReadableSpan]] = {}
+        self._spans_by_span_id_by_trace_id: Dict[int, Dict[int, ReadableSpan]] = {}
         self._event_span_event_by_trace_id: Dict[int, Event] = {}
         self._telemetry_span_event_by_trace_id: Dict[int, Event] = {}
-        self._request_span_event_by_trace_id: Dict[int, Event] = {}
-        self._response_span_event_by_trace_id: Dict[int, Event] = {}
 
     def clear_by_trace_id(self, trace_id):
         with self._lock:
             self._event_span_event_by_trace_id.pop(trace_id, None)
             self._telemetry_span_event_by_trace_id.pop(trace_id, None)
 
-    def _send_event_data_for_wrapper_span(self, trace_id: int, span_id: int):
+    def _send_event_data_for_instrumentation_context(self, instrumentation_context: SpanContext):
+
+        trace_id = instrumentation_context.trace_id
+        span_id = instrumentation_context.span_id
 
         event_span_event = self._event_span_event_by_trace_id.get(trace_id)
-        request_span_event = self._request_span_event_by_trace_id.get(trace_id)
 
-        if event_span_event is None or request_span_event is None:
+        if event_span_event is None:
             return
 
         if event_span_event.attributes is None:
@@ -57,17 +60,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             logger.exception("Failed to get request id from event attributes and unable to send event data")
             return
 
-        _event = None
-        event = None
-
-        if isinstance(request_span_event.attributes, Mapping):
-            _event = request_span_event.attributes.get(SlsExtensionSpanAttributes.SLS_HANDLER_REQUEST_JSON)
-
-        if isinstance(_event, (str, bytes)):
-            try:
-                event = json.loads(_event)
-            except JSONDecodeError:
-                pass
+        request_data = store.get_request_data_for_trace_id(trace_id)
 
         event_data = {
             "record": {
@@ -78,9 +71,10 @@ class SlsExtensionSpanExporter(SpanExporter):
                 },
                 "requestEventPayload": {
                     "executionId": request_id,
-                    "requestData": event,
+                    "requestData": request_data,
                     "spanId": format_span_id(span_id),
                     "traceId": format_trace_id(trace_id),
+                    "timestamp": int(event_span_event.timestamp / 1000000),
                 },
                 "span": {
                     "spanId": format_span_id(span_id),
@@ -90,35 +84,46 @@ class SlsExtensionSpanExporter(SpanExporter):
             "recordType": "eventData",
         }
 
-        try:
-            extension_otel_http_response: http.client.HTTPResponse = urllib.request.urlopen(
-                urllib.request.Request(
-                    extension_otel_http_url,
-                    method=HTTP_METHOD_POST,
-                    headers={
-                        HTTP_CONTENT_TYPE_HEADER: HTTP_CONTENT_TYPE_APPLICATION_JSON,
-                    },
-                    data=bytes(json.dumps(event_data), "utf-8"),
+        if not test_dry_log:
+            try:
+                extension_otel_http_response: http.client.HTTPResponse = urllib.request.urlopen(
+                    urllib.request.Request(
+                        extension_otel_http_url,
+                        method=HTTP_METHOD_POST,
+                        headers={
+                            HTTP_CONTENT_TYPE_HEADER: HTTP_CONTENT_TYPE_APPLICATION_JSON,
+                        },
+                        data=bytes(json.dumps(event_data), "utf-8"),
+                    )
+                )
+                extension_otel_http_response.read()
+            except Exception:
+                logger.exception("Failed to send handler eventData")
+
+            logger.debug(
+                json.dumps(
+                    {"extension": {"send": event_data}},
+                    indent=4 if test_dry_log_pretty else None,
+                    sort_keys=True,
                 )
             )
-            extension_otel_http_response.read()
-        except Exception:
-            logger.exception("Failed to send handler eventData")
-
-        logger.debug(
-            json.dumps(
-                {"extension": {"send": event_data}},
-                indent=4 if test_dry_log_pretty else None,
-                sort_keys=True,
+        else:
+            print(
+                json.dumps(
+                    {"extension": {"send": event_data}},
+                    indent=4 if test_dry_log_pretty else None,
+                    sort_keys=True,
+                )
             )
-        )
 
-    def _send_telemetry_data_for_wrapper_span(self, trace_id: int, span_id: int):
+    def _send_telemetry_data_for_instrumentation_context(self, instrumentation_context: SpanContext):
+
+        trace_id = instrumentation_context.trace_id
+        span_id = instrumentation_context.span_id
 
         telemetry_span_event = self._telemetry_span_event_by_trace_id.get(trace_id)
-        response_span_event = self._response_span_event_by_trace_id.get(trace_id)
 
-        if telemetry_span_event is None or response_span_event is None:
+        if telemetry_span_event is None:
             return
 
         if telemetry_span_event.attributes is None:
@@ -130,33 +135,21 @@ class SlsExtensionSpanExporter(SpanExporter):
             logger.exception("Failed to get request id from event attributes and unable to send event data")
             return
 
-        _result = None
-        result = None
-
-        if isinstance(response_span_event.attributes, Mapping):
-            _result = response_span_event.attributes.get(SlsExtensionSpanAttributes.SLS_HANDLER_RESPONSE_JSON)
-
-        if isinstance(_result, (str, bytes)):
-            try:
-                result = json.loads(_result)
-            except JSONDecodeError:
-                pass
-
         instrumentation_library_spans_by_resource: Dict[Resource, Dict[InstrumentationScope, List[ReadableSpan]]] = {}
 
         trace_ids = [trace_id]
 
-        # Iterate through all the spans and check for trace id in root and links.
-        for spans in self._spans_by_trace_id.values():
-            for span in spans:
+        for spans_by_span_id in self._spans_by_span_id_by_trace_id.values():
+            # Iterate through all the spans and check for trace id in root and links.
+            for span in spans_by_span_id.values():
                 if span.links:
                     for link in span.links:
-                        if link.context.trace_id in trace_ids:
-                            trace_ids.append(span.context.trace_id)
+                        if span.context.trace_id in trace_ids:
+                            trace_ids.append(link.context.trace_id)
 
-        # Build up the dictionary that will be used to produce the resource_spans dictionary.
-        for spans in self._spans_by_trace_id.values():
-            for span in spans:
+        for spans_by_span_id in self._spans_by_span_id_by_trace_id.values():
+            # Build up the dictionary that will be used to produce the resource_spans dictionary.
+            for span in spans_by_span_id.values():
                 if span.context.trace_id in trace_ids:
                     instrumentation_library_spans_by_resource.setdefault(span.resource, {})
                     instrumentation_library_spans_by_resource[span.resource].setdefault(span.instrumentation_scope, [])
@@ -193,6 +186,8 @@ class SlsExtensionSpanExporter(SpanExporter):
                 }
             )
 
+        response_data = store.get_response_data_for_trace_id(trace_id)
+
         telemetry_data = {
             "record": {
                 "function": {
@@ -201,11 +196,7 @@ class SlsExtensionSpanExporter(SpanExporter):
                 "responseEventPayload": {
                     "errorData": None,
                     "executionId": request_id,
-                    "responseData": result,
-                    "spanId": format_span_id(span_id),
-                    "traceId": format_trace_id(trace_id),
-                },
-                "span": {
+                    "responseData": response_data,
                     "spanId": format_span_id(span_id),
                     "traceId": format_trace_id(trace_id),
                 },
@@ -217,65 +208,76 @@ class SlsExtensionSpanExporter(SpanExporter):
             "requestId": request_id,
         }
 
-        try:
-            extension_otel_http_response: http.client.HTTPResponse = urllib.request.urlopen(
-                urllib.request.Request(
-                    extension_otel_http_url,
-                    method=HTTP_METHOD_POST,
-                    headers={
-                        HTTP_CONTENT_TYPE_HEADER: HTTP_CONTENT_TYPE_APPLICATION_JSON,
-                    },
-                    data=bytes(json.dumps(telemetry_data), "utf-8"),
+        if not test_dry_log:
+            try:
+                extension_otel_http_response: http.client.HTTPResponse = urllib.request.urlopen(
+                    urllib.request.Request(
+                        extension_otel_http_url,
+                        method=HTTP_METHOD_POST,
+                        headers={
+                            HTTP_CONTENT_TYPE_HEADER: HTTP_CONTENT_TYPE_APPLICATION_JSON,
+                        },
+                        data=bytes(json.dumps(telemetry_data), "utf-8"),
+                    )
+                )
+                extension_otel_http_response.read()
+            except Exception:
+                logger.exception("Failed to send handler eventData")
+
+            logger.debug(
+                json.dumps(
+                    {"extension": {"send": telemetry_data}},
+                    indent=4 if test_dry_log_pretty else None,
+                    sort_keys=True,
                 )
             )
-            extension_otel_http_response.read()
-        except Exception:
-            logger.exception("Failed to send handler eventData")
-
-        logger.debug(
-            json.dumps(
-                {"extension": {"send": telemetry_data}},
-                indent=4 if test_dry_log_pretty else None,
-                sort_keys=True,
+        else:
+            print(
+                json.dumps(
+                    {"extension": {"send": telemetry_data}},
+                    indent=4 if test_dry_log_pretty else None,
+                    sort_keys=True,
+                )
             )
-        )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
 
         if self._stopped:
             return SpanExportResult.FAILURE
 
-        wrapper_span: Optional[ReadableSpan] = None
+        instrumentation_span = None
 
         for span in spans:
 
             with self._lock:
-                self._spans_by_trace_id.setdefault(span.context.trace_id, []).append(span)
+                self._spans_by_span_id_by_trace_id.setdefault(span.context.trace_id, {})[span.context.span_id] = span
 
-            if span.instrumentation_scope.name == HANDLER_INSTRUMENTATION_NAME:
-                if span.name == "start":
-                    for event in span.events:
-                        if event.name == "event":
-                            with self._lock:
-                                self._event_span_event_by_trace_id[span.context.trace_id] = event
-                        elif event.name == "request":
-                            with self._lock:
-                                self._request_span_event_by_trace_id[span.context.trace_id] = event
-                        if span.parent:
-                            self._send_event_data_for_wrapper_span(span.parent.trace_id, span.parent.span_id)
-                if span.name == "finish":
-                    for event in span.events:
-                        if event.name == "telemetry":
-                            with self._lock:
-                                self._telemetry_span_event_by_trace_id[span.context.trace_id] = event
-                        elif event.name == "response":
-                            with self._lock:
-                                self._response_span_event_by_trace_id[span.context.trace_id] = event
-                if span.name == "wrapper":
-                    wrapper_span = span
+            sls_span_type = None
+            if span.attributes:
+                sls_span_type = span.attributes.get(SlsExtensionSpanAttributes.SLS_SPAN_TYPE)
 
-        if wrapper_span:
-            self._send_telemetry_data_for_wrapper_span(wrapper_span.context.trace_id, wrapper_span.context.span_id)
+            if sls_span_type == "start":
+                for event in span.events:
+                    if event.name == "event":
+                        with self._lock:
+                            self._event_span_event_by_trace_id[span.context.trace_id] = event
+                    if span.parent:
+                        self._send_event_data_for_instrumentation_context(span.parent)
+                    else:
+                        # TODO: Emit something here.
+                        pass
+            elif sls_span_type == "finish":
+                for event in span.events:
+                    if event.name == "telemetry":
+                        with self._lock:
+                            self._telemetry_span_event_by_trace_id[span.context.trace_id] = event
+            elif sls_span_type == "instrumentation":
+                instrumentation_span = span
+
+        # If the instrumentation span is part of this export then we are essentially done and can send the telemetry
+        # data.
+        if instrumentation_span:
+            self._send_telemetry_data_for_instrumentation_context(instrumentation_span.context)
 
         return SpanExportResult.SUCCESS
 

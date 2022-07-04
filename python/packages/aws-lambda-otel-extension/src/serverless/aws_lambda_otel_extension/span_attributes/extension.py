@@ -10,6 +10,10 @@ class SlsExtensionSpanAttributes:
     SLS_HANDLER_REQUEST_JSON = "sls.handler.request.json"
     SLS_HANDLER_RESPONSE_JSON = "sls.handler.response.json"
     SLS_HANDLER_REQUEST_REPRESENTATION = "sls.handler.request.representation"
+    SLS_HANDLER_REQUEST_TRUNCATED = "sls.handler.request.truncated"
     SLS_HANDLER_RESPONSE_REPRESENTATION = "sls.handler.response.representation"
+    SLS_HANDLER_RESPONSE_TRUNCATED = "sls.handler.response.truncated"
+
+    SLS_SPAN_TYPE = "sls.span.type"
 
     SLS_ORIGINAL_PROPERTIES = "sls.original_properties"

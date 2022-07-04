@@ -9,9 +9,6 @@ PACKAGE_NAME = _package_distribution.project_name
 PACKAGE_NAMESPACE = "serverless.aws_lambda_otel_extension"
 PACKAGE_VERSION = _package_distribution.version
 
-HANDLER_INSTRUMENTATION_NAME = "serverless.aws_lambda_otel_extension"
-WRAPPER_INSTRUMENTATION_NAME = "serverless.aws_lambda_otel_extension.aws_lambda.instrumentor"
-
 _X_AMZN_TRACE_ID_ENV_VAR = "_X_AMZN_TRACE_ID"
 
 AWS_DEFAULT_REGION_ENV_VAR = "AWS_DEFAULT_REGION"

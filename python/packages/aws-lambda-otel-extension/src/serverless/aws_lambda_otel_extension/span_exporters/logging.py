@@ -18,7 +18,11 @@ class SlsLoggingSpanExporter(SpanExporter):
             logger.debug(
                 json.dumps(
                     {
-                        "export": json.loads(span.to_json()),
+                        "instrumentation": {
+                            "name": span.instrumentation_scope.name,
+                            "version": span.instrumentation_scope.version,
+                        },
+                        "span": json.loads(span.to_json()),
                     },
                     indent=4 if self.pretty_print else None,
                     sort_keys=True,
