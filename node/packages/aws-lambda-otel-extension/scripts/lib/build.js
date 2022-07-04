@@ -24,8 +24,10 @@ module.exports = async (distFilename, options = {}) => {
     mkdir(path.dirname(distFilename), { intermediate: true, silent: true }),
     (async () => {
       if (mode & 2) {
+        // External extension
         ensureNpmDependencies('external/otel-extension-external');
         if (mode === 2) {
+          // Runtime agnostic
           zip.addLocalFile(
             path.resolve(externalRuntimeAgnosticDir, 'extensions/otel-extension'),
             'extensions'
@@ -35,6 +37,7 @@ module.exports = async (distFilename, options = {}) => {
             'otel-extension-external'
           );
         } else {
+          // Node.js runtime only
           zip.addLocalFile(path.resolve(externalDir, 'extensions/otel-extension'), 'extensions');
         }
         zip.addFile(
@@ -55,6 +58,7 @@ module.exports = async (distFilename, options = {}) => {
         );
       }
       if (mode & 1) {
+        // Node.js internal extension
         ensureNpmDependencies('internal/otel-extension-internal-node');
         zip.addFile(
           'otel-extension-internal-node/index.js',
