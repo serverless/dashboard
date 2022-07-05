@@ -294,21 +294,25 @@ def _instrument(
                         )
                     )
 
+                event_http_path = None
+
                 if event_type == LambdaEventType.APIGateway:
+                    event_http_path = event["requestContext"]["resourcePath"]
                     http_attributes = BoundedAttributes(
                         attributes=_filtered_attributes(
                             {
                                 **http_attributes,
                                 "eventCustomHttpMethod": event["requestContext"]["httpMethod"],
                                 "eventCustomRequestTimeEpoch": event["requestContext"]["requestTimeEpoch"],
-                                "eventHttpPath": event["requestContext"]["resourcePath"],
-                                "httpPath": event["requestContext"]["resourcePath"],
+                                "eventHttpPath": event_http_path,
+                                "httpPath": event_http_path,
                                 "rawHttpPath": event["path"],
                             }
                         )
                     )
                 elif event_type == LambdaEventType.APIGatewayV2:
                     routeKey = cast(str, event["requestContext"]["routeKey"])
+                    event_http_path = routeKey.split(" ")[1] if " " in routeKey else routeKey
                     http_attributes = BoundedAttributes(
                         attributes=_filtered_attributes(
                             {
@@ -316,8 +320,8 @@ def _instrument(
                                 "eventCustomHttpMethod": event["requestContext"]["http"]["method"],
                                 "eventCustomRequestTimeEpoch": event["requestContext"]["timeEpoch"],
                                 "eventCustomStage": event["requestContext"]["stage"],
-                                "eventHttpPath": routeKey.split(" ")[1] if " " in routeKey else routeKey,
-                                "httpPath": routeKey.split(" ")[1] if " " in routeKey else routeKey,
+                                "eventHttpPath": event_http_path,
+                                "httpPath": event_http_path,
                                 "rawHttpPath": event["rawPath"],
                             }
                         )
@@ -416,6 +420,9 @@ def _instrument(
             if instrumentation_span.is_recording():
                 if extracted_http_path:
                     instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, extracted_http_path)
+                else:
+                    if event_http_path:
+                        instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, event_http_path)
                 if extracted_http_status_code:
                     instrumentation_span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, extracted_http_status_code)
                 if not isinstance(result, Exception):
