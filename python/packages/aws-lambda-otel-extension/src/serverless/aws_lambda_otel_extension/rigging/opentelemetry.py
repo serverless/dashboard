@@ -10,7 +10,7 @@ from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
 from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_provider
+from opentelemetry.trace import get_tracer, set_tracer_provider
 from pkg_resources import iter_entry_points
 
 from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsAwsLambdaInstrumentor
@@ -27,10 +27,11 @@ logger = logging.getLogger(__name__)
 
 def setup_auto_instrumentor() -> None:
 
-    temporary_tracer_provider = cast(TracerProvider, TracerProvider())
-    temporary_tracer = cast(Tracer, get_tracer(__name__, PACKAGE_VERSION, temporary_tracer_provider))
-
     if store.is_cold_start:
+
+        temporary_tracer_provider = cast(TracerProvider, TracerProvider())
+        temporary_tracer = cast(Tracer, get_tracer(__name__, PACKAGE_VERSION, temporary_tracer_provider))
+
         try:
             with temporary_tracer.start_as_current_span(
                 name="__instrumentor__",
@@ -91,6 +92,8 @@ def setup_auto_instrumentor() -> None:
                             },
                         )
 
+                    # Do this last.  If anything explodes before this point we want to make sure that the handler is not
+                    # wrapped and instrumented.
                     SlsAwsLambdaInstrumentor().instrument()
 
                 except Exception:
@@ -133,9 +136,6 @@ def setup_tracer_provider() -> None:
             SimpleSpanProcessor(SlsLoggingSpanExporter(pretty_print=settings.test_dry_log_pretty))
         )
 
+        set_tracer_provider(tracer_provider)
+
         set_global_textmap(AwsXRayPropagator())
-
-    else:
-        tracer_provider = cast(TracerProvider, get_tracer_provider())
-
-    set_tracer_provider(tracer_provider)
