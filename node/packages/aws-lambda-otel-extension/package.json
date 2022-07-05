@@ -1,14 +1,15 @@
 {
   "name": "@serverless/aws-lambda-otel-extension",
   "repository": "serverless/runtime",
-  "version": "0.4.1",
+  "version": "0.4.6",
   "author": "Serverless, Inc.",
   "dependencies": {
     "adm-zip": "^0.5.9",
     "child-process-ext": "^2.1.1",
-    "esbuild": "^0.14.43",
+    "esbuild": "^0.14.47",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9",
+    "memoizee": "^0.4.15",
     "protobufjs": "^6.11.3",
     "semver": "^7.3.7",
     "yargs-parser": "^21.0.1"
@@ -42,10 +43,12 @@
   "scripts": {
     "build": "./scripts/build.js dist/extension.zip",
     "build:external": "./scripts/build.js dist/extension-external.zip --mode=2",
+    "generate-proto": "pbjs -t static-module -w commonjs -o external/otel-extension-external/proto.js proto/metric-service.proto proto/trace-service.proto",
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "test": "mocha \"test/unit/**/*.test.js\"",
     "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
-    "test:integration": "mocha \"test/integration/**/*.test.js\""
+    "test:integration": "mocha \"test/integration/**/*.test.js\"",
+    "test:performance": "mocha test/benchmark/performance.test.js"
   },
   "publishConfig": {
     "access": "public"

@@ -1,5 +1,8 @@
 'use strict';
 
+const http = require('http');
+const https = require('https');
+
 const isObject = (value) => value && typeof value === 'object';
 
 const extensionVersion = (() => {
@@ -174,13 +177,13 @@ const measureAttributes = [
     type: 'stringValue',
   },
   {
-    key: 'faas.error_exception_stacktrace',
-    source: 'errorExceptionMessage',
+    key: 'faas.error_stacktrace',
+    source: 'errorStacktrace',
     type: 'stringValue',
   },
   {
-    key: 'faas.error_exception_message',
-    source: 'errorExceptionStacktrace',
+    key: 'faas.error_message',
+    source: 'errorMessage',
     type: 'stringValue',
   },
   {
@@ -229,8 +232,8 @@ const measureAttributes = [
     type: 'stringValue',
   },
   {
-    key: 'faas.error_exception_type',
-    source: 'errorExceptionType',
+    key: 'faas.error_type',
+    source: 'errorType',
     type: 'stringValue',
   },
 ];
@@ -246,4 +249,8 @@ module.exports = {
   resourceAttributes,
   measureAttributes,
   stripResponseBlobData,
+  keepAliveAgents: {
+    http: new http.Agent({ keepAlive: true }),
+    https: new https.Agent({ keepAlive: true }),
+  },
 };

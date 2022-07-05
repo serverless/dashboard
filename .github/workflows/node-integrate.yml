@@ -195,6 +195,8 @@ jobs:
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SLS_ORG_NAME: test
+      SLS_ORG_TOKEN: ${{ secrets.SLS_ORG_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -252,6 +254,11 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm run test:integration
+
+      - name: Validate performancer
+        run: |
+          cd node/packages/aws-lambda-otel-extension
+          npm run test:performance
 
       - name: Tag if new version
         run: |

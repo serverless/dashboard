@@ -42,11 +42,12 @@ features like Providers, Parameters and Secrets.
 **Invoke your function, and login to Serverless Console**
 Once you have deployed your function, do the following to start using Serverless Console.
 
-1. Login to [Serverless Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link) 
+1. Sign up or login to [Serverless Console](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) 
 1. Invoke your function, or hit your API Endpoint
 
 It may take a second for the first data point to show up,
 but will speed up considerably from there. Each time you invoke
-one of your instrumented functions, we receive [Traces](./concepts/traces.md) in Console. 
+one of your instrumented functions, we receive [Traces](./product//traces.md) in Console. 
 
-For more details see our [concepts section](./concepts) or learn about using [Serverless Console](./using/).
+For more details see our [product section](./product) or learn about using [Serverless Console on AWS](./integrations/aws/).
+
