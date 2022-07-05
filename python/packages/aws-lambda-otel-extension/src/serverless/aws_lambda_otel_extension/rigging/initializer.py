@@ -4,5 +4,5 @@ from serverless.aws_lambda_otel_extension.rigging.opentelemetry import setup_aut
 
 def initialize():
     setup_logging()
-    setup_tracer_provider()
-    setup_auto_instrumentor()
+    tracer_provider = setup_tracer_provider()
+    setup_auto_instrumentor(tracer_provider)

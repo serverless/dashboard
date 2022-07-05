@@ -1,5 +1,5 @@
 import logging
-from typing import List, cast
+from typing import List, Optional, cast
 
 from opentelemetry.distro import OpenTelemetryDistro
 from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
@@ -10,7 +10,7 @@ from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
 from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.trace import get_tracer, set_tracer_provider
+from opentelemetry.trace import get_tracer, set_tracer_provider, get_tracer_provider
 from pkg_resources import iter_entry_points
 
 from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsAwsLambdaInstrumentor
@@ -25,7 +25,7 @@ from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggi
 logger = logging.getLogger(__name__)
 
 
-def setup_auto_instrumentor() -> None:
+def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
     if store.is_cold_start:
 
@@ -38,9 +38,9 @@ def setup_auto_instrumentor() -> None:
                 attributes={
                     SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "instrumentor",
                 },
-            ) as current_span:
-                current_span = cast(Span, current_span)
-                store.append_pre_instrumentation_span(current_span)
+            ) as instrumentor_span:
+                instrumentor_span = cast(Span, instrumentor_span)
+                store.append_pre_instrumentation_span(instrumentor_span)
                 try:
                     distro = OpenTelemetryDistro()
 
@@ -76,14 +76,14 @@ def setup_auto_instrumentor() -> None:
                             except Exception as exc:
                                 failed.append(entry_point.name)
                                 logger.exception("Instrumenting of %s failed", entry_point.name)
-                                current_span.record_exception(exc, escaped=True)
+                                instrumentor_span.record_exception(exc, escaped=True)
                                 raise exc
 
                     for entry_point in iter_entry_points("opentelemetry_post_instrument"):
                         entry_point.load()()
 
-                    if current_span.is_recording():
-                        current_span.add_event(
+                    if instrumentor_span.is_recording():
+                        instrumentor_span.add_event(
                             "auto_instrumentor",
                             attributes={
                                 "instrumented": instrumented,
@@ -103,7 +103,7 @@ def setup_auto_instrumentor() -> None:
             logger.exception("Exception while starting instrumentor span")
 
 
-def setup_tracer_provider() -> None:
+def setup_tracer_provider() -> TracerProvider:
 
     # If this is a cold start then we should initialize the global tracer.  We currently don't attempt to provide a
     # customized and filtered span processor where we could work with an inherited tracer and add a span processor to
@@ -139,3 +139,8 @@ def setup_tracer_provider() -> None:
         set_tracer_provider(tracer_provider)
 
         set_global_textmap(AwsXRayPropagator())
+
+    else:
+        tracer_provider = cast(TracerProvider, get_tracer_provider())
+
+    return tracer_provider
