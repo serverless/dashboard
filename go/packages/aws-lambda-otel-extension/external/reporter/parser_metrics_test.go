@@ -76,34 +76,23 @@ func Test_batchOverflowSpans(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []*protoc.TracesData
+		want *protoc.TracesData
 	}{
 		{
 			name: "batchOverflowSpans 101 spans",
 			args: args{
 				traces: trace101,
 			},
-			want: []*protoc.TracesData{
-				{
-					ResourceSpans: []*protoc.ResourceSpans{
-						{
-							Resource: trace101.ResourceSpans[0].Resource,
-							InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
-								{
-									Spans: spans101[:MaxSpansPerBatch],
-								},
+			want: &protoc.TracesData{
+				ResourceSpans: []*protoc.ResourceSpans{
+					{
+						Resource: trace101.ResourceSpans[0].Resource,
+						InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
+							{
+								Spans: spans101[:MaxSpansPerBatch],
 							},
-						},
-					},
-				},
-				{
-					ResourceSpans: []*protoc.ResourceSpans{
-						{
-							Resource: trace101.ResourceSpans[0].Resource,
-							InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
-								{
-									Spans: spans101[MaxSpansPerBatch:],
-								},
+							{
+								Spans: spans101[MaxSpansPerBatch:],
 							},
 						},
 					},
@@ -115,15 +104,13 @@ func Test_batchOverflowSpans(t *testing.T) {
 			args: args{
 				traces: trace99,
 			},
-			want: []*protoc.TracesData{
-				{
-					ResourceSpans: []*protoc.ResourceSpans{
-						{
-							Resource: trace99.ResourceSpans[0].Resource,
-							InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
-								{
-									Spans: spans99,
-								},
+			want: &protoc.TracesData{
+				ResourceSpans: []*protoc.ResourceSpans{
+					{
+						Resource: trace99.ResourceSpans[0].Resource,
+						InstrumentationLibrarySpans: []*protoc.InstrumentationLibrarySpans{
+							{
+								Spans: spans99,
 							},
 						},
 					},
@@ -135,10 +122,8 @@ func Test_batchOverflowSpans(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := batchOverflowSpans(tt.args.traces)
 
-			for i, gotMsg := range got {
-				if !reflect.DeepEqual(gotMsg, tt.want[i]) {
-					t.Errorf("batchOverflowSpans() = \ngot %v\nwant %v\n\n", spew.Sdump(gotMsg), spew.Sdump(tt.want[i]))
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("batchOverflowSpans() = \ngot %v\nwant %v\n\n", spew.Sdump(got), spew.Sdump(tt.want))
 			}
 		})
 	}

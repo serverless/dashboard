@@ -18,10 +18,7 @@ type PostData struct {
 	body       []byte
 	path       string
 	isProtobuf bool
-	trying     bool
-	lock       *sync.Mutex
-	next       *PostData
-	prev       *PostData
+	retries    int
 }
 
 type ReporterClient struct {
@@ -29,8 +26,7 @@ type ReporterClient struct {
 	settings       *lib.UserSettings
 	eg             *errgroup.Group
 	continueEvents chan bool
-	stackLast      *PostData
-	stackLock      *sync.Mutex
+	pool           *sync.Pool
 	extraParams    url.Values
 	logger         *lib.Logger
 }
@@ -49,70 +45,46 @@ func NewReporterClient(settings *lib.UserSettings) *ReporterClient {
 		ReporterClient: &fasthttp.Client{},
 		settings:       settings,
 		eg:             &errgroup.Group{},
-		stackLock:      &sync.Mutex{},
 		extraParams:    extraParams,
 		continueEvents: make(chan bool),
 		logger:         logger,
+		pool:           &sync.Pool{},
 	}
 }
 
 func (c *ReporterClient) Flush() {
-	current := c.stackLast
 	for {
-		if current == nil {
+		if postData := c.pool.Get(); postData != nil {
+			data := postData.(PostData)
+			c.eg.Go(func() error {
+				return c.syncPost(&data)
+			})
+		} else {
 			return
 		}
-		if !current.trying {
-			param := current
-			c.eg.Go(func() error {
-				return c.syncPost(param)
-			})
-		}
-		current = current.prev
 	}
 }
 
 func (c *ReporterClient) Post(path string, body []byte, isProtobuf bool) error {
-	c.stackLock.Lock()
 	data := PostData{
 		body:       body,
 		path:       path,
-		lock:       &sync.Mutex{},
-		trying:     false,
-		prev:       c.stackLast,
 		isProtobuf: isProtobuf,
+		retries:    0,
 	}
-	c.stackLast = &data
-	c.stackLock.Unlock()
-	c.eg.Go(func() error {
-		return c.syncPost(&data)
-	})
-	return nil
-}
-
-func (c *ReporterClient) removeStack(postData *PostData) {
-	c.stackLock.Lock()
-	defer c.stackLock.Unlock()
-	if postData.prev == nil {
-		c.stackLast = postData.next
-	} else {
-		postData.prev.next = postData.next
-	}
-	if postData.next != nil {
-		postData.next.prev = postData.prev
-	}
+	return c.syncPost(&data)
 }
 
 func (c *ReporterClient) syncPost(postData *PostData) (err error) {
-	postData.lock.Lock()
 	start := time.Now()
-	postData.trying = true
 	defer func() {
 		if err != nil {
-			c.logger.Error("Post error", zap.Error(err))
+			c.logger.Error("Post error", zap.String("path", postData.path))
+			if postData.retries < 3 {
+				postData.retries++
+				c.pool.Put(*postData)
+			} // otherwise just stop trying to send this data...
 		}
-		c.removeStack(postData)
-		postData.lock.Unlock()
 	}()
 	// c.logger.Debug("Sending post", zap.String("path", postData.path))
 
@@ -120,6 +92,7 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 	defer fasthttp.ReleaseRequest(req)
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(postData.path)
+	req.SetBody(postData.body)
 
 	req.Header.Set("accept-encoding", "gzip")
 	if postData.isProtobuf {
@@ -140,7 +113,7 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 		return err
 	}
 	if resp.StatusCode() != 200 {
-		err = fmt.Errorf("request failed with status %s", resp.StatusCode)
+		err = fmt.Errorf("request failed with status %d", resp.StatusCode())
 		return err
 	}
 	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))

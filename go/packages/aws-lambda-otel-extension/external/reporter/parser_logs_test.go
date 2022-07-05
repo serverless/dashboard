@@ -19,7 +19,7 @@ func Test_parseLogsAPIPayload(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []logMessage
+		want    []LogMessage
 		wantErr bool
 	}{
 		{
@@ -27,57 +27,55 @@ func Test_parseLogsAPIPayload(t *testing.T) {
 			args: args{
 				data: []byte(logsData),
 			},
-			want: []logMessage{
+			want: []LogMessage{
 				{
-					time:    time.Date(2022, 6, 23, 18, 14, 44, 959*NANO_MILLI, time.UTC),
-					logType: "platform.start",
-					objectRecord: platformObjectRecord{
-						requestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
-						startLogItem: startLogItem{
-							version: "$LATEST",
+					Time:    time.Date(2022, 6, 23, 18, 14, 44, 959*NANO_MILLI, time.UTC),
+					LogType: "platform.start",
+					ObjectRecord: types.PlatformObjectRecord{
+						RequestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
+						StartLogItem: types.StartLogItem{
+							Version: "$LATEST",
 						},
 					},
-					stringRecord: "START RequestId: b5051b53-a6df-4bb7-aba7-874520d1ec77 Version: $LATEST",
+					StringRecord: "START RequestId: b5051b53-a6df-4bb7-aba7-874520d1ec77 Version: $LATEST",
 				},
 				{
-					time:         time.Date(2022, 6, 23, 18, 14, 44, 993*NANO_MILLI, time.UTC),
-					logType:      "function",
-					stringRecord: "2022-06-23T18:14:44.993Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tInside Lambda function handler\n",
+					Time:         time.Date(2022, 6, 23, 18, 14, 44, 993*NANO_MILLI, time.UTC),
+					LogType:      "function",
+					StringRecord: "2022-06-23T18:14:44.993Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tInside Lambda function handler\n",
 				},
 				{
-					time:         time.Date(2022, 6, 23, 18, 14, 45, 495*NANO_MILLI, time.UTC),
-					logType:      "function",
-					stringRecord: "2022-06-23T18:14:45.494Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tAfter sleep\n",
+					Time:         time.Date(2022, 6, 23, 18, 14, 45, 495*NANO_MILLI, time.UTC),
+					LogType:      "function",
+					StringRecord: "2022-06-23T18:14:45.494Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tAfter sleep\n",
 				},
 				{
-					time:    time.Date(2022, 6, 23, 18, 14, 45, 498*NANO_MILLI, time.UTC),
-					logType: "platform.runtimeDone",
-					objectRecord: platformObjectRecord{
-						requestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
-						runtimeDoneItem: runtimeDoneItem{
-							status: "success",
-						},
+					Time:    time.Date(2022, 6, 23, 18, 14, 45, 498*NANO_MILLI, time.UTC),
+					LogType: "platform.runtimeDone",
+					ObjectRecord: types.PlatformObjectRecord{
+						RequestID:       "b5051b53-a6df-4bb7-aba7-874520d1ec77",
+						RuntimeDoneItem: "success",
 					},
 				},
 				{
-					time:         time.Date(2022, 6, 23, 18, 14, 45, 499*NANO_MILLI, time.UTC),
-					logType:      "platform.end",
-					stringRecord: "END RequestId: b5051b53-a6df-4bb7-aba7-874520d1ec77",
-					objectRecord: platformObjectRecord{
-						requestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
+					Time:         time.Date(2022, 6, 23, 18, 14, 45, 499*NANO_MILLI, time.UTC),
+					LogType:      "platform.end",
+					StringRecord: "END RequestId: b5051b53-a6df-4bb7-aba7-874520d1ec77",
+					ObjectRecord: types.PlatformObjectRecord{
+						RequestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
 					},
 				},
 				{
-					time:         time.Date(2022, 6, 23, 18, 14, 45, 499*NANO_MILLI, time.UTC),
-					logType:      "platform.report",
-					stringRecord: "REPORT RequestId: b5051b53-a6df-4bb7-aba7-874520d1ec77\tDuration: 537.68 ms\tBilled Duration: 538 ms\tMemory Size: 1024 MB\tMax Memory Used: 92 MB",
-					objectRecord: platformObjectRecord{
-						requestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
-						reportLogItem: reportLogMetrics{
-							durationMs:       537.68,
-							billedDurationMs: 538,
-							memorySizeMB:     1024,
-							maxMemoryUsedMB:  92,
+					Time:         time.Date(2022, 6, 23, 18, 14, 45, 499*NANO_MILLI, time.UTC),
+					LogType:      "platform.report",
+					StringRecord: "",
+					ObjectRecord: types.PlatformObjectRecord{
+						RequestID: "b5051b53-a6df-4bb7-aba7-874520d1ec77",
+						ReportLogItem: types.ReportLogMetrics{
+							DurationMs:       537.68,
+							BilledDurationMs: 538,
+							MemorySizeMB:     1024,
+							MaxMemoryUsedMB:  92,
 						},
 					},
 				},
@@ -86,7 +84,7 @@ func Test_parseLogsAPIPayload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseLogsAPIPayload(tt.args.data)
+			got, err := ParseLogsAPIPayload(tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseLogsAPIPayload() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -102,10 +100,10 @@ func Test_parseLogsAPIPayload(t *testing.T) {
 
 func Test_readLogs(t *testing.T) {
 	type args struct {
-		data []byte
+		data []LogMessage
 	}
 
-	logMsgs, _ := parseLogsAPIPayload([]byte(logsData))
+	logMsgs, _ := ParseLogsAPIPayload([]byte(logsData))
 
 	tests := []struct {
 		name    string
@@ -115,33 +113,33 @@ func Test_readLogs(t *testing.T) {
 	}{{
 		name: "readLogs",
 		args: args{
-			data: []byte(logsData),
+			data: logMsgs,
 		},
 		want: []types.LogJson{
 			{
-				Body: &logMsgs[0].stringRecord,
+				Body: &logMsgs[0].StringRecord,
 			},
 			{
-				Body: &logMsgs[1].stringRecord,
+				Body: &logMsgs[1].StringRecord,
 			},
 			{
-				Body: &logMsgs[2].stringRecord,
+				Body: &logMsgs[2].StringRecord,
 			},
 			{
-				Body: &logMsgs[3].stringRecord,
+				Body: &logMsgs[3].StringRecord,
 			},
 			{
-				Body: &logMsgs[4].stringRecord,
+				Body: &logMsgs[4].StringRecord,
 			},
 			{
-				Body: &logMsgs[5].stringRecord,
+				Body: &logMsgs[5].StringRecord,
 			},
 		},
 	},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := readLogs(tt.args.data, &types.EventDataPayload{})
+			got, err := ReadLogs(tt.args.data, &types.EventDataPayload{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readLogs() error = %v, wantErr %v", err, tt.wantErr)
 				return

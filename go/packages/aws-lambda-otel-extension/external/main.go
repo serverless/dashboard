@@ -117,7 +117,7 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 	for {
 		// block until we receive runtimeDone
 		reportAgent.WaitDone()
-		reportAgent.WaitRequests(time.Millisecond * 500)
+		reportAgent.WaitRequests(time.Millisecond * 1000)
 		select {
 		case <-ctx.Done():
 			logger.Debug("Context cancelled, exiting")

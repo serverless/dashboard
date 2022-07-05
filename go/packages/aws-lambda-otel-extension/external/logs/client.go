@@ -2,26 +2,25 @@ package logs
 
 import (
 	"aws-lambda-otel-extension/external/types"
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/valyala/fasthttp"
 )
 
 const lambdaAgentIdentifierHeaderKey string = "Lambda-Extension-Identifier"
 
 // Client is the client used to subscribe to the Logs API
 type Client struct {
-	httpClient     *http.Client
+	httpClient     *fasthttp.Client
 	logsApiBaseUrl string
 }
 
 // NewClient returns a new Client with the given URL
 func NewClient(logsApiBaseUrl string) (*Client, error) {
 	return &Client{
-		httpClient:     &http.Client{},
+		httpClient:     &fasthttp.Client{},
 		logsApiBaseUrl: logsApiBaseUrl,
 	}, nil
 }
@@ -110,50 +109,35 @@ func (c *Client) Subscribe(types []types.LogEventType, bufferingCfg BufferingCfg
 		return nil, err
 	}
 
-	headers := make(map[string]string)
-	headers[lambdaAgentIdentifierHeaderKey] = extensionId
 	url := fmt.Sprintf("%s/2020-08-15/logs", c.logsApiBaseUrl)
-	resp, err := httpPutWithHeaders(c.httpClient, url, data, &headers)
+
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	req.Header.SetMethod("PUT")
+	req.SetRequestURI(url)
+	req.SetBody(data)
+
+	// set headers
+	req.Header.SetContentType("application/json")
+	req.Header.Set(lambdaAgentIdentifierHeaderKey, extensionId)
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	err = c.httpClient.Do(req, resp)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusAccepted {
+	if resp.StatusCode() == fasthttp.StatusAccepted {
 		fmt.Println("WARNING!!! Logs API is not supported! Is this extension running in a local sandbox?")
-	} else if resp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
+	} else if resp.StatusCode() != fasthttp.StatusOK {
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, errors.New(fmt.Sprintf("%s failed: %d[%s] %s", url, resp.StatusCode, resp.Status, string(body)))
+		return nil, errors.New(fmt.Sprintf("%s failed: %d[%s] %s", url, resp.StatusCode(), err, string(resp.Body())))
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
-
-	return &SubscribeResponse{string(body)}, nil
-}
-
-func httpPutWithHeaders(client *http.Client, url string, data []byte, headers *map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(data))
-	if err != nil {
-		return nil, err
-	}
-
-	contentType := "application/json"
-	req.Header.Set("Content-Type", contentType)
-	if headers != nil {
-		for k, v := range *headers {
-			req.Header.Set(k, v)
-		}
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
+	return &SubscribeResponse{string(resp.Body())}, nil
 }
