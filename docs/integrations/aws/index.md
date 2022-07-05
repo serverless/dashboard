@@ -41,7 +41,7 @@ yourself for each of your Lambdas functions.
 ### Pre-requisites
 Before you get started make sure you have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 and a recent version of [Node.js](https://nodejs.dev/learn/how-to-install-nodejs) and a 
-[Serverless Console Organization](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) and [jq]().
+[Serverless Console Organization](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) and [jq](https://stedolan.github.io/jq/download/).
 
 ### 1.Clone the repo and install Node modules
 Once you have everything you need you'll need to clone this repo
