@@ -1,6 +1,7 @@
 import threading
 from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
+from diskcache import Cache  # type: ignore
 from opentelemetry.sdk.trace import Span
 
 
@@ -11,8 +12,8 @@ class Store:
         self._execution_ids: Set[str] = set()
         self._pre_instrumentation_spans: List[Span] = []
 
-        self._request_data_by_trace_id: Dict[int, Union[Dict, str, bytes]] = {}
-        self._response_data_by_trace_id: Dict[int, Union[Dict, str, bytes]] = {}
+        self._request_data_by_trace_id = Cache()
+        self._response_data_by_trace_id = Cache()
 
     def add_execution_id(self, execution_id: Any) -> None:
         with self._lock:
@@ -28,11 +29,11 @@ class Store:
 
     def set_request_data_for_trace_id(self, trace_id: int, event: Union[Dict, str, bytes]) -> None:
         with self._lock:
-            self._request_data_by_trace_id[trace_id] = event
+            self._request_data_by_trace_id.set(trace_id, event)
 
     def set_response_data_for_trace_id(self, trace_id: int, result: Union[Dict, str, bytes]) -> None:
         with self._lock:
-            self._response_data_by_trace_id[trace_id] = result
+            self._response_data_by_trace_id.set(trace_id, result)
 
     def get_request_data_for_trace_id(self, trace_id: int) -> Optional[Union[Dict, str, bytes]]:
         with self._lock:
@@ -45,12 +46,12 @@ class Store:
     def clear_request_data_for_trace_id(self, trace_id: int) -> None:
         with self._lock:
             if trace_id in self._request_data_by_trace_id:
-                del self._request_data_by_trace_id[trace_id]
+                self._request_data_by_trace_id.delete(trace_id)
 
     def clear_response_data_for_trace_id(self, trace_id: int) -> None:
         with self._lock:
             if trace_id in self._response_data_by_trace_id:
-                del self._response_data_by_trace_id[trace_id]
+                self._response_data_by_trace_id.delete(trace_id)
 
     @property
     def pre_instrumentation_spans(self) -> Iterator[Span]:

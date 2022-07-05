@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class SlsExtensionSpanExporter(SpanExporter):
-    def __init__(self):
+    def __init__(self, num_threads: int = 4):
         self._stopped = False
         self._lock = threading.Lock()
         self._spans_by_span_id_by_trace_id: Dict[int, Dict[int, ReadableSpan]] = {}
@@ -55,7 +55,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             return
 
         try:
-            request_id = event_span_event.attributes["computeRequestId"]
+            execution_id = event_span_event.attributes["computeExecutionId"]
         except KeyError:
             logger.exception("Failed to get request id from event attributes and unable to send event data")
             return
@@ -65,12 +65,12 @@ class SlsExtensionSpanExporter(SpanExporter):
         event_data = {
             "record": {
                 "eventData": {
-                    request_id: {
+                    execution_id: {
                         **event_span_event.attributes,
                     },
                 },
                 "requestEventPayload": {
-                    "executionId": request_id,
+                    "executionId": execution_id,
                     "requestData": request_data,
                     "spanId": format_span_id(span_id),
                     "traceId": format_trace_id(trace_id),
@@ -130,7 +130,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             return
 
         try:
-            request_id = telemetry_span_event.attributes["computeRequestId"]
+            execution_id = telemetry_span_event.attributes["computeExecutionId"]
         except KeyError:
             logger.exception("Failed to get request id from event attributes and unable to send event data")
             return
@@ -195,7 +195,7 @@ class SlsExtensionSpanExporter(SpanExporter):
                 },
                 "responseEventPayload": {
                     "errorData": None,
-                    "executionId": request_id,
+                    "executionId": execution_id,
                     "responseData": response_data,
                     "spanId": format_span_id(span_id),
                     "traceId": format_trace_id(trace_id),
@@ -205,7 +205,7 @@ class SlsExtensionSpanExporter(SpanExporter):
                 },
             },
             "recordType": "telemetryData",
-            "requestId": request_id,
+            "requestId": execution_id,
         }
 
         if not test_dry_log:
@@ -256,7 +256,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             if span.attributes:
                 sls_span_type = span.attributes.get(SlsExtensionSpanAttributes.SLS_SPAN_TYPE)
 
-            if sls_span_type == "start":
+            if sls_span_type == "pre":
                 for event in span.events:
                     if event.name == "event":
                         with self._lock:
@@ -266,7 +266,7 @@ class SlsExtensionSpanExporter(SpanExporter):
                     else:
                         # TODO: Emit something here.
                         pass
-            elif sls_span_type == "finish":
+            elif sls_span_type == "post":
                 for event in span.events:
                     if event.name == "telemetry":
                         with self._lock:
@@ -277,6 +277,7 @@ class SlsExtensionSpanExporter(SpanExporter):
         # If the instrumentation span is part of this export then we are essentially done and can send the telemetry
         # data.
         if instrumentation_span:
+            # TODO: Move these bits to a span processor that can handle threading this different.
             self._send_telemetry_data_for_instrumentation_context(instrumentation_span.context)
 
         return SpanExportResult.SUCCESS

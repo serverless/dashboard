@@ -5,6 +5,6 @@
 # handler code as well as supported libraries.
 
 export ORIG_HANDLER=$_HANDLER
-export _HANDLER="serverless_aws_lambda_otel_extension_wrapper_handler.auto_instrumenting_handler"
+export _HANDLER="serverless_aws_lambda_otel_extension_wrapper_handler.wrapper_handler"
 
 exec "$@"

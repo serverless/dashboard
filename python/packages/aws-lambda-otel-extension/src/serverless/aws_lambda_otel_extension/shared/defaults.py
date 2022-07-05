@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-DEF_SLS_OPENTELEMETRY_SERVER_URL = "http://sandbox:2772"
+DEF_SLS_OPENTELEMETRY_SERVER_URL = "http://localhost:2772"
 
 DEF_SLS_OTEL_METRICS_ENABLED = False
 
