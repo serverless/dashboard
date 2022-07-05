@@ -21,7 +21,7 @@ _TODO: This section will be completed in the near future_
 
 #### 1. Build layer artifact
 
-##### 1.2 Node.js runtime version
+##### 1.2 Node.js runtime version (external + internal extension)
 
 _Note: pre-build layer artifacts are published with `@serverless/aws-lambda-otel-extension-dist` package, and instead of building it manually (as documented below) it is advised to rely on them instead._
 
@@ -39,7 +39,7 @@ npm run build
 
 Artifact is generated into `dist/extension.zip` file
 
-##### 1.3 Runtime agnostic version
+##### 1.3 Runtime agnostic version (just external extension)
 
 Runtime agnostic version (of just external layer) can be built as following
 
@@ -54,6 +54,14 @@ npm run build:external
 ```
 
 Artifact is generated into `dist/extension-external.zip` file
+
+##### 1.4 Custom settings
+
+Monitoring settings (as documented below) can also be bundled into generated layers, for that pass path to settings file with `--settings-filename` param. File is expected to be a valid Node.js CJS module, It can be plain JSON, or JS, which can be helpful in case of dynamically resolved settings
+
+```sh
+npm run build -- --settings-filename <path>
+```
 
 #### 2. Publish layer
 

@@ -24,6 +24,17 @@ const merge = (target, source) => {
   }
 };
 
+const bundledSettings = (() => {
+  try {
+    // eslint-disable-next-line import/no-unresolved
+    return require('./.user-settings');
+  } catch {
+    return null;
+  }
+})();
+
+if (bundledSettings) merge(userSettings, bundledSettings);
+
 const envSettings = (() => {
   const envSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
 

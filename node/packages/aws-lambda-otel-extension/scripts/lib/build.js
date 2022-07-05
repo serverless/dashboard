@@ -26,6 +26,9 @@ module.exports = async (distFilename, options = {}) => {
   const mode = options.mode || 3; // 1: internal, 2: external
   const zip = new AdmZip();
 
+  const settingsBufferDeferred = options.settingsFilename
+    ? fsp.readFile(options.settingsFilename)
+    : null;
   await Promise.all([
     unlink(distFilename, { loose: true }),
     mkdir(path.dirname(distFilename), { intermediate: true, silent: true }),
@@ -61,6 +64,12 @@ module.exports = async (distFilename, options = {}) => {
           ).stdoutBuffer
         );
         zip.addFile('otel-extension-external/user-settings.js', await getUserSettingsBuffer());
+        if (options.settingsFilename) {
+          zip.addFile(
+            `otel-extension-external/.user-settings${path.extname(options.settingsFilename)}`,
+            await settingsBufferDeferred
+          );
+        }
         zip.addFile(
           'otel-extension-external/version.json',
           Buffer.from(JSON.stringify(version), 'utf8')
@@ -91,6 +100,12 @@ module.exports = async (distFilename, options = {}) => {
           'otel-extension-internal-node'
         );
         zip.addFile('otel-extension-internal-node/user-settings.js', await getUserSettingsBuffer());
+        if (options.settingsFilename) {
+          zip.addFile(
+            `otel-extension-internal-node/.user-settings${path.extname(options.settingsFilename)}`,
+            await settingsBufferDeferred
+          );
+        }
       }
     })(),
   ]);
