@@ -1,7 +1,7 @@
 <!--
 title: AWS Lambda
 menuText: AWS Lambda
-description: An overview of the AWS Lamba Integration
+description: An overview of the AWS Lambda Integration
 menuOrder: 6
 -->
 
@@ -89,7 +89,7 @@ deploy to. It's helpful to set these as environment variables.
 ```text
 ORG_ID=<your-org-id> 
 ORG_TOKEN=<your-org-token>
-SERVICE_NAME=<your-service-name>
+NAMESPACE=<your-namespace>
 FUNCTION_NAME<name-of-lambda-function>
 ENVIRONMENT=dev
 REGION=us-east-1
@@ -97,35 +97,27 @@ REGION=us-east-1
 
 *  Curl the following endpoint to get an ingest token.
 ```
-curl -X POST \
+INGEST_TOKEN=$(curl -X POST \
   'https://core.serverless-dev.com/ingestion/kinesis/token' \
   --header 'Accept: application/json' \
   --header 'sls-token-type: orgToken' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer 620cea8d-1d78-4e65-bd93-32d4609734f1' \
+  --header 'Authorization: Bearer $ORG_TOKEN' \
   --data-raw '{
-	"orgId": "$ORG_ID",
-	"serviceId": "test-service",
-	"stage": "test"
-}'
-
+        "orgId": "$ORG_ID",
+        "serviceId": "test-service",
+        "stage": "$ENVIRONMENT"
+}' | jq -r .token.accessToken)
 ```
 ### 5.Configure necessary environment variables and tags
 
 Configure the AWS environment variables using the AWS CLI
 
-(syntax not correct here yet)
-```
-aws lambda   update-function-configuration --function-name $FUNCTION_NAME --region us-east-1 --environment Variables=\
-"
-{
-   OTEL_RESOURCE_ATTRIBUTES : {}
-  "common": { "destination": { "requestHeaders": "serverless_token=#YOUR INGEST TOKEN" } },
-  "logs": { "destination": "https://core.serverless.com/v1/logs" },
-  "metrics": { "destination": "https://core.serverless.com/v1/metrics" },
-  "request": { "destination": "https://core.serverless.com/v1/request-response" },
-  "response": { "destination": "https://core.serverless.com/v1/request-response" },
-  "traces": { "destination": "https://core.serverless.com/v1/traces' },
-}
-"
+```text
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {NAMESPACE=$NAMESPACE}
+
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {ENVIRONMENT=$ENVIRONMENT}
+
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {INGEST_TOKEN=$INGEST_TOKEN}
+
 ```
