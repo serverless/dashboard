@@ -414,9 +414,10 @@ def _instrument(
             in_memory_span_exporter.clear()
 
             if instrumentation_span.is_recording():
-                instrumentation_span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, extracted_http_status_code)
                 if extracted_http_path:
                     instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, extracted_http_path)
+                if extracted_http_status_code:
+                    instrumentation_span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, extracted_http_status_code)
                 if not isinstance(result, Exception):
                     instrumentation_span.set_status(Status(StatusCode.OK))
 
@@ -449,6 +450,26 @@ def _instrument(
                     }
                 )
             )
+
+            if extracted_http_path:
+                http_attributes = BoundedAttributes(
+                    attributes=_filtered_attributes(
+                        {
+                            **http_attributes,
+                            "httpPath": extracted_http_path,
+                        }
+                    )
+                )
+
+            if extracted_http_status_code:
+                http_attributes = BoundedAttributes(
+                    attributes=_filtered_attributes(
+                        {
+                            **http_attributes,
+                            "httpStatusCode": extracted_http_status_code,
+                        }
+                    )
+                )
 
             wrapper_attributes = BoundedAttributes(
                 attributes=_filtered_attributes(
