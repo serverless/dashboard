@@ -423,6 +423,8 @@ def _instrument(
                 else:
                     if event_http_path:
                         instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, event_http_path)
+                    else:
+                        instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, "")
                 if extracted_http_status_code:
                     instrumentation_span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, extracted_http_status_code)
                 if not isinstance(result, Exception):
