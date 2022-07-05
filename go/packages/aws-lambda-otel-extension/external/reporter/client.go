@@ -3,6 +3,7 @@ package reporter
 import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/protoc"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"sync"
@@ -12,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type PostData struct {
@@ -65,7 +67,7 @@ func (c *ReporterClient) Flush() {
 	}
 }
 
-func (c *ReporterClient) Post(path string, body []byte, isProtobuf bool) error {
+func (c *ReporterClient) post(path string, body []byte, isProtobuf bool) error {
 	data := PostData{
 		body:       body,
 		path:       path,
@@ -73,6 +75,27 @@ func (c *ReporterClient) Post(path string, body []byte, isProtobuf bool) error {
 		retries:    0,
 	}
 	return c.syncPost(&data)
+}
+
+func (c *ReporterClient) postProto(use lib.UserSettingsEndpoint, protod protoreflect.ProtoMessage) {
+	var isProtobuf bool
+	var data []byte
+	var err error
+	if use.OutputType == "json" {
+		data, err = json.Marshal(protod)
+		isProtobuf = false
+	} else {
+		data, err = proto.Marshal(protod)
+		isProtobuf = true
+	}
+
+	if err != nil {
+		c.logger.Error("Error marshalling", zap.Error(err), zap.String("endpoint", use.Destination))
+	}
+
+	c.eg.Go(func() error {
+		return c.post(use.Destination, data, isProtobuf)
+	})
 }
 
 func (c *ReporterClient) syncPost(postData *PostData) (err error) {
@@ -122,44 +145,27 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 
 func (c *ReporterClient) PostLogs(logs []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Logs.Destination, logs, false)
+		return c.post(c.settings.Logs.Destination, logs, false)
 	})
 }
 
 func (c *ReporterClient) PostMetrics(metrics *protoc.MetricsData) {
-	data, err := proto.Marshal(metrics)
-	// data, err := json.Marshal(metrics)
-	if err != nil {
-		c.logger.Error("Error marshalling metrics", zap.Error(err))
-	}
-
-	c.eg.Go(func() error {
-		return c.Post(c.settings.Metrics.Destination, data, true)
-	})
+	c.postProto(c.settings.Metrics, metrics)
 }
 
 func (c *ReporterClient) PostTrace(trace *protoc.TracesData) {
-	data, err := proto.Marshal(trace)
-	// data, err := json.Marshal(trace)
-	if err != nil {
-		c.logger.Error("Error marshalling traces", zap.Error(err))
-		return
-	}
-
-	c.eg.Go(func() error {
-		return c.Post(c.settings.Traces.Destination, data, true)
-	})
+	c.postProto(c.settings.Traces, trace)
 }
 
 func (c *ReporterClient) PostRequest(request []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Request.Destination, request, false)
+		return c.post(c.settings.Request.Destination, request, false)
 	})
 }
 
 func (c *ReporterClient) PostResponse(response []byte) {
 	c.eg.Go(func() error {
-		return c.Post(c.settings.Response.Destination, response, false)
+		return c.post(c.settings.Response.Destination, response, false)
 	})
 }
 
