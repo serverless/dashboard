@@ -83,7 +83,7 @@ func (l *InternalHttpListener) http_handler(ctx *fasthttp.RequestCtx) {
 		if telemetryData.ResponseEventPayload != nil {
 			l.reportAgent.PostResponse(*telemetryData.ResponseEventPayload)
 		}
-		l.currentRequestData.SetLastTelemetryData(&telemetryData.Function)
+		l.currentRequestData.SetLastTelemetryData(telemetryData.Function)
 		metrics := reporter.CreateMetricsPayload(telemetryData.RequestID, telemetryData.Function, nil)
 
 		l.reportAgent.PostMetrics(metrics)

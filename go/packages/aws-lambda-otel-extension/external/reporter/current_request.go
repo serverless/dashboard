@@ -4,7 +4,8 @@ import (
 	"aws-lambda-otel-extension/external/lib"
 	"aws-lambda-otel-extension/external/types"
 	"encoding/json"
-	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"go.uber.org/zap"
 )
@@ -14,7 +15,7 @@ type CurrentRequestData struct {
 	UniqueNames       map[string]bool
 	EventData         *types.EventDataPayload
 	reportAgent       *ReporterClient
-	lastTelemetryData *[]byte
+	lastTelemetryData *map[string]interface{}
 	logger            *lib.Logger
 }
 
@@ -80,42 +81,43 @@ func (c *CurrentRequestData) SetUniqueName(name string) {
 	c.UniqueNames[name] = true
 }
 
-func (c *CurrentRequestData) GetLastTelemetryData() (*map[string]interface{}, error) {
-	if c.lastTelemetryData == nil {
-		return nil, nil
-	}
-	var data map[string]interface{}
-	err := json.Unmarshal(*c.lastTelemetryData, &data)
-	if err != nil {
-		return nil, err
-	}
-	return &data, nil
+func (c *CurrentRequestData) GetLastTelemetryData() *map[string]interface{} {
+	return c.lastTelemetryData
 }
 
-func (c *CurrentRequestData) SetLastTelemetryData(data *map[string]interface{}) {
-	b, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-	c.lastTelemetryData = &b
+func (c *CurrentRequestData) SetLastTelemetryData(data map[string]interface{}) {
+	c.lastTelemetryData = &data
+}
+
+func getTempFilename() string {
+	return filepath.Join(os.TempDir(), "sls-otel-extension-storage")
 }
 
 func (c *CurrentRequestData) SaveLastTelemetryData() {
-	file, err := ioutil.TempFile("", "sls-otel-extension-storage")
+	file, err := os.Open(getTempFilename())
 	if err != nil {
 		c.logger.Error("Error creating temporary file", zap.Error(err))
 		return
 	}
 	defer file.Close()
-	file.Write(*c.lastTelemetryData)
+	b, err := json.Marshal(c.lastTelemetryData)
+	if err != nil {
+		return
+	}
+	file.Write(b)
 }
 
 func (c *CurrentRequestData) LoadLastTelemetryData() {
-	file, _ := ioutil.TempFile("", "sls-otel-extension-storage")
-	defer file.Close()
-	var b []byte
-	_, err := file.Read(b)
+	tempFile := getTempFilename()
+	b, err := os.ReadFile(tempFile)
 	if err != nil {
-		c.lastTelemetryData = &b
+		return
 	}
+	var data map[string]interface{}
+	err = json.Unmarshal(b, &data)
+	if err != nil {
+		return
+	}
+	c.lastTelemetryData = &data
+	os.Remove(tempFile)
 }

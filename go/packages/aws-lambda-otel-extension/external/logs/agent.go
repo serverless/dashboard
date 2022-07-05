@@ -74,7 +74,6 @@ func (s *LogsApiHttpListener) http_handler(ctx *fasthttp.RequestCtx) {
 		s.currentRequestData.SendLogs(typeFunctions)
 	}
 
-	lastTelemetryData, err := s.currentRequestData.GetLastTelemetryData()
 	if err != nil {
 		s.logger.Error("Error getting last telemetry data", zap.Error(err))
 	}
@@ -84,19 +83,18 @@ func (s *LogsApiHttpListener) http_handler(ctx *fasthttp.RequestCtx) {
 		case types.LogTypePlatformStart:
 			s.currentRequestData.SetUniqueName("start")
 		case types.LogTypePlatformRuntimeDone:
-			if msg.ObjectRecord.RuntimeDoneItem != "success" && lastTelemetryData != nil {
+			if msg.ObjectRecord.RuntimeDoneItem != "success" && s.currentRequestData.GetLastTelemetryData() != nil {
 				s.currentRequestData.SaveLastTelemetryData()
 			}
 			s.logger.Debug("Logs api agent received runtime done", zap.String("runtime_done_item", msg.ObjectRecord.RuntimeDoneItem))
 			s.reportAgent.SetDone()
 		case types.LogTypePlatformReport:
-			if lastTelemetryData == nil {
+			if s.currentRequestData.GetLastTelemetryData() == nil {
 				s.currentRequestData.LoadLastTelemetryData()
-				lastTelemetryData, _ = s.currentRequestData.GetLastTelemetryData()
 			}
-			s.logger.Debug(fmt.Sprintf("LogTypePlatformReport to send report (%v)", lastTelemetryData))
-			if lastTelemetryData != nil {
-				metrics := reporter.CreateMetricsPayload(msg.ObjectRecord.RequestID, *lastTelemetryData, &msg.ObjectRecord)
+			s.logger.Debug(fmt.Sprintf("LogTypePlatformReport to send report (%v)", s.currentRequestData.GetLastTelemetryData()))
+			if s.currentRequestData.GetLastTelemetryData() != nil {
+				metrics := reporter.CreateMetricsPayload(msg.ObjectRecord.RequestID, *s.currentRequestData.GetLastTelemetryData(), &msg.ObjectRecord)
 				s.reportAgent.PostMetrics(metrics)
 			}
 		}
