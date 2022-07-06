@@ -9,6 +9,10 @@ const debugLog = (...args) => {
 };
 debugLog('Internal extension: Init');
 
+// Bundled user settings may involve environment variables adjustments
+// therefore needs to be loaded first
+const userSettings = require('./user-settings');
+
 const http = require('http');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
@@ -35,7 +39,6 @@ const AwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
-const userSettings = require('./user-settings');
 
 const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
