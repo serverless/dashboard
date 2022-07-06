@@ -1,9 +1,17 @@
 import importlib
 import logging
+from logging import LogRecord
 from typing import Any, List, Optional, cast
 
 from opentelemetry.distro import OpenTelemetryDistro
 from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+from opentelemetry.instrumentation.logging.environment_variables import (
+    OTEL_PYTHON_LOG_CORRELATION as OTEL_PYTHON_LOG_CORRELATION_ENV_VAR,
+)
+from opentelemetry.instrumentation.logging.environment_variables import (
+    OTEL_PYTHON_LOG_FORMAT as OTEL_PYTHON_LOG_FORMAT_ENV_VAR,
+)
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.aws import AwsXRayPropagator
 from opentelemetry.sdk.extension.aws.resource import AwsLambdaResourceDetector
@@ -18,8 +26,8 @@ from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsA
 from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsExtensionResourceDetector
 from serverless.aws_lambda_otel_extension.shared.constants import PACKAGE_VERSION
 from serverless.aws_lambda_otel_extension.shared.settings import (
-    SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-    SETTINGS_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,
+    SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS,
+    SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS,
     SETTINGS_TEST_DRY_LOG_PRETTY,
 )
 from serverless.aws_lambda_otel_extension.shared.store import store
@@ -28,6 +36,13 @@ from serverless.aws_lambda_otel_extension.span_exporters.extension import SlsExt
 from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggingSpanExporter
 
 logger = logging.getLogger(__name__)
+
+
+def auto_fixer_log_hook(span: Span, *args: Any, **kwargs: Any) -> None:
+    if args:
+        if isinstance(args[0], LogRecord):
+            # log_record = args[0]
+            print(span, args, kwargs)
 
 
 def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
@@ -66,6 +81,20 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
+    # do_reset_logger = True
+
+    # if SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS is not None:
+    #     if "logging" not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
+    #         do_reset_logger = False
+
+    # if SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS is not None:
+    #     if "logging" in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
+    #         do_reset_logger = False
+
+    # if do_reset_logger:
+    #     for handler in logging.root.handlers[:]:
+    #         logging.root.removeHandler(handler)
+
     if store.is_cold_start:
 
         temporary_tracer_provider = cast(TracerProvider, TracerProvider())
@@ -80,6 +109,7 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
             ) as instrumentor_span:
                 instrumentor_span = cast(Span, instrumentor_span)
                 store.append_pre_instrumentation_span(instrumentor_span)
+
                 try:
                     distro = OpenTelemetryDistro()
 
@@ -92,13 +122,16 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
                     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
 
-                        if SETTINGS_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS:
-                            if entry_point.name not in SETTINGS_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS:
+                        if entry_point.name == "logging":
+                            continue
+
+                        if isinstance(SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS, list):
+                            if entry_point.name not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
                                 skipped.append(entry_point.name)
                                 continue
 
-                        if SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS:
-                            if entry_point.name in SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS:
+                        if isinstance(SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS, list):
+                            if entry_point.name in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
                                 skipped.append(entry_point.name)
                                 continue
 
@@ -115,6 +148,7 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
                                     tracer_provider=tracer_provider,
                                     request_hook=auto_fixer_request_hook,
                                     response_hook=auto_fixer_response_hook,
+                                    log_hook=auto_fixer_log_hook,
                                 )
                                 instrumented.append(entry_point.name)
 

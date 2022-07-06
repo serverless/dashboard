@@ -23,14 +23,14 @@ class HTTPClientWorkerPool:
         self._executor = ThreadPoolExecutor(max_workers=num_threads)
 
     def _fire_and_forget(self, request: HTTPRequest):
-        token = context_attach(set_context_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             for attempt in Retrying(wait=wait_fixed(0.25), stop=stop_after_attempt(3)):
                 with attempt:
+                    token = context_attach(set_context_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                     urlopen(request, timeout=5)
+                    context_detach(token)
         except RetryError:
             logger.exception("Failed to send request")
-        context_detach(token)
 
     def submit_request(self, request: HTTPRequest):
         with self._lock:
