@@ -400,12 +400,10 @@ def _instrument(
                     if handler_span.is_recording():
                         handler_span.set_attribute(SpanAttributes.CODE_NAMESPACE, wrapped_module_name)
                         handler_span.set_attribute(SpanAttributes.CODE_FUNCTION, wrapped_function_name)
-
                         handler_span.set_attribute(
                             SlsExtensionSpanAttributes.SLS_HANDLER_INITIAL, initial_lambda_handler
                         )
                         handler_span.set_attribute(SlsExtensionSpanAttributes.SLS_HANDLER_FINAL, final_lambda_handler)
-
                         if extracted_lambda_handler:
                             handler_span.set_attribute(
                                 SlsExtensionSpanAttributes.SLS_HANDLER_EXTRACTED, extracted_lambda_handler

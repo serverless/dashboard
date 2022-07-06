@@ -15,7 +15,7 @@ from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_prov
 from pkg_resources import iter_entry_points
 
 from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsAwsLambdaInstrumentor
-from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsConsoleResourceDetector
+from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsExtensionResourceDetector
 from serverless.aws_lambda_otel_extension.shared.constants import PACKAGE_VERSION
 from serverless.aws_lambda_otel_extension.shared.settings import (
     SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
@@ -159,7 +159,7 @@ def setup_tracer_provider() -> TracerProvider:
             detectors=[
                 ProcessResourceDetector(),
                 AwsLambdaResourceDetector(),
-                SlsConsoleResourceDetector(),
+                SlsExtensionResourceDetector(),
                 # This comes last because we want it to override `service.name` if it is present.
                 OTELResourceDetector(),
             ]

@@ -7,7 +7,7 @@ from serverless.aws_lambda_otel_extension.shared.environment import ENV_SLS_CONS
 logger = logging.getLogger(__name__)
 
 
-class SlsConsoleResourceDetector(ResourceDetector):
+class SlsExtensionResourceDetector(ResourceDetector):
     def detect(self) -> "Resource":
 
         if not ENV_SLS_CONSOLE_SETTINGS:
