@@ -1,5 +1,6 @@
+import importlib
 import logging
-from typing import List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from opentelemetry.distro import OpenTelemetryDistro
 from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
@@ -14,9 +15,13 @@ from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_prov
 from pkg_resources import iter_entry_points
 
 from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsAwsLambdaInstrumentor
-from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsExtensionResourceDetector
-from serverless.aws_lambda_otel_extension.shared import settings
+from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsConsoleResourceDetector
 from serverless.aws_lambda_otel_extension.shared.constants import PACKAGE_VERSION
+from serverless.aws_lambda_otel_extension.shared.settings import (
+    SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+    SETTINGS_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS,
+    SETTINGS_TEST_DRY_LOG_PRETTY,
+)
 from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_exporters.extension import SlsExtensionSpanExporter
@@ -25,22 +30,38 @@ from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggi
 logger = logging.getLogger(__name__)
 
 
-def fixer_request_hook(span: Span, *args, **kwargs):
-    pass
+def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
+
+    opentelemetry_instrumentation_fixer_module = None
+
+    try:
+        opentelemetry_instrumentation_fixer_module = importlib.import_module(
+            f"serverless.aws_lambda_otel_extension.fixers.{span.instrumentation_scope.name}"
+        )
+    except Exception:
+        pass
+
+    if opentelemetry_instrumentation_fixer_module:
+        fixer_response_hook = getattr(opentelemetry_instrumentation_fixer_module, "fixer_response_hook", None)
+        if callable(fixer_response_hook):
+            fixer_response_hook(span, *args, **kwargs)
 
 
-def fixer_response_hook(span: Span, *args, **kwargs):
+def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
-    if span.instrumentation_scope.name == "opentelemetry.instrumentation.django":
-        response = args[0]
-        try:
-            from django.http import HttpRequest  # type: ignore
-        except ImportError:
-            return
+    opentelemetry_instrumentation_fixer_module = None
 
-        if isinstance(response, HttpRequest):
-            if not span.name:
-                span.update_name(response.path)
+    try:
+        opentelemetry_instrumentation_fixer_module = importlib.import_module(
+            f"serverless.aws_lambda_otel_extension.fixers.{span.instrumentation_scope.name}"
+        )
+    except Exception:
+        pass
+
+    if opentelemetry_instrumentation_fixer_module:
+        fixer_response_hook = getattr(opentelemetry_instrumentation_fixer_module, "fixer_response_hook", None)
+        if callable(fixer_response_hook):
+            fixer_response_hook(span, *args, **kwargs)
 
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
@@ -71,13 +92,13 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
                     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
 
-                        if settings.otel_python_enabled_instrumentations:
-                            if entry_point.name not in settings.otel_python_enabled_instrumentations:
+                        if SETTINGS_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS:
+                            if entry_point.name not in SETTINGS_OTEL_PYTHON_ENABLED_INSTRUMENTATIONS:
                                 skipped.append(entry_point.name)
                                 continue
 
-                        if settings.otel_python_disabled_instrumentations:
-                            if entry_point.name in settings.otel_python_disabled_instrumentations:
+                        if SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS:
+                            if entry_point.name in SETTINGS_OTEL_PYTHON_DISABLED_INSTRUMENTATIONS:
                                 skipped.append(entry_point.name)
                                 continue
 
@@ -92,8 +113,8 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
                                     entry_point,
                                     skip_dep_check=True,
                                     tracer_provider=tracer_provider,
-                                    request_hook=fixer_request_hook,
-                                    response_hook=fixer_response_hook,
+                                    request_hook=auto_fixer_request_hook,
+                                    response_hook=auto_fixer_response_hook,
                                 )
                                 instrumented.append(entry_point.name)
 
@@ -138,7 +159,7 @@ def setup_tracer_provider() -> TracerProvider:
             detectors=[
                 ProcessResourceDetector(),
                 AwsLambdaResourceDetector(),
-                SlsExtensionResourceDetector(),
+                SlsConsoleResourceDetector(),
                 # This comes last because we want it to override `service.name` if it is present.
                 OTELResourceDetector(),
             ]
@@ -163,7 +184,7 @@ def setup_tracer_provider() -> TracerProvider:
 
         # Extra information is logged to the console.
         tracer_provider.add_span_processor(
-            SimpleSpanProcessor(SlsLoggingSpanExporter(pretty_print=settings.test_dry_log_pretty))
+            SimpleSpanProcessor(SlsLoggingSpanExporter(pretty_print=SETTINGS_TEST_DRY_LOG_PRETTY))
         )
 
         set_tracer_provider(tracer_provider)

@@ -39,7 +39,7 @@ from serverless.aws_lambda_otel_extension.shared.environment import (
     ENV_AWS_REGION,
     ENV_ORIG_HANDLER,
 )
-from serverless.aws_lambda_otel_extension.shared.settings import sls_otel_extension_flush_timeout
+from serverless.aws_lambda_otel_extension.shared.settings import SETTINGS_SLS_EXTENSION_FLUSH_TIMEOUT
 from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.shared.utilities import (
     extract_account_id_from_invoked_function_arn,
@@ -47,6 +47,7 @@ from serverless.aws_lambda_otel_extension.shared.utilities import (
 )
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_attributes.overloaded import OverloadedSpanAttributes
+from serverless.aws_lambda_otel_extension.workers.http import http_client_worker_pool
 
 _InstrumentorHookT = Optional[Callable[[Span, Dict, Any], None]]
 _RequestHookT = Optional[Callable[[Span, Dict, Any], None]]
@@ -109,7 +110,7 @@ def _instrument(
 
     def _instrumented_lambda_handler_call(call_wrapped, instance, args, kwargs):
 
-        lambda_handler = ENV_ORIG_HANDLER or ENV__HANDLER
+        initial_lambda_handler = ENV_ORIG_HANDLER or ENV__HANDLER
         span_kind = None
 
         # Handle this early on so that we can be a bit more accurate.
@@ -378,15 +379,17 @@ def _instrument(
             extracted_http_status_code = None
 
             extracted_lambda_handler = None
+            final_lambda_handler = initial_lambda_handler
 
             try:
                 extracted_lambda_handler = import_module("wsgi_handler").load_config().get("app")  # noqa
+                final_lambda_handler = f"{initial_lambda_handler}::{extracted_lambda_handler}"
             except Exception:
                 pass
 
             try:
                 with tracer.start_as_current_span(
-                    name=extracted_lambda_handler or lambda_handler or "__handler__",
+                    name=final_lambda_handler,
                     attributes={
                         SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "handler",
                     },
@@ -397,6 +400,16 @@ def _instrument(
                     if handler_span.is_recording():
                         handler_span.set_attribute(SpanAttributes.CODE_NAMESPACE, wrapped_module_name)
                         handler_span.set_attribute(SpanAttributes.CODE_FUNCTION, wrapped_function_name)
+
+                        handler_span.set_attribute(
+                            SlsExtensionSpanAttributes.SLS_HANDLER_INITIAL, initial_lambda_handler
+                        )
+                        handler_span.set_attribute(SlsExtensionSpanAttributes.SLS_HANDLER_FINAL, final_lambda_handler)
+
+                        if extracted_lambda_handler:
+                            handler_span.set_attribute(
+                                SlsExtensionSpanAttributes.SLS_HANDLER_EXTRACTED, extracted_lambda_handler
+                            )
 
                     # Call the original function.
                     try:
@@ -541,6 +554,11 @@ def _instrument(
         except Exception:
             logger.exception("Exception while flushing telemetry data")
 
+        try:
+            http_client_worker_pool.force_flush()
+        except Exception:
+            logger.exception("Exception while flushing http client worker pool")
+
         if isinstance(result, Exception):
             raise result
         else:
@@ -565,7 +583,7 @@ class SlsAwsLambdaInstrumentor(BaseInstrumentor):
         _instrument(
             self._wrapped_module_name,
             self._wrapped_function_name,
-            flush_timeout=kwargs.get("flush_timeout", sls_otel_extension_flush_timeout),
+            flush_timeout=kwargs.get("flush_timeout", SETTINGS_SLS_EXTENSION_FLUSH_TIMEOUT),
             tracer_provider=kwargs.get("tracer_provider"),
         )
 

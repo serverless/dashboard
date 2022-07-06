@@ -2,11 +2,9 @@ class SlsExtensionSpanAttributes:
 
     SLS_EVENT_TYPE = "sls.event_type"
 
-    SLS_HANDLER_ACTUAL = "sls.handler_actual"
-    SLS_HANDLER_ENTRYPOINT = "sls.handler_entrypoint"
-    SLS_HANDLER_MIDDLEWARE = "sls.handler_middleware"
-    SLS_HANDLER_NAME = "sls.handler_name"
-    SLS_HANDLER_RENAMED = "sls.handler_renamed"
+    SLS_HANDLER_INITIAL = "sls.handler_initial"
+    SLS_HANDLER_EXTRACTED = "sls.handler_extracted"
+    SLS_HANDLER_FINAL = "sls.handler_final"
 
     SLS_HANDLER_REQUEST_JSON = "sls.handler_request_json"
     SLS_HANDLER_REQUEST_REPRESENTATION = "sls.handler_request_representation"
