@@ -7,7 +7,7 @@ from pathlib import PosixPath
 from shutil import rmtree
 from subprocess import call
 from textwrap import dedent
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeVar, cast
 
 UID = os.getuid()
 GID = os.getgid()
@@ -37,6 +37,9 @@ class BuildLayerNamespace(argparse.Namespace):
     build_path: PosixPath
     dist_path: PosixPath
     docker_bin_path: Optional[PosixPath]
+
+    python_version: str
+    arch: str
 
     skip_download: bool
     skip_install: bool
@@ -68,12 +71,24 @@ def setup_build_environment(args: BuildLayerNamespace):
             rmtree(install_path, ignore_errors=True)
 
 
+TD = TypeVar("TD", bound=Dict)
+
+
+def dict_filtered_by_key_if_arg(d: TD, arg: str) -> TD:
+    if arg:
+        return cast(TD, {k: v for k, v in d.items() if k == arg})
+    else:
+        return d
+
+
 def docker_download_wheels_from_matrix(args: BuildLayerNamespace):
 
     docker = str(args.docker_bin_path.absolute()) if args.docker_bin_path else "docker"
 
-    for python_version, arch_docker_images in sorted(PYTHON_VERSION_ARCH_DOCKER_IMAGE_MATRIX.items()):
-        for arch, docker_image in arch_docker_images.items():
+    for python_version, arch_docker_images in sorted(
+        dict_filtered_by_key_if_arg(PYTHON_VERSION_ARCH_DOCKER_IMAGE_MATRIX, args.python_version).items()
+    ):
+        for arch, docker_image in sorted(dict_filtered_by_key_if_arg(arch_docker_images, args.arch).items()):
             docker_cache_path = DOCKER_PROJECT_PATH / "build" / "cache"
             docker_downloads_path = DOCKER_PROJECT_PATH / "build" / "downloads" / arch / python_version
             call(
@@ -116,8 +131,10 @@ def docker_install_wheels_from_matrix(args: BuildLayerNamespace):
     # how many duplicate files there are for each arch and then optionally install ones that cover every python version
     # in `/opt/python` directory and the rest will go into the respective `/opt/python/lib/python3.x/site-packages`
     # directory.
-    for python_version, arch_docker_images in sorted(PYTHON_VERSION_ARCH_DOCKER_IMAGE_MATRIX.items()):
-        for arch in arch_docker_images.keys():
+    for python_version, arch_docker_images in sorted(
+        dict_filtered_by_key_if_arg(PYTHON_VERSION_ARCH_DOCKER_IMAGE_MATRIX, args.python_version).items()
+    ):
+        for arch in sorted(dict_filtered_by_key_if_arg(arch_docker_images, args.arch).keys()):
 
             if args.single_arch:
                 arch_or_universal = arch
@@ -132,8 +149,10 @@ def docker_install_wheels_from_matrix(args: BuildLayerNamespace):
                 [f.name for f in downloads_arch_python_version_path.glob("*") if f.is_file()]
             )
 
-    for python_version, arch_docker_images in sorted(PYTHON_VERSION_ARCH_DOCKER_IMAGE_MATRIX.items()):
-        for arch, docker_image in arch_docker_images.items():
+    for python_version, arch_docker_images in sorted(
+        dict_filtered_by_key_if_arg(PYTHON_VERSION_ARCH_DOCKER_IMAGE_MATRIX, args.python_version).items()
+    ):
+        for arch, docker_image in sorted(dict_filtered_by_key_if_arg(arch_docker_images, args.arch).items()):
 
             if args.single_arch:
                 arch_or_universal = arch
@@ -224,6 +243,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--skip-download", action="store_true")
     parser.add_argument("--skip-install", action="store_true")
+
+    parser.add_argument("--python-version", type=str)
+    parser.add_argument("--arch", type=str)
 
     parser.add_argument("--single-arch", action="store_true")
 
