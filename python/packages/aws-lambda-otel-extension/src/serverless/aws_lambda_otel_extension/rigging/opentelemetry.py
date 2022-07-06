@@ -21,6 +21,8 @@ from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_exporters.extension import SlsExtensionSpanExporter
 from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggingSpanExporter
+from opentelemetry.semconv.trace import SpanAttributes
+import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,11 @@ def fixer_response_hook(span: Span, *args, **kwargs):
 
     if span.instrumentation_scope.name == "opentelemetry.instrumentation.django":
         if not span.name:
-            span.update_name(repr(span.name))
+            try:
+                # TODO: Throw a massive amount of tests at this.
+                span.update_name(urllib.parse.urlparse(SpanAttributes.HTTP_URL).path)
+            except Exception:
+                span.update_name(repr(span.name))
 
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
