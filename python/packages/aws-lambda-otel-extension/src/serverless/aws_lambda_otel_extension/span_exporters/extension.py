@@ -1,4 +1,3 @@
-import http.client
 import json
 import logging
 import threading
@@ -24,17 +23,19 @@ from serverless.aws_lambda_otel_extension.shared.settings import (
 from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_formatters.extension import telemetry_formatted_span
+from serverless.aws_lambda_otel_extension.workers.http import http_client_worker_pool
 
 logger = logging.getLogger(__name__)
 
 
 class SlsExtensionSpanExporter(SpanExporter):
-    def __init__(self, num_threads: int = 4):
+    def __init__(self, endpoint: str = None):
         self._stopped = False
         self._lock = threading.Lock()
         self._spans_by_span_id_by_trace_id: Dict[int, Dict[int, ReadableSpan]] = {}
         self._event_span_event_by_trace_id: Dict[int, Event] = {}
         self._telemetry_span_event_by_trace_id: Dict[int, Event] = {}
+        self._endpoint = endpoint or extension_otel_http_url
 
     def clear_by_trace_id(self, trace_id):
         with self._lock:
@@ -86,9 +87,9 @@ class SlsExtensionSpanExporter(SpanExporter):
 
         if not test_dry_log:
             try:
-                extension_otel_http_response: http.client.HTTPResponse = urllib.request.urlopen(
+                http_client_worker_pool.submit_request(
                     urllib.request.Request(
-                        extension_otel_http_url,
+                        self._endpoint,
                         method=HTTP_METHOD_POST,
                         headers={
                             HTTP_CONTENT_TYPE_HEADER: HTTP_CONTENT_TYPE_APPLICATION_JSON,
@@ -96,9 +97,8 @@ class SlsExtensionSpanExporter(SpanExporter):
                         data=bytes(json.dumps(event_data), "utf-8"),
                     )
                 )
-                extension_otel_http_response.read()
             except Exception:
-                logger.exception("Failed to send handler eventData")
+                logger.exception("Failed to submit event data")
 
             logger.debug(
                 json.dumps(
@@ -210,9 +210,9 @@ class SlsExtensionSpanExporter(SpanExporter):
 
         if not test_dry_log:
             try:
-                extension_otel_http_response: http.client.HTTPResponse = urllib.request.urlopen(
+                http_client_worker_pool.submit_request(
                     urllib.request.Request(
-                        extension_otel_http_url,
+                        self._endpoint,
                         method=HTTP_METHOD_POST,
                         headers={
                             HTTP_CONTENT_TYPE_HEADER: HTTP_CONTENT_TYPE_APPLICATION_JSON,
@@ -220,9 +220,8 @@ class SlsExtensionSpanExporter(SpanExporter):
                         data=bytes(json.dumps(telemetry_data), "utf-8"),
                     )
                 )
-                extension_otel_http_response.read()
             except Exception:
-                logger.exception("Failed to send handler eventData")
+                logger.exception("Failed to submit telemetry data")
 
             logger.debug(
                 json.dumps(
@@ -245,7 +244,7 @@ class SlsExtensionSpanExporter(SpanExporter):
         if self._stopped:
             return SpanExportResult.FAILURE
 
-        instrumentation_span = None
+        instrumentation_spans: List[ReadableSpan] = []
 
         for span in spans:
 
@@ -272,13 +271,17 @@ class SlsExtensionSpanExporter(SpanExporter):
                         with self._lock:
                             self._telemetry_span_event_by_trace_id[span.context.trace_id] = event
             elif sls_span_type == "instrumentation":
-                instrumentation_span = span
+                instrumentation_spans.append(span)
 
-        # If the instrumentation span is part of this export then we are essentially done and can send the telemetry
         # data.
-        if instrumentation_span:
+        for instrumentation_span in instrumentation_spans:
             # TODO: Move these bits to a span processor that can handle threading this different.
             self._send_telemetry_data_for_instrumentation_context(instrumentation_span.context)
+            with self._lock:
+                self._spans_by_span_id_by_trace_id.pop(instrumentation_span.context.trace_id, None)
+                self._event_span_event_by_trace_id.pop(instrumentation_span.context.trace_id, None)
+                self._telemetry_span_event_by_trace_id.pop(instrumentation_span.context.trace_id, None)
+            http_client_worker_pool.force_flush()
 
         return SpanExportResult.SUCCESS
 

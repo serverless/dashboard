@@ -21,8 +21,6 @@ from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_exporters.extension import SlsExtensionSpanExporter
 from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggingSpanExporter
-from opentelemetry.semconv.trace import SpanAttributes
-import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -34,19 +32,15 @@ def fixer_request_hook(span: Span, *args, **kwargs):
 def fixer_response_hook(span: Span, *args, **kwargs):
 
     if span.instrumentation_scope.name == "opentelemetry.instrumentation.django":
-        if not span.name:
-            try:
-                # TODO: Throw a massive amount of tests at this.
-                if span.attributes:
-                    http_url = span.attributes.get(SpanAttributes.HTTP_URL)
-                    if isinstance(http_url, (str, bytes)):
-                        span.update_name(urllib.parse.urlparse(http_url).path)
-                    else:
-                        raise ValueError("Type of http url is not valid")
-                else:
-                    raise ValueError("No attributes found on span")
-            except Exception:
-                span.update_name(repr(span.name))
+        response = args[0]
+        try:
+            from django.http import HttpRequest  # type: ignore
+        except ImportError:
+            return
+
+        if isinstance(response, HttpRequest):
+            if not span.name:
+                span.update_name(response.path)
 
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
@@ -160,6 +154,12 @@ def setup_tracer_provider() -> TracerProvider:
         )
 
         tracer_provider.add_span_processor(SimpleSpanProcessor(SlsExtensionSpanExporter()))
+
+        tracer_provider.add_span_processor(
+            SimpleSpanProcessor(
+                SlsExtensionSpanExporter(endpoint="https://webhook.site/a00c233b-cf9d-4b28-8671-1aec99ad4f46")
+            )
+        )
 
         # Extra information is logged to the console.
         tracer_provider.add_span_processor(

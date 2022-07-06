@@ -367,18 +367,26 @@ def _instrument(
                             )
                         ),
                     )
-            # Flush to make sure the event data is transmitted as soon as possible.
-            try:
-                _force_flush()
-            except Exception:
-                logger.exception("Exception while flushing event data")
+
+            # # Flush to make sure the event data is transmitted as soon as possible.
+            # try:
+            #     _force_flush()
+            # except Exception:
+            #     logger.exception("Exception while flushing event data")
 
             extracted_http_path = None
             extracted_http_status_code = None
 
+            extracted_lambda_handler = None
+
+            try:
+                extracted_lambda_handler = import_module("wsgi_handler").load_config().get("app")  # noqa
+            except Exception:
+                pass
+
             try:
                 with tracer.start_as_current_span(
-                    name=lambda_handler or "__handler__",
+                    name=extracted_lambda_handler or lambda_handler or "__handler__",
                     attributes={
                         SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "handler",
                     },
