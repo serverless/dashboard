@@ -11,7 +11,18 @@ debugLog('Internal extension: Init');
 
 // Bundled user settings may involve environment variables adjustments
 // therefore needs to be loaded first
-const userSettings = require('./user-settings');
+const userSettings = (() => {
+  try {
+    return require('./user-settings');
+  } catch (error) {
+    process.stdout.write(
+      `Error: Extension user settings resolution crashed with: ${error.stack}\n`
+    );
+    process.stdout.write('Extension will operate in no-op mode\n');
+    return null;
+  }
+})();
+if (!userSettings) return;
 
 const http = require('http');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
