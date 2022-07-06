@@ -26,25 +26,15 @@ const merge = (target, source) => {
 
 const bundledSettings = (() => {
   try {
-    // eslint-disable-next-line import/no-unresolved
-    return require('./.user-settings');
+    require.resolve('./.user-settings');
   } catch {
     return null;
   }
+  // eslint-disable-next-line import/no-unresolved
+  return require('./.user-settings');
 })();
 
 if (bundledSettings) merge(userSettings, bundledSettings);
 
-const envSettings = (() => {
-  const envSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
-
-  if (!envSettingsText) return null;
-  try {
-    return JSON.parse(envSettingsText);
-  } catch (error) {
-    process._rawDebug(`Resolution of user settings failed with: ${error.message}`);
-    return null;
-  }
-})();
-
-if (envSettings) merge(userSettings, envSettings);
+const envSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
+if (envSettingsText) merge(userSettings, JSON.parse(envSettingsText));

@@ -19,7 +19,20 @@ module.exports = (async () => {
   const runtimeEventEmitter = new EventEmitter();
   const servers = new Set();
 
-  const userSettings = require('./user-settings');
+  let isNoopMode = false;
+  const userSettings = (() => {
+    try {
+      return require('./user-settings');
+    } catch (error) {
+      isNoopMode = true;
+      process.stdout.write(
+        `Error: Extension user settings resolution crashed with: ${error.stack}\n`
+      );
+      process.stdout.write('Extension will operate in no-op mode\n');
+      return null;
+    }
+  })();
+
   const {
     debugLog,
     keepAliveAgents: { http: keepAliveAgent },
@@ -161,7 +174,7 @@ module.exports = (async () => {
     // unconditionaly in all cases (it's not harmful if subscription is active)
     await new Promise((resolve, reject) => {
       const eventTypes = ['platform'];
-      if (!userSettings.logs.disabled) eventTypes.push('function');
+      if (!isNoopMode && !userSettings.logs.disabled) eventTypes.push('function');
       const putData = JSON.stringify({
         destination: { protocol: 'HTTP', URI: 'http://sandbox:4243' },
         types: eventTypes,
@@ -355,7 +368,7 @@ module.exports = (async () => {
         }
 
         const extensionIdentifier = response.headers['lambda-extension-identifier'];
-        monitorInternalTelemetry();
+        if (!isNoopMode) monitorInternalTelemetry();
         resolve(
           Promise.all([monitorEvents(extensionIdentifier), monitorLogs(extensionIdentifier)])
         );
