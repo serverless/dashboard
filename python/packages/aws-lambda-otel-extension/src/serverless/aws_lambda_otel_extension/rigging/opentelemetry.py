@@ -41,7 +41,8 @@ def fixer_response_hook(span: Span, *args, **kwargs):
                     http_url = span.attributes.get(SpanAttributes.HTTP_URL)
                     if isinstance(http_url, (str, bytes)):
                         span.update_name(urllib.parse.urlparse(http_url).path)
-                    raise ValueError("Type of http url is not valid")
+                    else:
+                        raise ValueError("Type of http url is not valid")
                 else:
                     raise ValueError("No attributes found on span")
             except Exception:
