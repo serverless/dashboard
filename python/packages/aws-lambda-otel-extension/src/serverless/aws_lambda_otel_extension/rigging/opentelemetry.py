@@ -25,6 +25,17 @@ from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggi
 logger = logging.getLogger(__name__)
 
 
+def fixer_request_hook(span: Span, *args, **kwargs):
+    pass
+
+
+def fixer_response_hook(span: Span, *args, **kwargs):
+
+    if span.instrumentation_scope.name == "opentelemetry.instrumentation.django":
+        if not span.name:
+            span.update_name(repr(span.name))
+
+
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
     if store.is_cold_start:
@@ -70,7 +81,13 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
                                     skipped.append(entry_point.name)
                                     continue
 
-                                distro.load_instrumentor(entry_point, skip_dep_check=True)
+                                distro.load_instrumentor(
+                                    entry_point,
+                                    skip_dep_check=True,
+                                    tracer_provider=tracer_provider,
+                                    request_hook=fixer_request_hook,
+                                    response_hook=fixer_response_hook,
+                                )
                                 instrumented.append(entry_point.name)
 
                             except Exception as exc:
