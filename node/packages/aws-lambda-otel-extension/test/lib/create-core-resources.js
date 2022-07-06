@@ -17,14 +17,12 @@ const createLayer = async ({ layerName, filename, skipBuild, buildConfig }) => {
   }
 
   log.info('Publishing layer (%s) to AWS', filename);
-  await awsRequest(Lambda, 'publishLayerVersion', {
-    LayerName: layerName,
-    Content: { ZipFile: await fsp.readFile(filename) },
-  });
-  log.info('Resolving layer ARN');
   const arn = (
-    await awsRequest(Lambda, 'listLayerVersions', { LayerName: layerName })
-  ).LayerVersions.shift().LayerVersionArn;
+    await awsRequest(Lambda, 'publishLayerVersion', {
+      LayerName: layerName,
+      Content: { ZipFile: await fsp.readFile(filename) },
+    })
+  ).LayerVersionArn;
   log.info('Layer ready %s', arn);
   return arn;
 };
