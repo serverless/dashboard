@@ -214,3 +214,4 @@ Additionally extension layers that are used for testing can be overridden with f
 
 - `TEST_LAYER_FILENAME` - Path to `.zip` file of a layer which contains both external and internal Node.js extensions. Ineffective with `--extension-layers-mode=dual`
 - `TEST_EXTERNAL_LAYER_FILENAME` - Path to `.zip` file of a layer which contains external (runtime agnostic) extension. Effective only with `--extension-layers-mode=dual`
+- `TEST_INTERNAL_LAYER_FILENAME` - Path to `.zip` file of a layer which contains just internal Node.js extension. It's effective for `internalOnly` benchmark variant, and in other cases effective only with `--extension-layers-mode=dual`
