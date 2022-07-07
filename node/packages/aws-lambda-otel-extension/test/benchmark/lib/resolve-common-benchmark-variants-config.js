@@ -58,6 +58,7 @@ module.exports = async (coreConfig, options) => {
               DEBUG_SLS_OTEL_LAYER: '1',
             },
           },
+          ...(coreConfig.layerExternalArn ? null : { Layers: [coreConfig.layerExternalArn] }),
         },
       },
     ],

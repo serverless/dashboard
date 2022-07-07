@@ -31,7 +31,9 @@ const create = async (testConfig, coreConfig) => {
       Code: {
         ZipFile: await resolveDirZipBuffer(fixturesDirname),
       },
-      Layers: [coreConfig.layerArn],
+      Layers: coreConfig.layerArn
+        ? [coreConfig.layerArn]
+        : [coreConfig.layerExternalArn, coreConfig.layerInternalArn],
       Environment: {
         Variables: {
           AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
