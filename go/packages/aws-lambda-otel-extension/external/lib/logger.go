@@ -34,3 +34,5 @@ func NewLogger() (logger *zap.Logger) {
 	}
 	return logger
 }
+
+var ErrLogger = log.New(os.Stderr, "", 0)

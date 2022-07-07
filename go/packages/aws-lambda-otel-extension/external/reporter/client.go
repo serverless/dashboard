@@ -31,6 +31,7 @@ type ReporterClient struct {
 	pool           *sync.Pool
 	extraParams    url.Values
 	logger         *lib.Logger
+	clock          time.Time
 }
 
 type transformDataType func() ([]byte, error)
@@ -51,6 +52,7 @@ func NewReporterClient(settings *lib.UserSettings) *ReporterClient {
 		continueEvents: make(chan bool),
 		logger:         logger,
 		pool:           &sync.Pool{},
+		clock:          time.Time{},
 	}
 }
 
@@ -183,6 +185,7 @@ func (c *ReporterClient) PostResponse(response []byte) {
 }
 
 func (c *ReporterClient) SetDone() {
+	c.clock = time.Now()
 	c.continueEvents <- true
 }
 
@@ -211,4 +214,21 @@ func (c *ReporterClient) Shutdown() error {
 	err := c.WaitRequests(time.Second * 2)
 	c.ReporterClient.CloseIdleConnections()
 	return err
+}
+
+// clocks logic
+func (c *ReporterClient) RegisterClockStart() {
+	c.clock = time.Now()
+}
+
+func (c *ReporterClient) ReportInitDuration(t time.Time) {
+	lib.ErrLogger.Printf("Extension overhead duration: external initialization: %dms\n", time.Now().Sub(t).Milliseconds())
+}
+
+func (c *ReporterClient) ReportOverheadDuration() {
+	lib.ErrLogger.Printf("Extension overhead duration: external invocation: %dms\n", time.Now().Sub(c.clock).Milliseconds())
+}
+
+func (c *ReporterClient) ReportShutdownDuration() {
+	lib.ErrLogger.Printf("Extension overhead duration: external shutdown: %dms\n", time.Now().Sub(c.clock).Milliseconds())
 }

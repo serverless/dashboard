@@ -25,6 +25,7 @@ var (
 const INITIAL_QUEUE_SIZE = 100
 
 func main() {
+	startTime := time.Now()
 	ctx, cancel := context.WithCancel(context.Background())
 	// wg := new(sync.WaitGroup)
 	logger := lib.NewLogger()
@@ -75,10 +76,12 @@ func main() {
 	// }()
 
 	// Will block until shutdown event is received or cancelled via the context.
-	logger.Debug("Going to process events loop")
+	reportAgent.ReportInitDuration(startTime)
 
 	// first call init next/event
 	processEvents(ctx, logger, reportAgent, currentRequestData)
+
+	reportAgent.RegisterClockStart()
 
 	logger.Debug("Exiting")
 	logsApiAgent.Shutdown(ctx)
@@ -87,6 +90,8 @@ func main() {
 	if err != nil {
 		logger.Error("Failed to shutdown report agent", zap.Error(err))
 	}
+
+	reportAgent.ReportShutdownDuration()
 
 	return
 }
@@ -125,6 +130,7 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 			return
 		default:
 			logger.Debug("Reading next event...")
+			reportAgent.ReportOverheadDuration()
 			if err := next(); err != nil {
 				return
 			}
