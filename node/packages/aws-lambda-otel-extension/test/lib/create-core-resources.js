@@ -63,6 +63,14 @@ const createLayers = async (config, layerTypes) => {
           });
           return;
         case 'nodeInternal':
+          if (process.env.TEST_INTERNAL_LAYER_FILENAME) {
+            config.layerExternalArn = await createLayer({
+              layerName: `${basename}-internal`,
+              filename: process.env.TEST_INTERNAL_LAYER_FILENAME,
+              skipBuild: true,
+            });
+            return;
+          }
           config.layerInternalArn = await createLayer({
             layerName: `${basename}-internal`,
             filename: path.resolve(__dirname, '../../dist/extension.internal.zip'),
