@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
@@ -66,7 +67,7 @@ func (s *LogsApiHttpListener) http_handler(ctx *fasthttp.RequestCtx) {
 
 	var typeFunctions []reporter.LogMessage
 	for _, msg := range msgs {
-		if msg.LogType == types.LogTypeFunction {
+		if msg.LogType == types.LogTypeFunction && !strings.Contains(msg.StringRecord, "SERVERLESS_ENTERPRISE") {
 			typeFunctions = append(typeFunctions, msg)
 		}
 	}
@@ -126,17 +127,19 @@ type HttpAgent struct {
 	listener           *LogsApiHttpListener
 	logger             *lib.Logger
 	CurrentRequestData *reporter.CurrentRequestData
+	settings           *lib.UserSettings
 }
 
 // NewLogsApiAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
-func NewLogsApiAgent(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData) (*HttpAgent, error) {
+func NewLogsApiAgent(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData, settings *lib.UserSettings) (*HttpAgent, error) {
 	logsApiListener := NewLogsApiHttpListener(reportAgent, currentRequestData)
 
 	return &HttpAgent{
 		listener:           logsApiListener,
 		logger:             lib.NewLogger(),
 		CurrentRequestData: currentRequestData,
+		settings:           settings,
 	}, nil
 }
 
@@ -156,7 +159,11 @@ func (h HttpAgent) Init(agentID string) error {
 
 	_ = h.listener.Start()
 
-	eventTypes := []types.LogEventType{types.LogTypePlatform, types.LogTypeFunction}
+	eventTypes := []types.LogEventType{types.LogTypePlatform}
+
+	if !h.settings.Logs.Disabled {
+		eventTypes = append(eventTypes, types.LogTypeFunction)
+	}
 	bufferingCfg := BufferingCfg{
 		MaxItems:  10000,
 		MaxBytes:  262144,

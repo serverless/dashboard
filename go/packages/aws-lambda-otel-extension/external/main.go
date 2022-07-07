@@ -105,6 +105,7 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 			return err
 		} else if res.EventType == extension.Invoke {
 			currentRequestData.SetUniqueName("invoke")
+			logger.Debug("Invoke received")
 		}
 		return nil
 	}
