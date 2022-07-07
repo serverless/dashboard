@@ -74,21 +74,20 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
-    do_reset_logger = True
-
-    if SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS is not None:
-        if "logging" not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
-            do_reset_logger = False
-
-    if SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS is not None:
-        if "logging" in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
-            do_reset_logger = False
-
-    if do_reset_logger:
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
-
     if store.is_cold_start:
+        do_reset_logger = True
+
+        if SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS is not None:
+            if "logging" not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
+                do_reset_logger = False
+
+        if SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS is not None:
+            if "logging" in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
+                do_reset_logger = False
+
+        if do_reset_logger:
+            for handler in logging.root.handlers[:]:
+                logging.root.removeHandler(handler)
 
         temporary_tracer_provider = cast(TracerProvider, TracerProvider())
         temporary_tracer = cast(Tracer, get_tracer(__name__, PACKAGE_VERSION, temporary_tracer_provider))
