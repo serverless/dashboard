@@ -61,6 +61,8 @@ INSTRUMENTATION_MAP = {
     ],
 }
 
-DO_NOT_INSTRUMENT = [
-    "sqlite3",  # There appears to be a serious issue introduces in opentelemetry 0.32b0
+JUST_PLAIN_DO_NOT_INSTRUMENT = [
+    # FIXME: There appears to be a serious issue introduced in opentelemetry 0.32b0 to deal with how dbapi is wrapped..
+    # need to get down to the bottom of this.
+    "sqlite3",
 ]

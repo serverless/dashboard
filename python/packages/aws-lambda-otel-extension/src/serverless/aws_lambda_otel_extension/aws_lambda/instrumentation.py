@@ -109,7 +109,6 @@ def _instrument(
             tracer_provider.force_flush()
 
     def _instrumented_lambda_handler_call(call_wrapped, instance, args, kwargs):
-
         initial_lambda_handler = ENV_ORIG_HANDLER or ENV__HANDLER
         span_kind = None
 
@@ -294,6 +293,8 @@ def _instrument(
                             }
                         )
                     )
+
+                logger.debug("time passes")
 
                 event_http_path = None
 

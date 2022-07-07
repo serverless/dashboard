@@ -17,7 +17,7 @@ from pkg_resources import iter_entry_points
 
 from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsAwsLambdaInstrumentor
 from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsExtensionResourceDetector
-from serverless.aws_lambda_otel_extension.shared.constants import PACKAGE_VERSION
+from serverless.aws_lambda_otel_extension.shared.constants import JUST_PLAIN_DO_NOT_INSTRUMENT, PACKAGE_VERSION
 from serverless.aws_lambda_otel_extension.shared.settings import (
     SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS,
     SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS,
@@ -74,19 +74,19 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
-    # do_reset_logger = True
+    do_reset_logger = True
 
-    # if SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS is not None:
-    #     if "logging" not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
-    #         do_reset_logger = False
+    if SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS is not None:
+        if "logging" not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
+            do_reset_logger = False
 
-    # if SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS is not None:
-    #     if "logging" in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
-    #         do_reset_logger = False
+    if SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS is not None:
+        if "logging" in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
+            do_reset_logger = False
 
-    # if do_reset_logger:
-    #     for handler in logging.root.handlers[:]:
-    #         logging.root.removeHandler(handler)
+    if do_reset_logger:
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
 
     if store.is_cold_start:
 
@@ -115,7 +115,8 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
                     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
 
-                        if entry_point.name == "logging":
+                        if entry_point.name in JUST_PLAIN_DO_NOT_INSTRUMENT:
+                            skipped.append(entry_point.name)
                             continue
 
                         if isinstance(SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS, list):
