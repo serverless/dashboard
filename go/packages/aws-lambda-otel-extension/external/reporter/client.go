@@ -98,14 +98,14 @@ func (c *ReporterClient) postProto(use lib.UserSettingsEndpoint, protod protoref
 	})
 }
 
-func (c *ReporterClient) syncPost(postData *PostData) (err error) {
-	// start := time.Now()
+func (c *ReporterClient) syncPostTest(postData *PostData) (err error) {
+	start := time.Now()
 	// c.logger.Info("SLS DATA", zap.ByteString("data", postData.body))
-	// c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
+	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
 	return nil
 }
 
-func (c *ReporterClient) syncPostR(postData *PostData) (err error) {
+func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 	start := time.Now()
 	code := 0
 	defer func() {
