@@ -14,7 +14,7 @@ def wrapper_handler(event: Dict, context: Any) -> Dict:
 
     initialize()
 
-    print("...", store.is_cold_start)
+    print("...", store.is_cold_start, store._execution_ids)
 
     handler_module_name, handler_function_name = os.getenv("ORIG_HANDLER", os.environ["_HANDLER"]).rsplit(".", 1)
     handler_module = import_module(handler_module_name)
