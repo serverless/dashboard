@@ -17,7 +17,15 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, Status, StatusCode, get_current_span, get_tracer, get_tracer_provider
+from opentelemetry.trace import (
+    SpanKind,
+    Status,
+    StatusCode,
+    get_current_span,
+    get_tracer,
+    get_tracer_provider,
+    NonRecordingSpan,
+)
 from opentelemetry.util._time import _time_ns
 from wrapt import wrap_function_wrapper  # type: ignore
 
@@ -63,6 +71,8 @@ def _filtered_attributes(attributes: Dict) -> Dict:
 
 def _extract_handler_span_parent_context(event: Dict, context: Any) -> Optional[Context]:
 
+    handler_parent_context = None
+
     xray_env_var = os.environ.get(_X_AMZN_TRACE_ID_ENV_VAR)
 
     if xray_env_var:
@@ -70,7 +80,7 @@ def _extract_handler_span_parent_context(event: Dict, context: Any) -> Optional[
         if get_current_span(handler_parent_context).get_span_context().trace_flags.sampled:
             return handler_parent_context
 
-    return None
+    return handler_parent_context
 
 
 def _instrument(
@@ -187,9 +197,6 @@ def _instrument(
             start_time=min_start_time,  # Rewind the start time to the earliest span.
         ) as instrumentation_span:
 
-            # TODO: Again... Talk to OpenTelemetry devs about generic types... super ugh...
-            instrumentation_span = cast(Span, instrumentation_span)
-
             with tracer.start_as_current_span(
                 name="__pre__",
                 attributes={
@@ -197,8 +204,6 @@ def _instrument(
                 },
                 start_time=min_start_time,  # Rewind the start time to the earliest span.
             ) as start_span:
-                start_span = cast(Span, start_span)
-
                 if instrumentation_span.is_recording():
                     if context_invoked_function_arn:
                         if context_extracted_account_id:
@@ -326,7 +331,8 @@ def _instrument(
 
                 try:
                     if event is not None:
-                        store.set_request_data_for_trace_id(instrumentation_span.context.trace_id, event)
+                        if instrumentation_span.is_recording():
+                            store.set_request_data_for_trace_id(instrumentation_span.context.trace_id, event)
                 except Exception:
                     logger.exception("Exception while setting request data for trace id")
 
@@ -347,8 +353,8 @@ def _instrument(
                             # TODO: Add in children here (by iterating over pre_instrumentation_spans for spans that match
                             # this parent.  This could get horribly recursive real fast.  There may be an easier way to
                             # transplant these spans over to this context without a bunch of hackery.
-                            _pre_instrumentation_span = cast(Span, _pre_instrumentation_span)
-                            _pre_instrumentation_span._events = pre_instrumentation_span.events
+                            if isinstance(_pre_instrumentation_span, Span):
+                                _pre_instrumentation_span._events = pre_instrumentation_span.events
                         _pre_instrumentation_span.end(end_time=pre_instrumentation_span.end_time)
 
                 if start_span.is_recording():
@@ -416,7 +422,8 @@ def _instrument(
 
                     try:
                         if not isinstance(result, Exception):
-                            store.set_response_data_for_trace_id(instrumentation_span.context.trace_id, result)
+                            if instrumentation_span.is_recording():
+                                store.set_response_data_for_trace_id(instrumentation_span.context.trace_id, result)
                     except Exception:
                         logger.exception("Exception while setting response data for trace id")
 
@@ -526,8 +533,6 @@ def _instrument(
                     SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "post",
                 },
             ) as finish_span:
-                finish_span = cast(Span, finish_span)
-
                 if finish_span.is_recording():
                     finish_span.add_event(
                         name="telemetry",
