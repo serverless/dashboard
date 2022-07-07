@@ -10,7 +10,7 @@ const buildLayer = require('../../scripts/lib/build');
 const awsRequest = require('../utils/aws-request');
 const basename = require('./basename');
 
-const createLayer = async (config, { layerName, filename, skipBuild, buildConfig }) => {
+const createLayer = async ({ layerName, filename, skipBuild, buildConfig }) => {
   if (!skipBuild) {
     log.info('Building layer');
     await buildLayer(filename, buildConfig);
@@ -35,35 +35,35 @@ const createLayers = async (config, layerTypes) => {
       switch (layerType) {
         case 'nodeAll':
           if (process.env.TEST_LAYER_FILENAME) {
-            config.layerArn = await createLayer(config, {
+            config.layerArn = await createLayer({
               layerName: basename,
               filename: process.env.TEST_LAYER_FILENAME,
               skipBuild: true,
             });
             return;
           }
-          config.layerArn = await createLayer(config, {
+          config.layerArn = await createLayer({
             layerName: basename,
             filename: path.resolve(__dirname, '../../dist/extension.zip'),
           });
           return;
         case 'external':
           if (process.env.TEST_EXTERNAL_LAYER_FILENAME) {
-            config.layerExternalArn = await createLayer(config, {
+            config.layerExternalArn = await createLayer({
               layerName: `${basename}-external`,
               filename: process.env.TEST_EXTERNAL_LAYER_FILENAME,
               skipBuild: true,
             });
             return;
           }
-          config.layerExternalArn = await createLayer(config, {
+          config.layerExternalArn = await createLayer({
             layerName: `${basename}-external`,
             filename: path.resolve(__dirname, '../../dist/extension.external.zip'),
             buildConfig: { mode: 2 },
           });
           return;
         case 'nodeInternal':
-          config.layerInternalArn = await createLayer(config, {
+          config.layerInternalArn = await createLayer({
             layerName: `${basename}-internal`,
             filename: path.resolve(__dirname, '../../dist/extension.internal.zip'),
             buildConfig: { mode: 1 },
