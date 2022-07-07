@@ -1,5 +1,5 @@
 import threading
-from typing import Any, Dict, Iterator, List, Optional, Set, Union
+from typing import Dict, Iterator, List, Optional, Set, Union
 
 from diskcache import Cache  # type: ignore
 from opentelemetry.sdk.trace import Span
@@ -15,9 +15,19 @@ class Store:
         self._request_data_by_trace_id = Cache()
         self._response_data_by_trace_id = Cache()
 
-    def add_execution_id(self, execution_id: Any) -> None:
+    def is_cold_start_for_optional_execution_id(self, execution_id: Optional[str] = None) -> bool:
         with self._lock:
-            self._execution_ids.add(str(execution_id))
+            if execution_id:
+                # If an execution ID is offered then it is added to the set and if the set is only length 1 after then
+                # we are definately a cold start execution.
+                self._execution_ids.add(str(execution_id))
+                if len(self._execution_ids) == 1:
+                    return True
+            else:
+                # If no execution ID is offered then we want to return True if the length of the set is only 0.
+                if len(self._execution_ids) == 0:
+                    return True
+        return False
 
     def append_pre_instrumentation_span(self, span: Span) -> None:
         with self._lock:
@@ -59,11 +69,6 @@ class Store:
             for pre_instrumentation_span in self._pre_instrumentation_spans:
                 yield pre_instrumentation_span
         return
-
-    @property
-    def is_cold_start(self) -> bool:
-        with self._lock:
-            return len(self._execution_ids) <= 1
 
 
 store = Store()

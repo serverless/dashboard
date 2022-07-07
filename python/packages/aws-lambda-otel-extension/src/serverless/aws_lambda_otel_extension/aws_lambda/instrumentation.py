@@ -128,9 +128,6 @@ def _instrument(
         context_or_env_function_name = getattr(context, "function_name", ENV_AWS_LAMBDA_FUNCTION_NAME)
         context_execution_id = getattr(context, "aws_request_id", None)
 
-        # Store cold start information and make sure we dump the request ID into the store.
-        store.add_execution_id(context_execution_id)
-
         try:
             with temporary_tracer.start_as_current_span(
                 name="__detect__",
@@ -173,7 +170,9 @@ def _instrument(
 
         pre_instrumentation_spans = []
 
-        if store.is_cold_start:
+        is_cold_start = store.is_cold_start_for_optional_execution_id(context_execution_id)
+
+        if is_cold_start:
             pre_instrumentation_spans = list(store.pre_instrumentation_spans)
             store.clear_pre_instrumentation_spans()
 
@@ -257,7 +256,7 @@ def _instrument(
                             "computeCustomLogGroupName": ENV_AWS_LAMBDA_LOG_GROUP_NAME,
                             "computeCustomLogStreamName": ENV_AWS_LAMBDA_LOG_STREAM_NAME,
                             "computeExecutionId": context_execution_id,
-                            "computeIsColdStart": store.is_cold_start,
+                            "computeIsColdStart": is_cold_start,
                             "computeMemorySize": context_or_env_memory_limit_in_mb,
                             "computeProcessTime": int(process_start_time / 1e6),
                             "computeProcessTimeUnixNano": process_start_time,
@@ -293,8 +292,6 @@ def _instrument(
                             }
                         )
                     )
-
-                logger.debug("time passes")
 
                 event_http_path = None
 

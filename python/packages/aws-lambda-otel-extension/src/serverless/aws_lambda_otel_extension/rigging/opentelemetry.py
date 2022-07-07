@@ -35,7 +35,7 @@ def auto_fixer_log_hook(span: Span, *args: Any, **kwargs: Any) -> None:
     if args:
         if isinstance(args[0], LogRecord):
             # log_record = args[0]
-            print(span, args, kwargs)
+            print("log_hook", span, args, kwargs)
 
 
 def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
@@ -74,20 +74,8 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
 def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
-    if store.is_cold_start:
-        do_reset_logger = True
-
-        if SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS is not None:
-            if "logging" not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
-                do_reset_logger = False
-
-        if SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS is not None:
-            if "logging" in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
-                do_reset_logger = False
-
-        if do_reset_logger:
-            for handler in logging.root.handlers[:]:
-                logging.root.removeHandler(handler)
+    # We expect the set of execution IDs to be empty at this point - hence cold start.
+    if store.is_cold_start_for_optional_execution_id():
 
         temporary_tracer_provider = cast(TracerProvider, TracerProvider())
         temporary_tracer = cast(Tracer, get_tracer(__name__, PACKAGE_VERSION, temporary_tracer_provider))
@@ -180,7 +168,9 @@ def setup_tracer_provider() -> TracerProvider:
     # If this is a cold start then we should initialize the global tracer.  We currently don't attempt to provide a
     # customized and filtered span processor where we could work with an inherited tracer and add a span processor to
     # it.
-    if store.is_cold_start:
+    if store.is_cold_start_for_optional_execution_id():
+
+        logger.debug("Creating global tracer provider")
 
         resource = get_aggregated_resources(
             detectors=[
@@ -219,6 +209,9 @@ def setup_tracer_provider() -> TracerProvider:
         set_global_textmap(AwsXRayPropagator())
 
     else:
+
+        logger.debug("Fetching global tracer provider")
+
         tracer_provider = cast(TracerProvider, get_tracer_provider())
 
     return tracer_provider
