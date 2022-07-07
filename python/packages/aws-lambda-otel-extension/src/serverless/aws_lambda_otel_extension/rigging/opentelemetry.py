@@ -5,13 +5,6 @@ from typing import Any, List, Optional, cast
 
 from opentelemetry.distro import OpenTelemetryDistro
 from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
-from opentelemetry.instrumentation.logging import LoggingInstrumentor
-from opentelemetry.instrumentation.logging.environment_variables import (
-    OTEL_PYTHON_LOG_CORRELATION as OTEL_PYTHON_LOG_CORRELATION_ENV_VAR,
-)
-from opentelemetry.instrumentation.logging.environment_variables import (
-    OTEL_PYTHON_LOG_FORMAT as OTEL_PYTHON_LOG_FORMAT_ENV_VAR,
-)
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.aws import AwsXRayPropagator
 from opentelemetry.sdk.extension.aws.resource import AwsLambdaResourceDetector
