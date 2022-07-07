@@ -20,6 +20,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This is the IAM Role required to integrate your AWS account with Serverless Inc.'s (serverless.com) monitoring and observability products.
 Resources:
+  ServerlessIntegrationStackReporter:
+    Type: AWS::CloudFormation::CustomResource
+    Version: "1.0"
+    Properties:
+      ServiceToken: arn:aws:lambda:us-east-1:486128539022:function:platform-core-integration-aws-prod-stackReporter
+      ExternalId:
+        Ref: ExternalId
+      Version:
+        Ref: Version
   ServerlessRole:
     Type: AWS::IAM::Role
     Properties:
@@ -169,7 +178,22 @@ Resources:
                   - "backup:ListTags"
 
                   #
-                  ## Cloudfront
+                  ## CloudFormation
+                  # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_Operations.html
+
+                  - "DescribePublisher"
+                  - "DescribeStackInstance"
+                  - "DescribeStackResource"
+                  - "DescribeStackResources"
+                  - "DescribeStackSet"
+                  - "DescribeStacks"
+                  - "ListStackInstances"
+                  - "ListStackResources"
+                  - "ListStackSets"
+                  - "ListStacks"
+
+                  #
+                  ## CloudFront
                   # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
 
                   - "cloudfront:DescribeFunction"
@@ -843,4 +867,7 @@ Resources:
 Parameters:
   ExternalId:
     Description: "[!Do not change!] External ID for securing the role"
+    Type: String
+  Version:
+    Description: "[!Do not change!] Template Version"
     Type: String
