@@ -28,6 +28,7 @@ const create = async (testConfig, coreConfig) => {
     await awsRequest(Lambda, 'createFunction', {
       Role: coreConfig.roleArn,
       Runtime: 'nodejs16.x',
+      MemorySize: 1024,
       Code: {
         ZipFile: await resolveDirZipBuffer(fixturesDirname),
       },
