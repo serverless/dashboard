@@ -35,7 +35,7 @@ const resolveIngestionData = async () => {
 };
 
 module.exports = async (coreConfig, options) => {
-  const memorySize = options.memorySize || 128;
+  const memorySize = options.memorySize || 1024;
   const allBenchmarkVariantsConfig = new Map([
     [
       'bare',
