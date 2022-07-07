@@ -10,7 +10,7 @@ from opentelemetry.propagators.aws import AwsXRayPropagator
 from opentelemetry.sdk.extension.aws.resource import AwsLambdaResourceDetector
 from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
-from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, Tracer, TracerProvider
+from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, Tracer, TracerProvider, SpanProcessor
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_provider
 from pkg_resources import iter_entry_points
@@ -204,14 +204,20 @@ def setup_tracer_provider() -> TracerProvider:
             SimpleSpanProcessor(SlsLoggingSpanExporter(pretty_print=SETTINGS_TEST_DRY_LOG_PRETTY))
         )
 
-        set_tracer_provider(tracer_provider)
-
         set_global_textmap(AwsXRayPropagator())
 
-    else:
+        set_tracer_provider(tracer_provider)
+        print(
+            tracer_provider._active_span_processor._span_processors,
+            [getattr(sp, "span_exporter", None) for sp in tracer_provider._active_span_processor._span_processors],
+        )
 
-        logger.debug("Fetching global tracer provider")
+    logger.debug("Fetching global tracer provider")
 
-        tracer_provider = cast(TracerProvider, get_tracer_provider())
+    tracer_provider = cast(TracerProvider, get_tracer_provider())
+    print(
+        tracer_provider._active_span_processor._span_processors,
+        [getattr(sp, "span_exporter", None) for sp in tracer_provider._active_span_processor._span_processors],
+    )
 
     return tracer_provider
