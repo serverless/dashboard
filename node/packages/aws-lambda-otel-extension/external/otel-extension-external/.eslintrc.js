@@ -16,4 +16,5 @@ module.exports = {
     ],
     'no-console': 'off',
   },
+  ignorePatterns: ['proto.js'],
 };

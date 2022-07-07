@@ -7,7 +7,7 @@ menuOrder: 1
 
 # Serverless Console
 
-This repository is the singular location of all open-source components of [Serverless Console](https://console.serverless.com), our new serverless observability offering.  The intent of this repository is to be centralized, convenient and transparent.  
+This repository is the singular location of all open-source components of [Serverless Console](https://console.serverless.com?ref_website=https%3A%2F%2Fgithub.com%2Fserverless%2Fconsole), our new serverless observability offering.  The intent of this repository is to be centralized, convenient and transparent.  
 
 Here you will find:
 

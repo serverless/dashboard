@@ -1,6 +1,6 @@
 'use strict';
 
-const { resourceAttributes, measureAttributes } = require('./helper');
+const { resourceAttributes, measureAttributes, stripResponseBlobData } = require('./helper');
 
 const createMetricAttributes = (fun, report) => {
   const metricAttributes = measureAttributes.map(({ key, value, source, type }) => {
@@ -111,9 +111,8 @@ const createResourceAttributes = (fun) =>
     }
   });
 
-const createLogPayload = (eventData, logs) => {
-  const spanData = eventData.span;
-  const key = Object.keys(eventData.eventData)[0];
+const createAttributes = (requestData) => {
+  const key = Object.keys(requestData.eventData)[0];
 
   const metricAttributeNames = new Set([
     'faas.arch',
@@ -122,7 +121,7 @@ const createLogPayload = (eventData, logs) => {
     'faas.api_gateway_app_id',
   ]);
   const metricsAtt = {};
-  for (const attribute of createMetricAttributes(eventData.eventData[key])) {
+  for (const attribute of createMetricAttributes(requestData.eventData[key])) {
     if (!metricAttributeNames.has(attribute.key)) continue;
     metricsAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
@@ -144,10 +143,20 @@ const createLogPayload = (eventData, logs) => {
     'faas.collector_version',
   ]);
   const resourceAtt = {};
-  for (const attribute of createResourceAttributes(eventData.eventData[key])) {
+  for (const attribute of createResourceAttributes(requestData.eventData[key])) {
     if (!resourceAttributeNames.has(attribute.key)) continue;
     resourceAtt[attribute.key] = Object.values(attribute.value || {})[0];
   }
+
+  return {
+    resourceAtt,
+    metricsAtt,
+  };
+};
+
+const createLogPayload = (requestData, logs) => {
+  const spanData = requestData.span;
+  const { resourceAtt, metricsAtt } = createAttributes(requestData);
 
   const severityNumberMap = {
     TRACE: 1,
@@ -173,6 +182,26 @@ const createLogPayload = (eventData, logs) => {
       ProcessingOrderId: process.hrtime.bigint().toString(),
     };
   });
+};
+
+const createRequestPayload = (requestData) => {
+  const { resourceAtt, metricsAtt } = createAttributes(requestData);
+  return {
+    ...requestData.requestEventPayload,
+    attributes: resourceAtt,
+    resource: metricsAtt,
+  };
+};
+
+const createResponsePayload = (responseData, currentRequestData) => {
+  const { resourceAtt, metricsAtt } = createAttributes(currentRequestData);
+  const strippedResponseData = stripResponseBlobData(responseData);
+  return {
+    ...strippedResponseData,
+    timestamp: Date.now(),
+    attributes: resourceAtt,
+    resource: metricsAtt,
+  };
 };
 
 const createHistogramMetric = ({ name, unit, count, sum, record, attributes }) => ({
@@ -396,7 +425,10 @@ const createTracePayload = (requestId, fun, traces) => {
 };
 
 module.exports = {
+  createAttributes,
   createLogPayload,
   createTracePayload,
   createMetricsPayload,
+  createRequestPayload,
+  createResponsePayload,
 };

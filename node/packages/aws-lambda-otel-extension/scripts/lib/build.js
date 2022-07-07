@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fsp = require('fs').promises;
+const memoizee = require('memoizee');
 const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
 const mkdir = require('fs2/mkdir');
@@ -10,24 +11,33 @@ const ensureNpmDependencies = require('./ensure-npm-dependencies');
 const { version } = require('../../package');
 
 const rootDir = path.resolve(__dirname, '../../');
+const userSettingsFilename = path.resolve(__dirname, '../../lib/user-settings.js');
 const esbuildFilename = path.resolve(rootDir, 'node_modules/.bin/esbuild');
 const externalDir = path.resolve(rootDir, 'external');
-const externalProtoRelativeDirname = 'otel-extension-external/proto';
 const externalRuntimeAgnosticDir = path.resolve(rootDir, 'external-runtime-agnostic');
 const internalDir = path.resolve(rootDir, 'internal');
+
+const getUserSettingsBuffer = memoizee(async () => fsp.readFile(userSettingsFilename), {
+  promise: true,
+});
 
 module.exports = async (distFilename, options = {}) => {
   if (!options) options = {};
   const mode = options.mode || 3; // 1: internal, 2: external
   const zip = new AdmZip();
 
+  const settingsBufferDeferred = options.settingsFilename
+    ? fsp.readFile(options.settingsFilename)
+    : null;
   await Promise.all([
     unlink(distFilename, { loose: true }),
     mkdir(path.dirname(distFilename), { intermediate: true, silent: true }),
     (async () => {
       if (mode & 2) {
+        // External extension
         ensureNpmDependencies('external/otel-extension-external');
         if (mode === 2) {
+          // Runtime agnostic
           zip.addLocalFile(
             path.resolve(externalRuntimeAgnosticDir, 'extensions/otel-extension'),
             'extensions'
@@ -37,6 +47,7 @@ module.exports = async (distFilename, options = {}) => {
             'otel-extension-external'
           );
         } else {
+          // Node.js runtime only
           zip.addLocalFile(path.resolve(externalDir, 'extensions/otel-extension'), 'extensions');
         }
         zip.addFile(
@@ -46,17 +57,17 @@ module.exports = async (distFilename, options = {}) => {
               path.resolve(path.resolve(externalDir, 'otel-extension-external/index.js')),
               '--bundle',
               '--platform=node',
+              '--external:./user-settings',
               '--external:./version',
               '--external:/var/runtime/node_modules/aws-sdk',
             ])
           ).stdoutBuffer
         );
-        for (const relativeFilename of await fsp.readdir(
-          path.resolve(externalDir, externalProtoRelativeDirname)
-        )) {
-          zip.addLocalFile(
-            path.resolve(externalDir, externalProtoRelativeDirname, relativeFilename),
-            externalProtoRelativeDirname
+        zip.addFile('otel-extension-external/user-settings.js', await getUserSettingsBuffer());
+        if (options.settingsFilename) {
+          zip.addFile(
+            `otel-extension-external/.user-settings${path.extname(options.settingsFilename)}`,
+            await settingsBufferDeferred
           );
         }
         zip.addFile(
@@ -64,7 +75,10 @@ module.exports = async (distFilename, options = {}) => {
           Buffer.from(JSON.stringify(version), 'utf8')
         );
       }
+    })(),
+    (async () => {
       if (mode & 1) {
+        // Node.js internal extension
         ensureNpmDependencies('internal/otel-extension-internal-node');
         zip.addFile(
           'otel-extension-internal-node/index.js',
@@ -73,6 +87,7 @@ module.exports = async (distFilename, options = {}) => {
               path.resolve(path.resolve(internalDir, 'otel-extension-internal-node/index.js')),
               '--bundle',
               '--platform=node',
+              '--external:./user-settings',
             ])
           ).stdoutBuffer
         );
@@ -84,6 +99,13 @@ module.exports = async (distFilename, options = {}) => {
           path.resolve(internalDir, 'otel-extension-internal-node/wrapper.js'),
           'otel-extension-internal-node'
         );
+        zip.addFile('otel-extension-internal-node/user-settings.js', await getUserSettingsBuffer());
+        if (options.settingsFilename) {
+          zip.addFile(
+            `otel-extension-internal-node/.user-settings${path.extname(options.settingsFilename)}`,
+            await settingsBufferDeferred
+          );
+        }
       }
     })(),
   ]);

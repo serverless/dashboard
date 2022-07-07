@@ -2,7 +2,7 @@
 
 const createHttpRequest = require('http').request;
 const createHttpsRequest = require('https').request;
-const { debugLog } = require('./helper');
+const { debugLog, keepAliveAgents } = require('./helper');
 const userSettings = require('./user-settings');
 
 const isUrl = RegExp.prototype.test.bind(/^https?:\/\//);
@@ -14,8 +14,6 @@ const extraRequestHeaders = userSettings.common.destination.requestHeaders
     )
   : {};
 
-const getProtobufLoad = () => require('protobufjs').load;
-
 const s3Client = ['logs', 'metrics', 'request', 'response', 'traces'].some((name) => {
   const destination = userSettings[name].destination;
   return destination && destination.startsWith('s3://');
@@ -26,11 +24,9 @@ const s3Client = ['logs', 'metrics', 'request', 'response', 'traces'].some((name
   : null;
 
 let httpRequestIdTracker = 0;
-const prepareReport = async (data, { outputType }, { protobuf }) => {
+const prepareReport = (data, { outputType }, { protobuf }) => {
   if (outputType !== 'protobuf') return data;
-  const root = await getProtobufLoad()(`${__dirname}${protobuf.path}`);
-  const ServiceRequest = root.lookupType(protobuf.type);
-  return ServiceRequest.encode(data).finish();
+  return protobuf.encode(data).finish();
 };
 
 const sendReport = async (data, { destination, outputType }) => {
@@ -43,32 +39,37 @@ const sendReport = async (data, { destination, outputType }) => {
   };
   await new Promise((resolve, reject) => {
     const httpRequestId = ++httpRequestIdTracker;
-    const createRequest = destination.startsWith('https') ? createHttpsRequest : createHttpRequest;
+    const isHttps = destination.startsWith('https');
+    const createRequest = isHttps ? createHttpsRequest : createHttpRequest;
     debugLog(`Request [${httpRequestId}]:`, destination);
     const requestStartTime = process.hrtime.bigint();
-    const request = createRequest(destination, { method: 'post', headers }, (response) => {
-      if (response.statusCode === 200) {
-        debugLog(
-          `Request [${httpRequestId}]: ok in: ${Math.round(
-            Number(process.hrtime.bigint() - requestStartTime) / 1000000
-          )}ms`
-        );
-        resolve();
-        return;
+    const request = createRequest(
+      destination,
+      { agent: isHttps ? keepAliveAgents.https : keepAliveAgents.http, method: 'post', headers },
+      (response) => {
+        if (response.statusCode === 200) {
+          debugLog(
+            `Request [${httpRequestId}]: ok in: ${Math.round(
+              Number(process.hrtime.bigint() - requestStartTime) / 1000000
+            )}ms`
+          );
+          resolve();
+          return;
+        }
+        let responseText = '';
+        response.on('data', (chunk) => {
+          responseText += String(chunk);
+        });
+        response.on('end', () => {
+          debugLog(
+            `Request [${httpRequestId}]: failed in: ${Math.round(
+              Number(process.hrtime.bigint() - requestStartTime) / 1000000
+            )}ms with: [${response.status}] ${responseText}`
+          );
+          resolve();
+        });
       }
-      let responseText = '';
-      response.on('data', (chunk) => {
-        responseText += String(chunk);
-      });
-      response.on('end', () => {
-        debugLog(
-          `Request [${httpRequestId}]: failed in: ${Math.round(
-            Number(process.hrtime.bigint() - requestStartTime) / 1000000
-          )}ms with: [${response.status}] ${responseText}`
-        );
-        resolve();
-      });
-    });
+    );
     request.on('error', reject);
     request.write(body);
     request.end();
@@ -87,24 +88,18 @@ const storeReport = async (data, { destination, outputType }, { s3 }) => {
     .promise();
 };
 
+const proto = require('./proto');
+
 const protobufConfigs = {
-  metrics: {
-    path: '/proto/metric-service.proto',
-    type: 'opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest',
-  },
-  traces: {
-    path: '/proto/trace-service.proto',
-    type: 'opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest',
-  },
+  metrics: proto.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest,
+  traces: proto.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest,
 };
 
 module.exports = async (name, data) => {
   debugLog(`Report ${name}:`, JSON.stringify(data));
   const settings = userSettings[name];
   if (protobufConfigs[name]) {
-    data = await prepareReport(data, settings, {
-      protobuf: protobufConfigs[name],
-    });
+    data = prepareReport(data, settings, { protobuf: protobufConfigs[name] });
   }
   if (settings.destination && isUrl(settings.destination)) {
     await sendReport(data, settings);

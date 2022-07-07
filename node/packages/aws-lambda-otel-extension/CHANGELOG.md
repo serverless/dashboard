@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.6](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.5...@serverless/aws-lambda-otel-extension@0.4.6) (2022-06-29)
+
+### Bug Fixes
+
+- Fix handling of promise resolution ([867b3bc](https://github.com/serverless/runtime/commit/867b3bc59e73bcda99f8e30a008fadd98b9c0f52))
+
+### Maintenance Improvements
+
+- Improve resolution handling ([938ce98](https://github.com/serverless/runtime/commit/938ce98fe03900739f9a1c9b1765e3f242d5c657))
+- Simplify stale callback handling ([fb2885a](https://github.com/serverless/runtime/commit/fb2885a9004c06e31db3eec2d2bab83f2fa39617))
+
+### [0.4.5](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.4...@serverless/aws-lambda-otel-extension@0.4.5) (2022-06-29)
+
+### Bug Fixes
+
+- Fix handling of a case where `telemetryData` arrives before `eventData` ([26991ee](https://github.com/serverless/runtime/commit/26991ee530110901ec1de1a945351a7d42ec4166))
+
+### Maintenance Improvements
+
+- Add debug logs on internal extension requests timing ([2d2c2db](https://github.com/serverless/runtime/commit/2d2c2dbfe2b5fe99cd13a262031ae1d0b81be688))
+- Ensure to reuse HTTP(S) connection sockets ([82d295a](https://github.com/serverless/runtime/commit/82d295ac6f1ab7255ba6c67a890c4153b220d25c))
+- Remove `node-fetch` dependency ([688e24d](https://github.com/serverless/runtime/commit/688e24d08e94219df23038fc90b8325616d50de7))
+
+### [0.4.4](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.3...@serverless/aws-lambda-otel-extension@0.4.4) (2022-06-27)
+
+### Bug Fixes
+
+- Fix handling of doubled resolution ([8eacf17](https://github.com/serverless/runtime/commit/8eacf17644a82d1e164a2752aa35a5289becce8b))
+
+### Performance Improvements
+
+- Optimize protobuf encoding by using pre-compiled interface ([70f26e6](https://github.com/serverless/runtime/commit/70f26e6faf1c5315f11e6b3f7dee1b02956b8186))
+- Improve telemetry server response time ([60ae043](https://github.com/serverless/runtime/commit/60ae043d31e5f13594a2743b2365343d47898a72))
+
+### Maintenance Improvements
+
+- Clarify wrapping logic ([2b203f0](https://github.com/serverless/runtime/commit/2b203f0445d1e322b518b91c555446f3fc017e6d))
+- Cleanup invalid _async_ mark ([7423971](https://github.com/serverless/runtime/commit/74239715d008f26639856294dc611f3cd429eb07))
+
+### [0.4.3](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.2...@serverless/aws-lambda-otel-extension@0.4.3) (2022-06-23)
+
+### Features
+
+- Add attributes and resource to req/res payload ([18d69e9](https://github.com/serverless/runtime/commit/18d69e9a785a7019dceb2f3d657b7b31e2cf7164))
+
+### Maintenance Improvements
+
+- Changed getCurrentRequestData to getRequestContext ([a80a961](https://github.com/serverless/runtime/commit/a80a96163119615065c377c9bb3b18c4e2b8629f))
+- Added invoke time to internal context ([c70d60a](https://github.com/serverless/runtime/commit/c70d60aefb80099cb1422b1f2d745860f7258135))
+
 ### [0.4.2](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.1...@serverless/aws-lambda-otel-extension@0.4.2) (2022-06-15)
 
 ### Maintenance Improvements

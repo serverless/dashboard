@@ -9,6 +9,7 @@ const debugLog = (...args) => {
 };
 debugLog('Internal extension: Init');
 
+const http = require('http');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
@@ -32,7 +33,6 @@ const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis')
 const { FastifyInstrumentation } = require('@opentelemetry/instrumentation-fastify');
 const AwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
-const fetch = require('node-fetch');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
 const userSettings = require('./user-settings');
@@ -40,6 +40,8 @@ const userSettings = require('./user-settings');
 const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
+const telemetryServerUrl = `http://localhost:${OTEL_SERVER_PORT}`;
+const keepAliveAgent = new http.Agent({ keepAlive: true });
 
 const tracerProvider = new NodeTracerProvider();
 const memoryExporter = new InMemorySpanExporter();
@@ -113,24 +115,52 @@ const requestHandler = async (span, { event, context }) => {
       traceId: span.spanContext().traceId,
       spanId: span.spanContext().spanId,
       requestData: event,
+      timestamp: EvalError.$serverlessInvocationStart,
       executionId: context.awsRequestId,
     };
   }
 
+  const requestBody = JSON.stringify(eventDataPayload);
+  debugLog('Internal extension: Send event data');
   if (process.env.TEST_DRY_LOG) {
-    process._rawDebug(
-      `${require('util').inspect(eventDataPayload, { depth: Infinity, colors: true })}\n`
-    );
+    process.stdout.write(`⚡ eventData: ${requestBody}\n`);
   } else {
-    debugLog('Internal extension: Send event data');
     // Send request data to external so that we can attach this data to logs
-    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-      method: 'post',
-      body: JSON.stringify(eventDataPayload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const requestStartTime = process.hrtime.bigint();
+    let requestSocket;
+    try {
+      await new Promise((resolve, reject) => {
+        const request = http.request(
+          telemetryServerUrl,
+          {
+            agent: keepAliveAgent,
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(requestBody),
+            },
+          },
+          (response) => {
+            if (response.statusCode === 200) {
+              resolve();
+            } else {
+              reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+            }
+          }
+        );
+        request.on('error', reject);
+        request.on('socket', (socket) => (requestSocket = socket));
+        request.write(requestBody);
+        request.end();
+      });
+    } finally {
+      if (requestSocket) requestSocket.unref();
+    }
+    debugLog(
+      `Internal extension request [eventData]: ok in: ${Math.round(
+        Number(process.hrtime.bigint() - requestStartTime) / 1000000
+      )}ms`
+    );
   }
 };
 
@@ -338,19 +368,46 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
     };
   }
 
+  const requestBody = JSON.stringify(telemetryDataPayload);
+  debugLog('Internal extension: Send telemetry data');
   if (process.env.TEST_DRY_LOG) {
-    process._rawDebug(
-      `${require('util').inspect(telemetryDataPayload, { depth: Infinity, colors: true })}\n`
-    );
+    process.stdout.write(`⚡ telemetryData: ${requestBody}\n`);
   } else {
-    debugLog('Internal extension: Send telemetry data');
-    await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-      method: 'post',
-      body: JSON.stringify(telemetryDataPayload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const requestStartTime = process.hrtime.bigint();
+    let requestSocket;
+    try {
+      await new Promise((resolve, reject) => {
+        const request = http.request(
+          telemetryServerUrl,
+          {
+            agent: keepAliveAgent,
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(requestBody),
+            },
+          },
+          (response) => {
+            if (response.statusCode === 200) {
+              resolve();
+            } else {
+              reject(new Error(`Unexpected response status code: ${response.statusCode}`));
+            }
+          }
+        );
+        request.on('error', reject);
+        request.on('socket', (socket) => (requestSocket = socket));
+        request.write(requestBody);
+        request.end();
+      });
+    } finally {
+      if (requestSocket) requestSocket.unref();
+    }
+    debugLog(
+      `Internal extension request [telemetryData]: ok in: ${Math.round(
+        Number(process.hrtime.bigint() - requestStartTime) / 1000000
+      )}ms`
+    );
   }
 
   // Reset the exporter so we don't see duplicates

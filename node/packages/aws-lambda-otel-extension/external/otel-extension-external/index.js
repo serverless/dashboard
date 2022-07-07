@@ -20,9 +20,18 @@ module.exports = (async () => {
   const servers = new Set();
 
   const userSettings = require('./user-settings');
-  const { stripResponseBlobData, debugLog } = require('./helper');
+  const {
+    debugLog,
+    keepAliveAgents: { http: keepAliveAgent },
+  } = require('./helper');
   const reportOtelData = require('./report-otel-data');
-  const { createMetricsPayload, createTracePayload, createLogPayload } = require('./otel-payloads');
+  const {
+    createMetricsPayload,
+    createTracePayload,
+    createLogPayload,
+    createRequestPayload,
+    createResponsePayload,
+  } = require('./otel-payloads');
 
   const pendingReports = new Set();
   const sendReport = (method, payload) => {
@@ -33,7 +42,7 @@ module.exports = (async () => {
 
   // Rotate current request data
   // Each new "platform.start" or invoke event resets the object
-  const getCurrentRequestData = (() => {
+  const getCurrentRequestContext = (() => {
     let current;
     return (uniqueEventName) => {
       if (!current) current = { logsQueue: [] };
@@ -82,13 +91,13 @@ module.exports = (async () => {
               );
             }
             if (functionLogEvents.length) {
-              const currentRequestData = getCurrentRequestData();
-              if (!currentRequestData.eventData) {
-                currentRequestData.logsQueue.push(...functionLogEvents);
+              const currentRequestContext = getCurrentRequestContext();
+              if (!currentRequestContext.requestData) {
+                currentRequestContext.logsQueue.push(...functionLogEvents);
               } else {
                 sendReport(
                   'logs',
-                  createLogPayload(currentRequestData.eventData, functionLogEvents)
+                  createLogPayload(currentRequestContext.requestData, functionLogEvents)
                 );
               }
             }
@@ -97,7 +106,7 @@ module.exports = (async () => {
               switch (event.type) {
                 case 'platform.start':
                   debugLog('Extension platform log: start');
-                  getCurrentRequestData('start');
+                  getCurrentRequestContext('start');
                   // eslint-disable-next-line no-loop-func
                   ongoingInvocationDeferred = new Promise((resolve) => {
                     resolveOngoingInvocationDeferred = resolve;
@@ -162,6 +171,7 @@ module.exports = (async () => {
       const request = http.request(
         `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-08-15/logs`,
         {
+          agent: keepAliveAgent,
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -206,6 +216,7 @@ module.exports = (async () => {
         const request = http.request(
           `${baseUrl}/event/next`,
           {
+            agent: keepAliveAgent,
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -213,6 +224,7 @@ module.exports = (async () => {
             },
           },
           (response) => {
+            debugLog('Extension: Received event/next response');
             if (response.statusCode !== 200) {
               reject(new Error(`Unexpected register response status code: ${response.statusCode}`));
               return;
@@ -237,7 +249,7 @@ module.exports = (async () => {
           await Promise.resolve(ongoingInvocationDeferred).then(waitUntilAllReportsAreSent);
           break;
         case 'INVOKE':
-          getCurrentRequestData('invoke');
+          getCurrentRequestContext('invoke');
           await new Promise((resolve) => {
             runtimeEventEmitter.once('runtimeDone', resolve);
           })
@@ -261,26 +273,48 @@ module.exports = (async () => {
           request.on('data', (data) => {
             body += data;
           });
-          request.on('end', async () => {
+          request.on('end', () => {
+            response.writeHead(200, '');
+            response.end('OK');
             const data = JSON.parse(body);
             debugLog('Internal telemetry payload', JSON.stringify(data));
             switch (data.recordType) {
               case 'eventData':
                 {
                   if (data.record.requestEventPayload) {
-                    sendReport('request', data.record.requestEventPayload);
+                    sendReport('request', createRequestPayload(data.record));
                   }
-                  const currentRequestData = getCurrentRequestData('request');
-                  currentRequestData.eventData = data.record;
-                  if (currentRequestData.logsQueue.length) {
-                    sendReport('logs', createLogPayload(data.record, currentRequestData.logsQueue));
+                  const currentRequestContext = getCurrentRequestContext('request');
+                  currentRequestContext.requestData = data.record;
+                  if (currentRequestContext.logsQueue.length) {
+                    sendReport(
+                      'logs',
+                      createLogPayload(data.record, currentRequestContext.logsQueue)
+                    );
+                  }
+                  if (currentRequestContext.responseEventPayload) {
+                    sendReport(
+                      'response',
+                      createResponsePayload(currentRequestContext.responseEventPayload, data.record)
+                    );
                   }
                 }
                 break;
               case 'telemetryData':
                 lastTelemetryData = data;
                 if (data.record.responseEventPayload) {
-                  sendReport('response', stripResponseBlobData(data.record.responseEventPayload));
+                  const currentRequestContext = getCurrentRequestContext();
+                  if (!currentRequestContext.requestData) {
+                    currentRequestContext.responseEventPayload = data.record.responseEventPayload;
+                  } else {
+                    sendReport(
+                      'response',
+                      createResponsePayload(
+                        data.record.responseEventPayload,
+                        currentRequestContext.requestData
+                      )
+                    );
+                  }
                 }
                 sendReport('metrics', createMetricsPayload(data.requestId, data.record.function));
                 for (const tracePayload of createTracePayload(
@@ -294,8 +328,6 @@ module.exports = (async () => {
               default:
                 throw new Error('Unrecognized event data');
             }
-            response.writeHead(200, '');
-            response.end('OK');
           });
         })
         .listen(OTEL_SERVER_PORT)
@@ -308,6 +340,7 @@ module.exports = (async () => {
     const request = http.request(
       `${baseUrl}/register`,
       {
+        agent: keepAliveAgent,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
