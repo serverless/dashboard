@@ -74,6 +74,9 @@ func (c *ReporterClient) post(path string, body []byte, isProtobuf bool) error {
 		isProtobuf: isProtobuf,
 		retries:    0,
 	}
+	if path == "" {
+		return c.syncPostLog(&data)
+	}
 	return c.syncPost(&data)
 }
 
@@ -98,9 +101,9 @@ func (c *ReporterClient) postProto(use lib.UserSettingsEndpoint, protod protoref
 	})
 }
 
-func (c *ReporterClient) syncPostTest(postData *PostData) (err error) {
+func (c *ReporterClient) syncPostLog(postData *PostData) (err error) {
 	start := time.Now()
-	// c.logger.Info("SLS DATA", zap.ByteString("data", postData.body))
+	c.logger.Info("DATA", zap.ByteString("data", postData.body))
 	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
 	return nil
 }
