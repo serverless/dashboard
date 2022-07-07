@@ -47,6 +47,21 @@ const createLayers = async (config, layerTypes) => {
             filename: path.resolve(__dirname, '../../dist/extension.zip'),
           });
           return;
+        case 'external':
+          if (process.env.TEST_EXTERNAL_LAYER_FILENAME) {
+            config.layerExternalArn = await createLayer(config, {
+              layerName: `${basename}-external`,
+              filename: process.env.TEST_EXTERNAL_LAYER_FILENAME,
+              skipBuild: true,
+            });
+            return;
+          }
+          config.layerExternalArn = await createLayer(config, {
+            layerName: `${basename}-external`,
+            filename: path.resolve(__dirname, '../../dist/extension.external.zip'),
+            buildConfig: { mode: 2 },
+          });
+          return;
         case 'nodeInternal':
           config.layerInternalArn = await createLayer(config, {
             layerName: `${basename}-internal`,
