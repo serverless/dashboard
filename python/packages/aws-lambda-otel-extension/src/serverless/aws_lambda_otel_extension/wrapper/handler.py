@@ -4,7 +4,6 @@ from importlib import import_module
 from typing import Any, Dict
 
 from serverless.aws_lambda_otel_extension.rigging.initializer import initialize
-from serverless.aws_lambda_otel_extension.shared.store import store
 
 logger = logging.getLogger(__name__)
 

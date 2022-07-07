@@ -30,13 +30,14 @@ logger = logging.getLogger(__name__)
 
 
 class SlsExtensionSpanExporter(SpanExporter):
-    def __init__(self, endpoint: str = None):
+    def __init__(self, endpoint: str = None, silent: bool = False):
         self._stopped = False
         self._lock = threading.Lock()
         self._spans_by_span_id_by_trace_id: Dict[int, Dict[int, ReadableSpan]] = {}
         self._event_span_event_by_trace_id: Dict[int, Event] = {}
         self._telemetry_span_event_by_trace_id: Dict[int, Event] = {}
         self._endpoint = default_if_none(endpoint, SETTINGS_SLS_EXTENSION_COLLECTOR_URL)
+        self._silent = silent
 
     def clear_by_trace_id(self, trace_id):
         with self._lock:
@@ -101,21 +102,23 @@ class SlsExtensionSpanExporter(SpanExporter):
             except Exception:
                 logger.exception("Failed to submit event data")
 
-            logger.debug(
-                json.dumps(
-                    {"extension": {"send": event_data}},
-                    indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
-                    sort_keys=True,
+            if not self._silent:
+                logger.debug(
+                    json.dumps(
+                        {"extension": {"send": event_data}},
+                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        sort_keys=True,
+                    )
                 )
-            )
         else:
-            print(
-                json.dumps(
-                    {"extension": {"send": event_data}},
-                    indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
-                    sort_keys=True,
+            if not self._silent:
+                print(
+                    json.dumps(
+                        {"extension": {"send": event_data}},
+                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        sort_keys=True,
+                    )
                 )
-            )
 
     def _send_telemetry_data_for_instrumentation_context(self, instrumentation_context: SpanContext):
 
@@ -224,21 +227,23 @@ class SlsExtensionSpanExporter(SpanExporter):
             except Exception:
                 logger.exception("Failed to submit telemetry data")
 
-            logger.debug(
-                json.dumps(
-                    {"extension": {"send": telemetry_data}},
-                    indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
-                    sort_keys=True,
+            if not self._silent:
+                logger.debug(
+                    json.dumps(
+                        {"extension": {"send": telemetry_data}},
+                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        sort_keys=True,
+                    )
                 )
-            )
         else:
-            print(
-                json.dumps(
-                    {"extension": {"send": telemetry_data}},
-                    indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
-                    sort_keys=True,
+            if not self._silent:
+                print(
+                    json.dumps(
+                        {"extension": {"send": telemetry_data}},
+                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        sort_keys=True,
+                    )
                 )
-            )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
 

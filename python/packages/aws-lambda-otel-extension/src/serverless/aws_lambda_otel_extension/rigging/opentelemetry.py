@@ -1,6 +1,5 @@
 import importlib
 import logging
-from logging import LogRecord
 from typing import Any, List, Optional, cast
 
 from opentelemetry.distro import OpenTelemetryDistro
@@ -10,7 +9,7 @@ from opentelemetry.propagators.aws import AwsXRayPropagator
 from opentelemetry.sdk.extension.aws.resource import AwsLambdaResourceDetector
 from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
-from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, Tracer, TracerProvider, SpanProcessor
+from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_provider
 from pkg_resources import iter_entry_points
@@ -32,10 +31,11 @@ logger = logging.getLogger(__name__)
 
 
 def auto_fixer_log_hook(span: Span, *args: Any, **kwargs: Any) -> None:
-    if args:
-        if isinstance(args[0], LogRecord):
-            # log_record = args[0]
-            print("log_hook", span, args, kwargs)
+    pass
+    # if args:
+    #     if isinstance(args[0], LogRecord):
+    #         # log_record = args[0]
+    #         print("log_hook", span, args, kwargs)
 
 
 def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
@@ -152,6 +152,16 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
                             },
                         )
 
+                    logger.debug(
+                        {
+                            "auto_instrumentor": {
+                                "instrumented": instrumented,
+                                "skipped": skipped,
+                                "failed": failed,
+                            }
+                        }
+                    )
+
                     # Do this last.  If anything explodes before this point we want to make sure that the handler is not
                     # wrapped and instrumented.
                     SlsAwsLambdaInstrumentor().instrument()
@@ -165,13 +175,13 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
 
 def setup_tracer_provider() -> TracerProvider:
 
+    is_cold_start = store.is_cold_start_for_optional_execution_id()
+    logger.debug({"is_cold_start": is_cold_start})
+
     # If this is a cold start then we should initialize the global tracer.  We currently don't attempt to provide a
     # customized and filtered span processor where we could work with an inherited tracer and add a span processor to
     # it.
-    if store.is_cold_start_for_optional_execution_id():
-
-        logger.debug("Creating global tracer provider")
-
+    if is_cold_start:
         resource = get_aggregated_resources(
             detectors=[
                 ProcessResourceDetector(),
@@ -193,9 +203,13 @@ def setup_tracer_provider() -> TracerProvider:
 
         tracer_provider.add_span_processor(SimpleSpanProcessor(SlsExtensionSpanExporter()))
 
+        # Test output (for thread debugging and general event analysis)
         tracer_provider.add_span_processor(
             SimpleSpanProcessor(
-                SlsExtensionSpanExporter(endpoint="https://webhook.site/a00c233b-cf9d-4b28-8671-1aec99ad4f46")
+                SlsExtensionSpanExporter(
+                    endpoint="https://webhook.site/a00c233b-cf9d-4b28-8671-1aec99ad4f46",
+                    silent=True,
+                )
             )
         )
 
@@ -204,20 +218,10 @@ def setup_tracer_provider() -> TracerProvider:
             SimpleSpanProcessor(SlsLoggingSpanExporter(pretty_print=SETTINGS_TEST_DRY_LOG_PRETTY))
         )
 
+        set_tracer_provider(tracer_provider)
+
         set_global_textmap(AwsXRayPropagator())
 
-        set_tracer_provider(tracer_provider)
-        print(
-            tracer_provider._active_span_processor._span_processors,
-            [getattr(sp, "span_exporter", None) for sp in tracer_provider._active_span_processor._span_processors],
-        )
-
-    logger.debug("Fetching global tracer provider")
-
     tracer_provider = cast(TracerProvider, get_tracer_provider())
-    print(
-        tracer_provider._active_span_processor._span_processors,
-        [getattr(sp, "span_exporter", None) for sp in tracer_provider._active_span_processor._span_processors],
-    )
 
     return tracer_provider

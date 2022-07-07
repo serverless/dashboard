@@ -63,17 +63,14 @@ def _filtered_attributes(attributes: Dict) -> Dict:
 
 def _extract_handler_span_parent_context(event: Dict, context: Any) -> Optional[Context]:
 
-    handler_parent_context = None
-
     xray_env_var = os.environ.get(_X_AMZN_TRACE_ID_ENV_VAR)
 
     if xray_env_var:
         handler_parent_context = AwsXRayPropagator().extract({TRACE_HEADER_KEY: xray_env_var})
+        if get_current_span(handler_parent_context).get_span_context().trace_flags.sampled:
+            return handler_parent_context
 
-    if handler_parent_context and get_current_span(handler_parent_context).get_span_context().trace_flags.sampled:
-        return handler_parent_context
-
-    return handler_parent_context
+    return None
 
 
 def _instrument(
@@ -171,6 +168,7 @@ def _instrument(
         pre_instrumentation_spans = []
 
         is_cold_start = store.is_cold_start_for_optional_execution_id(context_execution_id)
+        logger.debug({"is_cold_start": is_cold_start})
 
         if is_cold_start:
             pre_instrumentation_spans = list(store.pre_instrumentation_spans)
