@@ -41,7 +41,7 @@ func main() {
 	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
 
 	// Create Logs API agent
-	logsApiAgent, err := logs.NewLogsApiAgent(reportAgent, currentRequestData)
+	logsApiAgent, err := logs.NewLogsApiAgent(reportAgent, currentRequestData, &userSettings)
 	if err != nil {
 		logger.Fatal("couldnt create logs api agent", zap.Error(err))
 	}
