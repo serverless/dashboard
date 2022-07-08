@@ -23,3 +23,14 @@ All created resourced are named or prefixed with `test-otel-extension-<testUid>`
 ```bash
 npm run test:integration
 ```
+
+## Environment variables
+
+How extensions behave, for various testing purposes, can be tweaked with following environment variables:
+
+- `DEBUG_SLS_OTEL_LAYER` - Log debug messages, of which scope is to:
+  - Mark certain processing points
+  - Log payloads which are send between extensions and to the external ingestion server
+  - Report durations overhead that extension introduces
+- `TEST_DRY_LOG` - In context of the internal extension, log payloads instead of sending them to the external extension
+- `SLS_TEST_RUN` - In context of the external extension, do not exit the process after shutdown phase
