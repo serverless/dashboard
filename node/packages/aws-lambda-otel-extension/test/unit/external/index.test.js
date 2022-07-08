@@ -19,10 +19,7 @@ describe('external', () => {
     ensureNpmDependencies('external/otel-extension-external');
     evilDns.add('sandbox', '127.0.0.1');
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
-    process.env.SLS_OTEL_USER_SETTINGS = JSON.stringify({
-      metrics: { outputType: 'json' },
-      traces: { outputType: 'json' },
-    });
+    process.env.SLS_TEST_EXTENSION_REPORT_TYPE = 'json';
     process.env.SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT = '1';
   });
 

@@ -93,7 +93,6 @@ logs:
   # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
   destination: https://some-url/ | s3://bucketname[/rootkey]
 metrics:
-  outputType: protobuf | json # Output type (defaults to protobuf)
   # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
   destination: https://some-url/ | s3://bucketname[/rootkey]
 request:
@@ -107,7 +106,6 @@ response:
   # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
   destination: https://some-url/ | s3://bucketname[/rootkey
 traces:
-  outputType: protobuf | json # Output type (defaults to protobuf)
   # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
   destination: https://some-url/ | s3://bucketname[/rootkey]
 ```

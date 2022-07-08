@@ -53,3 +53,4 @@ How extensions behave, for various testing purposes, can be tweaked with followi
   - Report durations overhead that extension introduces
 - `SLS_TEST_EXTENSION_INTERNAL_LOG` - In context of the internal extension, log payloads instead of sending them to the external extension
 - `SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT` - In context of the external extension, do not exit the process after shutdown phase
+- `SLS_TEST_EXTENSION_REPORT_TYPE` - Set to `json` to pass reports in direct JSON format instead of Protobuf
