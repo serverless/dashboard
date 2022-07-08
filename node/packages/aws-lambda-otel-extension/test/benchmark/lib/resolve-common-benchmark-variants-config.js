@@ -55,7 +55,7 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               SLS_OTEL_USER_SETTINGS: JSON.stringify({ logs: { disabled: true } }),
-              DEBUG_SLS_OTEL_LAYER: '1',
+              SLS_DEBUG_EXTENSION: '1',
             },
           },
           ...(coreConfig.layerExternalArn ? null : { Layers: [coreConfig.layerExternalArn] }),
@@ -71,7 +71,7 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-              DEBUG_SLS_OTEL_LAYER: '1',
+              SLS_DEBUG_EXTENSION: '1',
               TEST_DRY_LOG: '1',
             },
           },
@@ -86,7 +86,7 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-              DEBUG_SLS_OTEL_LAYER: '1',
+              SLS_DEBUG_EXTENSION: '1',
               SLS_OTEL_USER_SETTINGS: JSON.stringify({
                 logs: { disabled: true },
                 metrics: { outputType: 'json' },
@@ -105,7 +105,7 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-              DEBUG_SLS_OTEL_LAYER: '1',
+              SLS_DEBUG_EXTENSION: '1',
               SLS_OTEL_USER_SETTINGS: JSON.stringify({
                 logs: { disabled: true },
               }),
@@ -124,7 +124,7 @@ module.exports = async (coreConfig, options) => {
         Environment: {
           Variables: {
             AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-            DEBUG_SLS_OTEL_LAYER: '1',
+            SLS_DEBUG_EXTENSION: '1',
             OTEL_RESOURCE_ATTRIBUTES: `sls_service_name=${service},sls_stage=${stage},sls_org_id=${orgId}`,
             SLS_OTEL_USER_SETTINGS: JSON.stringify({
               common: { destination: { requestHeaders: `serverless_token=${token}` } },

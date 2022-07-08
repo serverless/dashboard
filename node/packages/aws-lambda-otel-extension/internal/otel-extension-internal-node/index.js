@@ -3,7 +3,7 @@
 const processStartTime = process.hrtime.bigint();
 
 const debugLog = (...args) => {
-  if (process.env.DEBUG_SLS_OTEL_LAYER) {
+  if (process.env.SLS_DEBUG_EXTENSION) {
     process._rawDebug(...args);
   }
 };
@@ -459,7 +459,7 @@ module.exports = detectResources({
 
 const { handlerLoadDuration } = require('./prepare-wrapper')();
 
-if (process.env.DEBUG_SLS_OTEL_LAYER) {
+if (process.env.SLS_DEBUG_EXTENSION) {
   process._rawDebug(
     'Extension overhead duration: internal initialization:',
     `${Math.round(

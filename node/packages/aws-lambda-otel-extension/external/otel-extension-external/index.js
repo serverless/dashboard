@@ -85,7 +85,7 @@ module.exports = (async () => {
                 // TODO: Remove after Dashboard is turned off
                 !event.record.includes('SERVERLESS_ENTERPRISE')
             );
-            if (process.env.DEBUG_SLS_OTEL_LAYER) {
+            if (process.env.SLS_DEBUG_EXTENSION) {
               functionLogEvents = functionLogEvents.filter(
                 (event) => !event.record.startsWith('Extension overhead duration: ')
               );
