@@ -7,10 +7,10 @@ const requireUncached = require('ncjsm/require-uncached');
 describe('test/unit/external/user-settings.test.js', () => {
   const getUserConfig = () => requireUncached(() => require('../../../lib/user-settings'));
   afterEach(() => {
-    delete process.env.SLS_OTEL_USER_SETTINGS;
+    delete process.env.SLS_EXTENSION;
   });
   it('should handle gently no data', () => {
-    process.env.SLS_OTEL_USER_SETTINGS = JSON.stringify({
+    process.env.SLS_EXTENSION = JSON.stringify({
       orgId: 'orgId',
       namespace: 'service',
       environment: 'dev',

@@ -75,7 +75,7 @@ Ensure that internal extension of a layer is pre-loaded by configuring `AWS_LAMB
 
 #### 4. Configure monitoring settings
 
-Monitoring settings are expected to be provided in JSON format at `SLS_OTEL_USER_SETTINGS` environment variable.
+Monitoring settings are expected to be provided in JSON format at `SLS_EXTENSION` environment variable.
 
 ##### Required settings:
 
