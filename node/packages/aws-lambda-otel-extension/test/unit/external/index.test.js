@@ -23,7 +23,7 @@ describe('external', () => {
       metrics: { outputType: 'json' },
       traces: { outputType: 'json' },
     });
-    process.env.SLS_TEST_RUN = '1';
+    process.env.SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT = '1';
   });
 
   it('should handle plain success invocation', async () => {
