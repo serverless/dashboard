@@ -4,28 +4,21 @@ import platform
 import sys
 from importlib import import_module
 from traceback import TracebackException
-from typing import Any, Callable, Collection, Dict, Optional, cast
+from typing import Any, Callable, Collection, Dict, Optional, Tuple, cast
 
 import psutil
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor  # type: ignore
 from opentelemetry.instrumentation.utils import unwrap
-from opentelemetry.propagators.aws.aws_xray_propagator import TRACE_HEADER_KEY, AwsXRayPropagator
+from opentelemetry.propagators.aws.aws_xray_propagator import TRACE_HEADER_KEY
+from opentelemetry.propagate import get_global_textmap
 from opentelemetry.sdk.trace import ReadableSpan, Span, Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import (
-    SpanKind,
-    Status,
-    StatusCode,
-    get_current_span,
-    get_tracer,
-    get_tracer_provider,
-    NonRecordingSpan,
-)
+from opentelemetry.trace import SpanKind, Status, StatusCode, get_current_span, get_tracer, get_tracer_provider
 from opentelemetry.util._time import _time_ns
 from wrapt import wrap_function_wrapper  # type: ignore
 
@@ -69,18 +62,47 @@ def _filtered_attributes(attributes: Dict) -> Dict:
     return attributes
 
 
-def _extract_handler_span_parent_context(event: Dict, context: Any) -> Optional[Context]:
+def _extract_handler_span_parent_context(
+    event: Dict,
+    context: Any,
+    event_type: Optional[LambdaEventType] = None,
+) -> Tuple[Optional[Context], BoundedAttributes]:
 
-    handler_parent_context = None
+    parent_context = None
 
-    xray_env_var = os.environ.get(_X_AMZN_TRACE_ID_ENV_VAR)
+    _x_amzn_trace_id = os.environ.get(_X_AMZN_TRACE_ID_ENV_VAR)
 
-    if xray_env_var:
-        handler_parent_context = AwsXRayPropagator().extract({TRACE_HEADER_KEY: xray_env_var})
-        if get_current_span(handler_parent_context).get_span_context().trace_flags.sampled:
-            return handler_parent_context
+    if _x_amzn_trace_id:
+        parent_context = get_global_textmap().extract({TRACE_HEADER_KEY: _x_amzn_trace_id})
 
-    return handler_parent_context
+        parent_attributes = BoundedAttributes()
+
+        if get_current_span(parent_context).get_span_context().trace_flags.sampled:
+            for kv in _x_amzn_trace_id.split(";"):
+                try:
+                    k, v = kv.split("=", 1)
+                    parent_attributes = BoundedAttributes(
+                        attributes=_filtered_attributes(
+                            {
+                                **parent_attributes,
+                                f"remote.{k}".lower(): v,
+                            }
+                        )
+                    )
+                except Exception:
+                    pass
+
+            return parent_context, parent_attributes
+
+    if event_type in [LambdaEventType.APIGateway, LambdaEventType.APIGatewayV2]:
+        headers = event.get("headers")
+        if isinstance(headers, dict):
+            for k, v in headers.items():
+                if isinstance(k, str):
+                    if k.lower() == "x-amzn-trace-id":
+                        parent_context = get_global_textmap().extract({TRACE_HEADER_KEY: v})
+
+    return parent_context, BoundedAttributes()
 
 
 def _instrument(
@@ -170,7 +192,7 @@ def _instrument(
                     SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "extract",
                 },
             ) as extract_span:
-                parent_context = _extract_handler_span_parent_context(event, context)
+                parent_context, parent_attributes = _extract_handler_span_parent_context(event, context, event_type)
             store.append_pre_instrumentation_span(extract_span)
         except Exception:
             logger.exception("Exception while processing extract span")
@@ -192,11 +214,11 @@ def _instrument(
             context=parent_context,
             kind=span_kind,
             attributes={
+                **parent_attributes,
                 SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "instrumentation",
             },
             start_time=min_start_time,  # Rewind the start time to the earliest span.
         ) as instrumentation_span:
-
             with tracer.start_as_current_span(
                 name="__pre__",
                 attributes={
