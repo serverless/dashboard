@@ -95,14 +95,31 @@ func main() {
 	processEvents(ctx, logger, reportAgent, currentRequestData)
 
 	reportAgent.RegisterClockStart()
+	endWG := new(sync.WaitGroup)
 
 	logger.Debug("Exiting")
-	logsApiAgent.Shutdown(ctx)
-	metricsApiListener.Shutdown()
-	err = reportAgent.Shutdown()
-	if err != nil {
-		logger.Error("Failed to shutdown report agent", zap.Error(err))
-	}
+	endWG.Add(1)
+	go func() {
+		logsApiAgent.Shutdown(ctx)
+		endWG.Done()
+	}()
+
+	endWG.Add(1)
+	go func() {
+		metricsApiListener.Shutdown()
+		endWG.Done()
+	}()
+
+	endWG.Add(1)
+	go func() {
+		err := reportAgent.Shutdown()
+		if err != nil {
+			logger.Error("Failed to shutdown report agent", zap.Error(err))
+		}
+		endWG.Done()
+	}()
+
+	endWG.Wait()
 
 	reportAgent.ReportShutdownDuration()
 
