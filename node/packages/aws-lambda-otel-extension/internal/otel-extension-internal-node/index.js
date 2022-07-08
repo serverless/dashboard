@@ -122,7 +122,7 @@ const requestHandler = async (span, { event, context }) => {
 
   const requestBody = JSON.stringify(eventDataPayload);
   debugLog('Internal extension: Send event data');
-  if (process.env.TEST_DRY_LOG) {
+  if (process.env.SLS_TEST_EXTENSION_INTERNAL_LOG) {
     process.stdout.write(`⚡ eventData: ${requestBody}\n`);
   } else {
     // Send request data to external so that we can attach this data to logs
@@ -370,7 +370,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
 
   const requestBody = JSON.stringify(telemetryDataPayload);
   debugLog('Internal extension: Send telemetry data');
-  if (process.env.TEST_DRY_LOG) {
+  if (process.env.SLS_TEST_EXTENSION_INTERNAL_LOG) {
     process.stdout.write(`⚡ telemetryData: ${requestBody}\n`);
   } else {
     const requestStartTime = process.hrtime.bigint();
