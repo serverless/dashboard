@@ -125,9 +125,11 @@ module.exports = async (coreConfig, options) => {
           Variables: {
             AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
             SLS_DEBUG_EXTENSION: '1',
-            OTEL_RESOURCE_ATTRIBUTES: `sls_service_name=${service},sls_stage=${stage},sls_org_id=${orgId}`,
             SLS_OTEL_USER_SETTINGS: JSON.stringify({
+              orgId,
               ingestToken: token,
+              namespace: service,
+              environment: stage,
               logs: { disabled: true },
             }),
           },

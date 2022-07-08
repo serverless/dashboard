@@ -45,6 +45,24 @@ const altDestination = (() => {
 
 if (altDestination) {
   userSettings._altDestination = altDestination;
-} else if (!userSettings.ingestToken) {
-  throw new Error('Missing required "ingestToken" setting');
+} else {
+  if (!userSettings.ingestToken) throw new Error('Missing required "ingestToken" setting');
+  if (!userSettings.orgId) throw new Error('Missing required "orgId" setting');
+  if (!userSettings.namespace) throw new Error('Missing required "namespace" setting');
+  if (!userSettings.environment) throw new Error('Missing required "environment" setting');
+}
+
+const otelResourceAtrributes = [];
+if (userSettings.namespace) {
+  otelResourceAtrributes.push(`sls_service_name=${userSettings.namespace}`);
+}
+if (userSettings.environment) otelResourceAtrributes.push(`sls_stage=${userSettings.environment}`);
+if (userSettings.orgId) otelResourceAtrributes.push(`sls_org_id=${userSettings.orgId}`);
+
+if (otelResourceAtrributes.length) {
+  if (process.env.OTEL_RESOURCE_ATTRIBUTES) {
+    process.env.OTEL_RESOURCE_ATTRIBUTES += `,${otelResourceAtrributes.join(',')}`;
+  } else {
+    process.env.OTEL_RESOURCE_ATTRIBUTES = otelResourceAtrributes.join(',');
+  }
 }
