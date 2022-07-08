@@ -1,32 +1,43 @@
 'use strict';
 
-const createHttpRequest = require('http').request;
-const createHttpsRequest = require('https').request;
-const { debugLog, keepAliveAgents } = require('./helper');
+const https = require('https');
+const {
+  debugLog,
+  keepAliveAgents: { https: keepAliveAgent },
+} = require('./helper');
 const userSettings = require('./user-settings');
 
-const isUrl = RegExp.prototype.test.bind(/^https?:\/\//);
+const altDestination = userSettings._altDestination;
+
 const s3UrlPattern = /^s3:\/\/(?<bucket>[^/]+)(\/(?<rootKey>.+))?/;
 const reportType = process.env.SLS_TEST_EXTENSION_REPORT_TYPE === 'json' ? 'json' : 'protobuf';
+const extraRequestHeaders = { serverless_token: userSettings.ingestToken };
 
-const extraRequestHeaders = userSettings.common.destination.requestHeaders
-  ? Object.fromEntries(
-      new URLSearchParams(userSettings.common.destination.requestHeaders).entries()
-    )
-  : {};
+const s3Client =
+  altDestination && altDestination.startsWith('s3://')
+    ? // aws-sdk is provided in Lambda runtime
+      // eslint-disable-next-line import/no-unresolved
+      new (require('/var/runtime/node_modules/aws-sdk').S3)()
+    : null;
 
-const s3Client = ['logs', 'metrics', 'request', 'response', 'traces'].some((name) => {
-  const destination = userSettings[name].destination;
-  return destination && destination.startsWith('s3://');
-})
-  ? // aws-sdk is provided in Lambda runtime
-    // eslint-disable-next-line import/no-unresolved
-    new (require('/var/runtime/node_modules/aws-sdk').S3)()
-  : null;
+const backendUrl =
+  process.env.SERVERLESS_PLATFORM_STAGE === 'dev'
+    ? 'https://core.serverless-dev.com'
+    : 'https://core.serverless.com';
+
+const ingestionServerUrl = `${backendUrl}/ingestion/kinesis`;
+
+const urls = {
+  logs: `${ingestionServerUrl}/v1/logs`,
+  metrics: `${ingestionServerUrl}/v1/metrics`,
+  request: `${ingestionServerUrl}/v1/request-response`,
+  response: `${ingestionServerUrl}/v1/request-response`,
+  traces: `${ingestionServerUrl}/v1/traces`,
+};
 
 let httpRequestIdTracker = 0;
 
-const sendReport = async (data, { destination }, { outputType }) => {
+const sendReport = async (data, { outputType, url }) => {
   const body = outputType === 'protobuf' ? data : JSON.stringify(data);
   const headers = {
     'accept-encoding': 'gzip',
@@ -36,13 +47,11 @@ const sendReport = async (data, { destination }, { outputType }) => {
   };
   await new Promise((resolve, reject) => {
     const httpRequestId = ++httpRequestIdTracker;
-    const isHttps = destination.startsWith('https');
-    const createRequest = isHttps ? createHttpsRequest : createHttpRequest;
-    debugLog(`Request [${httpRequestId}]:`, destination);
+    debugLog(`Request [${httpRequestId}]:`, url);
     const requestStartTime = process.hrtime.bigint();
-    const request = createRequest(
-      destination,
-      { agent: isHttps ? keepAliveAgents.https : keepAliveAgents.http, method: 'post', headers },
+    const request = https.request(
+      url,
+      { agent: keepAliveAgent, method: 'post', headers },
       (response) => {
         if (response.statusCode === 200) {
           debugLog(
@@ -73,8 +82,8 @@ const sendReport = async (data, { destination }, { outputType }) => {
   });
 };
 
-const storeReport = async (data, { destination }, { s3, outputType }) => {
-  const { bucket, rootKey } = destination.match(s3UrlPattern).groups;
+const storeReport = async (data, { s3, outputType }) => {
+  const { bucket, rootKey } = altDestination.match(s3UrlPattern).groups;
   await s3Client
     .putObject({
       Body: Buffer.from(outputType === 'protobuf' ? data : JSON.stringify(data)),
@@ -94,13 +103,12 @@ const protobufConfigs = {
 
 module.exports = async (name, data) => {
   debugLog(`Report ${name}:`, JSON.stringify(data));
-  const settings = userSettings[name];
   const outputType = protobufConfigs[name] && reportType !== 'json' ? 'protobuf' : 'json';
   if (outputType === 'protobuf') data = protobufConfigs[name].encode(data).finish();
-  if (settings.destination && isUrl(settings.destination)) {
-    await sendReport(data, settings, { outputType });
-  } else if (settings.destination && settings.destination.startsWith('s3://')) {
-    await storeReport(data, settings, {
+  if (!altDestination) {
+    await sendReport(data, { outputType, url: urls[name] });
+  } else if (altDestination.startsWith('s3://')) {
+    await storeReport(data, {
       s3: { key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/metrics/${new Date().toISOString()}` },
       outputType,
     });

@@ -40,6 +40,7 @@ const create = async (testConfig, coreConfig) => {
           AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
           SLS_DEBUG_EXTENSION: '1',
           SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
+          SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
         },
       },
       ...configuration,

@@ -1,10 +1,8 @@
 'use strict';
 
 const apiRequest = require('@serverless/utils/api-request');
-const backendUrl = require('@serverless/utils/lib/auth/urls').backend;
 const log = require('log').get('test');
 
-const ingestionServerUrl = `${backendUrl}/ingestion/kinesis`;
 const service = 'benchmark';
 const stage = 'test';
 
@@ -73,6 +71,7 @@ module.exports = async (coreConfig, options) => {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
               SLS_DEBUG_EXTENSION: '1',
               SLS_TEST_EXTENSION_INTERNAL_LOG: '1',
+              SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
             },
           },
         },
@@ -88,6 +87,7 @@ module.exports = async (coreConfig, options) => {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
               SLS_DEBUG_EXTENSION: '1',
               SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
+              SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
               SLS_OTEL_USER_SETTINGS: JSON.stringify({
                 logs: { disabled: true },
               }),
@@ -105,6 +105,7 @@ module.exports = async (coreConfig, options) => {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
               SLS_DEBUG_EXTENSION: '1',
+              SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
               SLS_OTEL_USER_SETTINGS: JSON.stringify({
                 logs: { disabled: true },
               }),
@@ -126,12 +127,8 @@ module.exports = async (coreConfig, options) => {
             SLS_DEBUG_EXTENSION: '1',
             OTEL_RESOURCE_ATTRIBUTES: `sls_service_name=${service},sls_stage=${stage},sls_org_id=${orgId}`,
             SLS_OTEL_USER_SETTINGS: JSON.stringify({
-              common: { destination: { requestHeaders: `serverless_token=${token}` } },
+              ingestToken: token,
               logs: { disabled: true },
-              metrics: { destination: `${ingestionServerUrl}/v1/metrics` },
-              request: { destination: `${ingestionServerUrl}/v1/request-response` },
-              response: { destination: `${ingestionServerUrl}/v1/request-response` },
-              traces: { destination: `${ingestionServerUrl}/v1/traces` },
             }),
           },
         },
