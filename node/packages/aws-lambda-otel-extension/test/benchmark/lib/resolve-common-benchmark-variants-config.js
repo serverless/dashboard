@@ -72,7 +72,7 @@ module.exports = async (coreConfig, options) => {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
               SLS_DEBUG_EXTENSION: '1',
-              TEST_DRY_LOG: '1',
+              SLS_TEST_EXTENSION_INTERNAL_LOG: '1',
             },
           },
         },

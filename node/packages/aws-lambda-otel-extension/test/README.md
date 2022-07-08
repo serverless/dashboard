@@ -51,5 +51,5 @@ How extensions behave, for various testing purposes, can be tweaked with followi
   - Mark certain processing points
   - Log payloads which are send between extensions and to the external ingestion server
   - Report durations overhead that extension introduces
-- `TEST_DRY_LOG` - In context of the internal extension, log payloads instead of sending them to the external extension
+- `SLS_TEST_EXTENSION_INTERNAL_LOG` - In context of the internal extension, log payloads instead of sending them to the external extension
 - `SLS_TEST_RUN` - In context of the external extension, do not exit the process after shutdown phase
