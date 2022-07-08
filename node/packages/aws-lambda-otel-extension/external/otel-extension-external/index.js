@@ -371,7 +371,7 @@ module.exports = (async () => {
     'Extension overhead duration: external shutdown:',
     `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
   );
-  if (!process.env.SLS_TEST_RUN) process.exit();
+  if (!process.env.SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT) process.exit();
 })().catch((error) => {
   // Ensure to crash extension process on unhandled rejection
   process.nextTick(() => {
