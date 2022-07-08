@@ -5,10 +5,10 @@
 const userSettings = (module.exports = {
   common: { destination: {} },
   logs: {},
-  metrics: { outputType: 'protobuf' },
+  metrics: {},
   request: {},
   response: {},
-  traces: { outputType: 'protobuf' },
+  traces: {},
 });
 
 const isObject = (value) => Boolean(value && typeof value === 'object');

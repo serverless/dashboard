@@ -7,6 +7,7 @@ const userSettings = require('./user-settings');
 
 const isUrl = RegExp.prototype.test.bind(/^https?:\/\//);
 const s3UrlPattern = /^s3:\/\/(?<bucket>[^/]+)(\/(?<rootKey>.+))?/;
+const reportType = process.env.SLS_TEST_EXTENSION_REPORT_TYPE === 'json' ? 'json' : 'protobuf';
 
 const extraRequestHeaders = userSettings.common.destination.requestHeaders
   ? Object.fromEntries(
@@ -24,12 +25,8 @@ const s3Client = ['logs', 'metrics', 'request', 'response', 'traces'].some((name
   : null;
 
 let httpRequestIdTracker = 0;
-const prepareReport = (data, { outputType }, { protobuf }) => {
-  if (outputType !== 'protobuf') return data;
-  return protobuf.encode(data).finish();
-};
 
-const sendReport = async (data, { destination, outputType }) => {
+const sendReport = async (data, { destination }, { outputType }) => {
   const body = outputType === 'protobuf' ? data : JSON.stringify(data);
   const headers = {
     'accept-encoding': 'gzip',
@@ -76,7 +73,7 @@ const sendReport = async (data, { destination, outputType }) => {
   });
 };
 
-const storeReport = async (data, { destination, outputType }, { s3 }) => {
+const storeReport = async (data, { destination }, { s3, outputType }) => {
   const { bucket, rootKey } = destination.match(s3UrlPattern).groups;
   await s3Client
     .putObject({
@@ -98,14 +95,14 @@ const protobufConfigs = {
 module.exports = async (name, data) => {
   debugLog(`Report ${name}:`, JSON.stringify(data));
   const settings = userSettings[name];
-  if (protobufConfigs[name]) {
-    data = prepareReport(data, settings, { protobuf: protobufConfigs[name] });
-  }
+  const outputType = protobufConfigs[name] && reportType !== 'json' ? 'protobuf' : 'json';
+  if (outputType === 'protobuf') data = protobufConfigs[name].encode(data).finish();
   if (settings.destination && isUrl(settings.destination)) {
-    await sendReport(data, settings);
+    await sendReport(data, settings, { outputType });
   } else if (settings.destination && settings.destination.startsWith('s3://')) {
     await storeReport(data, settings, {
       s3: { key: `${process.env.AWS_LAMBDA_FUNCTION_NAME}/metrics/${new Date().toISOString()}` },
+      outputType,
     });
   } else {
     process.stdout.write(`⚡ ${name}: ${JSON.stringify(data)}\n`);
