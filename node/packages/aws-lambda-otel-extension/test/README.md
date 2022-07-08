@@ -24,6 +24,25 @@ All created resourced are named or prefixed with `test-otel-extension-<testUid>`
 npm run test:integration
 ```
 
+## Performance tests
+
+Both AWS credentials Serverless Console credentials are needed to run performance test.
+
+Test confirms on performance of the extension instrumentation. Specifically they validate whether introduced initialization and invocation duration overhead doesn't go beyond agreed threshold.
+
+Same as in case of integration tests, home folder is mocked, so AWS credentials cannot be set via `AWS_PROFILE` (easiest it to provide them via `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY`).
+
+Console credentials need to be provided with following environment variables:
+
+- `SLS_ORG_NAME` - Name of the organization
+- `SLS_ORG_TOKEN` - Authentication org token, which can be obtained for given organization in Console UI
+
+Otherwise characteristic of test is very same as in case of integration tests (please follow it's documentation)
+
+```bash
+npm run test:performance
+```
+
 ## Environment variables
 
 How extensions behave, for various testing purposes, can be tweaked with following environment variables:
