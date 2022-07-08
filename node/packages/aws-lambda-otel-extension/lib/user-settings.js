@@ -33,7 +33,7 @@ const bundledSettings = (() => {
 
 if (bundledSettings) merge(userSettings, bundledSettings);
 
-const envSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
+const envSettingsText = process.env.SLS_EXTENSION;
 if (envSettingsText) merge(userSettings, JSON.parse(envSettingsText));
 
 const altDestination = (() => {

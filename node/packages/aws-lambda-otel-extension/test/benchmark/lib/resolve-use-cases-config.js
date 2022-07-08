@@ -122,7 +122,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
                 case 'protoLog':
                 case 'console': {
                   const userSettings = JSON.parse(
-                    caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
+                    caseConfig.configuration.Environment.Variables.SLS_EXTENSION
                   );
                   delete userSettings.logs;
                   return [
@@ -131,7 +131,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
                       configuration: {
                         Environment: {
                           Variables: {
-                            SLS_OTEL_USER_SETTINGS: JSON.stringify(userSettings),
+                            SLS_EXTENSION: JSON.stringify(userSettings),
                           },
                         },
                       },

@@ -52,7 +52,7 @@ module.exports = async (coreConfig, options) => {
           MemorySize: memorySize,
           Environment: {
             Variables: {
-              SLS_OTEL_USER_SETTINGS: JSON.stringify({ logs: { disabled: true } }),
+              SLS_EXTENSION: JSON.stringify({ logs: { disabled: true } }),
               SLS_DEBUG_EXTENSION: '1',
             },
           },
@@ -88,7 +88,7 @@ module.exports = async (coreConfig, options) => {
               SLS_DEBUG_EXTENSION: '1',
               SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
               SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
-              SLS_OTEL_USER_SETTINGS: JSON.stringify({
+              SLS_EXTENSION: JSON.stringify({
                 logs: { disabled: true },
               }),
             },
@@ -106,7 +106,7 @@ module.exports = async (coreConfig, options) => {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
               SLS_DEBUG_EXTENSION: '1',
               SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
-              SLS_OTEL_USER_SETTINGS: JSON.stringify({
+              SLS_EXTENSION: JSON.stringify({
                 logs: { disabled: true },
               }),
             },
@@ -125,7 +125,7 @@ module.exports = async (coreConfig, options) => {
           Variables: {
             AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
             SLS_DEBUG_EXTENSION: '1',
-            SLS_OTEL_USER_SETTINGS: JSON.stringify({
+            SLS_EXTENSION: JSON.stringify({
               orgId,
               ingestToken: token,
               namespace: service,
