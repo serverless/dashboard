@@ -239,7 +239,7 @@ const measureAttributes = [
 ];
 
 const debugLog = (...args) => {
-  if (process.env.DEBUG_SLS_OTEL_LAYER) {
+  if (process.env.SLS_DEBUG_EXTENSION) {
     process._rawDebug(...args);
   }
 };
