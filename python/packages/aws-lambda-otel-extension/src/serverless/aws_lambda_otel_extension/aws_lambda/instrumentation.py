@@ -69,6 +69,7 @@ def _extract_handler_span_parent_context(
 ) -> Tuple[Optional[Context], BoundedAttributes]:
 
     parent_context = None
+    parent_attributes = BoundedAttributes()
 
     _x_amzn_trace_id = os.environ.get(_X_AMZN_TRACE_ID_ENV_VAR)
 
@@ -100,9 +101,28 @@ def _extract_handler_span_parent_context(
             for k, v in headers.items():
                 if isinstance(k, str):
                     if k.lower() == "x-amzn-trace-id":
-                        parent_context = get_global_textmap().extract({TRACE_HEADER_KEY: v})
+                        if isinstance(v, str):
+                            x_amzn_trace_id = v
 
-    return parent_context, BoundedAttributes()
+                            parent_context = get_global_textmap().extract({TRACE_HEADER_KEY: x_amzn_trace_id})
+
+                            for kv in x_amzn_trace_id.split(";"):
+                                try:
+                                    k, v = kv.split("=", 1)
+                                    parent_attributes = BoundedAttributes(
+                                        attributes=_filtered_attributes(
+                                            {
+                                                **parent_attributes,
+                                                f"remote.{k}".lower(): v,
+                                            }
+                                        )
+                                    )
+                                except Exception:
+                                    pass
+
+                            return parent_context, parent_attributes
+
+    return parent_context, parent_attributes
 
 
 def _instrument(
