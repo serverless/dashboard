@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,26 +18,39 @@ import (
 	"go.uber.org/zap"
 )
 
+// INITIAL_QUEUE_SIZE is the initial size set for the synchronous logQueue
+const INITIAL_QUEUE_SIZE = 100
+
 var (
 	extensionClient = extension.NewClient(os.Getenv("AWS_LAMBDA_RUNTIME_API"))
 )
 
-// INITIAL_QUEUE_SIZE is the initial size set for the synchronous logQueue
-const INITIAL_QUEUE_SIZE = 100
-
 func main() {
 	startTime := time.Now()
+
 	ctx, cancel := context.WithCancel(context.Background())
-	// wg := new(sync.WaitGroup)
+
+	extWG := new(sync.WaitGroup)
+	startWG := new(sync.WaitGroup)
 	logger := lib.NewLogger()
 	defer logger.Sync()
+
+	// register extension while we start other services
+	extWG.Add(1)
+	go func() {
+		// Register the extension
+		err := extensionClient.Register(ctx)
+		if err != nil {
+			panic(err)
+		}
+		extWG.Done()
+	}()
+
 	userSettings, err := lib.GetUserSettings()
 	if err != nil {
 		logger.Error("Failed to get user settings", zap.Error(err))
 		return
 	}
-
-	logger.Debug("Starting external extension")
 
 	reportAgent := reporter.NewReporterClient(&userSettings)
 	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
@@ -60,20 +74,19 @@ func main() {
 	metricsApiListener := metrics.NewInternalHttpListener(reportAgent, currentRequestData)
 	metricsApiListener.Start()
 
-	// Register the extension
-	err = extensionClient.Register(ctx)
-	if err != nil {
-		panic(err)
-	}
-
 	// Subscribe to logs API
 	// Logs start being delivered only after the subscription happens.
-	// go func() {
-	err = logsApiAgent.Init(extensionClient.ExtensionID)
-	if err != nil {
-		logger.Fatal("couldnt init logs api agent", zap.Error(err))
-	}
-	// }()
+	startWG.Add(1)
+	go func() {
+		extWG.Wait()
+		err = logsApiAgent.Init(extensionClient.ExtensionID)
+		if err != nil {
+			logger.Fatal("couldnt init logs api agent", zap.Error(err))
+		}
+		startWG.Done()
+	}()
+
+	startWG.Wait()
 
 	// Will block until shutdown event is received or cancelled via the context.
 	reportAgent.ReportInitDuration(startTime)

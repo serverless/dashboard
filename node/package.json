@@ -22,7 +22,7 @@
     "@commitlint/cli": "^17.0.3",
     "@commitlint/lint": "^17.0.3",
     "@serverless/eslint-config": "^4.0.1",
-    "@serverless/test": "^11.0.0",
+    "@serverless/test": "^11.0.1",
     "@serverless/utils": "^6.6.0",
     "chai": "^4.3.6",
     "chalk": "^4.1.2",

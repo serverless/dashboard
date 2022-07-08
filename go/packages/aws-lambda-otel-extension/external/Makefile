@@ -1,6 +1,6 @@
 build:
 	rm -Rf dist/extension*
-	GOOS=linux GOARCH=amd64 go build -o dist/extensions/otel-extension main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/extensions/otel-extension main.go
 	strip dist/extensions/otel-extension
 	cd dist; zip extension.zip -r extensions/ otel-extension-internal-node/
 
