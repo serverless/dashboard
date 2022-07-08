@@ -21,6 +21,7 @@ describe('external', () => {
     process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
     process.env.SLS_TEST_EXTENSION_REPORT_TYPE = 'json';
     process.env.SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT = '1';
+    process.env.SLS_TEST_EXTENSION_REPORT_DESTINATION = 'log';
   });
 
   it('should handle plain success invocation', async () => {

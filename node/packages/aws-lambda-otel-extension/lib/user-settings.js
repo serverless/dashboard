@@ -3,12 +3,9 @@
 'use strict';
 
 const userSettings = (module.exports = {
-  common: { destination: {} },
   logs: {},
-  metrics: {},
   request: {},
   response: {},
-  traces: {},
 });
 
 const isObject = (value) => Boolean(value && typeof value === 'object');
@@ -38,3 +35,16 @@ if (bundledSettings) merge(userSettings, bundledSettings);
 
 const envSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
 if (envSettingsText) merge(userSettings, JSON.parse(envSettingsText));
+
+const altDestination = (() => {
+  const setting = process.env.SLS_TEST_EXTENSION_REPORT_DESTINATION || '';
+  if (setting.startsWith('s3://')) return setting;
+  if (setting === 'log') return setting;
+  return null;
+})();
+
+if (altDestination) {
+  userSettings._altDestination = altDestination;
+} else if (!userSettings.ingestToken) {
+  throw new Error('Missing required "ingestToken" setting');
+}
