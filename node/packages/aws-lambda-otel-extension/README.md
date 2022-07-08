@@ -79,6 +79,18 @@ Monitoring settings are expected to be provided in JSON format at `SLS_OTEL_USER
 
 ##### Required settings:
 
+###### `orgId`
+
+Serverless Console organization id
+
+###### `namespace`
+
+Namespace at which reports should be grouped (Serverless Framework sets it with _service name_)
+
+###### `environment`
+
+Application environment (Serverless Framework sets with _stage_ value)
+
 ###### `ingestToken`
 
 Serverless Console ingestion token, to be obtained via Serverless Console API. At this point it's resolved automatically in context of the Serverless Framework (manual resolution instructions will be provided in a near future)

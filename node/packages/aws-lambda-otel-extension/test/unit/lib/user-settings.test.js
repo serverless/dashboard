@@ -11,11 +11,17 @@ describe('test/unit/external/user-settings.test.js', () => {
   });
   it('should handle gently no data', () => {
     process.env.SLS_OTEL_USER_SETTINGS = JSON.stringify({
+      orgId: 'orgId',
+      namespace: 'service',
+      environment: 'dev',
       ingestToken: 'foo',
       logs: { disabled: true },
       foo: 'bar',
     });
     expect(getUserConfig()).to.deep.equal({
+      orgId: 'orgId',
+      namespace: 'service',
+      environment: 'dev',
       ingestToken: 'foo',
       logs: { disabled: true },
       request: {},
