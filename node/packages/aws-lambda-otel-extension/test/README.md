@@ -47,6 +47,7 @@ npm run test:performance
 
 How extensions behave, for various testing purposes, can be tweaked with following environment variables:
 
+- `SERVERLESS_PLATFORM_STAGE` - Ingestion server stage to which reports should be propagated (default is `prod`, with this setting it can be overriden to `dev`)
 - `SLS_DEBUG_EXTENSION` - Log debug messages, of which scope is to:
   - Mark certain processing points
   - Log payloads which are send between extensions and to the external ingestion server
