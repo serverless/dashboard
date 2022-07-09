@@ -24,27 +24,31 @@ const handledOutcomes = new Set(['success', 'error:handled']);
 
 const create = async (testConfig, coreConfig) => {
   const { configuration } = testConfig;
+  const resultConfiguration = {
+    Role: coreConfig.roleArn,
+    Runtime: 'nodejs16.x',
+    MemorySize: 1024,
+    Code: {
+      ZipFile: await resolveDirZipBuffer(fixturesDirname),
+    },
+    Layers: coreConfig.layerArn
+      ? [coreConfig.layerArn]
+      : [coreConfig.layerExternalArn, coreConfig.layerInternalArn],
+    Environment: {
+      Variables: {
+        AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
+        SLS_DEBUG_EXTENSION: '1',
+        SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
+        SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
+      },
+    },
+    ...configuration,
+  };
+  if (process.env.SERVERLESS_PLATFORM_STAGE === 'dev') {
+    resultConfiguration.Environment.Variables.SERVERLESS_PLATFORM_STAGE = 'dev';
+  }
   try {
-    await awsRequest(Lambda, 'createFunction', {
-      Role: coreConfig.roleArn,
-      Runtime: 'nodejs16.x',
-      MemorySize: 1024,
-      Code: {
-        ZipFile: await resolveDirZipBuffer(fixturesDirname),
-      },
-      Layers: coreConfig.layerArn
-        ? [coreConfig.layerArn]
-        : [coreConfig.layerExternalArn, coreConfig.layerInternalArn],
-      Environment: {
-        Variables: {
-          AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-          SLS_DEBUG_EXTENSION: '1',
-          SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
-          SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
-        },
-      },
-      ...configuration,
-    });
+    await awsRequest(Lambda, 'createFunction', resultConfiguration);
   } catch (error) {
     if (
       error.message.includes('The role defined for the function cannot be assumed by Lambda') ||
