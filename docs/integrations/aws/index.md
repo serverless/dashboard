@@ -86,14 +86,7 @@ You'll need to setup the config for the extension in a json file.
 The following command will create one called sample.json
 
 ```text
-echo '
-{ 
-  "orgId" : "'$ORG_ID'",           
-  "ingestToken" : "'$INGEST_TOKEN'", 
-  "namespace" : "'$NAMESPACE'",
-  "environment" : "'$ENVIRONMENT'"
-}'  > sample.json
-
+echo '{ "orgId":"'$ORG_ID'","ingestToken":"'$INGEST_TOKEN'","namespace":"'$NAMESPACE'", "environment" : "'$ENVIRONMENT'"}'  > sample.json
 ```
 
 ### 3. Setup your environment variables
