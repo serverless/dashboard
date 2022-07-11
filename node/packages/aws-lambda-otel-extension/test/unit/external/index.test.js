@@ -63,7 +63,6 @@ describe('external', () => {
 
       emitter.emit('logs', [
         {
-          time: '2022-02-14T15:31:24.674Z',
           type: 'platform.start',
           record: {
             requestId,
@@ -71,7 +70,6 @@ describe('external', () => {
           },
         },
         {
-          time: '2022-02-14T15:31:24.676Z',
           type: 'platform.extension',
           record: {
             name: 'otel-extension',
@@ -201,12 +199,10 @@ describe('external', () => {
       });
       emitter.emit('logs', [
         {
-          time: '2022-02-14T15:31:26.713Z',
           type: 'function',
           record: `2022-02-14T13:01:30.307Z\t${requestId}\tINFO\tHi mom`,
         },
         {
-          time: '2022-02-14T15:31:26.713Z',
           type: 'platform.runtimeDone',
           record: {
             requestId,
@@ -214,7 +210,6 @@ describe('external', () => {
           },
         },
         {
-          time: '2022-02-14T15:31:26.742Z',
           type: 'platform.end',
           record: {
             requestId,
@@ -225,7 +220,6 @@ describe('external', () => {
       emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
       emitter.emit('logs', [
         {
-          time: '2022-02-14T15:31:26.742Z',
           type: 'platform.report',
           record: {
             requestId,
