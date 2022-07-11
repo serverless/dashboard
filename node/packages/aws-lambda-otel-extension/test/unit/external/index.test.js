@@ -5,6 +5,7 @@ const { expect } = require('chai');
 const path = require('path');
 const { EventEmitter } = require('events');
 const spawn = require('child-process-ext/spawn');
+const argsParse = require('yargs-parser');
 const log = require('log').get('test');
 const getExtensionServerMock = require('../../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../../utils/normalize-otel-attributes');
@@ -29,7 +30,12 @@ describe('external', () => {
     const { server, listenerEmitter } = getExtensionServerMock(emitter, { requestId });
 
     server.listen(port);
-    const extensionProcess = spawn('node', [extensionFilename], {
+    const [extensionCommand, ...extensionArgs] = (() => {
+      const customCommand = process.env.SLS_TEST_EXTENSION_COMMAND;
+      if (!customCommand) return ['node', extensionFilename];
+      return argsParse(customCommand)._;
+    })();
+    const extensionProcess = spawn(extensionCommand, extensionArgs, {
       env: {
         ...process.env,
         AWS_LAMBDA_RUNTIME_API: `127.0.0.1:${port}`,
