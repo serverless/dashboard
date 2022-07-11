@@ -3,11 +3,26 @@
 const processStartTime = process.hrtime.bigint();
 
 const debugLog = (...args) => {
-  if (process.env.DEBUG_SLS_OTEL_LAYER) {
+  if (process.env.SLS_DEBUG_EXTENSION) {
     process._rawDebug(...args);
   }
 };
 debugLog('Internal extension: Init');
+
+// Bundled user settings may involve environment variables adjustments
+// therefore needs to be loaded first
+const userSettings = (() => {
+  try {
+    return require('./user-settings');
+  } catch (error) {
+    process.stdout.write(
+      `Error: Extension user settings resolution crashed with: ${error.stack}\n`
+    );
+    process.stdout.write('Extension will operate in no-op mode\n');
+    return null;
+  }
+})();
+if (!userSettings) return;
 
 const http = require('http');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
@@ -35,7 +50,6 @@ const AwsLambdaInstrumentation = require('./aws-lambda-instrumentation');
 const { diag, DiagConsoleLogger } = require('@opentelemetry/api');
 const SlsSpanProcessor = require('./span-processor');
 const { detectEventType } = require('./event-detection');
-const userSettings = require('./user-settings');
 
 const OTEL_SERVER_PORT = 2772;
 const logLevel = getEnv().OTEL_LOG_LEVEL;
@@ -122,7 +136,7 @@ const requestHandler = async (span, { event, context }) => {
 
   const requestBody = JSON.stringify(eventDataPayload);
   debugLog('Internal extension: Send event data');
-  if (process.env.TEST_DRY_LOG) {
+  if (process.env.SLS_TEST_EXTENSION_INTERNAL_LOG) {
     process.stdout.write(`⚡ eventData: ${requestBody}\n`);
   } else {
     // Send request data to external so that we can attach this data to logs
@@ -370,7 +384,7 @@ const responseHandler = async (span, { res, err }, isTimeout) => {
 
   const requestBody = JSON.stringify(telemetryDataPayload);
   debugLog('Internal extension: Send telemetry data');
-  if (process.env.TEST_DRY_LOG) {
+  if (process.env.SLS_TEST_EXTENSION_INTERNAL_LOG) {
     process.stdout.write(`⚡ telemetryData: ${requestBody}\n`);
   } else {
     const requestStartTime = process.hrtime.bigint();
@@ -459,7 +473,7 @@ module.exports = detectResources({
 
 const { handlerLoadDuration } = require('./prepare-wrapper')();
 
-if (process.env.DEBUG_SLS_OTEL_LAYER) {
+if (process.env.SLS_DEBUG_EXTENSION) {
   process._rawDebug(
     'Extension overhead duration: internal initialization:',
     `${Math.round(

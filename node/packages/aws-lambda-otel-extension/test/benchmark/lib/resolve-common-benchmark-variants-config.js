@@ -1,10 +1,8 @@
 'use strict';
 
 const apiRequest = require('@serverless/utils/api-request');
-const backendUrl = require('@serverless/utils/lib/auth/urls').backend;
 const log = require('log').get('test');
 
-const ingestionServerUrl = `${backendUrl}/ingestion/kinesis`;
 const service = 'benchmark';
 const stage = 'test';
 
@@ -35,7 +33,7 @@ const resolveIngestionData = async () => {
 };
 
 module.exports = async (coreConfig, options) => {
-  const memorySize = options.memorySize || 128;
+  const memorySize = options.memorySize || 1024;
   const allBenchmarkVariantsConfig = new Map([
     [
       'bare',
@@ -54,10 +52,11 @@ module.exports = async (coreConfig, options) => {
           MemorySize: memorySize,
           Environment: {
             Variables: {
-              SLS_OTEL_USER_SETTINGS: JSON.stringify({ logs: { disabled: true } }),
-              DEBUG_SLS_OTEL_LAYER: '1',
+              SLS_EXTENSION: JSON.stringify({ logs: { disabled: true } }),
+              SLS_DEBUG_EXTENSION: '1',
             },
           },
+          ...(coreConfig.layerExternalArn ? null : { Layers: [coreConfig.layerExternalArn] }),
         },
       },
     ],
@@ -70,8 +69,9 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-              DEBUG_SLS_OTEL_LAYER: '1',
-              TEST_DRY_LOG: '1',
+              SLS_DEBUG_EXTENSION: '1',
+              SLS_TEST_EXTENSION_INTERNAL_LOG: '1',
+              SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
             },
           },
         },
@@ -85,11 +85,11 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-              DEBUG_SLS_OTEL_LAYER: '1',
-              SLS_OTEL_USER_SETTINGS: JSON.stringify({
+              SLS_DEBUG_EXTENSION: '1',
+              SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
+              SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
+              SLS_EXTENSION: JSON.stringify({
                 logs: { disabled: true },
-                metrics: { outputType: 'json' },
-                traces: { outputType: 'json' },
               }),
             },
           },
@@ -104,8 +104,9 @@ module.exports = async (coreConfig, options) => {
           Environment: {
             Variables: {
               AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-              DEBUG_SLS_OTEL_LAYER: '1',
-              SLS_OTEL_USER_SETTINGS: JSON.stringify({
+              SLS_DEBUG_EXTENSION: '1',
+              SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
+              SLS_EXTENSION: JSON.stringify({
                 logs: { disabled: true },
               }),
             },
@@ -123,15 +124,13 @@ module.exports = async (coreConfig, options) => {
         Environment: {
           Variables: {
             AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-            DEBUG_SLS_OTEL_LAYER: '1',
-            OTEL_RESOURCE_ATTRIBUTES: `sls_service_name=${service},sls_stage=${stage},sls_org_id=${orgId}`,
-            SLS_OTEL_USER_SETTINGS: JSON.stringify({
-              common: { destination: { requestHeaders: `serverless_token=${token}` } },
+            SLS_DEBUG_EXTENSION: '1',
+            SLS_EXTENSION: JSON.stringify({
+              orgId,
+              ingestToken: token,
+              namespace: service,
+              environment: stage,
               logs: { disabled: true },
-              metrics: { destination: `${ingestionServerUrl}/v1/metrics` },
-              request: { destination: `${ingestionServerUrl}/v1/request-response` },
-              response: { destination: `${ingestionServerUrl}/v1/request-response` },
-              traces: { destination: `${ingestionServerUrl}/v1/traces` },
             }),
           },
         },

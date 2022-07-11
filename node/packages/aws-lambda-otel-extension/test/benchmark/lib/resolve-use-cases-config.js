@@ -2,11 +2,9 @@
 
 const _ = require('lodash');
 const path = require('path');
-const backendUrl = require('@serverless/utils/lib/auth/urls').backend;
 const resolveFileZipBuffer = require('../../utils/resolve-file-zip-buffer');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
-const ingestionServerUrl = `${backendUrl}/ingestion/kinesis`;
 
 const cloneMap = (map) => new Map(Array.from(map, ([key, value]) => [key, _.merge({}, value)]));
 
@@ -121,9 +119,10 @@ module.exports = (benchmarkVariantsConfig, options) => {
             Array.from(benchmarkVariantsConfig, ([name, caseConfig]) => {
               switch (name) {
                 case 'jsonLog':
-                case 'protoLog': {
+                case 'protoLog':
+                case 'console': {
                   const userSettings = JSON.parse(
-                    caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
+                    caseConfig.configuration.Environment.Variables.SLS_EXTENSION
                   );
                   delete userSettings.logs;
                   return [
@@ -132,25 +131,7 @@ module.exports = (benchmarkVariantsConfig, options) => {
                       configuration: {
                         Environment: {
                           Variables: {
-                            SLS_OTEL_USER_SETTINGS: JSON.stringify(userSettings),
-                          },
-                        },
-                      },
-                    }),
-                  ];
-                }
-                case 'console': {
-                  const userSettings = JSON.parse(
-                    caseConfig.configuration.Environment.Variables.SLS_OTEL_USER_SETTINGS
-                  );
-                  userSettings.logs = { destination: `${ingestionServerUrl}/v1/logs` };
-                  return [
-                    name,
-                    _.merge({}, caseConfig, {
-                      configuration: {
-                        Environment: {
-                          Variables: {
-                            SLS_OTEL_USER_SETTINGS: JSON.stringify(userSettings),
+                            SLS_EXTENSION: JSON.stringify(userSettings),
                           },
                         },
                       },

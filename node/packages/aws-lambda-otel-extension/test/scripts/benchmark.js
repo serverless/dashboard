@@ -19,6 +19,7 @@ require('../benchmark')({
   benchmarkVariants: argv['benchmark-variants'] ? resolveSet(argv['benchmark-variants']) : null,
   useCases: argv['use-cases'] ? resolveSet(argv['use-cases']) : null,
   memorySize: argv['memory-size'] ? Number(argv['memory-size']) : null,
+  extensionLayersMode: argv['extension-layers-mode'] || null,
 }).then((resultsMap) => {
   process.stdout.write(
     `${[

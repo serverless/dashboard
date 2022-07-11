@@ -21,7 +21,7 @@ const wrapOriginalHandler = (originalHandler) => {
   let isResolved = false;
   const unresolvedPromise = new Promise(() => {});
   const debugLog = (...args) => {
-    if (process.env.DEBUG_SLS_OTEL_LAYER) process._rawDebug(...args);
+    if (process.env.SLS_DEBUG_EXTENSION) process._rawDebug(...args);
   };
   let contextDone;
 

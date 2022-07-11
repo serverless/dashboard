@@ -24,26 +24,31 @@ const handledOutcomes = new Set(['success', 'error:handled']);
 
 const create = async (testConfig, coreConfig) => {
   const { configuration } = testConfig;
+  const resultConfiguration = {
+    Role: coreConfig.roleArn,
+    Runtime: 'nodejs16.x',
+    MemorySize: 1024,
+    Code: {
+      ZipFile: await resolveDirZipBuffer(fixturesDirname),
+    },
+    Layers: coreConfig.layerArn
+      ? [coreConfig.layerArn]
+      : [coreConfig.layerExternalArn, coreConfig.layerInternalArn],
+    Environment: {
+      Variables: {
+        AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
+        SLS_DEBUG_EXTENSION: '1',
+        SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
+        SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
+      },
+    },
+    ...configuration,
+  };
+  if (process.env.SERVERLESS_PLATFORM_STAGE === 'dev') {
+    resultConfiguration.Environment.Variables.SERVERLESS_PLATFORM_STAGE = 'dev';
+  }
   try {
-    await awsRequest(Lambda, 'createFunction', {
-      Role: coreConfig.roleArn,
-      Runtime: 'nodejs16.x',
-      Code: {
-        ZipFile: await resolveDirZipBuffer(fixturesDirname),
-      },
-      Layers: [coreConfig.layerArn],
-      Environment: {
-        Variables: {
-          AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
-          DEBUG_SLS_OTEL_LAYER: '1',
-          SLS_OTEL_USER_SETTINGS: JSON.stringify({
-            metrics: { outputType: 'json' },
-            traces: { outputType: 'json' },
-          }),
-        },
-      },
-      ...configuration,
-    });
+    await awsRequest(Lambda, 'createFunction', resultConfiguration);
   } catch (error) {
     if (
       error.message.includes('The role defined for the function cannot be assumed by Lambda') ||
@@ -126,7 +131,11 @@ const retrieveReports = async (testConfig) => {
       logGroupName: `/aws/lambda/${testConfig.configuration.FunctionName}`,
       nextToken,
     });
-    if (result.nextToken) return [...result.events, ...(await retrieveEvents(result.nextToken))];
+    // AWS happens to respond with `nextToken` chains when there are no further events
+    // Therefore we use it only if we received some events with the request
+    if (result.nextToken && result.events.length) {
+      return [...result.events, ...(await retrieveEvents(result.nextToken))];
+    }
     return result.events;
   };
   const retrieveAllEvents = async () => {
@@ -264,7 +273,6 @@ const retrieveReports = async (testConfig) => {
           currentProcessData.initDuration = Number(reportData.initDuration);
         }
         invocationsData.push(currentInvocationData);
-        currentInvocationData = null;
       }
     }
   } while (invocationsData.length < testConfig.invokeCount);

@@ -56,9 +56,12 @@ const deleteLayers = async (layerName) => {
   );
 };
 
-const deleteDefaultLayers = () => deleteLayers(basename);
-const deleteInternalLayers = () => deleteLayers(`${basename}-internal`);
-const deleteAllLayers = () => Promise.all([deleteDefaultLayers(), deleteInternalLayers()]);
+const deleteAllLayers = () =>
+  Promise.all([
+    deleteLayers(basename),
+    deleteLayers(`${basename}-internal`),
+    deleteLayers(`${basename}-external`),
+  ]);
 
 const deleteRole = async () => {
   const policyArn = `arn:aws:iam::${

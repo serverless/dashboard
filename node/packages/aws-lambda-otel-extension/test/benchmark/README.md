@@ -201,8 +201,17 @@ Generated benchmark results are output to the console in CSV format. To store th
 ./test/scripts/benchmark.js > benchmark.csv
 ```
 
-Benchmark run can additionally be configured with following CLI params
+### 4.1 Run customization
 
-- `--use-cases` Function use cases to test (e.g. `callback,express`)
-- `--benchmark-variants` Benchmark variants to test (e.g. `bare,externalOnly`)
+Benchmark run can additionally be customized with following CLI params
+
+- `--use-cases` Comma separated list of function use cases to test (e.g. `callback,express`)
+- `--benchmark-variants` Comma separated list of benchmark variants to test (e.g. `bare,externalOnly`)
 - `--memory-size` Memory size to provide to lambdas (by default it's 128MB).
+- `--extension-layers-mode` By default benchmark are run against single layer which contains Node.js external and internal extension. By setting `dual` value for this mode, benchmark will be run with those two extensions provided as separate layers (and external layer will come with Node.js binary bundled)
+
+Additionally extension layers that are used for testing can be overridden with following environment variables:
+
+- `TEST_LAYER_FILENAME` - Path to `.zip` file of a layer which contains both external and internal Node.js extensions. Ineffective with `--extension-layers-mode=dual`
+- `TEST_EXTERNAL_LAYER_FILENAME` - Path to `.zip` file of a layer which contains external (runtime agnostic) extension. Effective only with `--extension-layers-mode=dual`
+- `TEST_INTERNAL_LAYER_FILENAME` - Path to `.zip` file of a layer which contains just internal Node.js extension. It's effective for `internalOnly` benchmark variant, and in other cases effective only with `--extension-layers-mode=dual`

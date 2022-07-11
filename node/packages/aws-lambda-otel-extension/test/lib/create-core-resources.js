@@ -10,21 +10,19 @@ const buildLayer = require('../../scripts/lib/build');
 const awsRequest = require('../utils/aws-request');
 const basename = require('./basename');
 
-const createLayer = async (config, { layerName, filename, skipBuild, buildConfig }) => {
+const createLayer = async ({ layerName, filename, skipBuild, buildConfig }) => {
   if (!skipBuild) {
     log.info('Building layer');
     await buildLayer(filename, buildConfig);
   }
 
   log.info('Publishing layer (%s) to AWS', filename);
-  await awsRequest(Lambda, 'publishLayerVersion', {
-    LayerName: layerName,
-    Content: { ZipFile: await fsp.readFile(filename) },
-  });
-  log.info('Resolving layer ARN');
   const arn = (
-    await awsRequest(Lambda, 'listLayerVersions', { LayerName: layerName })
-  ).LayerVersions.shift().LayerVersionArn;
+    await awsRequest(Lambda, 'publishLayerVersion', {
+      LayerName: layerName,
+      Content: { ZipFile: await fsp.readFile(filename) },
+    })
+  ).LayerVersionArn;
   log.info('Layer ready %s', arn);
   return arn;
 };
@@ -35,20 +33,43 @@ const createLayers = async (config, layerTypes) => {
       switch (layerType) {
         case 'nodeAll':
           if (process.env.TEST_LAYER_FILENAME) {
-            config.layerArn = await createLayer(config, {
+            config.layerArn = await createLayer({
               layerName: basename,
               filename: process.env.TEST_LAYER_FILENAME,
               skipBuild: true,
             });
             return;
           }
-          config.layerArn = await createLayer(config, {
+          config.layerArn = await createLayer({
             layerName: basename,
             filename: path.resolve(__dirname, '../../dist/extension.zip'),
           });
           return;
+        case 'external':
+          if (process.env.TEST_EXTERNAL_LAYER_FILENAME) {
+            config.layerExternalArn = await createLayer({
+              layerName: `${basename}-external`,
+              filename: process.env.TEST_EXTERNAL_LAYER_FILENAME,
+              skipBuild: true,
+            });
+            return;
+          }
+          config.layerExternalArn = await createLayer({
+            layerName: `${basename}-external`,
+            filename: path.resolve(__dirname, '../../dist/extension.external.zip'),
+            buildConfig: { mode: 2 },
+          });
+          return;
         case 'nodeInternal':
-          config.layerInternalArn = await createLayer(config, {
+          if (process.env.TEST_INTERNAL_LAYER_FILENAME) {
+            config.layerExternalArn = await createLayer({
+              layerName: `${basename}-internal`,
+              filename: process.env.TEST_INTERNAL_LAYER_FILENAME,
+              skipBuild: true,
+            });
+            return;
+          }
+          config.layerInternalArn = await createLayer({
             layerName: `${basename}-internal`,
             filename: path.resolve(__dirname, '../../dist/extension.internal.zip'),
             buildConfig: { mode: 1 },
