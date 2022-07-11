@@ -45,7 +45,7 @@ describe('external', () => {
       },
     });
     await Promise.all([
-      new Promise((resolve) => listenerEmitter.once('listener', resolve)),
+      new Promise((resolve) => listenerEmitter.once('next', resolve)),
       new Promise((resolve) => listenerEmitter.once('logsSubscription', resolve)),
     ]);
     emitter.emit('event', { eventType: 'INVOKE', requestId });
@@ -210,7 +210,7 @@ describe('external', () => {
         },
       },
     ]);
-    await new Promise((resolve) => listenerEmitter.once('listener', resolve));
+    await new Promise((resolve) => listenerEmitter.once('next', resolve));
     emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
     emitter.emit('logs', [
       {

@@ -62,7 +62,7 @@ module.exports = (emitter) => {
         request.on('data', () => {});
         request.on('end', () => {
           log.get('listener')('emit next ready');
-          listenerEmitter.emit('listener');
+          listenerEmitter.emit('next');
           emitter.once('event', (data) => {
             const statusCode = 200;
             const responseBody = data;
