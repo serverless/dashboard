@@ -117,7 +117,7 @@ module.exports = (emitter) => {
             .then((res) => res.text())
             .then(() => {
               log.get('listener')('emit logs subscription ready');
-              listenerEmitter.emit('logsSubscription');
+              listenerEmitter.emit('logsSubscription', data);
             });
         });
       } else {
