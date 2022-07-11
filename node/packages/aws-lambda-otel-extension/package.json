@@ -43,6 +43,7 @@
   "scripts": {
     "build": "./scripts/build.js dist/extension.zip",
     "build:external": "./scripts/build.js dist/extension-external.zip --mode=2",
+    "build:internal": "./scripts/build.js dist/extension-internal.zip --mode=1",
     "generate-proto": "pbjs -t static-module -w commonjs -o external/otel-extension-external/proto.js proto/metric-service.proto proto/trace-service.proto",
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "test": "mocha \"test/unit/**/*.test.js\"",

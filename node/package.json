@@ -18,9 +18,11 @@
     "@aws-sdk/client-cloudwatch-logs": "^3.118.1",
     "@aws-sdk/client-iam": "^3.118.1",
     "@aws-sdk/client-lambda": "^3.118.1",
+    "@aws-sdk/client-s3": "^3.121.0",
     "@aws-sdk/client-sts": "^3.118.1",
     "@commitlint/cli": "^17.0.3",
     "@commitlint/lint": "^17.0.3",
+    "@octokit/rest": "^19.0.3",
     "@serverless/eslint-config": "^4.0.1",
     "@serverless/test": "^11.0.0",
     "@serverless/utils": "^6.6.0",
@@ -47,9 +49,11 @@
     "prettier": "^2.7.1",
     "process-utils": "^4.0.0",
     "standard-version": "^9.5.0",
+    "stream-promise": "^3.2.0",
     "timers-ext": "^0.1.7",
     "type": "^2.6.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "yargs-parser": "^21.0.1"
   },
   "scripts": {
     "lint": "eslint .",

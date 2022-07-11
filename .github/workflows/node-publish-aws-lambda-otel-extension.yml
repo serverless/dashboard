@@ -39,13 +39,6 @@ jobs:
           path: node/packages/aws-lambda-otel-extension/node_modules
           key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
           restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve packages/aws-lambda-otel-extension-dist/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionDistNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension-dist/node_modules
-          key: packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension-dist/package.json') }}
-          restore-keys: packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -76,19 +69,13 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension/internal/otel-extension-internal-node
           npm install
-      - name: Install packages/aws-lambda-otel-extension-dist dependencies
-        if: steps.cacheAwsLambdaOtelExtensionDistNodeModules.outputs.cache-hit != 'true'
-        run: |
-          cd node/packages/aws-lambda-otel-extension-dist
-          npm update --save-dev --no-save
 
       - name: Build distributables
         run: |
-          cd node/packages/aws-lambda-otel-extension-dist
-          rm -rf node_modules/@serverless/aws-lambda-otel-extension
-          ln -s ../../../aws-lambda-otel-extension node_modules/@serverless/aws-lambda-otel-extension
+          cd node/packages/aws-lambda-otel-extension
           npm run build
-          npm run prepare-package-json
+          npm run build:external
+          npm run build:internal
 
       - name: Publish new version
         # Note: Setting NODE_AUTH_TOKEN as job|workspace wide env var won't work
@@ -99,11 +86,61 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm publish
-          cd ../aws-lambda-otel-extension-dist
-          npm publish
 
       - name: Publish release notes
         run: |
           cd node/packages/aws-lambda-otel-extension
           TAG=${GITHUB_REF:10}
           npx github-release-from-cc-changelog $TAG
+
+      - name: Publish layers (dev)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          cd node
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-dev-layers-registry \
+            --layer-basename sls-otel-extension-node \
+            --version $VERSION \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension.zip \
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-dev-layers-registry \
+            --layer-basename sls-otel-extension-external \
+            --version $VERSION \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension-external.zip
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-dev-layers-registry \
+            --layer-basename sls-otel-extension-internal-node \
+            --version $VERSION \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension-internal.zip
+
+      - name: Publish layers (prod)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          TAG=${GITHUB_REF:10}
+          cd node
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-layers-registry \
+            --layer-basename sls-otel-extension-node \
+            --version $VERSION \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension.zip
+            --github-tag $TAG
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-layers-registry \
+            --layer-basename sls-otel-extension-external \
+            --version $VERSION \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension-external.zip
+            --github-tag $TAG
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-layers-registry \
+            --layer-basename sls-otel-extension-internal-node \
+            --version $VERSION \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension-internal.zip
+            --github-tag $TAG
