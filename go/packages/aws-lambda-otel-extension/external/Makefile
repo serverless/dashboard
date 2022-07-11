@@ -1,7 +1,6 @@
 build:
 	rm -Rf dist/extension*
-	GOOS=linux GOARCH=amd64 go build -o dist/extensions/otel-extension main.go
-	strip dist/extensions/otel-extension
+	GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/extensions/otel-extension main.go
 	cd dist; zip extension.zip -r extensions/ otel-extension-internal-node/
 
 deploy:
