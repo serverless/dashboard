@@ -1,11 +1,11 @@
 'use strict';
 
 const { expect } = require('chai');
+
+const path = require('path');
 const { EventEmitter } = require('events');
-const evilDns = require('evil-dns');
+const spawn = require('child-process-ext/spawn');
 const log = require('log').get('test');
-const requireUncached = require('ncjsm/require-uncached');
-const overwriteStdoutWrite = require('process-utils/override-stdout-write');
 const getExtensionServerMock = require('../../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../../utils/normalize-otel-attributes');
 const { default: fetch } = require('node-fetch');
@@ -13,15 +13,14 @@ const ensureNpmDependencies = require('../../../scripts/lib/ensure-npm-dependenc
 
 const OTEL_SERVER_PORT = 2772;
 const port = 9001;
+const extensionFilename = path.resolve(
+  __dirname,
+  '../../../external/otel-extension-external/index.js'
+);
 
 describe('external', () => {
   before(async () => {
     ensureNpmDependencies('external/otel-extension-external');
-    evilDns.add('sandbox', '127.0.0.1');
-    process.env.AWS_LAMBDA_RUNTIME_API = `127.0.0.1:${port}`;
-    process.env.SLS_TEST_EXTENSION_REPORT_TYPE = 'json';
-    process.env.SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT = '1';
-    process.env.SLS_TEST_EXTENSION_REPORT_DESTINATION = 'log';
   });
 
   it('should handle plain success invocation', async () => {
@@ -30,11 +29,15 @@ describe('external', () => {
     const { server, listenerEmitter } = getExtensionServerMock(emitter, { requestId });
 
     server.listen(port);
-    let stdoutData = '';
-    const extensionProcess = overwriteStdoutWrite(
-      (data) => (stdoutData += data),
-      async () => requireUncached(() => require('../../../external/otel-extension-external'))
-    );
+    const extensionProcess = spawn('node', [extensionFilename], {
+      env: {
+        ...process.env,
+        AWS_LAMBDA_RUNTIME_API: `127.0.0.1:${port}`,
+        SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
+        SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
+        SLS_TEST_EXTENSION_HOSTNAME: 'localhost',
+      },
+    });
     await Promise.all([
       new Promise((resolve) => listenerEmitter.once('listener', resolve)),
       new Promise((resolve) => listenerEmitter.once('logsSubscription', resolve)),
@@ -220,7 +223,7 @@ describe('external', () => {
       },
     ]);
 
-    await extensionProcess;
+    const stdoutData = (await extensionProcess).stdoutBuffer.toString();
     server.close();
 
     log.debug('report string %s', stdoutData);
