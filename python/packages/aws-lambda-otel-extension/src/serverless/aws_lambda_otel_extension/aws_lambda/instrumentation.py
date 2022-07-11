@@ -11,8 +11,8 @@ from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor  # type: ignore
 from opentelemetry.instrumentation.utils import unwrap
-from opentelemetry.propagators.aws.aws_xray_propagator import TRACE_HEADER_KEY
 from opentelemetry.propagate import get_global_textmap
+from opentelemetry.propagators.aws.aws_xray_propagator import TRACE_HEADER_KEY
 from opentelemetry.sdk.trace import ReadableSpan, Span, Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
@@ -56,6 +56,24 @@ _ResponseHookT = Optional[Callable[[Span, Dict, Any, Dict], None]]
 
 logger = logging.getLogger(__name__)
 
+CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
+FAAS_ID = ResourceAttributes.FAAS_ID
+
+FAAS_EXECUTION = SpanAttributes.FAAS_EXECUTION
+AWS_LAMBDA_INVOKED_ARN = SpanAttributes.AWS_LAMBDA_INVOKED_ARN
+CODE_NAMESPACE = SpanAttributes.CODE_NAMESPACE
+CODE_FUNCTION = SpanAttributes.CODE_FUNCTION
+HTTP_ROUTE = SpanAttributes.HTTP_ROUTE
+HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE
+
+SLS_EVENT_TYPE = SlsExtensionSpanAttributes.SLS_EVENT_TYPE
+SLS_HANDLER_EXTRACTED = SlsExtensionSpanAttributes.SLS_HANDLER_EXTRACTED
+SLS_HANDLER_FINAL = SlsExtensionSpanAttributes.SLS_HANDLER_FINAL
+SLS_HANDLER_INITIAL = SlsExtensionSpanAttributes.SLS_HANDLER_INITIAL
+SLS_SPAN_TYPE = SlsExtensionSpanAttributes.SLS_SPAN_TYPE
+
+HTTP_PATH = OverloadedSpanAttributes.HTTP_PATH
+
 
 def _filtered_attributes(attributes: Dict) -> Dict:
     attributes = filter_dict_values_is_not_none(attributes)
@@ -90,7 +108,7 @@ def _extract_handler_span_parent_context(
                             }
                         )
                     )
-                except Exception:
+                except Exception:  # noqa: S110 (if this doesn't work then we can safely ignore it)
                     pass
 
             return parent_context, parent_attributes
@@ -117,7 +135,7 @@ def _extract_handler_span_parent_context(
                                             }
                                         )
                                     )
-                                except Exception:
+                                except Exception:  # noqa: S110 (if this doesn't work then we can safely ignore it)
                                     pass
 
                             return parent_context, parent_attributes
@@ -181,7 +199,7 @@ def _instrument(
             with temporary_tracer.start_as_current_span(
                 name="__detect__",
                 attributes={
-                    SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "detect",
+                    SLS_SPAN_TYPE: "detect",
                 },
             ) as detect_span:
                 event_type = detect_lambda_event_type(event, context)
@@ -209,7 +227,7 @@ def _instrument(
             with temporary_tracer.start_as_current_span(
                 name="__extract__",
                 attributes={
-                    SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "extract",
+                    SLS_SPAN_TYPE: "extract",
                 },
             ) as extract_span:
                 parent_context, parent_attributes = _extract_handler_span_parent_context(event, context, event_type)
@@ -235,36 +253,32 @@ def _instrument(
             kind=span_kind,
             attributes={
                 **parent_attributes,
-                SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "instrumentation",
+                SLS_SPAN_TYPE: "instrumentation",
             },
             start_time=min_start_time,  # Rewind the start time to the earliest span.
         ) as instrumentation_span:
             with tracer.start_as_current_span(
                 name="__pre__",
                 attributes={
-                    SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "pre",
+                    SLS_SPAN_TYPE: "pre",
                 },
                 start_time=min_start_time,  # Rewind the start time to the earliest span.
             ) as start_span:
                 if instrumentation_span.is_recording():
                     if context_invoked_function_arn:
                         if context_extracted_account_id:
-                            instrumentation_span.set_attribute(
-                                ResourceAttributes.CLOUD_ACCOUNT_ID, context_extracted_account_id
-                            )
-                        instrumentation_span.set_attribute(ResourceAttributes.FAAS_ID, context_invoked_function_arn)
-                        instrumentation_span.set_attribute(
-                            SpanAttributes.AWS_LAMBDA_INVOKED_ARN, context_invoked_function_arn
-                        )
+                            instrumentation_span.set_attribute(CLOUD_ACCOUNT_ID, context_extracted_account_id)
+                        instrumentation_span.set_attribute(FAAS_ID, context_invoked_function_arn)
+                        instrumentation_span.set_attribute(AWS_LAMBDA_INVOKED_ARN, context_invoked_function_arn)
                     if context_execution_id:
-                        instrumentation_span.set_attribute(SpanAttributes.FAAS_EXECUTION, context_execution_id)
+                        instrumentation_span.set_attribute(FAAS_EXECUTION, context_execution_id)
 
                 if callable(request_hook):
                     try:
                         with tracer.start_as_current_span(
                             name="__request_hook__",
                             attributes={
-                                SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "request_hook",
+                                SLS_SPAN_TYPE: "request_hook",
                             },
                         ) as request_hook_span:
                             try:
@@ -276,7 +290,7 @@ def _instrument(
                         logger.exception("Exception during request_hook span")
 
                 if event_type:
-                    instrumentation_span.set_attribute(SlsExtensionSpanAttributes.SLS_EVENT_TYPE, event_type.value)
+                    instrumentation_span.set_attribute(SLS_EVENT_TYPE, event_type.value)
 
                 # This is just here to be pretty.
                 resource_attributes = tracer_provider.resource.attributes
@@ -413,12 +427,6 @@ def _instrument(
                         ),
                     )
 
-            # # Flush to make sure the event data is transmitted as soon as possible.
-            # try:
-            #     _force_flush()
-            # except Exception:
-            #     logger.exception("Exception while flushing event data")
-
             extracted_http_path = None
             extracted_http_status_code = None
 
@@ -428,30 +436,26 @@ def _instrument(
             try:
                 extracted_lambda_handler = import_module("wsgi_handler").load_config().get("app")  # noqa
                 final_lambda_handler = f"{initial_lambda_handler}::{extracted_lambda_handler}"
-            except Exception:
+            except Exception:  # noqa: S110 (ignore missing module)
                 pass
 
             try:
                 with tracer.start_as_current_span(
                     name=final_lambda_handler,
                     attributes={
-                        SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "handler",
+                        SLS_SPAN_TYPE: "handler",
                     },
                 ) as handler_span:
 
                     handler_span = cast(Span, handler_span)
 
                     if handler_span.is_recording():
-                        handler_span.set_attribute(SpanAttributes.CODE_NAMESPACE, wrapped_module_name)
-                        handler_span.set_attribute(SpanAttributes.CODE_FUNCTION, wrapped_function_name)
-                        handler_span.set_attribute(
-                            SlsExtensionSpanAttributes.SLS_HANDLER_INITIAL, initial_lambda_handler
-                        )
-                        handler_span.set_attribute(SlsExtensionSpanAttributes.SLS_HANDLER_FINAL, final_lambda_handler)
+                        handler_span.set_attribute(CODE_NAMESPACE, wrapped_module_name)
+                        handler_span.set_attribute(CODE_FUNCTION, wrapped_function_name)
+                        handler_span.set_attribute(SLS_HANDLER_INITIAL, initial_lambda_handler)
+                        handler_span.set_attribute(SLS_HANDLER_FINAL, final_lambda_handler)
                         if extracted_lambda_handler:
-                            handler_span.set_attribute(
-                                SlsExtensionSpanAttributes.SLS_HANDLER_EXTRACTED, extracted_lambda_handler
-                            )
+                            handler_span.set_attribute(SLS_HANDLER_EXTRACTED, extracted_lambda_handler)
 
                     # Call the original function.
                     try:
@@ -476,21 +480,21 @@ def _instrument(
                 finished_span = cast(ReadableSpan, finished_span)
                 if finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django":
                     if finished_span.attributes:
-                        extracted_http_path = finished_span.attributes.get(SpanAttributes.HTTP_ROUTE)
-                        extracted_http_status_code = finished_span.attributes.get(SpanAttributes.HTTP_STATUS_CODE)
+                        extracted_http_path = finished_span.attributes.get(HTTP_ROUTE)
+                        extracted_http_status_code = finished_span.attributes.get(HTTP_STATUS_CODE)
 
             in_memory_span_exporter.clear()
 
             if instrumentation_span.is_recording():
                 if extracted_http_path:
-                    instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, extracted_http_path)
+                    instrumentation_span.set_attribute(HTTP_PATH, extracted_http_path)
                 else:
                     if event_http_path:
-                        instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, event_http_path)
+                        instrumentation_span.set_attribute(HTTP_PATH, event_http_path)
                     else:
-                        instrumentation_span.set_attribute(OverloadedSpanAttributes.HTTP_PATH, "")
+                        instrumentation_span.set_attribute(HTTP_PATH, "")
                 if extracted_http_status_code:
-                    instrumentation_span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, extracted_http_status_code)
+                    instrumentation_span.set_attribute(HTTP_STATUS_CODE, extracted_http_status_code)
                 if not isinstance(result, Exception):
                     instrumentation_span.set_status(Status(StatusCode.OK))
 
@@ -501,7 +505,7 @@ def _instrument(
                         with tracer.start_as_current_span(
                             name="__response_hook__",
                             attributes={
-                                SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "response_hook",
+                                SLS_SPAN_TYPE: "response_hook",
                             },
                         ) as response_hook_span:
                             try:
@@ -572,7 +576,7 @@ def _instrument(
             with tracer.start_as_current_span(
                 name="__post__",
                 attributes={
-                    SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "post",
+                    SLS_SPAN_TYPE: "post",
                 },
             ) as finish_span:
                 if finish_span.is_recording():

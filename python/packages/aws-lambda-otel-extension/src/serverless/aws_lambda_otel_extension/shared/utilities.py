@@ -1,13 +1,4 @@
-from typing import Any, Dict, List, Optional, TypeVar
-
-DN = TypeVar("DN", bound=Any)
-
-
-def default_if_none(value: Optional[DN], default: DN) -> DN:
-    # Just a shortcut to avoid having to do the same thing over and over.
-    if value is None:
-        return default
-    return value
+from typing import Dict, List, Optional
 
 
 def split_or_none(s: Optional[str]) -> Optional[List[str]]:

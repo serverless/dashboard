@@ -20,7 +20,6 @@ from serverless.aws_lambda_otel_extension.shared.constants import JUST_PLAIN_DO_
 from serverless.aws_lambda_otel_extension.shared.settings import (
     SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS,
     SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS,
-    SETTINGS_TEST_DRY_LOG_PRETTY,
 )
 from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
@@ -29,13 +28,11 @@ from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggi
 
 logger = logging.getLogger(__name__)
 
+SLS_SPAN_TYPE = SlsExtensionSpanAttributes.SLS_SPAN_TYPE
+
 
 def auto_fixer_log_hook(span: Span, *args: Any, **kwargs: Any) -> None:
     pass
-    # if args:
-    #     if isinstance(args[0], LogRecord):
-    #         # log_record = args[0]
-    #         print("log_hook", span, args, kwargs)
 
 
 def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
@@ -46,7 +43,7 @@ def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
         opentelemetry_instrumentation_fixer_module = importlib.import_module(
             f"serverless.aws_lambda_otel_extension.fixers.{span.instrumentation_scope.name}"
         )
-    except Exception:
+    except Exception:  # noqa: S110 (ignore missing module)
         pass
 
     if opentelemetry_instrumentation_fixer_module:
@@ -63,7 +60,7 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
         opentelemetry_instrumentation_fixer_module = importlib.import_module(
             f"serverless.aws_lambda_otel_extension.fixers.{span.instrumentation_scope.name}"
         )
-    except Exception:
+    except Exception:  # noqa: S110 (ignore missing module)
         pass
 
     if opentelemetry_instrumentation_fixer_module:
@@ -84,7 +81,7 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
             with temporary_tracer.start_as_current_span(
                 name="__instrumentor__",
                 attributes={
-                    SlsExtensionSpanAttributes.SLS_SPAN_TYPE: "instrumentor",
+                    SLS_SPAN_TYPE: "instrumentor",
                 },
             ) as instrumentor_span:
                 instrumentor_span = cast(Span, instrumentor_span)
@@ -214,9 +211,7 @@ def setup_tracer_provider() -> TracerProvider:
         )
 
         # Extra information is logged to the console.
-        tracer_provider.add_span_processor(
-            SimpleSpanProcessor(SlsLoggingSpanExporter(pretty_print=SETTINGS_TEST_DRY_LOG_PRETTY))
-        )
+        tracer_provider.add_span_processor(SimpleSpanProcessor(SlsLoggingSpanExporter()))
 
         set_tracer_provider(tracer_provider)
 

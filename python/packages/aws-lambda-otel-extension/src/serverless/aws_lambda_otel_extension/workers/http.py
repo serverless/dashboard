@@ -27,7 +27,10 @@ class HTTPClientWorkerPool:
             for attempt in Retrying(wait=wait_fixed(0.25), stop=stop_after_attempt(3)):
                 with attempt:
                     token = context_attach(set_context_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-                    urlopen(request, timeout=5)
+                    if request.full_url.lower().startswith("http://") or request.full_url.lower().startswith(
+                        "https://"
+                    ):
+                        urlopen(request, timeout=5)  # noqa: S310 (properly validated above)
                     context_detach(token)
         except RetryError:
             logger.exception("Failed to send request")

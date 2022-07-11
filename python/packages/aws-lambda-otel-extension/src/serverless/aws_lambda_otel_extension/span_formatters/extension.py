@@ -5,6 +5,8 @@ from opentelemetry.trace import SpanContext, format_span_id, format_trace_id
 
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 
+SLS_ORIGINAL_PROPERTIES = SlsExtensionSpanAttributes.SLS_ORIGINAL_PROPERTIES
+
 
 def telemetry_formatted_span(span: ReadableSpan) -> Dict:
 
@@ -25,9 +27,7 @@ def telemetry_formatted_span(span: ReadableSpan) -> Dict:
                 "timeUnixNano": str(event.timestamp),
                 "attributes": {
                     **span._format_attributes(event.attributes),
-                    SlsExtensionSpanAttributes.SLS_ORIGINAL_PROPERTIES: ",".join(
-                        span._format_attributes(event.attributes).keys()
-                    ),
+                    SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(event.attributes).keys()),
                 },
             }
         )
@@ -41,9 +41,7 @@ def telemetry_formatted_span(span: ReadableSpan) -> Dict:
                 "spanId": format_span_id(link.context.span_id),
                 "attributes": {
                     **span._format_attributes(link.attributes),
-                    SlsExtensionSpanAttributes.SLS_ORIGINAL_PROPERTIES: ",".join(
-                        span._format_attributes(link.attributes).keys()
-                    ),
+                    SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(link.attributes).keys()),
                 },
             }
         )
@@ -58,9 +56,7 @@ def telemetry_formatted_span(span: ReadableSpan) -> Dict:
         "endTimeUnixNano": str(span._end_time),
         "attributes": {
             **span._format_attributes(span._attributes),
-            SlsExtensionSpanAttributes.SLS_ORIGINAL_PROPERTIES: ",".join(
-                span._format_attributes(span._attributes).keys()
-            ),
+            SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(span._attributes).keys()),
         },
         "events": events,
         "links": links,

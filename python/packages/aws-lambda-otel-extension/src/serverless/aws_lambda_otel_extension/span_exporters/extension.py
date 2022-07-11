@@ -16,12 +16,11 @@ from serverless.aws_lambda_otel_extension.shared.constants import (
     HTTP_METHOD_POST,
 )
 from serverless.aws_lambda_otel_extension.shared.settings import (
-    SETTINGS_SLS_EXTENSION_COLLECTOR_URL,
-    SETTINGS_TEST_DRY_LOG,
-    SETTINGS_TEST_DRY_LOG_PRETTY,
+    SETTINGS_SLS_EXTENSION_EXPORT_URL,
+    SETTINGS_SLS_EXTENSION_INTERNAL_LOG,
+    SETTINGS_SLS_EXTENSION_INTERNAL_LOG_PRETTY,
 )
 from serverless.aws_lambda_otel_extension.shared.store import store
-from serverless.aws_lambda_otel_extension.shared.utilities import default_if_none
 from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.span_formatters.extension import telemetry_formatted_span
 from serverless.aws_lambda_otel_extension.workers.http import http_client_worker_pool
@@ -36,7 +35,7 @@ class SlsExtensionSpanExporter(SpanExporter):
         self._spans_by_span_id_by_trace_id: Dict[int, Dict[int, ReadableSpan]] = {}
         self._event_span_event_by_trace_id: Dict[int, Event] = {}
         self._telemetry_span_event_by_trace_id: Dict[int, Event] = {}
-        self._endpoint = default_if_none(endpoint, SETTINGS_SLS_EXTENSION_COLLECTOR_URL)
+        self._endpoint = endpoint or SETTINGS_SLS_EXTENSION_EXPORT_URL
         self._silent = silent
 
     def clear_by_trace_id(self, trace_id):
@@ -87,7 +86,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             "recordType": "eventData",
         }
 
-        if not SETTINGS_TEST_DRY_LOG:
+        if not SETTINGS_SLS_EXTENSION_INTERNAL_LOG:
             try:
                 http_client_worker_pool.submit_request(
                     urllib.request.Request(
@@ -106,16 +105,16 @@ class SlsExtensionSpanExporter(SpanExporter):
                 logger.debug(
                     json.dumps(
                         {"extension": {"send": event_data}},
-                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        indent=4 if SETTINGS_SLS_EXTENSION_INTERNAL_LOG_PRETTY else None,
                         sort_keys=True,
                     )
                 )
         else:
             if not self._silent:
-                print(
+                print(  # noqa: T201
                     json.dumps(
                         {"extension": {"send": event_data}},
-                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        indent=4 if SETTINGS_SLS_EXTENSION_INTERNAL_LOG_PRETTY else None,
                         sort_keys=True,
                     )
                 )
@@ -212,7 +211,7 @@ class SlsExtensionSpanExporter(SpanExporter):
             "requestId": execution_id,
         }
 
-        if not SETTINGS_TEST_DRY_LOG:
+        if not SETTINGS_SLS_EXTENSION_INTERNAL_LOG:
             try:
                 http_client_worker_pool.submit_request(
                     urllib.request.Request(
@@ -231,16 +230,16 @@ class SlsExtensionSpanExporter(SpanExporter):
                 logger.debug(
                     json.dumps(
                         {"extension": {"send": telemetry_data}},
-                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        indent=4 if SETTINGS_SLS_EXTENSION_INTERNAL_LOG_PRETTY else None,
                         sort_keys=True,
                     )
                 )
         else:
             if not self._silent:
-                print(
+                print(  # noqa: T201
                     json.dumps(
                         {"extension": {"send": telemetry_data}},
-                        indent=4 if SETTINGS_TEST_DRY_LOG_PRETTY else None,
+                        indent=4 if SETTINGS_SLS_EXTENSION_INTERNAL_LOG_PRETTY else None,
                         sort_keys=True,
                     )
                 )
