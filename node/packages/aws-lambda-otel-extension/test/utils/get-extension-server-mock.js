@@ -25,6 +25,9 @@ module.exports = (emitter) => {
     });
   };
   emitter.on('logs', (data) => {
+    for (const logEvent of data) {
+      if (!logEvent.time) logEvent.time = new Date().toISOString();
+    }
     sendLogs({ 'Content-Type': 'application/json' }, data);
   });
 
