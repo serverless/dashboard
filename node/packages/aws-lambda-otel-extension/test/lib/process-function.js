@@ -273,7 +273,6 @@ const retrieveReports = async (testConfig) => {
           currentProcessData.initDuration = Number(reportData.initDuration);
         }
         invocationsData.push(currentInvocationData);
-        currentInvocationData = null;
       }
     }
   } while (invocationsData.length < testConfig.invokeCount);
