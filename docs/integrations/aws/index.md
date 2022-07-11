@@ -93,5 +93,5 @@ echo '{ "orgId":"'$ORG_ID'","ingestToken":"'$INGEST_TOKEN'","namespace":"'$NAMES
 
 ```text
 aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables=SLS_EXTENSION --cli-input-json file://sample.json  && \
-aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {AWS_LAMBDA_EXEC_WRAPPER='/opt/otel-extension-internal-node/exec-wrapper.sh'}
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables={AWS_LAMBDA_EXEC_WRAPPER='/opt/otel-extension-internal-node/exec-wrapper.sh'}
 ```
