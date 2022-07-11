@@ -84,15 +84,6 @@ jobs:
           restore-keys: |
             packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-otel-extension/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve packages/aws-lambda-otel-extension-dist/node_modules from cache
-        id: cacheAwsLambdaOtelExtensionDistNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/packages/aws-lambda-otel-extension-dist/node_modules
-          key: packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-otel-extension-dist/package.json') }}
-          restore-keys: |
-            packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
-            packages/aws-lambda-otel-extension-dist/node-modules-v16-${{ runner.os }}-refs/heads/main-
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -124,11 +115,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension/test/fixtures/lambdas
           npm update --no-save
-      - name: Install packages/aws-lambda-otel-extension-dist dependencies
-        if: steps.cacheAwsLambdaOtelExtensionDistNodeModules.outputs.cache-hit != 'true'
-        run: |
-          cd node/packages/aws-lambda-otel-extension-dist
-          npm update --save-dev --no-save
 
       - name: Validate Prettier formatting
         run: |
