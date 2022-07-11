@@ -7,7 +7,7 @@ let isInitializing = true;
 let invocationStartTime;
 let shutdownStartTime;
 
-module.exports = (async () => {
+(async () => {
   const fs = require('fs');
   const http = require('http');
   const path = require('path');
@@ -15,6 +15,7 @@ module.exports = (async () => {
   const { EventEmitter } = require('events');
 
   const baseUrl = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-01-01/extension`;
+  const sandboxHostname = process.env.SLS_TEST_EXTENSION_HOSTNAME || 'sandbox';
 
   const runtimeEventEmitter = new EventEmitter();
   const servers = new Set();
@@ -164,7 +165,7 @@ module.exports = (async () => {
             }
           });
         })
-        .listen(4243, 'sandbox')
+        .listen(4243, sandboxHostname)
     );
 
     // Subscribe to logs.
@@ -176,7 +177,7 @@ module.exports = (async () => {
       const eventTypes = ['platform'];
       if (!isNoopMode && !userSettings.logs.disabled) eventTypes.push('function');
       const putData = JSON.stringify({
-        destination: { protocol: 'HTTP', URI: 'http://sandbox:4243' },
+        destination: { protocol: 'HTTP', URI: `http://${sandboxHostname}:4243` },
         types: eventTypes,
         buffering: { timeoutMs: 25, maxBytes: 262144, maxItems: 1000 },
         schemaVersion: '2021-03-18',
@@ -384,7 +385,7 @@ module.exports = (async () => {
     'Extension overhead duration: external shutdown:',
     `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
   );
-  if (!process.env.SLS_TEST_EXTENSION_EXTERNAL_NO_EXIT) process.exit();
+  process.exit();
 })().catch((error) => {
   // Ensure to crash extension process on unhandled rejection
   process.nextTick(() => {
