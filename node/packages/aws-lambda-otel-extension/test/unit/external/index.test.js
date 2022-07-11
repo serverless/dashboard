@@ -40,8 +40,23 @@ const extensionProcessHandler = async (callback) => {
   });
   await Promise.all([
     new Promise((resolve) => listenerEmitter.once('next', resolve)),
-    new Promise((resolve) => listenerEmitter.once('logsSubscription', resolve)),
+    new Promise((resolve) =>
+      listenerEmitter.once('logsSubscription', (body) => {
+        resolve();
+        emitter.emit('logs', [
+          {
+            type: 'platform.logsSubscription',
+            record: {
+              name: 'extension-external.js',
+              state: 'Subscribed',
+              types: body.types,
+            },
+          },
+        ]);
+      })
+    ),
   ]);
+
   try {
     await callback({ emitter, listenerEmitter, extensionProcess });
     return (await extensionProcess).stdoutBuffer.toString();
