@@ -39,63 +39,36 @@ Serverless Framework you'll need to build, and deploy the extension
 yourself for each of your Lambdas functions. 
 
 ### Pre-requisites
-Before you get started make sure you have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-and a recent version of [Node.js](https://nodejs.dev/learn/how-to-install-nodejs) and a 
+Before you get started make sure you have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) a 
 [Serverless Console Organization](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) and [jq](https://stedolan.github.io/jq/download/).
 
-### 1.Clone the repo and install Node modules
-Once you have everything you need you'll need to clone this repo
-and install node modules.
 
-```text
-git clone https://github.com/serverless/console.git
-cd console
-npm install
-```
+### 1. Request an ingest token.
+Ingesting data into console requires a secret, known as an
+ingest token. A unique token is issued every 30 days
+for the combination of your function name, environment
+and namespace. 
 
-### 2.Build the extension locally
-Next you'll need to run a set of build commands to build
-the internal and external extensions.
+In order to streaming this process it's helpful to set these 
+as environment variables locally so you can copy/paste the
+commands below. 
 
-```
-cd node/packages/aws-lambda-otel-extension/external/otel-extension-external
-npm install
-cd ../../internal/otel-extension-internal-node
-npm install
-cd ../../
-npm run build
-```
-This will generate an artifact in `dist/extension.zip`
-
-### 3.Publish the extension to your AWS Account
-Once you have built the extension, you can publish it 
-to your AWS account.
-
-```text
-aws lambda publish-layer-version \
-   --layer-name sls-otel-extension \
-   --zip-file fileb://./dist/extension.zip 
-   --region us-east-1 
-```
-
-### 4.Request an ingest token
-Next you'll need to request an ingest token based on your 
-organization id, service name, and environment you wish to
-deploy to. It's helpful to set these as environment variables.
-
+To find your org details -
 * Go to your org settings page to get your org id and org token
 * Set the following environment variables (used later)
 
 ```text
-ORG_ID=<your-org-id> 
-ORG_TOKEN=<your-org-token>
-NAMESPACE=<your-namespace>
-FUNCTION_NAME<name-of-lambda-function>
-ENVIRONMENT=dev
-REGION=us-east-1
+ORG_ID=<your-org-id> && \
+ORG_TOKEN=<your-org-token> && \
+NAMESPACE=<your-namespace> && \
+FUNCTION_NAME<name-of-lambda-function> && \
+ENVIRONMENT=<your-environment e.g. dev> && \
+REGION=us-east-1 
 ```
 
-*  Curl the following endpoint to get an ingest token.
+
+
+*  Next, you can setup an ingest token with the following command.
 ```
 INGEST_TOKEN=$(curl -X POST \
   'https://core.serverless-dev.com/ingestion/kinesis/token' \
@@ -105,19 +78,33 @@ INGEST_TOKEN=$(curl -X POST \
   --header 'Authorization: Bearer $ORG_TOKEN' \
   --data-raw '{
         "orgId": "$ORG_ID",
-        "serviceId": "test-service",
+        "serviceId": "$NAMESPACE",
         "stage": "$ENVIRONMENT"
 }' | jq -r .token.accessToken)
 ```
-### 5.Configure necessary environment variables and tags
+### 2.Create a config file 
 
-Configure the AWS environment variables using the AWS CLI
+You'll need to setup the config for the extension in a json file.
+The following command will create one called sample.json
 
 ```text
-aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {NAMESPACE=$NAMESPACE}
+echo '
+{ 
+  "orgId" : "'$ORG_ID'",           
+  "ingestToken" : "'$INGEST_TOKEN'", 
+  "namespace" : "'$NAMESPACE'",
+  "environment" : "'$ENVIRONMENT'"
+}'  > sample.json
 
+```
+
+### 3. Setup your environment variables
+
+
+$ aws ec2 run-instances --cli-input-json file://ec2runinst.json
+
+
+```text
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {NAMESPACE=$NAMESPACE} && \
 aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {ENVIRONMENT=$ENVIRONMENT}
-
-aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {INGEST_TOKEN=$INGEST_TOKEN}
-
 ```
