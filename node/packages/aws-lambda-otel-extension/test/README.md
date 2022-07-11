@@ -58,3 +58,4 @@ How extensions behave, for various testing purposes, can be tweaked with followi
 - `SLS_TEST_EXTENSION_REPORT_DESTINATION` - Telemetry reports normally are sent to the Console ingestion servers, with this variable this can be overriden:
   - Set to `s3://<bucket>//<root-key>` to send reports to S3 bucket
   - Set to `log` to just log reports into process stdout
+- `SLS_TEST_EXTENSION_COMMAND` - _(Processed only in context of the external extension unit test)_ A command to run external extension process (e.g. `node path/to/external-extension/module.js`)
