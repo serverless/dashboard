@@ -131,7 +131,11 @@ const retrieveReports = async (testConfig) => {
       logGroupName: `/aws/lambda/${testConfig.configuration.FunctionName}`,
       nextToken,
     });
-    if (result.nextToken) return [...result.events, ...(await retrieveEvents(result.nextToken))];
+    // AWS happens to respond with `nextToken` chains when there are no further events
+    // Therefore we use it only if we received some events with the request
+    if (result.nextToken && result.events.length) {
+      return [...result.events, ...(await retrieveEvents(result.nextToken))];
+    }
     return result.events;
   };
   const retrieveAllEvents = async () => {
