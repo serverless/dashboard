@@ -1,4 +1,7 @@
 
 { 
-   "hello":" + us-east-1+ " 
+  "orgId" : "8c053d7e-f61d-45bd-9641-b11052151024",           
+  "ingestToken" : "null", 
+  "namespace" : "default",
+  "environment" : "dev"
 }

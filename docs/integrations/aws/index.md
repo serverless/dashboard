@@ -61,12 +61,10 @@ To find your org details -
 ORG_ID=<your-org-id> && \
 ORG_TOKEN=<your-org-token> && \
 NAMESPACE=<your-namespace> && \
-FUNCTION_NAME<name-of-lambda-function> && \
+FUNCTION_NAME=<name-of-lambda-function> && \
 ENVIRONMENT=<your-environment e.g. dev> && \
 REGION=us-east-1 
 ```
-
-
 
 *  Next, you can setup an ingest token with the following command.
 ```
@@ -100,11 +98,7 @@ echo '
 
 ### 3. Setup your environment variables
 
-
-$ aws ec2 run-instances --cli-input-json file://ec2runinst.json
-
-
 ```text
-aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {NAMESPACE=$NAMESPACE} && \
-aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {ENVIRONMENT=$ENVIRONMENT}
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables=SLS_EXTENSION --cli-input-json file://sample.json  && \
+aws lambda update-function-configuration --function-name $FUNCTION_NAME --region $REGION --environment Variables= {AWS_LAMBDA_EXEC_WRAPPER='/opt/otel-extension-internal-node/exec-wrapper.sh'}
 ```
