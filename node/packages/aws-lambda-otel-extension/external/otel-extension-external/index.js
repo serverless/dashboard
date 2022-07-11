@@ -7,7 +7,7 @@ let isInitializing = true;
 let invocationStartTime;
 let shutdownStartTime;
 
-module.exports = (async () => {
+(async () => {
   const fs = require('fs');
   const http = require('http');
   const path = require('path');
@@ -15,11 +15,25 @@ module.exports = (async () => {
   const { EventEmitter } = require('events');
 
   const baseUrl = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2020-01-01/extension`;
+  const sandboxHostname = process.env.SLS_TEST_EXTENSION_HOSTNAME || 'sandbox';
 
   const runtimeEventEmitter = new EventEmitter();
   const servers = new Set();
 
-  const userSettings = require('./user-settings');
+  let isNoopMode = false;
+  const userSettings = (() => {
+    try {
+      return require('./user-settings');
+    } catch (error) {
+      isNoopMode = true;
+      process.stdout.write(
+        `Error: Extension user settings resolution crashed with: ${error.stack}\n`
+      );
+      process.stdout.write('Extension will operate in no-op mode\n');
+      return null;
+    }
+  })();
+
   const {
     debugLog,
     keepAliveAgents: { http: keepAliveAgent },
@@ -85,7 +99,7 @@ module.exports = (async () => {
                 // TODO: Remove after Dashboard is turned off
                 !event.record.includes('SERVERLESS_ENTERPRISE')
             );
-            if (process.env.DEBUG_SLS_OTEL_LAYER) {
+            if (process.env.SLS_DEBUG_EXTENSION) {
               functionLogEvents = functionLogEvents.filter(
                 (event) => !event.record.startsWith('Extension overhead duration: ')
               );
@@ -151,7 +165,7 @@ module.exports = (async () => {
             }
           });
         })
-        .listen(4243, 'sandbox')
+        .listen(4243, sandboxHostname)
     );
 
     // Subscribe to logs.
@@ -161,9 +175,9 @@ module.exports = (async () => {
     // unconditionaly in all cases (it's not harmful if subscription is active)
     await new Promise((resolve, reject) => {
       const eventTypes = ['platform'];
-      if (!userSettings.logs.disabled) eventTypes.push('function');
+      if (!isNoopMode && !userSettings.logs.disabled) eventTypes.push('function');
       const putData = JSON.stringify({
-        destination: { protocol: 'HTTP', URI: 'http://sandbox:4243' },
+        destination: { protocol: 'HTTP', URI: `http://${sandboxHostname}:4243` },
         types: eventTypes,
         buffering: { timeoutMs: 25, maxBytes: 262144, maxItems: 1000 },
         schemaVersion: '2021-03-18',
@@ -355,7 +369,7 @@ module.exports = (async () => {
         }
 
         const extensionIdentifier = response.headers['lambda-extension-identifier'];
-        monitorInternalTelemetry();
+        if (!isNoopMode) monitorInternalTelemetry();
         resolve(
           Promise.all([monitorEvents(extensionIdentifier), monitorLogs(extensionIdentifier)])
         );
@@ -371,7 +385,7 @@ module.exports = (async () => {
     'Extension overhead duration: external shutdown:',
     `${Math.round(Number(process.hrtime.bigint() - shutdownStartTime) / 1000000)}ms`
   );
-  if (!process.env.SLS_TEST_RUN) process.exit();
+  process.exit();
 })().catch((error) => {
   // Ensure to crash extension process on unhandled rejection
   process.nextTick(() => {

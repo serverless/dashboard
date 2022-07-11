@@ -1,6 +1,6 @@
 # @serverless/aws-lambda-otel-extension
 
-## AWS Lambda extension that gathers [OpenTelemetry](https://opentelemetry.io/) data and sends it to the designated destination
+## AWS Lambda extension that gathers [OpenTelemetry](https://opentelemetry.io/) data and sends it to the Serverless Console ingestion servers
 
 _Package is still in an experimental stage and subject to major changes._
 
@@ -10,7 +10,7 @@ _At this point, only Node.js runtime is supported, but this support will be exte
 
 The extension is a lambda layer with a source maintained in [opt](opt) folder. There are two extensions configured within a layer:
 
-1. External, placed in [opt/otel-extension/external](opt/otel-extension/external) folder, which gathers information (from (1) execution environment (2) AWS Lambdas APIs (3) Data provided via internal extension) and sends the compliant [OpenTelemetry](https://opentelemetry.io/) payload to designated destination (see [Configure destination endpoints of telemetry payloads](#configure-destination-endpoints-of-telemetry-payloads))
+1. External, placed in [opt/otel-extension/external](opt/otel-extension/external) folder, which gathers information (from (1) execution environment (2) AWS Lambdas APIs (3) Data provided via internal extension) and sends the compliant [OpenTelemetry](https://opentelemetry.io/) payload to Serverless Console ingestion servers
 2. Internal, placed in [opt/otel-extension/internal](opt/otel-extension/internal) folder, which is pre-run in the same process as Node.js Lambda handler, and through pre-setup instrumentation gathers additional data about invocations, which is sent to external extension
 
 ### What telemetry payload does it generate?
@@ -73,44 +73,47 @@ Ensure that layer version ARN is listed in Lambda layers.
 
 Ensure that internal extension of a layer is pre-loaded by configuring `AWS_LAMBDA_EXEC_WRAPPER` environment variable with `/opt/otel-extension-internal-node/exec-wrapper.sh`
 
-##### 4. Configure monitoring settings
+#### 4. Configure monitoring settings
 
-Monitoring settings are expected to be provided in JSON format at `SLS_OTEL_USER_SETTINGS` environment variable.
+Monitoring settings are expected to be provided in JSON format at `SLS_EXTENSION` environment variable.
 
-All settings are optional, still if no settings are provided, the generated telemetry reports will be just logged into process output.
+##### Required settings:
 
-Supported settings:
+###### `orgId`
 
-```yaml
-common:
-  # Settings common to all reports
-  destination:
-    # Request headers for server (url) destinations
-    requestHeaders: param1=value&param2=value # search params string of headers to be added to each request
-logs:
-  # Log report settings
-  disabled: true # Disable logs monitoring
-  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
-  destination: https://some-url/ | s3://bucketname[/rootkey]
-metrics:
-  outputType: protobuf | json # Output type (defaults to protobuf)
-  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
-  destination: https://some-url/ | s3://bucketname[/rootkey]
-request:
-  # Request report settings
-  disabled: true # Disable request reporting
-  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
-  destination: https://some-url/ | s3://bucketname[/rootkey]
-response:
-  # Response report settings
-  disabled: true # Disable response reporting
-  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
-  destination: https://some-url/ | s3://bucketname[/rootkey
-traces:
-  outputType: protobuf | json # Output type (defaults to protobuf)
-  # Destination can be HTTP/HTTPS url, or S3 bucket. If not provided reports are written to the console
-  destination: https://some-url/ | s3://bucketname[/rootkey]
-```
+Serverless Console organization id
+
+###### `namespace`
+
+Namespace at which reports should be grouped (Serverless Framework sets it with _service name_)
+
+###### `environment`
+
+Application environment (Serverless Framework sets with _stage_ value)
+
+###### `ingestToken`
+
+Serverless Console ingestion token, to be obtained via Serverless Console API. At this point it's resolved automatically in context of the Serverless Framework (manual resolution instructions will be provided in a near future)
+
+##### Optional settings:
+
+##### `logs`
+
+Settings that affect log monitoring. Supported options:
+
+- `logs.disabled` - Set to true to disable logs monitoring
+
+##### `request`
+
+Settings that affect requests monitoring. Supported options:
+
+- `request.disabled` - Set to true to disable requests monitoring
+
+##### `response`
+
+Settings that affect response monitoring. Supported options:
+
+- `response.disabled` - Set to true to disable response monitoring
 
 ### Generated reports structure
 
@@ -148,32 +151,6 @@ _HTTP Responses with a non JSON body will be ignored_
 
 ### Tests
 
-To run tests ensure to additionaly run `npm install` in following folders:
+Tests can only be run in context of package repository (they're not included with npm package).
 
-- `external/otel-extension-external`
-- `internal/otel-extension-internal-node`
-- `test/fixtures/lambdas`
-
-#### Unit tests
-
-Unit tests are configured to be independent of any external infrastructure (AWS Lambda environment is emulated).
-
-```bash
-npm test
-```
-
-#### Integration tests
-
-AWS account is needed to run integration tests, and AWS credentials need to be configured.
-
-In tests, the home folder is mocked, therefore AWS access cannot be reliably set up via the `AWS_PROFILE` variable or any other means that rely on configuration placed in the home folder.
-
-Easiest is to run tests is by setting `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` environment variables.
-
-Tests create a temporary layer and Lambda resources and remove them after the test is finalized.
-
-All created resourced are named or prefixed with `test-otel-extension-<testUid>` string, where `testUid` is four characters taken from [local machine id](https://www.npmjs.com/package/node-machine-id) or in case of CI runs a random string. `testUid` string can also be overriden via environment variable `TEST_UID`
-
-```bash
-npm run test:integration
-```
+See [Tests documentation](./test/README.md)

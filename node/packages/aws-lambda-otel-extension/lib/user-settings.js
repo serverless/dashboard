@@ -3,12 +3,9 @@
 'use strict';
 
 const userSettings = (module.exports = {
-  common: { destination: {} },
   logs: {},
-  metrics: { outputType: 'protobuf' },
   request: {},
   response: {},
-  traces: { outputType: 'protobuf' },
 });
 
 const isObject = (value) => Boolean(value && typeof value === 'object');
@@ -26,25 +23,46 @@ const merge = (target, source) => {
 
 const bundledSettings = (() => {
   try {
-    // eslint-disable-next-line import/no-unresolved
-    return require('./.user-settings');
+    require.resolve('./.user-settings');
   } catch {
     return null;
   }
+  // eslint-disable-next-line import/no-unresolved
+  return require('./.user-settings');
 })();
 
 if (bundledSettings) merge(userSettings, bundledSettings);
 
-const envSettings = (() => {
-  const envSettingsText = process.env.SLS_OTEL_USER_SETTINGS;
+const envSettingsText = process.env.SLS_EXTENSION;
+if (envSettingsText) merge(userSettings, JSON.parse(envSettingsText));
 
-  if (!envSettingsText) return null;
-  try {
-    return JSON.parse(envSettingsText);
-  } catch (error) {
-    process._rawDebug(`Resolution of user settings failed with: ${error.message}`);
-    return null;
-  }
+const altDestination = (() => {
+  const setting = process.env.SLS_TEST_EXTENSION_REPORT_DESTINATION || '';
+  if (setting.startsWith('s3://')) return setting;
+  if (setting === 'log') return setting;
+  return null;
 })();
 
-if (envSettings) merge(userSettings, envSettings);
+if (altDestination) {
+  userSettings._altDestination = altDestination;
+} else {
+  if (!userSettings.ingestToken) throw new Error('Missing required "ingestToken" setting');
+  if (!userSettings.orgId) throw new Error('Missing required "orgId" setting');
+  if (!userSettings.namespace) throw new Error('Missing required "namespace" setting');
+  if (!userSettings.environment) throw new Error('Missing required "environment" setting');
+}
+
+const otelResourceAtrributes = [];
+if (userSettings.namespace) {
+  otelResourceAtrributes.push(`sls_service_name=${userSettings.namespace}`);
+}
+if (userSettings.environment) otelResourceAtrributes.push(`sls_stage=${userSettings.environment}`);
+if (userSettings.orgId) otelResourceAtrributes.push(`sls_org_id=${userSettings.orgId}`);
+
+if (otelResourceAtrributes.length) {
+  if (process.env.OTEL_RESOURCE_ATTRIBUTES) {
+    process.env.OTEL_RESOURCE_ATTRIBUTES += `,${otelResourceAtrributes.join(',')}`;
+  } else {
+    process.env.OTEL_RESOURCE_ATTRIBUTES = otelResourceAtrributes.join(',');
+  }
+}
