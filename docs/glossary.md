@@ -5,15 +5,14 @@ description:
 menuOrder: 4
 -->
 
-# Glossary
-
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
-## Serverless
+# Serverless
 
 We define "serverless" as any managed service from a cloud vendor that scales to zero with respects to pricing and utilization.  Serverless Console specializes in all "serverless" and "managed" services.
 
 # Organization
+
 An organization is a unique tenant within the Serverless suite of products (including Serverless Dashboard, Serverless Cloud, and Serverless Console).
 
 # Tags
@@ -122,7 +121,7 @@ When an AWS Lambda function instance receives a request after having received pr
 
 ## Timeout
 
-A timeout is a [configurable limit for the duration of your AWS Lambda](product/duration.md#configuring-timeouts-in-aws-lambda).
+A timeout is a configurable limit for the duration of your AWS Lambda.
 
 
 <!--
