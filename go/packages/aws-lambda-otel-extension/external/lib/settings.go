@@ -44,6 +44,7 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	// Custom settings
 	testJson := strings.ToLower(os.Getenv("SLS_TEST_EXTENSION_REPORT_TYPE")) == "json"
 	testDestination := strings.ToLower(os.Getenv("SLS_TEST_EXTENSION_REPORT_DESTINATION"))
+	platformStage := strings.ToLower(os.Getenv("SLS_PLATFORM_STAGE"))
 
 	if testJson {
 		extensionSettings.Metrics.ForceJson = true
@@ -54,7 +55,7 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	}
 
 	backendUrl := "https://core.serverless.com"
-	if extensionSettings.Environment == "dev" {
+	if extensionSettings.Environment == "dev" || platformStage == "dev" {
 		backendUrl = "https://core.serverless-dev.com"
 	}
 	ingestionServerUrl := backendUrl + "/ingestion/kinesis"
