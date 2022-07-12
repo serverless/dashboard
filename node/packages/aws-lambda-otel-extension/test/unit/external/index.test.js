@@ -301,7 +301,12 @@ describe('external', () => {
       const reportType = reportString.slice(2, reportString.indexOf(':'));
       if (!reports[reportType]) reports[reportType] = [];
       const jsonString = reportString.slice(reportString.indexOf(':') + 2);
-      log.debug('report %s JSON string %s', reportType, jsonString);
+      log.debug(
+        'report %s [%d] JSON string %s',
+        reportType,
+        reports[reportType].length + 1,
+        jsonString
+      );
       reports[reportType].push(JSON.parse(jsonString));
     }
     log.debug('reports %o', reports);
