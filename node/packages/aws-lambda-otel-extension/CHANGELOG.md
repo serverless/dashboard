@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.6...@serverless/aws-lambda-otel-extension@0.5.0) (2022-07-12)
+
+### ⚠ BREAKING CHANGES
+
+- Configuration variable `SLS_OTEL_USER_SETTINGS` is renamed to `SLS_EXTENSION`
+- Introduce new mandatory `orgId`, `namespace` and `environment` settings (required by the Serverless Console)
+- Extension is no longer observability tool agnostic. It's reconfigured to report specifically to the Serverless Console.
+  At the same time its configuration settings are simplified:
+  - Support for `destination` in all configuration groups is dropped.
+  - New required `ingestToken` property is introduced (for injection of kinesis server authentication token)
+  - Support for `metrics.outputType` and `traces.outputType` was removed (reports are hardcoded to be send in protobuf.
+
+### Features
+
+- New mandatory `orgId`, `namespace` and `environment` settings ([cc009de](https://github.com/serverless/runtime/commit/cc009de84cfe54f1934644c4bc79beb890869262))
+- On invalid user settings make extension ineffective ([8f7128b](https://github.com/serverless/runtime/commit/8f7128b2c747f5665273fd71af2a753f4a75bc89))
+- Remove support for `[metrics|traces].outputType` ([91e7e03](https://github.com/serverless/runtime/commit/91e7e03bda720dbf124f3c26465e0621942f6c24))
+- Rename `SLS_OTEL_USER_SETTINGS` into `SLS_EXTENSION` ([aa2b00b](https://github.com/serverless/runtime/commit/aa2b00beebee2e93e56f81e73cde13467db4c1ba))
+- Unconditionally send reports to the Serverless Console ([80ef8dc](https://github.com/serverless/runtime/commit/80ef8dc2982c1ad3ce64cabbe7d246ee2fb9ce60))
+- Support bundling of custom settings into layers ([cd699bc](https://github.com/serverless/runtime/commit/cd699bceda46df76d1d7d5b95923edcbb206938f))
+- Allow environment changes in bundled settings ([6e7bf67](https://github.com/serverless/runtime/commit/6e7bf67bbba786fa5dfdb1ca3cb4313f8e5d2323))
+
+### Maintenance Improvements
+
+- Add debug log on event/next response ([33950f2](https://github.com/serverless/runtime/commit/33950f21f1dcf55d29f55150a0f1a2b436e8c76d))
+- Centralize user settings handling ([b2bb89d](https://github.com/serverless/runtime/commit/b2bb89dd919eee73e9d72c795828db16d16c71f5))
+- Improve clarity of build script ([3db6c0d](https://github.com/serverless/runtime/commit/3db6c0dc40404ff101732428095bd4a623fdb307))
+
 ### [0.4.6](https://github.com/serverless/runtime/compare/@serverless/aws-lambda-otel-extension@0.4.5...@serverless/aws-lambda-otel-extension@0.4.6) (2022-06-29)
 
 ### Bug Fixes
