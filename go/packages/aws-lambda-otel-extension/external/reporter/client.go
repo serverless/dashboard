@@ -5,7 +5,6 @@ import (
 	"aws-lambda-otel-extension/external/protoc"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"sync"
 	"time"
 
@@ -25,30 +24,27 @@ type PostData struct {
 
 type ReporterClient struct {
 	ReporterClient *fasthttp.Client
-	settings       *lib.UserSettings
+	settings       *lib.ExtensionSettings
 	eg             *errgroup.Group
 	continueEvents chan bool
 	pool           *sync.Pool
-	extraParams    url.Values
+	token          string
 	logger         *lib.Logger
 	clock          time.Time
 }
 
 type transformDataType func() ([]byte, error)
 
-func NewReporterClient(settings *lib.UserSettings) *ReporterClient {
+func NewReporterClient(settings *lib.ExtensionSettings) *ReporterClient {
 	logger := lib.NewLogger()
 
-	extraParams, err := url.ParseQuery(settings.Common.Destination.RequestHeaders)
-	if err != nil {
-		logger.Error("Parsing request headers", zap.Error(err))
-	}
+	token := settings.IngestToken
 
 	return &ReporterClient{
 		ReporterClient: &fasthttp.Client{},
+		token:          token,
 		settings:       settings,
 		eg:             &errgroup.Group{},
-		extraParams:    extraParams,
 		continueEvents: make(chan bool),
 		logger:         logger,
 		pool:           &sync.Pool{},
@@ -82,11 +78,11 @@ func (c *ReporterClient) post(path string, body []byte, isProtobuf bool) error {
 	return c.syncPost(&data)
 }
 
-func (c *ReporterClient) postProto(use lib.UserSettingsEndpoint, protod protoreflect.ProtoMessage) {
+func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod protoreflect.ProtoMessage) {
 	var isProtobuf bool
 	var data []byte
 	var err error
-	if use.OutputType == "json" {
+	if use.ForceJson {
 		data, err = json.Marshal(protod)
 		isProtobuf = false
 	} else {
@@ -117,7 +113,7 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 		if err != nil {
 			c.logger.Error("Post error", zap.String("path", postData.path), zap.Error(err))
 			// retry if this isn't intentional error
-			if (code < 400 || code > 402) && postData.retries < 3 {
+			if (code < 400 || code > 404) && postData.retries < 3 {
 				postData.retries++
 				c.pool.Put(*postData)
 			} // otherwise just stop trying to send this data...
@@ -138,8 +134,8 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 		req.Header.SetContentType("application/json")
 	}
 
-	for key, value := range c.extraParams {
-		req.Header.Set(key, value[0])
+	if c.token != "" {
+		req.Header.Set("serverless_token", c.token)
 	}
 
 	resp := fasthttp.AcquireResponse()

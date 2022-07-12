@@ -8,8 +8,8 @@ import (
 )
 
 func TestReporterClient_Flush(t *testing.T) {
-	var userSettings lib.UserSettings
-	json.Unmarshal([]byte(`{"logs": {"destination": "/logs"}, "request": {"destination": "/request-response"}, "metrics": {"destination": "/metrics"}, "common": {"destination": {"requestHeaders": "serverless_token=53c94d82-a653-40de-94c5-c877a8c0f2e5"}}, "traces": {"destination": "/traces"}, "response": {"destination": "/request-response"}}`), &userSettings)
+	var settings lib.ExtensionSettings
+	json.Unmarshal([]byte{}, &settings)
 
 	tests := []struct {
 		name string
@@ -21,7 +21,7 @@ func TestReporterClient_Flush(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			c := NewReporterClient(&userSettings)
+			c := NewReporterClient(&settings)
 
 			// empty flush
 			c.Flush()

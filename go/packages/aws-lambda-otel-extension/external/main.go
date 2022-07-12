@@ -46,17 +46,17 @@ func main() {
 		extWG.Done()
 	}()
 
-	userSettings, err := lib.GetUserSettings()
+	settings, err := lib.GetExtensionSettings()
 	if err != nil {
 		logger.Error("Failed to get user settings", zap.Error(err))
 		return
 	}
 
-	reportAgent := reporter.NewReporterClient(&userSettings)
+	reportAgent := reporter.NewReporterClient(&settings)
 	currentRequestData := reporter.NewCurrentRequestData(reportAgent)
 
 	// Create Logs API agent
-	logsApiAgent, err := logs.NewLogsApiAgent(reportAgent, currentRequestData, &userSettings)
+	logsApiAgent, err := logs.NewLogsApiAgent(reportAgent, currentRequestData, &settings)
 	if err != nil {
 		logger.Fatal("couldnt create logs api agent", zap.Error(err))
 	}

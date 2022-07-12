@@ -264,13 +264,12 @@ func getTimeUnixNano(value interface{}) uint64 {
 	case string:
 		t, err := time.Parse(time.RFC3339Nano, value.(string))
 		if err != nil {
+			fmt.Printf("Unknown time string %s\n", err)
 			return 0
 		}
-		return uint64(t.UnixNano()) * 1000000
+		return uint64(t.UnixNano())
 	case int64:
 		return uint64(value.(int64)) * 1000000
-	case int32:
-		return uint64(value.(int32)) * 1000000
 	case int:
 		return uint64(value.(int)) * 1000000
 	case float32:

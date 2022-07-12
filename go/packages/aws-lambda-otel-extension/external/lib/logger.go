@@ -20,7 +20,7 @@ func PrettyPrint(v interface{}) string {
 
 func NewLogger() (logger *zap.Logger) {
 	var err error
-	stage, ok := os.LookupEnv("DEBUG_SLS_OTEL_LAYER")
+	stage, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	if !ok || stage == "" {
 		logger, err = zap.NewProduction()
 	} else {

@@ -8,3 +8,6 @@ deploy:
 
 proto:
 	protoc --proto_path=proto --go_out=protoc proto/*
+
+test:
+	go test ./...

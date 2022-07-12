@@ -2,42 +2,89 @@ package lib
 
 import (
 	"encoding/json"
+	"net/url"
 	"os"
+	"strings"
 )
 
-var userSettingsText = os.Getenv("SLS_OTEL_USER_SETTINGS")
-
-type UserSettingsEndpoint struct {
-	OutputType  string `json:"outputType"`
-	Destination string `json:"destination"`
-	Disabled    bool   `json:"disabled"`
-}
-
 type UserSettings struct {
-	Metrics  UserSettingsEndpoint `json:"metrics"`
-	Logs     UserSettingsEndpoint `json:"logs"`
-	Traces   UserSettingsEndpoint `json:"traces"`
-	Request  UserSettingsEndpoint `json:"request"`
-	Response UserSettingsEndpoint `json:"response"`
-	Common   struct {
+	Common struct {
 		Destination struct {
 			RequestHeaders string `json:"requestHeaders"`
 		} `json:"destination"`
 	} `json:"common"`
 }
 
-func GetUserSettings() (UserSettings, error) {
-	var userSettings UserSettings
-	err := json.Unmarshal([]byte(userSettingsText), &userSettings)
-	// For debug only
-	// customSettingsText := os.Getenv("SLS_OTEL_DEBUG_USER_SETTINGS")
+type ExtensionSettingsEndpoint struct {
+	ForceJson   bool   `json:"-"`
+	Disabled    bool   `json:"disabled"`
+	Destination string `json:"-"`
+}
 
-	customSettingsText := os.Getenv("SLS_CONSOLE_SETTINGS")
-	if customSettingsText != "" {
-		err = json.Unmarshal([]byte(customSettingsText), &userSettings)
-	}
+type ExtensionSettings struct {
+	Metrics     ExtensionSettingsEndpoint `json:"metrics"`
+	Logs        ExtensionSettingsEndpoint `json:"logs"`
+	Traces      ExtensionSettingsEndpoint `json:"traces"`
+	Request     ExtensionSettingsEndpoint `json:"request"`
+	Response    ExtensionSettingsEndpoint `json:"response"`
+	OrgID       string                    `json:"orgId"`
+	Namespace   string                    `json:"namespace"`
+	Environment string                    `json:"environment"`
+	IngestToken string                    `json:"ingestToken"`
+}
+
+func GetExtensionSettings() (ExtensionSettings, error) {
+	var extensionSettings ExtensionSettings
+	extensionSettingsText := os.Getenv("SLS_EXTENSION")
+	err := json.Unmarshal([]byte(extensionSettingsText), &extensionSettings)
 	if err != nil {
-		return UserSettings{}, err
+		return ExtensionSettings{}, err
 	}
-	return userSettings, nil
+
+	// Custom settings
+	testJson := strings.ToLower(os.Getenv("SLS_TEST_EXTENSION_REPORT_TYPE")) == "json"
+	testDestination := strings.ToLower(os.Getenv("SLS_TEST_EXTENSION_REPORT_DESTINATION"))
+
+	if testJson {
+		extensionSettings.Metrics.ForceJson = true
+		extensionSettings.Logs.ForceJson = true
+		extensionSettings.Traces.ForceJson = true
+		extensionSettings.Request.ForceJson = true
+		extensionSettings.Response.ForceJson = true
+	}
+
+	backendUrl := "https://core.serverless.com"
+	if extensionSettings.Environment == "dev" {
+		backendUrl = "https://core.serverless-dev.com"
+	}
+	ingestionServerUrl := backendUrl + "/ingestion/kinesis"
+
+	if testDestination == "log" {
+		return extensionSettings, nil
+	} else if testDestination != "" {
+		ingestionServerUrl = testDestination
+	}
+
+	extensionSettings.Metrics.Destination = ingestionServerUrl + "/v1/metrics"
+	extensionSettings.Logs.Destination = ingestionServerUrl + "/v1/logs"
+	extensionSettings.Traces.Destination = ingestionServerUrl + "/v1/traces"
+	extensionSettings.Request.Destination = ingestionServerUrl + "/v1/request-response"
+	extensionSettings.Response.Destination = ingestionServerUrl + "/v1/request-response"
+
+	// TODO: remove above lines when we finish the var migration
+	customSettingsText := os.Getenv("SLS_OTEL_USER_SETTINGS")
+	if customSettingsText != "" {
+		var customSettings UserSettings
+		err = json.Unmarshal([]byte(customSettingsText), &customSettings)
+		if err != nil {
+			return ExtensionSettings{}, err
+		}
+		extraParams, err := url.ParseQuery(customSettings.Common.Destination.RequestHeaders)
+		if err != nil {
+			return ExtensionSettings{}, err
+		}
+		extensionSettings.IngestToken = extraParams.Get("serverless_token")
+	}
+
+	return extensionSettings, nil
 }
