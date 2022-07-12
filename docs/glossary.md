@@ -5,6 +5,8 @@ description:
 menuOrder: 4
 -->
 
+# Glossary
+
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
 # Serverless
