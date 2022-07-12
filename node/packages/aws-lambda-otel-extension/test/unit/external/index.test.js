@@ -310,6 +310,9 @@ describe('external', () => {
       reports[reportType].push(JSON.parse(jsonString));
     }
     log.debug('reports %o', reports);
+    expect(reports).to.not.have.property('logs');
+    expect(reports).to.not.have.property('request');
+    expect(reports).to.not.have.property('response');
     const metricsReport = reports.metrics[0];
     const tracesReport = reports.traces[0];
 
