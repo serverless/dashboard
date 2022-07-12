@@ -23,7 +23,7 @@ _TODO: This section will be completed in the near future_
 
 ##### 1.2 Node.js runtime version (external + internal extension)
 
-_Note: pre-build layer artifacts are published with `@serverless/aws-lambda-otel-extension-dist` package, and instead of building it manually (as documented below) it is advised to rely on them instead._
+_Note: pre-build layer artifacts are published to our AWS accounts, and instead of building it manually (as documented below) it is advised to rely on them instead (for ARN's of the pre-published layers check registry files which are attached to GitHub releases)_
 
 ```sh
 # Ensure layer dependencies are installed

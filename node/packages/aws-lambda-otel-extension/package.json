@@ -1,12 +1,12 @@
 {
   "name": "@serverless/aws-lambda-otel-extension",
   "repository": "serverless/runtime",
-  "version": "0.4.6",
+  "version": "0.5.0",
   "author": "Serverless, Inc.",
   "dependencies": {
     "adm-zip": "^0.5.9",
     "child-process-ext": "^2.1.1",
-    "esbuild": "^0.14.47",
+    "esbuild": "^0.14.49",
     "essentials": "^1.2.0",
     "fs2": "^0.3.9",
     "memoizee": "^0.4.15",
@@ -43,6 +43,7 @@
   "scripts": {
     "build": "./scripts/build.js dist/extension.zip",
     "build:external": "./scripts/build.js dist/extension-external.zip --mode=2",
+    "build:internal": "./scripts/build.js dist/extension-internal.zip --mode=1",
     "generate-proto": "pbjs -t static-module -w commonjs -o external/otel-extension-external/proto.js proto/metric-service.proto proto/trace-service.proto",
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "test": "mocha \"test/unit/**/*.test.js\"",
