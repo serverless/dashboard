@@ -6,6 +6,7 @@ const path = require('path');
 const { EventEmitter } = require('events');
 const spawn = require('child-process-ext/spawn');
 const argsParse = require('yargs-parser');
+const { v4: uuidv4 } = require('uuid');
 const log = require('log').get('test');
 const getExtensionServerMock = require('../../utils/get-extension-server-mock');
 const normalizeOtelAttributes = require('../../utils/normalize-otel-attributes');
@@ -19,9 +20,12 @@ const extensionFilename = path.resolve(
   '../../../external/otel-extension-external/index.js'
 );
 
-const extensionProcessHandler = async (callback) => {
+const region = 'us-east-1';
+const functionName = 'test';
+
+const extensionProcessHandler = async (options, callback) => {
   const emitter = new EventEmitter();
-  const { server, listenerEmitter } = getExtensionServerMock(emitter);
+  const { server, listenerEmitter } = getExtensionServerMock({ ...options, emitter });
 
   server.listen(port);
   const [extensionCommand, ...extensionArgs] = (() => {
@@ -36,6 +40,9 @@ const extensionProcessHandler = async (callback) => {
       SLS_TEST_EXTENSION_REPORT_TYPE: 'json',
       SLS_TEST_EXTENSION_REPORT_DESTINATION: 'log',
       SLS_TEST_EXTENSION_HOSTNAME: 'localhost',
+      AWS_LAMBDA_FUNCTION_VERSION: '$LATEST',
+      AWS_REGION: region,
+      AWS_LAMBDA_FUNCTION_NAME: functionName,
     },
   });
   await Promise.all([
@@ -72,183 +79,221 @@ describe('external', () => {
   });
 
   it('should handle plain success invocation', async () => {
-    const requestId = 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0';
-    const stdoutData = await extensionProcessHandler(async ({ emitter, listenerEmitter }) => {
-      emitter.emit('event', { eventType: 'INVOKE', requestId });
+    const requestId = uuidv4();
+    const stdoutData = await extensionProcessHandler(
+      { region, functionName },
+      async ({ emitter, listenerEmitter }) => {
+        emitter.emit('event', { eventType: 'INVOKE', requestId });
 
-      emitter.emit('logs', [
-        {
-          type: 'platform.start',
-          record: {
-            requestId,
-            version: '$LATEST',
+        emitter.emit('logs', [
+          {
+            type: 'platform.extension',
+            record: {
+              name: 'otel-extension',
+              state: 'Ready',
+              events: ['INVOKE', 'SHUTDOWN'],
+            },
           },
-        },
-        {
-          type: 'platform.extension',
-          record: {
-            name: 'otel-extension',
-            state: 'Ready',
-            events: ['INVOKE', 'SHUTDOWN'],
+        ]);
+        emitter.emit('logs', [
+          {
+            type: 'platform.start',
+            record: {
+              requestId,
+              version: '$LATEST',
+            },
           },
-        },
-      ]);
-      // Emit init logs
-      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-        method: 'post',
-        body: JSON.stringify({
-          recordType: 'eventData',
-          record: {
-            eventData: {
-              [requestId]: {
-                functionName: 'testFunction',
-                computeCustomEnvArch: 'x86',
-                computeRegion: 'us-east-1',
-                eventCustomApiId: requestId,
+        ]);
+
+        // Emit eventData
+        await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+          method: 'post',
+          body: JSON.stringify({
+            recordType: 'eventData',
+            record: {
+              eventData: {
+                [requestId]: {
+                  'service.name': 'unknown_service:/var/lang/bin/node',
+                  'telemetry.sdk.language': 'nodejs',
+                  'telemetry.sdk.name': 'opentelemetry',
+                  'telemetry.sdk.version': '1.3.1',
+                  'cloud.provider': 'aws',
+                  'cloud.platform': 'aws_lambda',
+                  'cloud.region': region,
+                  'faas.name': functionName,
+                  'faas.version': '$LATEST',
+                  'process.pid': 9,
+                  'process.executable.name': '/var/lang/bin/node',
+                  'process.command': '/var/runtime/index.mjs',
+                  'process.command_line': '/var/lang/bin/node /var/runtime/index.mjs',
+                  'process.runtime.version': '16.15.0',
+                  'process.runtime.name': 'nodejs',
+                  'process.runtime.description': 'Node.js',
+                  'computeCustomArn': `arn:aws:lambda:us-east-1:205994128558:function:${functionName}`,
+                  'functionName': functionName,
+                  'computeRuntime': 'aws.lambda.nodejs.16.15.0',
+                  'computeCustomFunctionVersion': '$LATEST',
+                  'computeMemorySize': '1024',
+                  'eventCustomXTraceId':
+                    'Root=1-62c86a37-0e8dec11533d5a206de73145;Parent=238558417f028ef4;Sampled=0',
+                  'computeCustomLogGroupName': `/aws/lambda/${functionName}`,
+                  'computeCustomLogStreamName':
+                    '2022/07/08/[$LATEST]b0eac4dc95e74a81b374c629a3a379d2',
+                  'computeCustomEnvArch': 'x86',
+                  'eventType': null,
+                  'eventCustomRequestId': requestId,
+                  'computeIsColdStart': true,
+                  'eventCustomDomain': null,
+                  'eventCustomRequestTimeEpoch': null,
+                },
+              },
+              span: {
+                traceId: '016dc9641e4b5d3d25ed6875a0b85536',
+                spanId: '32deafa681c39390',
               },
             },
-            span: {
-              traceId: 'trace-123',
-              spanId: 'span-123',
-            },
+          }),
+          headers: {
+            'Content-Type': 'application/json',
           },
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        });
 
-      await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
-        method: 'post',
-        body: JSON.stringify({
-          recordType: 'telemetryData',
-          requestId,
-          record: {
-            function: {
-              'service.name': 'test-otel-extension-success',
-              'telemetry.sdk.language': 'nodejs',
-              'telemetry.sdk.name': 'opentelemetry',
-              'telemetry.sdk.version': '1.0.1',
-              'cloud.provider': 'aws',
-              'cloud.platform': 'aws_lambda',
-              'cloud.region': 'us-east-1',
-              'faas.name': 'test-otel-extension-success',
-              'faas.version': '$LATEST',
-              'process.pid': 18,
-              'process.executable.name': '/var/lang/bin/node',
-              'process.command': '/var/runtime/index.js',
-              'process.command_line': '/var/lang/bin/node /var/runtime/index.js',
-              'computeCustomArn':
-                'arn:aws:lambda:us-east-1:992311060759:function:test-otel-extension-success',
-              'functionName': 'test-otel-extension-success',
-              'computeRegion': 'us-east-1',
-              'computeRuntime': 'aws.lambda.nodejs.14.18.1',
-              'computeCustomFunctionVersion': '$LATEST',
-              'computeMemorySize': '128',
-              'eventCustomXTraceId':
-                'Root=1-620a52a7-17a756211c086b284224da3d;Parent=2b73def916cea6f4;Sampled=0',
-              'computeCustomLogStreamName': '2022/02/14/[$LATEST]a98c4430fe4f4f59a0eb0d360d96213d',
-              'computeCustomEnvArch': 'x64',
-              'eventType': null,
-              'eventCustomRequestId': 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0',
-              'computeIsColdStart': true,
-              'eventCustomDomain': null,
-              'eventCustomRequestTimeEpoch': null,
-              'startTime': 1644843688147,
-              'endTime': 1644843690251,
-              'error': false,
-              'httpStatusCode': 200,
-            },
-            traces: {
-              resourceSpans: [
-                {
-                  resource: {
-                    'service.name': 'test-otel-extension-success',
-                    'telemetry.sdk.language': 'nodejs',
-                    'telemetry.sdk.name': 'opentelemetry',
-                    'telemetry.sdk.version': '1.0.1',
-                    'cloud.provider': 'aws',
-                    'cloud.platform': 'aws_lambda',
-                    'cloud.region': 'us-east-1',
-                    'faas.name': 'test-otel-extension-success',
-                    'faas.version': '$LATEST',
-                    'process.pid': 18,
-                    'process.executable.name': '/var/lang/bin/node',
-                    'process.command': '/var/runtime/index.js',
-                    'process.command_line': '/var/lang/bin/node /var/runtime/index.js',
-                  },
-                  instrumentationLibrarySpans: [
-                    {
-                      instrumentationLibrary: {
-                        name: '@opentelemetry/instrumentation-aws-lambda',
-                        version: '0.28.1',
-                      },
-                      spans: [
-                        {
-                          traceId: '571ce462a1147e9e5c586d547259451e',
-                          spanId: 'df3acdfbb928da48',
-                          name: 'test-otel-extension-success',
-                          kind: 'SPAN_KIND_SERVER',
-                          startTimeUnixNano: '1644843688147651600',
-                          endTimeUnixNano: '1644843690251790300',
-                          attributes: {
-                            'faas.execution': 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0',
-                            'faas.id':
-                              'arn:aws:lambda:us-east-1:992311060759:function:test-otel-extension-success',
-                            'cloud.account.id': '992311060759',
-                            'http.status_code': 200,
-                          },
-                          status: {},
-                        },
-                      ],
+        // Emit telemetry data
+        await fetch(`http://localhost:${OTEL_SERVER_PORT}`, {
+          method: 'post',
+          body: JSON.stringify({
+            recordType: 'telemetryData',
+            requestId,
+            record: {
+              function: {
+                'service.name': 'unknown_service:/var/lang/bin/node',
+                'telemetry.sdk.language': 'nodejs',
+                'telemetry.sdk.name': 'opentelemetry',
+                'telemetry.sdk.version': '1.3.1',
+                'cloud.provider': 'aws',
+                'cloud.platform': 'aws_lambda',
+                'cloud.region': region,
+                'faas.name': functionName,
+                'faas.version': '$LATEST',
+                'process.pid': 9,
+                'process.executable.name': '/var/lang/bin/node',
+                'process.command': '/var/runtime/index.mjs',
+                'process.command_line': '/var/lang/bin/node /var/runtime/index.mjs',
+                'process.runtime.version': '16.15.0',
+                'process.runtime.name': 'nodejs',
+                'process.runtime.description': 'Node.js',
+                'computeCustomArn': `arn:aws:lambda:us-east-1:205994128558:function:${functionName}`,
+                'functionName': functionName,
+                'computeRegion': region,
+                'computeRuntime': 'aws.lambda.nodejs.16.15.0',
+                'computeCustomFunctionVersion': '$LATEST',
+                'computeMemorySize': '1024',
+                'eventCustomXTraceId':
+                  'Root=1-62c86a37-0e8dec11533d5a206de73145;Parent=238558417f028ef4;Sampled=0',
+                'computeCustomLogGroupName': `/aws/lambda/${functionName}`,
+                'computeCustomLogStreamName':
+                  '2022/07/08/[$LATEST]b0eac4dc95e74a81b374c629a3a379d2',
+                'computeCustomEnvArch': 'x64',
+                'eventType': null,
+                'eventCustomRequestId': requestId,
+                'computeIsColdStart': true,
+                'eventCustomDomain': null,
+                'eventCustomRequestTimeEpoch': null,
+                'startTime': Date.now() - 100,
+                'endTime': Date.now(),
+                'error': false,
+                'httpStatusCode': 200,
+              },
+              traces: {
+                resourceSpans: [
+                  {
+                    resource: {
+                      'service.name': 'unknown_service:/var/lang/bin/node',
+                      'telemetry.sdk.language': 'nodejs',
+                      'telemetry.sdk.name': 'opentelemetry',
+                      'telemetry.sdk.version': '1.3.1',
+                      'cloud.provider': 'aws',
+                      'cloud.platform': 'aws_lambda',
+                      'cloud.region': region,
+                      'faas.name': functionName,
+                      'faas.version': '$LATEST',
+                      'process.pid': 9,
+                      'process.executable.name': '/var/lang/bin/node',
+                      'process.command': '/var/runtime/index.mjs',
+                      'process.command_line': '/var/lang/bin/node /var/runtime/index.mjs',
+                      'process.runtime.version': '16.15.0',
+                      'process.runtime.name': 'nodejs',
+                      'process.runtime.description': 'Node.js',
                     },
-                  ],
-                },
-              ],
+                    instrumentationLibrarySpans: [
+                      {
+                        instrumentationLibrary: {
+                          name: '@opentelemetry/instrumentation-aws-lambda',
+                          version: '0.28.1',
+                        },
+                        spans: [
+                          {
+                            traceId: '016dc9641e4b5d3d25ed6875a0b85536',
+                            spanId: '32deafa681c39390',
+                            name: functionName,
+                            kind: 'SPAN_KIND_SERVER',
+                            startTimeUnixNano: '1657301560142121000',
+                            endTimeUnixNano: '1657301560147432400',
+                            attributes: {
+                              'faas.execution': requestId,
+                              'faas.id': `arn:aws:lambda:us-east-1:205994128558:${functionName}`,
+                              'cloud.account.id': '205994128558',
+                              'sls.original_properties': 'faas.execution,faas.id,cloud.account.id',
+                            },
+                            status: {},
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        emitter.emit('logs', [
+          {
+            type: 'platform.runtimeDone',
+            record: {
+              requestId,
+              status: 'success',
             },
           },
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      emitter.emit('logs', [
-        {
-          type: 'function',
-          record: `2022-02-14T13:01:30.307Z\t${requestId}\tINFO\tHi mom`,
-        },
-        {
-          type: 'platform.runtimeDone',
-          record: {
-            requestId,
-            status: 'success',
-          },
-        },
-        {
-          type: 'platform.end',
-          record: {
-            requestId,
-          },
-        },
-      ]);
-      await new Promise((resolve) => listenerEmitter.once('next', resolve));
-      emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
-      emitter.emit('logs', [
-        {
-          type: 'platform.report',
-          record: {
-            requestId,
-            metrics: {
-              durationMs: 2064.05,
-              billedDurationMs: 2065,
-              memorySizeMB: 128,
-              maxMemoryUsedMB: 67,
-              initDurationMs: 238.12,
+        ]);
+        await new Promise((resolve) => listenerEmitter.once('next', resolve));
+        emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
+        emitter.emit('logs', [
+          {
+            type: 'platform.end',
+            record: {
+              requestId,
             },
           },
-        },
-      ]);
-    });
+          {
+            type: 'platform.report',
+            record: {
+              requestId,
+              metrics: {
+                durationMs: 2064.05,
+                billedDurationMs: 2065,
+                memorySizeMB: 128,
+                maxMemoryUsedMB: 67,
+                initDurationMs: 238.12,
+              },
+            },
+          },
+        ]);
+      }
+    );
 
     log.debug('report string %s', stdoutData);
     const reports = {};
@@ -262,19 +307,14 @@ describe('external', () => {
     log.debug('reports %o', reports);
     const metricsReport = reports.metrics[0];
     const tracesReport = reports.traces[0];
-    const logReport = reports.logs[0][0];
 
     const resourceMetrics = normalizeOtelAttributes(
       metricsReport.resourceMetrics[0].resource.attributes
     );
-    expect(resourceMetrics['faas.name']).to.equal('test-otel-extension-success');
+    expect(resourceMetrics['faas.name']).to.equal(functionName);
     const resourceSpans = normalizeOtelAttributes(
       tracesReport.resourceSpans[0].resource.attributes
     );
-    expect(resourceSpans['faas.name']).to.equal('test-otel-extension-success');
-
-    expect(logReport.Body).to.equal(`2022-02-14T13:01:30.307Z\t${requestId}\tINFO\tHi mom`);
-    expect(logReport.Attributes['faas.name']).to.equal('testFunction');
-    expect(logReport.Resource['faas.arch']).to.equal('x86');
+    expect(resourceSpans['faas.name']).to.equal(functionName);
   });
 });
