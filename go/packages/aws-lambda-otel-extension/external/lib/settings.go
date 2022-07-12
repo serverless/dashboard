@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
-	"strings"
 )
 
 type UserSettings struct {
@@ -31,6 +30,8 @@ type ExtensionSettings struct {
 	Namespace   string                    `json:"namespace"`
 	Environment string                    `json:"environment"`
 	IngestToken string                    `json:"ingestToken"`
+	// Custom settings
+	SandboxHostname string `json:"-"`
 }
 
 func GetExtensionSettings() (ExtensionSettings, error) {
@@ -42,9 +43,9 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	}
 
 	// Custom settings
-	testJson := strings.ToLower(os.Getenv("SLS_TEST_EXTENSION_REPORT_TYPE")) == "json"
-	testDestination := strings.ToLower(os.Getenv("SLS_TEST_EXTENSION_REPORT_DESTINATION"))
-	platformStage := strings.ToLower(os.Getenv("SLS_PLATFORM_STAGE"))
+	testJson := os.Getenv("SLS_TEST_EXTENSION_REPORT_TYPE") == "json"
+	testDestination := os.Getenv("SLS_TEST_EXTENSION_REPORT_DESTINATION")
+	platformStage := os.Getenv("SLS_PLATFORM_STAGE")
 
 	if testJson {
 		extensionSettings.Metrics.ForceJson = true
@@ -71,6 +72,13 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	extensionSettings.Traces.Destination = ingestionServerUrl + "/v1/traces"
 	extensionSettings.Request.Destination = ingestionServerUrl + "/v1/request-response"
 	extensionSettings.Response.Destination = ingestionServerUrl + "/v1/request-response"
+
+	sandboxHostname := os.Getenv("SLS_TEST_EXTENSION_HOSTNAME")
+	if sandboxHostname != "" {
+		extensionSettings.SandboxHostname = sandboxHostname
+	} else {
+		extensionSettings.SandboxHostname = "sandbox"
+	}
 
 	// TODO: remove above lines when we finish the var migration
 	customSettingsText := os.Getenv("SLS_OTEL_USER_SETTINGS")

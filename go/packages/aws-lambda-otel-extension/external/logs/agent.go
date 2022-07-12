@@ -24,20 +24,22 @@ type LogsApiHttpListener struct {
 	logger             *lib.Logger
 	reportAgent        *reporter.ReporterClient
 	currentRequestData *reporter.CurrentRequestData
+	settings           *lib.ExtensionSettings
 }
 
 // NewLogsApiHttpListener returns a LogsApiHttpListener with the given log queue
-func NewLogsApiHttpListener(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData) *LogsApiHttpListener {
+func NewLogsApiHttpListener(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData, settings *lib.ExtensionSettings) *LogsApiHttpListener {
 	return &LogsApiHttpListener{
 		logger:             lib.NewLogger(),
 		reportAgent:        reportAgent,
 		currentRequestData: currentRequestData,
+		settings:           settings,
 	}
 }
 
 // Start initiates the server in a goroutine where the logs will be sent
 func (s *LogsApiHttpListener) Start() bool {
-	address := fmt.Sprintf("sandbox:%s", LOGS_SERVER_PORT)
+	address := fmt.Sprintf("%s:%s", s.settings.SandboxHostname, LOGS_SERVER_PORT)
 	s.server = &fasthttp.Server{
 		Handler: s.http_handler,
 		Name:    "LogsApiHttpListener",
@@ -133,7 +135,7 @@ type HttpAgent struct {
 // NewLogsApiAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
 func NewLogsApiAgent(reportAgent *reporter.ReporterClient, currentRequestData *reporter.CurrentRequestData, settings *lib.ExtensionSettings) (*HttpAgent, error) {
-	logsApiListener := NewLogsApiHttpListener(reportAgent, currentRequestData)
+	logsApiListener := NewLogsApiHttpListener(reportAgent, currentRequestData, settings)
 
 	return &HttpAgent{
 		listener:           logsApiListener,
@@ -174,7 +176,7 @@ func (h HttpAgent) Init(agentID string) error {
 	}
 	destination := Destination{
 		Protocol:   HttpProto,
-		URI:        URI(fmt.Sprintf("http://sandbox:%s", LOGS_SERVER_PORT)),
+		URI:        URI(fmt.Sprintf("http://%s:%s", h.settings.SandboxHostname, LOGS_SERVER_PORT)),
 		HttpMethod: HttpPost,
 		Encoding:   JSON,
 	}
