@@ -59,7 +59,8 @@
     "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
     "prettier-check:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier -c",
     "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
-    "prettify:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier --write"
+    "prettify:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier --write",
+    "test:go": "SLS_EXTENSION=\"{}\" SLS_TEST_EXTENSION_COMMAND=/home/rfaga/serverless/console/go/packages/aws-lambda-otel-extension/external/dist/extensions/otel-extension mocha \"packages/aws-lambda-otel-extension/test/unit/external/*.test.js\""
   },
   "engines": {
     "node": ">=12.0"
