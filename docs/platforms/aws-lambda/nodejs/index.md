@@ -1,36 +1,59 @@
 # AWS Lambda: Node.js
 
-# Spans
+AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers.  You can measure Metrics, Traces and Logs of AWS Lambda via Serverless Console.
 
-## AWS Lambda
+# Traces & Spans
+
+Here is a reference guide of the Traces, Spans, Tags and more collected by Serverless Console.
+
+## Trace
+
+The Trace for an AWS Lambda specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown, and any logic performed within the Invocation phase.
+
+Additionally, the duration of the Trace is what AWS Lambda bills for, based on 1ms increments. Duration charges apply to initialization code that is declared outside of the handler in the Initiatlization phase, code that runs in the handler of a function during the Invocation phase, as well as the time it takes for code in any last running Extensions to finish executing during Shutdown phase.
+
+It’s important to note that duration of Traces for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
+
+#### Tags
+
+These are the Tags attached to this Trace:
 
 ```javascript
+
+/*
+ * Tags: Metadata
+ */
 
 s.sdk.name: "s-aws-lambda-nodejs",
 s.sdk.version: "0.0.1",
 s.org.id: "53121673-361f-4181-3411-53e031312c09",
 
+/*
+ * Tags: Standard
+ */
+
+s.platform: "aws-lambda",
 s.environment: "prod",
 s.namespace: "api",
 s.service: "aws-api-prod-getPoster",
+s.region: "us-east-1",
 
-s.http.domain: "api.planetmojo.io",
-s.http.method: "GET",
-s.http.path: "/collectible/movie-poster/metadata/{id}",
-s.http.raw_path: "/collectible/movie-poster/metadata/2293",
-s.http.status_code: 200,
-
-cloud.provider: "aws",
-cloud.platform: "lambda",
-cloud.region: "us-east-1",
+/*
+ * Tags: AWS
+ */
 
 aws.account.id: "670455222476",
 aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPoster",
 
+/*
+ * Tags: AWS Lambda
+ */
+
 aws.lambda.arch: "x64",
-aws.lambda.api_gateway_api_id: "pagbl1123133b91",
-aws.lambda.api_gateway_request_id: "2be123182-951a-4d139-9f49-d913f1231abaa",
+aws.lambda.api_gateway_api_id: "pagbl1123133b91", // Optional
+aws.lambda.api_gateway_request_id: "2be123182-951a-4d139-9f49-d913f1231abaa", // Optional
 aws.lambda.coldstart: false,
+aws.lambda.duration: 1032, // Maps to the Cloudwatch Logs Report "Billed Duration"
 aws.lambda.error: false,
 aws.lambda.error_culprit: "null",
 aws.lambda.error_exception_message: "null",
@@ -47,8 +70,73 @@ aws.lambda.request_id: "2be6c182-955a-4da9-9c39-d9e9d9febbaa",
 aws.lambda.request_time_epoch: 1657743048772,
 aws.lambda.version: "$LATEST",
 aws.lambda.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0",
+
+
+
+/*
+ * Tags: Scope
+ */
+
+s.faas.name: "aws-api-prod-getPoster",
+s.faas.error: true,
+s.faas.cold_start: true,
+s.faas.duration: 427,
+
+s.http.domain: "api.planetmojo.io", // Optional
+s.http.method: "GET", // Optional
+s.http.path: "/collectible/movie-poster/metadata/{id}", // Optional
+s.http.raw_path: "/collectible/movie-poster/metadata/2293", // Optional
+s.http.status_code: 200, // Optional
 ```
 
-## Initialization
+## Spans
 
-## Invocation
+### Initialization
+
+This is a Span within a Trace for AWS Lambda that represents the time spent loading your AWS Lambda function and running any initialization code.
+
+Initialization includes the following:
+
+Extension Init – Initializing all External AWS Lambda Extensions configured on the function (there is a limit of 10 Extensions per function).
+
+Runtime Init – Initializing the AWS Lambda Runtime (e.g, Node.js, Python).
+
+Function Init – Initializing the AWS Lambda Function code.
+
+Initialization only appears for the first event processed by each instance of your function, which is also known as a Cold-Start. It can also appear in advance of function invocations if you have enabled provisioned concurrency.
+
+You will want to optimize Initialization performance as best you can. Poor Initialization performance will directly affect the experience of your users and customers. Additionally, it's important to note that AWS charges you for Initialization time. Unfortunately, no tooling can offer a breakdown of what happens within the Initialization phase of AWS Lambda. Generally, adding multiple Extensions, large code file sizes, and using a slower runtime (e.g., Java) are the biggest culprits when it comes to slow Initialization.
+
+Once initialized, each instance of your function can process thousands of requests without performing another Initialization. However, AWS Lambda function instance containers will shutdown within 5-15 minutes of inactivity. After that, the next event will be a Cold-Start, causing Initialization to run again.
+
+#### Tags
+
+These are the Tags attached to this Span:
+
+```
+aws.lambda.initialization.duration: 600, // Maps to the Cloudwatch Logs Report "Init Duration"
+```
+
+### Invocation
+
+This is a Span within a Trace for AWS Lambda. After Initialization, Extensions and the handler of the AWS Lambda function run in the Invocation phase. This phase includes:
+
+Running External Extensions in parallel with the function. These also continue running after the function has completed, enabling Serverless Console to capture diagnostic information and ingest metrics, traces and logs.
+
+Running the wrapper logic for Internal Extensions.
+
+Running the handler for your AWS Lambda.
+
+The Invocation phase is comprised mostly of your handler (i.e. your business logic), and you want to optimize that as best you can because its performance (combined with Initialization performance) will have the biggest impact on the experience for your users and customers.
+
+Serverless Console provides a lot of auto-instrumentation for measuring Spans within the Invocation span, such as requests to other AWS Services and HTTP calls generally.
+
+It's important to note that your function's timeout setting limits the duration of the entire Invocation phase. For example, if you set the function timeout as 360 seconds, the function and all extensions need to complete within 360 seconds.
+
+#### Tags
+
+These are the Tags attached to this Span:
+
+```
+aws.lambda.invocation.duration: 432, // Maps to the Cloudwatch Logs Report "Duration"
+```
