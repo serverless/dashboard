@@ -24,6 +24,8 @@ const userSettings = (() => {
 })();
 if (!userSettings) return;
 
+const initializeRequireInTheMiddle = require('./require-in-the-middle-patch');
+
 const http = require('http');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
@@ -473,6 +475,8 @@ module.exports = detectResources({
   tracerProvider.resource = tracerProvider.resource.merge(resource);
   return { keepAliveAgent }; // For testing purposes
 });
+
+initializeRequireInTheMiddle();
 
 const { handlerLoadDuration } = require('./prepare-wrapper')();
 
