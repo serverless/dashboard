@@ -17,16 +17,20 @@ package types
 // 	CloudPlatform        *string `json:"cloud.platform"`
 // }
 
+type LogLine struct {
+	Timestamp         *int64  `json:"timestamp"`
+	SeverityText      *string `json:"severityText"`
+	SeverityNumber    *int64  `json:"severityNumber"`
+	Body              *string `json:"body"`
+	ProcessingOrderId *string `json:"processingOrderId"`
+}
+
 type LogJson struct {
-	Timestamp         *int64                 `json:"timestamp"`
-	Attributes        map[string]interface{} `json:"attributes"`
-	Resource          map[string]interface{} `json:"resource"`
-	TraceId           *string                `json:"traceId"`
-	SpanId            *string                `json:"spanId"`
-	SeverityText      *string                `json:"severityText"`
-	SeverityNumber    *int64                 `json:"severityNumber"`
-	ProcessingOrderId *string                `json:"processingOrderId"`
-	Body              *string                `json:"body"`
+	Attributes map[string]interface{} `json:"attributes"`
+	// Resource   map[string]interface{} `json:"resource"`
+	TraceId *string    `json:"traceId"`
+	SpanId  *string    `json:"spanId"`
+	Logs    *[]LogLine `json:"logs"`
 }
 
 // EventType represents the type of logs in Lambda

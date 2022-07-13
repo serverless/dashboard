@@ -165,7 +165,7 @@ func ParseLogsAPIPayload(data []byte) ([]LogMessage, error) {
 	return messages, nil
 }
 
-func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs []types.LogJson, err error) {
+func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs types.LogJson, err error) {
 	// Get first / unique key from EventData
 	var key string
 	for k := range eventData.EventData {
@@ -173,18 +173,20 @@ func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs []type
 		break
 	}
 
+	logLines := []types.LogLine{}
+
 	fun, ok := eventData.EventData[key].(map[string]interface{})
 	if !ok {
 		fmt.Printf(">> ReadLogs not MAPPING!: %+v\n", eventData.EventData[key])
 		return
 	}
 
-	metricsAtt := map[string]interface{}{}
-	for _, kv := range createMetricAttributes(fun, nil) {
-		if LogsMetricAttributeNames[kv.Key] {
-			metricsAtt[kv.Key] = getJsonValue(kv.Value)
-		}
-	}
+	// metricsAtt := map[string]interface{}{}
+	// for _, kv := range createMetricAttributes(fun, nil) {
+	// 	if LogsMetricAttributeNames[kv.Key] {
+	// 		metricsAtt[kv.Key] = getJsonValue(kv.Value)
+	// 	}
+	// }
 
 	resourcesAtt := map[string]interface{}{}
 	for _, kv := range createResourceAttributes(fun) {
@@ -207,18 +209,20 @@ func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs []type
 		}
 		timestamp := msgs[i].Time.UnixMilli()
 		orderId := fmt.Sprint(time.Now().UnixNano())
-		logs = append(logs, types.LogJson{
+		logLines = append(logLines, types.LogLine{
 			Body:              &msgs[i].StringRecord,
-			Attributes:        resourcesAtt,
-			Resource:          metricsAtt,
 			Timestamp:         &timestamp,
-			TraceId:           &eventData.Span.TraceID,
-			SpanId:            &eventData.Span.SpanID,
 			SeverityNumber:    &severityNumber,
 			SeverityText:      &severityText,
 			ProcessingOrderId: &orderId,
 		})
 	}
 
-	return logs, err
+	return types.LogJson{
+		Logs:       &logLines,
+		Attributes: resourcesAtt,
+		// Resource:          metricsAtt,
+		TraceId: &eventData.Span.TraceID,
+		SpanId:  &eventData.Span.SpanID,
+	}, err
 }

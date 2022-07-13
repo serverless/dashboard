@@ -12,6 +12,14 @@ import (
 const NANO_MILLI = 1000 * 1000
 const logsData = `[{"time":"2022-06-23T18:14:44.959Z","type":"platform.start","record":{"requestId":"b5051b53-a6df-4bb7-aba7-874520d1ec77","version":"$LATEST"}},{"time":"2022-06-23T18:14:44.993Z","type":"function","record":"2022-06-23T18:14:44.993Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tInside Lambda function handler\n"},{"time":"2022-06-23T18:14:45.495Z","type":"function","record":"2022-06-23T18:14:45.494Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tAfter sleep\n"},{"time":"2022-06-23T18:14:45.498Z","type":"platform.runtimeDone","record":{"requestId":"b5051b53-a6df-4bb7-aba7-874520d1ec77","status":"success"}},{"time":"2022-06-23T18:14:45.499Z","type":"platform.end","record":{"requestId":"b5051b53-a6df-4bb7-aba7-874520d1ec77"}},{"time":"2022-06-23T18:14:45.499Z","type":"platform.report","record":{"requestId":"b5051b53-a6df-4bb7-aba7-874520d1ec77","metrics":{"durationMs":537.68,"billedDurationMs":538,"memorySizeMB":1024,"maxMemoryUsedMB":92}}}]`
 
+func strPointer(s string) *string {
+	return &s
+}
+
+func int64Pointer(i int64) *int64 {
+	return &i
+}
+
 func Test_parseLogsAPIPayload(t *testing.T) {
 	type args struct {
 		data []byte
@@ -108,46 +116,56 @@ func Test_readLogs(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []types.LogJson
+		want    types.LogJson
 		wantErr bool
 	}{{
 		name: "readLogs",
 		args: args{
 			data: logMsgs,
 		},
-		want: []types.LogJson{
-			{
-				Body: &logMsgs[0].StringRecord,
-			},
-			{
-				Body: &logMsgs[1].StringRecord,
-			},
-			{
-				Body: &logMsgs[2].StringRecord,
-			},
-			{
-				Body: &logMsgs[3].StringRecord,
-			},
-			{
-				Body: &logMsgs[4].StringRecord,
-			},
-			{
-				Body: &logMsgs[5].StringRecord,
+		want: types.LogJson{
+			SpanId:  strPointer("spanId"),
+			TraceId: strPointer("traceId"),
+			Logs: &[]types.LogLine{
+				{
+					Timestamp:      int64Pointer(1656008084993),
+					SeverityText:   strPointer("INFO"),
+					SeverityNumber: int64Pointer(9),
+					Body:           strPointer("2022-06-23T18:14:44.993Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tInside Lambda function handler\n"),
+				},
+				{
+					Timestamp:      int64Pointer(1656008085495),
+					SeverityText:   strPointer("INFO"),
+					SeverityNumber: int64Pointer(9),
+					Body:           strPointer("2022-06-23T18:14:45.494Z\tb5051b53-a6df-4bb7-aba7-874520d1ec77\tINFO\tAfter sleep\n"),
+				},
 			},
 		},
 	},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ReadLogs(tt.args.data, &types.EventDataPayload{})
+			got, err := ReadLogs(tt.args.data, &types.EventDataPayload{
+				EventData: map[string]interface{}{
+					"testing": map[string]interface{}{},
+				},
+				Span: &types.Span{
+					TraceID: "traceId",
+					SpanID:  "spanId",
+				},
+			})
+			// remove automatic fields
+			got.Attributes = nil
+			for i := range *got.Logs {
+				(*got.Logs)[i].ProcessingOrderId = nil
+			}
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readLogs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			for i, gotMsg := range got {
-				if !reflect.DeepEqual(gotMsg, tt.want[i]) {
-					t.Errorf("readLogs() = \ngot %v\nwant %v\n\n", spew.Sdump(gotMsg), spew.Sdump(tt.want[i]))
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("readLogs() = \ngot %v\nwant %v\n\n", spew.Sdump(got), spew.Sdump(tt.want))
 			}
 		})
 	}
