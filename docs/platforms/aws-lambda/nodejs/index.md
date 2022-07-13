@@ -6,7 +6,7 @@ AWS Lambda is a serverless compute service that lets you run code without provis
 
 Here is a reference guide of the Traces, Spans, Tags and more collected by Serverless Console.
 
-## Trace
+## `aws-lambda`
 
 The Trace for an AWS Lambda specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown, and any logic performed within the Invocation phase.
 
@@ -20,34 +20,27 @@ These are the Tags attached to this Trace:
 
 ```javascript
 
-/*
- * Tags: Metadata
- */
+/* Tags: Metadata */
 
 s.sdk.name: "s-aws-lambda-nodejs",
 s.sdk.version: "0.0.1",
 s.org.id: "53121673-361f-4181-3411-53e031312c09",
-
-/*
- * Tags: Standard
- */
-
 s.platform: "aws-lambda",
 s.environment: "prod",
 s.namespace: "api",
 s.service: "aws-api-prod-getPoster",
 s.region: "us-east-1",
 
-/*
- * Tags: AWS
- */
+/* Tags: Standard */
+ 
+duration: 1032, // Maps to the AWS Lambda Cloudwatch Logs Report "Billed Duration"
+
+/* Tags: AWS */
 
 aws.account.id: "670455222476",
 aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPoster",
 
-/*
- * Tags: AWS Lambda
- */
+/* Tags: AWS Lambda */
 
 aws.lambda.arch: "x64",
 aws.lambda.coldstart: false,
@@ -81,7 +74,7 @@ aws.lambda.status_code: 200,
 
 ## Spans
 
-### Initialization
+### `initialization`
 
 This is a Span within a Trace for AWS Lambda that represents the time spent loading your AWS Lambda function and running any initialization code.
 
@@ -104,10 +97,13 @@ Once initialized, each instance of your function can process thousands of reques
 These are the Tags attached to this Span:
 
 ```javascript
-aws.lambda.initialization.duration: 600, // Maps to the Cloudwatch Logs Report "Init Duration"
+
+/* Tags: Standard */
+ 
+duration: 600, // Maps to the AWS Lambda Cloudwatch Logs Report "Init Duration"
 ```
 
-### Invocation
+### `invocation`
 
 This is a Span within a Trace for AWS Lambda. After Initialization, Extensions and the handler of the AWS Lambda function run in the Invocation phase. This phase includes:
 
@@ -119,7 +115,7 @@ Running the handler for your AWS Lambda.
 
 The Invocation phase is comprised mostly of your handler (i.e. your business logic), and you want to optimize that as best you can because its performance (combined with Initialization performance) will have the biggest impact on the experience for your users and customers.
 
-Serverless Console provides a lot of auto-instrumentation for measuring Spans within the Invocation span, such as requests to other AWS Services and HTTP calls generally.
+Serverless Console provides a lot of auto-instrumentation for measuring Spans within your business logic, which is located within the Invocation span, such as requests to other AWS Services and HTTP calls generally.
 
 It's important to note that your function's timeout setting limits the duration of the entire Invocation phase. For example, if you set the function timeout as 360 seconds, the function and all extensions need to complete within 360 seconds.
 
@@ -127,6 +123,76 @@ It's important to note that your function's timeout setting limits the duration 
 
 These are the Tags attached to this Span:
 
+
 ```javascript
-aws.lambda.invocation.duration: 432, // Maps to the Cloudwatch Logs Report "Duration"
+
+/* Tags: Standard */
+
+duration: 432, // Maps to the AWS Lambda Cloudwatch Logs Report "Duration"
 ```
+
+### `http`
+
+If you use the `http` module in Node.js, this Span is created.
+
+#### Tags
+
+These are the Tags attached to this Span:
+
+```javascript
+
+/* Tags: Standard */
+ 
+duration: 231
+
+/* Tags: http */
+
+node.http.url: "http://myapp.com"
+node.http.method: "get"
+node.http.path: "/helloworld"
+node.http.status_code: 401
+```
+
+### `https`
+
+If you use the `https` module in Node.js, this Span is created.
+
+#### Tags
+
+These are the Tags attached to this Span:
+
+```javascript
+
+/* Tags: Standard */
+ 
+duration: 331
+
+/* Tags: https */
+
+node.https.url: "http://myapp.com"
+node.https.method: "get"
+node.https.path: "/helloworld"
+node.https.status_code: 500
+```
+
+### `express`
+
+If an HTTP request is made from your AWS Lambda function, a Span is created.
+
+#### Tags
+
+These are the Tags attached to this Span:
+
+```javascript
+
+/* Tags: Standard */
+ 
+duration: 291
+
+/* Tags: express */
+
+express.method: "get"
+express.path: "/helloworld"
+express.status_code: 200
+```
+
