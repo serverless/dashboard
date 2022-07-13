@@ -469,7 +469,10 @@ registerInstrumentations({
 
 module.exports = detectResources({
   detectors: [awsLambdaDetector, envDetector, processDetector],
-}).then((resource) => (tracerProvider.resource = tracerProvider.resource.merge(resource)));
+}).then((resource) => {
+  tracerProvider.resource = tracerProvider.resource.merge(resource);
+  return { keepAliveAgent }; // For testing purposes
+});
 
 const { handlerLoadDuration } = require('./prepare-wrapper')();
 

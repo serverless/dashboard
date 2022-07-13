@@ -22,6 +22,7 @@ const payload = {};
 (async () => {
   ensureNpmDependencies('internal/otel-extension-internal-node');
   ensureNpmDependencies('test/fixtures/lambdas');
+  process.env.SLS_TEST_EXTENSION_REPORT_DESTINATION = 'log';
   process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
   process.env.AWS_REGION = 'us-east-1';
   process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');
@@ -60,7 +61,7 @@ const payload = {};
   server.listen(OTEL_SERVER_PORT);
 
   try {
-    await require('../../internal/otel-extension-internal-node');
+    const { keepAliveAgent } = await require('../../internal/otel-extension-internal-node');
     await new Promise((resolve, reject) => {
       const maybeThenable = require('../../internal/otel-extension-internal-node/wrapper').handler(
         payload,
@@ -79,6 +80,7 @@ const payload = {};
     });
 
     await deferredResultProcessing;
+    keepAliveAgent.destroy();
   } finally {
     server.close();
   }
