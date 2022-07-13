@@ -5,11 +5,12 @@ import urllib.request
 from typing import Dict, List, Sequence
 
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
-from opentelemetry.sdk.trace import Event, ReadableSpan, Resource
+from opentelemetry.sdk.trace import Event, ReadableSpan, Resource, Span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import SpanContext, format_span_id, format_trace_id
 
+from serverless.aws_lambda_otel_extension.opentelemetry.semconv.trace import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.shared.constants import (
     HTTP_CONTENT_TYPE_APPLICATION_JSON,
     HTTP_CONTENT_TYPE_HEADER,
@@ -21,11 +22,70 @@ from serverless.aws_lambda_otel_extension.shared.settings import (
     SETTINGS_SLS_EXTENSION_INTERNAL_LOG_PRETTY,
 )
 from serverless.aws_lambda_otel_extension.shared.store import store
-from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
-from serverless.aws_lambda_otel_extension.span_formatters.extension import telemetry_formatted_span
-from serverless.aws_lambda_otel_extension.workers.http import http_client_worker_pool
+from serverless.aws_lambda_otel_extension.worker.http import http_client_worker_pool
 
 logger = logging.getLogger(__name__)
+
+SLS_SPAN_TYPE = SlsExtensionSpanAttributes.SLS_SPAN_TYPE
+SLS_ORIGINAL_PROPERTIES = SlsExtensionSpanAttributes.SLS_ORIGINAL_PROPERTIES
+
+
+def telemetry_formatted_span(span: ReadableSpan) -> Dict:
+
+    parent_id = None
+
+    if span.parent is not None:
+        if isinstance(span.parent, Span):
+            parent_id = format_span_id(span.parent.get_span_context().span_id)
+        if isinstance(span.parent, SpanContext):
+            parent_id = format_span_id(span.parent.span_id)
+
+    events = []
+
+    for event in span.events:
+        events.append(
+            {
+                "name": event.name,
+                "timeUnixNano": str(event.timestamp),
+                "attributes": {
+                    **span._format_attributes(event.attributes),
+                    SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(event.attributes).keys()),
+                },
+            }
+        )
+
+    links = []
+
+    for link in span.links:
+        links.append(
+            {
+                "traceId": format_trace_id(link.context.trace_id),
+                "spanId": format_span_id(link.context.span_id),
+                "attributes": {
+                    **span._format_attributes(link.attributes),
+                    SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(link.attributes).keys()),
+                },
+            }
+        )
+
+    data: Dict = {
+        "name": span._name,
+        "traceId": format_trace_id(span.context.trace_id),
+        "spanId": format_span_id(span.context.span_id),
+        "parentSpanId": parent_id,
+        "kind": f"SPAN_KIND_{span.kind.name}",
+        "startTimeUnixNano": str(span._start_time),
+        "endTimeUnixNano": str(span._end_time),
+        "attributes": {
+            **span._format_attributes(span._attributes),
+            SLS_ORIGINAL_PROPERTIES: ",".join(span._format_attributes(span._attributes).keys()),
+        },
+        "events": events,
+        "links": links,
+        "status": {},
+    }
+
+    return data
 
 
 class SlsExtensionSpanExporter(SpanExporter):
@@ -258,7 +318,7 @@ class SlsExtensionSpanExporter(SpanExporter):
 
             sls_span_type = None
             if span.attributes:
-                sls_span_type = span.attributes.get(SlsExtensionSpanAttributes.SLS_SPAN_TYPE)
+                sls_span_type = span.attributes.get(SLS_SPAN_TYPE)
 
             if sls_span_type == "pre":
                 for event in span.events:

@@ -66,8 +66,7 @@ class Store:
     @property
     def pre_instrumentation_spans(self) -> Iterator[Span]:
         with self._lock:
-            for pre_instrumentation_span in self._pre_instrumentation_spans:
-                yield pre_instrumentation_span
+            yield from self._pre_instrumentation_spans
         return
 
 

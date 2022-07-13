@@ -22,7 +22,11 @@ from opentelemetry.trace import SpanKind, Status, StatusCode, get_current_span, 
 from opentelemetry.util._time import _time_ns
 from wrapt import wrap_function_wrapper  # type: ignore
 
-from serverless.aws_lambda_otel_extension.aws_lambda.event_detectors import detect_lambda_event_type
+from serverless.aws_lambda_otel_extension.event.detection import detect_aws_lambda_event_type
+from serverless.aws_lambda_otel_extension.opentelemetry.semconv.trace import (
+    OverloadedSpanAttributes,
+    SlsExtensionSpanAttributes,
+)
 from serverless.aws_lambda_otel_extension.shared.constants import (
     _X_AMZN_TRACE_ID_ENV_VAR,
     PACKAGE_NAMESPACE,
@@ -44,11 +48,9 @@ from serverless.aws_lambda_otel_extension.shared.settings import SETTINGS_SLS_EX
 from serverless.aws_lambda_otel_extension.shared.store import store
 from serverless.aws_lambda_otel_extension.shared.utilities import (
     extract_account_id_from_invoked_function_arn,
-    filter_dict_values_is_not_none,
+    filter_dict_value_is_not_none,
 )
-from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
-from serverless.aws_lambda_otel_extension.span_attributes.overloaded import OverloadedSpanAttributes
-from serverless.aws_lambda_otel_extension.workers.http import http_client_worker_pool
+from serverless.aws_lambda_otel_extension.worker.http import http_client_worker_pool
 
 _InstrumentorHookT = Optional[Callable[[Span, Dict, Any], None]]
 _RequestHookT = Optional[Callable[[Span, Dict, Any], None]]
@@ -76,7 +78,7 @@ HTTP_PATH = OverloadedSpanAttributes.HTTP_PATH
 
 
 def _filtered_attributes(attributes: Dict) -> Dict:
-    attributes = filter_dict_values_is_not_none(attributes)
+    attributes = filter_dict_value_is_not_none(attributes)
     return attributes
 
 
@@ -117,28 +119,26 @@ def _extract_handler_span_parent_context(
         headers = event.get("headers")
         if isinstance(headers, dict):
             for k, v in headers.items():
-                if isinstance(k, str):
-                    if k.lower() == "x-amzn-trace-id":
-                        if isinstance(v, str):
-                            x_amzn_trace_id = v
+                if isinstance(k, str) and k.lower() == "x-amzn-trace-id" and isinstance(v, str):
+                    x_amzn_trace_id = v
 
-                            parent_context = get_global_textmap().extract({TRACE_HEADER_KEY: x_amzn_trace_id})
+                    parent_context = get_global_textmap().extract({TRACE_HEADER_KEY: x_amzn_trace_id})
 
-                            for kv in x_amzn_trace_id.split(";"):
-                                try:
-                                    k, v = kv.split("=", 1)
-                                    parent_attributes = BoundedAttributes(
-                                        attributes=_filtered_attributes(
-                                            {
-                                                **parent_attributes,
-                                                f"remote.{k}".lower(): v,
-                                            }
-                                        )
-                                    )
-                                except Exception:  # noqa: S110 (if this doesn't work then we can safely ignore it)
-                                    pass
+                    for kv in x_amzn_trace_id.split(";"):
+                        try:
+                            k, v = kv.split("=", 1)
+                            parent_attributes = BoundedAttributes(
+                                attributes=_filtered_attributes(
+                                    {
+                                        **parent_attributes,
+                                        f"remote.{k}".lower(): v,
+                                    }
+                                )
+                            )
+                        except Exception:  # noqa: S110 (if this doesn't work then we can safely ignore it)
+                            pass
 
-                            return parent_context, parent_attributes
+                    return parent_context, parent_attributes
 
     return parent_context, parent_attributes
 
@@ -150,6 +150,7 @@ def _instrument(
     request_hook: _RequestHookT = None,
     response_hook: _ResponseHookT = None,
     tracer_provider: Optional[TracerProvider] = None,
+    raise_on_exception: Optional[bool] = None,
 ):
 
     # TODO: Talk to OpenTelemetry devs about generic types... ugh...
@@ -168,12 +169,6 @@ def _instrument(
     simple_span_processor = SimpleSpanProcessor(in_memory_span_exporter)
 
     tracer_provider.add_span_processor(simple_span_processor)
-
-    def _force_flush():
-        if flush_timeout is not None:
-            tracer_provider.force_flush(flush_timeout)
-        else:
-            tracer_provider.force_flush()
 
     def _instrumented_lambda_handler_call(call_wrapped, instance, args, kwargs):
         initial_lambda_handler = ENV_ORIG_HANDLER or ENV__HANDLER
@@ -202,7 +197,7 @@ def _instrument(
                     SLS_SPAN_TYPE: "detect",
                 },
             ) as detect_span:
-                event_type = detect_lambda_event_type(event, context)
+                event_type = detect_aws_lambda_event_type(event, context)
                 if event_type in set(
                     [
                         LambdaEventType.CloudWatchEvent,
@@ -386,9 +381,8 @@ def _instrument(
                     )
 
                 try:
-                    if event is not None:
-                        if instrumentation_span.is_recording():
-                            store.set_request_data_for_trace_id(instrumentation_span.context.trace_id, event)
+                    if event is not None and instrumentation_span.is_recording():
+                        store.set_request_data_for_trace_id(instrumentation_span.context.trace_id, event)
                 except Exception:
                     logger.exception("Exception while setting request data for trace id")
 
@@ -467,9 +461,8 @@ def _instrument(
                         logger.exception("Exception while calling handler function")
 
                     try:
-                        if not isinstance(result, Exception):
-                            if instrumentation_span.is_recording():
-                                store.set_response_data_for_trace_id(instrumentation_span.context.trace_id, result)
+                        if not isinstance(result, Exception) and instrumentation_span.is_recording():
+                            store.set_response_data_for_trace_id(instrumentation_span.context.trace_id, result)
                     except Exception:
                         logger.exception("Exception while setting response data for trace id")
 
@@ -478,10 +471,12 @@ def _instrument(
 
             for finished_span in in_memory_span_exporter.get_finished_spans():
                 finished_span = cast(ReadableSpan, finished_span)
-                if finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django":
-                    if finished_span.attributes:
-                        extracted_http_path = finished_span.attributes.get(HTTP_ROUTE)
-                        extracted_http_status_code = finished_span.attributes.get(HTTP_STATUS_CODE)
+                if (
+                    finished_span.instrumentation_info.name == "opentelemetry.instrumentation.django"
+                    and finished_span.attributes is not None
+                ):
+                    extracted_http_path = finished_span.attributes.get(HTTP_ROUTE)
+                    extracted_http_status_code = finished_span.attributes.get(HTTP_STATUS_CODE)
 
             in_memory_span_exporter.clear()
 
@@ -499,22 +494,21 @@ def _instrument(
                     instrumentation_span.set_status(Status(StatusCode.OK))
 
             # TODO: Revisit this to see if we should pass the exception as well.
-            if not isinstance(result, Exception):
-                if callable(response_hook):
-                    try:
-                        with tracer.start_as_current_span(
-                            name="__response_hook__",
-                            attributes={
-                                SLS_SPAN_TYPE: "response_hook",
-                            },
-                        ) as response_hook_span:
-                            try:
-                                response_hook(response_hook_span, event, context, result)
-                            except Exception:
-                                logger.exception("Exception while executing response_hook callable")
-                                raise
-                    except Exception:
-                        logger.exception("Exception during response_hook span")
+            if not isinstance(result, Exception) and callable(response_hook):
+                try:
+                    with tracer.start_as_current_span(
+                        name="__response_hook__",
+                        attributes={
+                            SLS_SPAN_TYPE: "response_hook",
+                        },
+                    ) as response_hook_span:
+                        try:
+                            response_hook(response_hook_span, event, context, result)
+                        except Exception:
+                            logger.exception("Exception while executing response_hook callable")
+                            raise
+                except Exception:
+                    logger.exception("Exception during response_hook span")
 
             http_attributes = BoundedAttributes(
                 attributes=_filtered_attributes(
@@ -595,7 +589,7 @@ def _instrument(
                     )
 
         try:
-            _force_flush
+            tracer_provider.force_flush(flush_timeout)
         except Exception:
             logger.exception("Exception while flushing telemetry data")
 
@@ -630,6 +624,7 @@ class SlsAwsLambdaInstrumentor(BaseInstrumentor):
             self._wrapped_function_name,
             flush_timeout=kwargs.get("flush_timeout", SETTINGS_SLS_EXTENSION_FLUSH_TIMEOUT),
             tracer_provider=kwargs.get("tracer_provider"),
+            raise_on_exception=kwargs.get("raise_on_exception", False),
         )
 
     def _uninstrument(self, **kwargs):

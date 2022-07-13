@@ -1,5 +1,6 @@
 import importlib
 import logging
+from contextlib import suppress
 from typing import Any, List, Optional, cast
 
 from opentelemetry.distro import OpenTelemetryDistro
@@ -14,17 +15,17 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_provider
 from pkg_resources import iter_entry_points
 
-from serverless.aws_lambda_otel_extension.aws_lambda.instrumentation import SlsAwsLambdaInstrumentor
-from serverless.aws_lambda_otel_extension.resource_detectors.extension import SlsExtensionResourceDetector
+from serverless.aws_lambda_otel_extension.opentelemetry.instrumentation.aws_lambda import SlsAwsLambdaInstrumentor
+from serverless.aws_lambda_otel_extension.opentelemetry.resource import SlsExtensionResourceDetector
+from serverless.aws_lambda_otel_extension.opentelemetry.semconv.trace.extension import SlsExtensionSpanAttributes
+from serverless.aws_lambda_otel_extension.opentelemetry.trace.export.extension import SlsExtensionSpanExporter
+from serverless.aws_lambda_otel_extension.opentelemetry.trace.export.logging import SlsLoggingSpanExporter
 from serverless.aws_lambda_otel_extension.shared.constants import JUST_PLAIN_DO_NOT_INSTRUMENT, PACKAGE_VERSION
 from serverless.aws_lambda_otel_extension.shared.settings import (
     SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS,
     SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS,
 )
 from serverless.aws_lambda_otel_extension.shared.store import store
-from serverless.aws_lambda_otel_extension.span_attributes.extension import SlsExtensionSpanAttributes
-from serverless.aws_lambda_otel_extension.span_exporters.extension import SlsExtensionSpanExporter
-from serverless.aws_lambda_otel_extension.span_exporters.logging import SlsLoggingSpanExporter
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +40,13 @@ def auto_fixer_request_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
     opentelemetry_instrumentation_fixer_module = None
 
-    try:
+    with suppress(Exception):
         opentelemetry_instrumentation_fixer_module = importlib.import_module(
-            f"serverless.aws_lambda_otel_extension.fixers.{span.instrumentation_scope.name}"
+            f"serverless.aws_lambda_otel_extension.opentelemetry.extension.{span.instrumentation_scope.name}.hooks"
         )
-    except Exception:  # noqa: S110 (ignore missing module)
-        pass
 
     if opentelemetry_instrumentation_fixer_module:
-        fixer_response_hook = getattr(opentelemetry_instrumentation_fixer_module, "fixer_response_hook", None)
+        fixer_response_hook = getattr(opentelemetry_instrumentation_fixer_module, "response_hook", None)
         if callable(fixer_response_hook):
             fixer_response_hook(span, *args, **kwargs)
 
@@ -56,15 +55,14 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
     opentelemetry_instrumentation_fixer_module = None
 
-    try:
+    print("!!!!!!!!!!!!!!!", span.instrumentation_scope.name)
+    with suppress(Exception):
         opentelemetry_instrumentation_fixer_module = importlib.import_module(
-            f"serverless.aws_lambda_otel_extension.fixers.{span.instrumentation_scope.name}"
+            f"serverless.aws_lambda_otel_extension.opentelemetry.extension.{span.instrumentation_scope.name}.hooks"
         )
-    except Exception:  # noqa: S110 (ignore missing module)
-        pass
 
     if opentelemetry_instrumentation_fixer_module:
-        fixer_response_hook = getattr(opentelemetry_instrumentation_fixer_module, "fixer_response_hook", None)
+        fixer_response_hook = getattr(opentelemetry_instrumentation_fixer_module, "response_hook", None)
         if callable(fixer_response_hook):
             fixer_response_hook(span, *args, **kwargs)
 
@@ -103,15 +101,19 @@ def setup_auto_instrumentor(tracer_provider: Optional[TracerProvider]) -> None:
                             skipped.append(entry_point.name)
                             continue
 
-                        if isinstance(SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS, list):
-                            if entry_point.name not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS:
-                                skipped.append(entry_point.name)
-                                continue
+                        if (
+                            isinstance(SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS, list)
+                            and entry_point.name not in SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS
+                        ):
+                            skipped.append(entry_point.name)
+                            continue
 
-                        if isinstance(SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS, list):
-                            if entry_point.name in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS:
-                                skipped.append(entry_point.name)
-                                continue
+                        if (
+                            isinstance(SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS, list)
+                            and entry_point.name in SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS
+                        ):
+                            skipped.append(entry_point.name)
+                            continue
 
                         if entry_point.dist:
                             try:

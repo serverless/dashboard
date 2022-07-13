@@ -7,7 +7,7 @@ def split_or_none(s: Optional[str]) -> Optional[List[str]]:
     return [x.strip() for x in s.split(",")]
 
 
-def filter_dict_values_is_not_none(d: Dict) -> Dict:
+def filter_dict_value_is_not_none(d: Dict) -> Dict:
     return {k: v for k, v in d.items() if v is not None}
 
 

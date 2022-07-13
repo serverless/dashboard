@@ -150,7 +150,7 @@ def is_event_scheduled(event: Dict, context: Any) -> bool:
     )
 
 
-def detect_lambda_event_type(event: Dict, context: Any) -> Optional[LambdaEventType]:
+def detect_aws_lambda_event_type(event: Dict, context: Any) -> Optional[LambdaEventType]:
 
     if is_event_alexa_skill(event, context):
         return LambdaEventType.AlexaSkill
