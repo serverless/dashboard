@@ -55,7 +55,6 @@ def auto_fixer_response_hook(span: Span, *args: Any, **kwargs: Any) -> None:
 
     opentelemetry_instrumentation_fixer_module = None
 
-    print("!!!!!!!!!!!!!!!", span.instrumentation_scope.name)
     with suppress(Exception):
         opentelemetry_instrumentation_fixer_module = importlib.import_module(
             f"serverless.aws_lambda_otel_extension.opentelemetry.extension.{span.instrumentation_scope.name}.hooks"
