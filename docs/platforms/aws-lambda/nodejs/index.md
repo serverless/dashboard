@@ -50,8 +50,6 @@ aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPost
  */
 
 aws.lambda.arch: "x64",
-aws.lambda.api_gateway_api_id: "pagbl1123133b91", // Optional
-aws.lambda.api_gateway_request_id: "2be123182-951a-4d139-9f49-d913f1231abaa", // Optional
 aws.lambda.coldstart: false,
 aws.lambda.duration: 1032, // Maps to the Cloudwatch Logs Report "Billed Duration"
 aws.lambda.error: false,
@@ -71,22 +69,14 @@ aws.lambda.request_time_epoch: 1657743048772,
 aws.lambda.version: "$LATEST",
 aws.lambda.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0",
 
-
-
-/*
- * Tags: Scope
- */
-
-s.faas.name: "aws-api-prod-getPoster",
-s.faas.error: true,
-s.faas.cold_start: true,
-s.faas.duration: 427,
-
-s.http.domain: "api.planetmojo.io", // Optional
-s.http.method: "GET", // Optional
-s.http.path: "/collectible/movie-poster/metadata/{id}", // Optional
-s.http.raw_path: "/collectible/movie-poster/metadata/2293", // Optional
-s.http.status_code: 200, // Optional
+// Optional AWS Lambda Tags
+aws.lambda.api_gateway_api_id: "pagbl1123133b91",
+aws.lambda.api_gateway_request_id: "2be123182-951a-4d139-9f49-d913f1231abaa",
+aws.lambda.domain: "api.planetmojo.io",
+aws.lambda.method: "GET",
+aws.lambda.path: "/collectible/movie-poster/metadata/{id}",
+aws.lambda.raw_path: "/collectible/movie-poster/metadata/2293",
+aws.lambda.status_code: 200,
 ```
 
 ## Spans
@@ -113,7 +103,7 @@ Once initialized, each instance of your function can process thousands of reques
 
 These are the Tags attached to this Span:
 
-```
+```javascript
 aws.lambda.initialization.duration: 600, // Maps to the Cloudwatch Logs Report "Init Duration"
 ```
 
@@ -137,6 +127,6 @@ It's important to note that your function's timeout setting limits the duration 
 
 These are the Tags attached to this Span:
 
-```
+```javascript
 aws.lambda.invocation.duration: 432, // Maps to the Cloudwatch Logs Report "Duration"
 ```
