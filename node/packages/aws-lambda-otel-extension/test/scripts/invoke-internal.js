@@ -5,9 +5,13 @@
 
 'use strict';
 
+require('essentials');
+require('log-node')();
+
 const http = require('http');
 const path = require('path');
 const isThenable = require('type/thenable/is');
+const log = require('log').get('test');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures');
@@ -51,7 +55,7 @@ const payload = {};
 
           if (logsQueue.length > 1) {
             server.close();
-            resolve();
+            resolve(logsQueue);
           }
         });
       }
@@ -79,8 +83,9 @@ const payload = {};
       if (isThenable(maybeThenable)) resolve(maybeThenable);
     });
 
-    await deferredResultProcessing;
+    const logs = await deferredResultProcessing;
     keepAliveAgent.destroy();
+    log.info(logs);
   } finally {
     server.close();
   }
