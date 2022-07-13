@@ -129,6 +129,24 @@ These are the Tags attached to this Span:
 duration: 432, // Maps to the AWS Lambda Cloudwatch Logs Report "Duration"
 ```
 
+## `aws-sdk`
+
+If you use the `aws-sdk` module in Node.js to interact with another service, this Span is created.
+
+```javascript
+
+/* Tags: Standard */
+ 
+duration: 231
+
+/* Tags: aws-sdk */
+
+aws.sdk.system: "aws-api"
+aws.sdk.method: "PutObject" // The name of the operation corresponding to the request, as returned by the AWS SDK. If the SDK does not provide a way to retrieve a name, the name of the command SHOULD be used, removing the suffix Command if present, resulting in a PascalCase name with no spaces.
+aws.sdk.service: "S3" // The name of the service to which a request is made, as returned by the AWS SDK. If the SDK does not provide a away to retrieve a name, the name of the SDK's client interface for a service SHOULD be used, removing the suffix Client if present, resulting in a PascalCase name with no spaces.
+aws.sdk.region: 'eu-west-1' // Region name for the request
+```
+
 ## `http`
 
 If you use the `http` module in Node.js, this Span is created.
