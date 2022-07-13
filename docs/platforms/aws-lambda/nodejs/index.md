@@ -4,28 +4,29 @@ AWS Lambda is a serverless compute service that lets you run code without provis
 
 # Trace
 
+Every AWS Lambda function invocation that is instrumented with our Extension generates a Trace.  This Trace contains the following Spans, some of which are optional depending on whether or not you use a specific module.
+
+* [aws-lambda](#aws-lambda)
+  * [initialization](#initialization)
+  * [invocation](#invocation)
+    * [express](#express)
+      * [https](#https)
+      * [http](#http)
+      * [aws-sdk](#aws-sdk)
+
+# Spans
+
 ## `aws-lambda`
 
-The Trace for an AWS Lambda specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown, and any logic performed within the Invocation phase.
+This is the parent Span (aka the Trace) for an AWS Lambda, wcich specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown, and any logic performed within the Invocation phase.
 
-An example Trace looks like this:
+Additionally, the duration of this Span is what AWS Lambda bills for, based on 1ms increments. Duration charges apply to initialization code that is declared outside of the handler in the Initiatlization phase, code that runs in the handler of a function during the Invocation phase, as well as the time it takes for code in any last running Extensions to finish executing during Shutdown phase.
 
-```
-* aws-lambda
-  * initialization
-  * invocation
-    * express
-      * https
-      * aws-sdk
-```
-
-Additionally, the duration of the Trace is what AWS Lambda bills for, based on 1ms increments. Duration charges apply to initialization code that is declared outside of the handler in the Initiatlization phase, code that runs in the handler of a function during the Invocation phase, as well as the time it takes for code in any last running Extensions to finish executing during Shutdown phase.
-
-It’s important to note that duration of Traces for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
+It’s important to note that duration of this Span for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
 
 ### Tags
 
-These are the Tags attached to this Trace:
+These are the Tags attached to this Span:
 
 ```javascript
 
@@ -81,7 +82,6 @@ aws.lambda.raw_path: "/collectible/movie-poster/metadata/2293",
 aws.lambda.status_code: 200,
 ```
 
-# Spans
 
 ## `initialization`
 
