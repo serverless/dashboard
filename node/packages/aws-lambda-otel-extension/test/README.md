@@ -47,11 +47,7 @@ npm run test:performance
 
 How extensions behave, for various testing purposes, can be tweaked with following environment variables:
 
-<<<<<<< HEAD
-
-- # `SERVERLESS_PLATFORM_STAGE` - Ingestion server stage to which reports should be propagated (default is `prod`, with this setting it can be overriden to `dev`)
 - `SERVERLESS_PLATFORM_STAGE` - Ingestion server stage to which reports should be propagated (default is `prod`, with this setting it can be overridden to `dev`)
-  > > > > > > > main
 - `SLS_DEBUG_EXTENSION` - Log debug messages, of which scope is to:
   - Mark certain processing points
   - Log payloads which are send between extensions and to the external ingestion server
@@ -59,10 +55,7 @@ How extensions behave, for various testing purposes, can be tweaked with followi
 - `SLS_TEST_EXTENSION_INTERNAL_LOG` - In context of the internal extension, log payloads instead of sending them to the external extension
 - `SLS_TEST_EXTENSION_HOSTNAME` - Custom environment hostname. Used to override `sandbox` when setting up log subscription server
 - `SLS_TEST_EXTENSION_REPORT_TYPE` - Set to `json` to pass reports in direct JSON format instead of Protobuf
-  <<<<<<< HEAD
-- # `SLS_TEST_EXTENSION_REPORT_DESTINATION` - Telemetry reports normally are sent to the Console ingestion servers, with this variable this can be overriden:
 - `SLS_TEST_EXTENSION_REPORT_DESTINATION` - Telemetry reports normally are sent to the Console ingestion servers, with this variable this can be overridden:
-  > > > > > > > main
   - Set to `s3://<bucket>//<root-key>` to send reports to S3 bucket
   - Set to `log` to just log reports into process stdout
 - `SLS_TEST_EXTENSION_COMMAND` - _(Processed only in context of the external extension unit test)_ A command to run external extension process (e.g. `node path/to/external-extension/module.js`)
