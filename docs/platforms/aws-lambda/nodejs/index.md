@@ -141,10 +141,12 @@ duration: 231
 
 /* Tags: aws-sdk */
 
-aws.sdk.system: "aws-api"
-aws.sdk.method: "PutObject" // The name of the operation corresponding to the request, as returned by the AWS SDK. If the SDK does not provide a way to retrieve a name, the name of the command SHOULD be used, removing the suffix Command if present, resulting in a PascalCase name with no spaces.
-aws.sdk.service: "S3" // The name of the service to which a request is made, as returned by the AWS SDK. If the SDK does not provide a away to retrieve a name, the name of the SDK's client interface for a service SHOULD be used, removing the suffix Client if present, resulting in a PascalCase name with no spaces.
 aws.sdk.region: 'eu-west-1' // Region name for the request
+aws.sdk.signature_version: "v4" // AWS version of authentication signature on the request.
+aws.sdk.service: "S3" // The name of the service to which a request is made, as returned by the AWS SDK.
+aws.sdk.operation: "PutObject" // The name of the operation corresponding to the request, as returned by the AWS SDK.
+aws.sdk.request_id: "01234123123567-89aab-cde4f-0123-af919asf" // Request unique ID, as returned from AWS on response.
+aws.sdk.error: "UriParameterError: Expected uri parameter to have length >= 1, but found "" for params.Bucket" // Information about a service or networking error, as returned from AWS
 ```
 
 ## `http`
