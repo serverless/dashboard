@@ -1,0 +1,29 @@
+# PR's only
+
+name: "Go: Integrate"
+
+on:
+  push:
+    branches: [main]
+    paths: ["go/**"]
+env:
+  FORCE_COLOR: 1
+defaults:
+  run:
+    working-directory: ./go/packages/aws-lambda-otel-extension/external
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "1.18.3"
+      - name: "Run unit tests"
+        run: |
+          go test -v ./...
