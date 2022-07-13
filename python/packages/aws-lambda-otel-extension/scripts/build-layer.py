@@ -91,7 +91,7 @@ def docker_download_wheels_from_matrix(args: BuildLayerNamespace):
         for arch, docker_image in sorted(dict_filtered_by_key_if_arg(arch_docker_images, args.arch).items()):
             docker_cache_path = DOCKER_PROJECT_PATH / "build" / "cache"
             docker_downloads_path = DOCKER_PROJECT_PATH / "build" / "downloads" / arch / python_version
-            call(
+            call(  # noqa: S603
                 [
                     *[docker, "run", "--platform", f"linux/{arch}", "--user", f"{UID}:{GID}", "--rm", "-it"],
                     *["-v", f"{PROJECT_PATH}:{DOCKER_PROJECT_PATH}"],
@@ -104,8 +104,6 @@ def docker_download_wheels_from_matrix(args: BuildLayerNamespace):
                             set -ex
                             python{python_version} -m venv /tmp/.venv \
                                 && source /tmp/.venv/bin/activate
-                            python{python_version} -m pip --cache-dir {docker_cache_path} install \
-                                --upgrade pip setuptools wheel
                             python{python_version} -m pip --cache-dir {docker_cache_path} download \
                                 --prefer-binary /project \
                                 --dest {docker_downloads_path}
@@ -159,12 +157,10 @@ def docker_install_wheels_from_matrix(args: BuildLayerNamespace):
             else:
                 arch_or_universal = "universal"
 
-            docker_install_path = DOCKER_PROJECT_PATH / "build" / "install"
-            docker_sync_path = DOCKER_PROJECT_PATH / "build" / "sync"
-
             docker_cache_path = DOCKER_PROJECT_PATH / "build" / "cache"
             docker_tmp_path = DOCKER_PROJECT_PATH / "build" / "tmp"
 
+            docker_install_path = DOCKER_PROJECT_PATH / "build" / "install"
             docker_common_install_path = docker_install_path / arch_or_universal / "opt" / "python"
             docker_uncommon_install_path = (
                 docker_common_install_path / "lib" / f"python{python_version}" / "site-packages"
@@ -196,45 +192,42 @@ def docker_install_wheels_from_matrix(args: BuildLayerNamespace):
             docker_common_requirements_path = docker_tmp_path / "requirements.common.txt"
             docker_uncommon_requirements_path = docker_tmp_path / "requirements.uncommon.txt"
 
-            for flags in ["PYTHONOPTIMIZE=2", "PYTHONOPTIMIZE=1", "PYTHONOPTIMIZE=0"]:
-                call(
-                    [
-                        *[docker, "run", "--platform", f"linux/{arch}", "--user", f"{UID}:{GID}", "--rm", "-it"],
-                        *["-v", f"{PROJECT_PATH}:/project"],
-                        docker_image,
-                        *[
-                            "/bin/bash",
-                            "-c",
-                            dedent(
-                                f"""
-                                set -ex
-                                {flags} python{python_version} -m venv /tmp/.venv \
-                                    && source /tmp/.venv/bin/activate
-                                {flags} python{python_version} -m pip --cache-dir {docker_cache_path} install \
-                                    --upgrade pip setuptools wheel
-                                {flags} python{python_version} -m pip --cache-dir {docker_cache_path} install \
-                                    --upgrade --force-reinstall \
-                                    --requirement {docker_common_requirements_path} \
-                                    --target {docker_common_install_path} \
-                                    --no-deps
-                                {flags} python{python_version} -m pip --cache-dir {docker_cache_path} install \
-                                    --upgrade --force-reinstall  \
-                                    --requirement {docker_uncommon_requirements_path} \
-                                    --target {docker_uncommon_install_path} \
-                                    --no-deps
-                                {flags} python{python_version} -m pip --cache-dir {docker_cache_path} install \
-                                    --upgrade --force-reinstall \
-                                    {DOCKER_PROJECT_PATH} \
-                                    --target {docker_common_install_path} \
-                                    --no-deps
-                                find {docker_common_install_path} -name "*.so" -exec strip {{}} +
-                                find {docker_uncommon_install_path} -name "*.so" -exec strip {{}} +
-                                rsync -avPHS {docker_install_path}/ {docker_sync_path}/
-                            """,
-                            ),
-                        ],
+            call(  # noqa: S603
+                [
+                    *[docker, "run", "--platform", f"linux/{arch}", "--user", f"{UID}:{GID}", "--rm", "-it"],
+                    *["-v", f"{PROJECT_PATH}:/project"],
+                    docker_image,
+                    *[
+                        "/bin/bash",
+                        "-c",
+                        dedent(
+                            f"""
+                            set -ex
+                            python{python_version} -m venv /tmp/.venv \
+                                && source /tmp/.venv/bin/activate
+                            python{python_version} -m pip --cache-dir {docker_cache_path} install \
+                                --no-compile \
+                                --requirement {docker_common_requirements_path} \
+                                --target {docker_common_install_path} \
+                                --no-deps
+                            python{python_version} -m pip --cache-dir {docker_cache_path} install \
+                                --no-compile \
+                                --requirement {docker_uncommon_requirements_path} \
+                                --target {docker_uncommon_install_path} \
+                                --no-deps
+                            python{python_version} -m pip --cache-dir {docker_cache_path} install \
+                                --no-compile \
+                                --upgrade --force-reinstall \
+                                {DOCKER_PROJECT_PATH} \
+                                --target {docker_common_install_path} \
+                                --no-deps
+                            find {docker_common_install_path} -name "*.so" -exec strip {{}} +
+                            find {docker_uncommon_install_path} -name "*.so" -exec strip {{}} +
+                        """,
+                        ),
                     ],
-                )
+                ],
+            )
 
 
 if __name__ == "__main__":
