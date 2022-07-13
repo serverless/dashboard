@@ -2,9 +2,7 @@
 
 AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers.  You can measure Metrics, Traces and Logs of AWS Lambda via Serverless Console.
 
-# Traces & Spans
-
-Here is a reference guide of the Traces, Spans, Tags and more collected by Serverless Console.
+# Trace
 
 ## `aws-lambda`
 
@@ -14,7 +12,7 @@ Additionally, the duration of the Trace is what AWS Lambda bills for, based on 1
 
 It’s important to note that duration of Traces for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
 
-#### Tags
+### Tags
 
 These are the Tags attached to this Trace:
 
@@ -72,9 +70,9 @@ aws.lambda.raw_path: "/collectible/movie-poster/metadata/2293",
 aws.lambda.status_code: 200,
 ```
 
-## Spans
+# Spans
 
-### `initialization`
+## `initialization`
 
 This is a Span within a Trace for AWS Lambda that represents the time spent loading your AWS Lambda function and running any initialization code.
 
@@ -92,7 +90,7 @@ You will want to optimize Initialization performance as best you can. Poor Initi
 
 Once initialized, each instance of your function can process thousands of requests without performing another Initialization. However, AWS Lambda function instance containers will shutdown within 5-15 minutes of inactivity. After that, the next event will be a Cold-Start, causing Initialization to run again.
 
-#### Tags
+### Tags
 
 These are the Tags attached to this Span:
 
@@ -103,7 +101,7 @@ These are the Tags attached to this Span:
 duration: 600, // Maps to the AWS Lambda Cloudwatch Logs Report "Init Duration"
 ```
 
-### `invocation`
+## `invocation`
 
 This is a Span within a Trace for AWS Lambda. After Initialization, Extensions and the handler of the AWS Lambda function run in the Invocation phase. This phase includes:
 
@@ -119,7 +117,7 @@ Serverless Console provides a lot of auto-instrumentation for measuring Spans wi
 
 It's important to note that your function's timeout setting limits the duration of the entire Invocation phase. For example, if you set the function timeout as 360 seconds, the function and all extensions need to complete within 360 seconds.
 
-#### Tags
+### Tags
 
 These are the Tags attached to this Span:
 
@@ -131,11 +129,11 @@ These are the Tags attached to this Span:
 duration: 432, // Maps to the AWS Lambda Cloudwatch Logs Report "Duration"
 ```
 
-### `http`
+## `http`
 
 If you use the `http` module in Node.js, this Span is created.
 
-#### Tags
+### Tags
 
 These are the Tags attached to this Span:
 
@@ -153,11 +151,11 @@ node.http.path: "/helloworld"
 node.http.status_code: 401
 ```
 
-### `https`
+## `https`
 
 If you use the `https` module in Node.js, this Span is created.
 
-#### Tags
+### Tags
 
 These are the Tags attached to this Span:
 
@@ -175,11 +173,11 @@ node.https.path: "/helloworld"
 node.https.status_code: 500
 ```
 
-### `express`
+## `express`
 
 If an HTTP request is made from your AWS Lambda function, a Span is created.
 
-#### Tags
+### Tags
 
 These are the Tags attached to this Span:
 
