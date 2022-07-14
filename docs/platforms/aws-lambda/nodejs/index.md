@@ -4,7 +4,7 @@ AWS Lambda is a serverless compute service that lets you run code without provis
 
 # Trace
 
-Every AWS Lambda function invocation that is instrumented with our Extension generates a Trace.  This Trace contains the following Spans, some of which are optional depending on whether or not you use a specific module.
+Every AWS Lambda function invocation instrumented with our Extension generates a Trace.  This Trace contains the following Spans, some of which are optional depending on the modules you use within your code.  We put extra effort into enriching this Trace with Tags useful for debugging across code, AWS Services and more.
 
 * [aws-lambda](#aws-lambda)
   * [initialization](#initialization)
@@ -16,7 +16,7 @@ Every AWS Lambda function invocation that is instrumented with our Extension gen
 
 # Spans
 
-## `aws-lambda`
+## `aws.lambda`
 
 This is the parent Span (aka the Trace) for an AWS Lambda, wcich specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown, and any logic performed within the Invocation phase.
 
@@ -32,58 +32,67 @@ These are the Tags attached to this Span:
 
 /* Tags: Metadata */
 
-s.sdk.name: "s-aws-lambda-nodejs",
-s.sdk.version: "0.0.1",
-s.org.id: "53121673-361f-4181-3411-53e031312c09",
-s.platform: "aws-lambda",
-s.environment: "prod",
-s.namespace: "api",
-s.service: "aws-api-prod-getPoster",
-s.region: "us-east-1",
+s.sdk.name: "s-aws-lambda-nodejs"
+s.sdk.version: "0.0.1"
+s.org.id: "53121673-361f-4181-3411-53e031312c09"
+s.platform: "aws-lambda"
+s.environment: "prod"
+s.namespace: "api"
+s.service: "aws-api-prod-getPoster"
+s.region: "us-east-1"
 
 /* Tags: Standard */
  
-duration: 1032, // Maps to the AWS Lambda Cloudwatch Logs Report "Billed Duration"
+duration: 1032 // Maps to the AWS Lambda Cloudwatch Logs Report "Billed Duration"
 
 /* Tags: AWS */
 
-aws.account.id: "670455222476",
-aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPoster",
+aws.account.id: "670455222476"
+aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPoster"
 
 /* Tags: AWS Lambda */
 
-aws.lambda.arch: "x64",
-aws.lambda.coldstart: false,
-aws.lambda.duration: 1032, // Maps to the Cloudwatch Logs Report "Billed Duration"
-aws.lambda.error: false,
-aws.lambda.error_culprit: "null",
-aws.lambda.error_exception_message: "null",
-aws.lambda.error_exception_stacktrace: "null",
-aws.lambda.error_exception_type: "null",
-aws.lambda.event_source: "aws.apigateway",
-aws.lambda.error_timeout: false,
-aws.lambda.event_type: "aws.apigatewayv2.http",
-aws.lambda.log_group: "/aws/lambda/aws-api-prod-getMoviePoster",
-aws.lambda.log_stream_name: "2022/07/13/[$LATEST]3f82942bb5e9484d87899e3b4cc0719e",
-aws.lambda.max_memory: "1024",
-aws.lambda.name: "aws-api-prod-getPoster",
-aws.lambda.request_id: "2be6c182-955a-4da9-9c39-d9e9d9febbaa",
-aws.lambda.request_time_epoch: 1657743048772,
-aws.lambda.version: "$LATEST",
-aws.lambda.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0",
+aws.lambda.arch: "x64"
+aws.lambda.coldstart: false
+aws.lambda.duration: 1032 // Maps to the Cloudwatch Logs Report "Billed Duration"
+aws.lambda.error: false
+aws.lambda.error_culprit: "null"
+aws.lambda.error_exception_message: "null"
+aws.lambda.error_exception_stacktrace: "null"
+aws.lambda.error_exception_type: "null"
+aws.lambda.event_source: "aws.apigateway"
+aws.lambda.error_timeout: false
+aws.lambda.event_type: "aws.apigatewayv2.http"
+aws.lambda.log_group: "/aws/lambda/aws-api-prod-getMoviePoster"
+aws.lambda.log_stream_name: "2022/07/13/[$LATEST]3f82942bb5e9484d87899e3b4cc0719e"
+aws.lambda.max_memory: "1024"
+aws.lambda.name: "aws-api-prod-getPoster"
+aws.lambda.request_id: "2be6c182-955a-4da9-9c39-d9e9d9febbaa"
+aws.lambda.request_time_epoch: 1657743048772
+aws.lambda.version: "$LATEST"
+aws.lambda.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0"
 
-// Optional AWS Lambda Tags
-aws.lambda.api_gateway_api_id: "pagbl1123133b91",
-aws.lambda.api_gateway_request_id: "2be123182-951a-4d139-9f49-d913f1231abaa",
-aws.lambda.domain: "api.planetmojo.io",
-aws.lambda.method: "GET",
-aws.lambda.path: "/collectible/movie-poster/metadata/{id}",
-aws.lambda.raw_path: "/collectible/movie-poster/metadata/2293",
-aws.lambda.status_code: 200,
+/* Tags: HTTP - Optional. If the Lambda is handling HTTP requests in anyway (API Gateway, Express.js), we'll attempt to create these tags */
+
+aws.lambda.http_domain: "api.planetmojo.io"
+aws.lambda.http_method: "GET"
+aws.lambda.http_path: "/collectible/movie-poster/metadata/{id}"
+aws.lambda.http_raw_path: "/collectible/movie-poster/metadata/2293"
+aws.lambda.http_status_code: 200
+
+/* Tags: API Gateway - Optional. If the function is handling an API Gateway event */
+
+api_gateway.api_id: "pagbl1123133b91"
+api_gateway.request_id: "2be123182-951a-4d139-9f49-d913f1231abaa"
+
+/* Tags: SQS - Optional. If the function is handling an SQS event */
+
+sqs.message.ids: [""]
+
+
 ```
 
-
-## `initialization`
+## `aws.lambda.initialization`
 
 This is a Span within a Trace for AWS Lambda that represents the time spent loading your AWS Lambda function and running any initialization code.
 
@@ -112,7 +121,7 @@ These are the Tags attached to this Span:
 duration: 600, // Maps to the AWS Lambda Cloudwatch Logs Report "Init Duration"
 ```
 
-## `invocation`
+## `aws.lambda.invocation`
 
 This is a Span within a Trace for AWS Lambda. After Initialization, Extensions and the handler of the AWS Lambda function run in the Invocation phase. This phase includes:
 
@@ -132,7 +141,6 @@ It's important to note that your function's timeout setting limits the duration 
 
 These are the Tags attached to this Span:
 
-
 ```javascript
 
 /* Tags: Standard */
@@ -140,9 +148,11 @@ These are the Tags attached to this Span:
 duration: 432, // Maps to the AWS Lambda Cloudwatch Logs Report "Duration"
 ```
 
-## `aws-sdk`
+## `aws.sdk.<service>.<operation>`
 
-If you use the `aws-sdk` module in Node.js to interact with another service, this Span is created.
+If you use the `aws-sdk` module in Node.js to interact with an AWS service, this Span is created.
+
+The title of the Span is all lowercase.
 
 ```javascript
 
@@ -160,7 +170,33 @@ aws.sdk.request_id: "01234123123567-89aab-cde4f-0123-af919asf" // Request unique
 aws.sdk.error: "UriParameterError: Expected uri parameter to have length >= 1, but found "" for params.Bucket" // Information about a service or networking error, as returned from AWS
 ```
 
-## `http`
+### `aws.sdk.sqs.sendmessage`
+
+If you use the `aws-sdk` module in Node.js with AWS SQS and perform a `sendMessage` operation, the following occurs to help us trace the lifecycle of the SQS message being sent:
+
+* We inspect the message being sent to see if it has the AWS SQS Message System Attribute `AWSTraceHeader`.
+* If it does not, we populate it according to the type expected, then copy it.
+* If it does, we copy it.
+* The value is put into the following tag on the `aws.sdk.<service>.<operation>` Span:
+
+```javascript
+s.trace_ids: ["jlkasfoja"]
+```
+
+### `aws.sdk.sqs.sendmessagebatch`
+
+If you use the `aws-sdk` module in Node.js with AWS SQS and perform a `sendMessageBatch` operation, the following occurs to help us trace the lifecycle of the SQS messages being sent:
+
+* We inspect the messages being sent to see if they have the AWS SQS Message System Attribute `AWSTraceHeader`.
+* If they do not, we populate it according to the type expected, then copy them.
+* If they do, we copy them.
+* The valuesare put into the following tag on the `aws.sdk.<service>.<operation>` Span:
+
+```javascript
+s.trace_ids: ["jlkasfoja", ...]
+```
+
+## `node.http`
 
 If you use the `http` module in Node.js, this Span is created.
 
@@ -182,7 +218,7 @@ node.http.path: "/helloworld"
 node.http.status_code: 401
 ```
 
-## `https`
+## `node.https`
 
 If you use the `https` module in Node.js, this Span is created.
 
