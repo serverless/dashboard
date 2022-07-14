@@ -54,7 +54,10 @@ s.span.end_time: "2022-07-13T20:10:48.799375104Z" // This Span's end time.
 
 aws.account.id: "670455222476"
 aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPoster"
-aws.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0" // Optional. If available
+
+/* Tags: aws.xray */
+
+aws.xray.trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0" // Optional. If available
 
 /* Tags: aws.lambda */
 
