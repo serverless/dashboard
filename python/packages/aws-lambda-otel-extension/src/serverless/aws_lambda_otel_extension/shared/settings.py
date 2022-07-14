@@ -56,6 +56,8 @@ SETTINGS_SLS_EXTENSION_FLUSH_TIMEOUT = (
 
 SETTINGS_SLS_EXTENSION: dict = {}
 
+SETTINGS_SLS_EXTENSION_OVERRIDE: dict = {}
+
 if ENV_SLS_EXTENSION:  # Do not allow an empty string or None.
     try:
         SETTINGS_SLS_EXTENSION = {

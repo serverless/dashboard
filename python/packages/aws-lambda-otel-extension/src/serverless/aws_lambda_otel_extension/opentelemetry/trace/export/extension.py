@@ -4,7 +4,7 @@ import threading
 import urllib.request
 from typing import Dict, List, Sequence
 
-from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.sdk.trace import Event, ReadableSpan, Resource, Span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope

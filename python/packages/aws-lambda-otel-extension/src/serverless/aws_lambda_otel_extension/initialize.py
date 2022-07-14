@@ -9,7 +9,7 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.aws import AwsXRayPropagator
 from opentelemetry.sdk.extension.aws.resource import AwsLambdaResourceDetector
 from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
-from opentelemetry.sdk.resources import OTELResourceDetector, ProcessResourceDetector, get_aggregated_resources
+from opentelemetry.sdk.resources import OTELResourceDetector, get_aggregated_resources
 from opentelemetry.sdk.trace import ConcurrentMultiSpanProcessor, Span, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.trace import get_tracer, get_tracer_provider, set_tracer_provider
@@ -17,18 +17,23 @@ from pkg_resources import iter_entry_points
 
 from serverless.aws_lambda_otel_extension.opentelemetry.instrumentation.aws_lambda import SlsAwsLambdaInstrumentor
 from serverless.aws_lambda_otel_extension.opentelemetry.resource import SlsExtensionResourceDetector
+from serverless.aws_lambda_otel_extension.opentelemetry.resource.process import ChrisGuidryProcessResourceDetector
 from serverless.aws_lambda_otel_extension.opentelemetry.semconv.trace.extension import SlsExtensionSpanAttributes
 from serverless.aws_lambda_otel_extension.opentelemetry.trace.export.extension import SlsExtensionSpanExporter
 from serverless.aws_lambda_otel_extension.opentelemetry.trace.export.logging import SlsLoggingSpanExporter
 from serverless.aws_lambda_otel_extension.shared.constants import (
-    REGRESSION_DO_NOT_INSTRUMENT,
     PACKAGE_NAMESPACE,
     PACKAGE_VERSION,
+    REGRESSION_DO_NOT_INSTRUMENT,
+    SLS_MARKER_DEBUG,
+    SLS_MARKER_EXTENSION,
+    SLS_MARKER_KEY,
 )
 from serverless.aws_lambda_otel_extension.shared.settings import (
     SETTINGS_SLS_EXTENSION_DISABLED_INSTRUMENTATIONS,
     SETTINGS_SLS_EXTENSION_ENABLED_INSTRUMENTATIONS,
     SETTINGS_SLS_EXTENSION_LOG_LEVEL,
+    SETTINGS_SLS_EXTENSION_OVERRIDE,
 )
 from serverless.aws_lambda_otel_extension.shared.store import store
 
@@ -87,16 +92,13 @@ def setup_opentelemetry_instrumentation(
     raise_on_exception: Optional[bool] = None,
 ) -> None:
 
-    is_cold_start = store.is_cold_start_for_optional_execution_id()
-    logger.debug({"is_cold_start": is_cold_start})
-
     if tracer_provider is None:
         _tracer_provider = get_tracer_provider()
         if isinstance(_tracer_provider, TracerProvider):
             tracer_provider = _tracer_provider
 
     # We expect the set of execution IDs to be empty at this point - hence cold start.
-    if is_cold_start and tracer_provider is not None:
+    if tracer_provider is not None:
 
         temporary_tracer_provider = TracerProvider()
         temporary_tracer = get_tracer(__name__, PACKAGE_VERSION, temporary_tracer_provider)
@@ -190,7 +192,14 @@ def setup_opentelemetry_instrumentation(
 
                     # Do this last.  If anything explodes before this point we want to make sure that the handler is not
                     # wrapped and instrumented.
-                    SlsAwsLambdaInstrumentor().instrument()
+                    SlsAwsLambdaInstrumentor().instrument(
+                        skip_dep_check=True,
+                        tracer_provider=tracer_provider,
+                        raise_on_exception=raise_on_exception,
+                        request_hook=_auto_instrumentation_request_hook,
+                        response_hook=_auto_instrumentation_response_hook,
+                        log_hook=_auto_instrumentation_log_hook,
+                    )
 
                 except Exception:
                     logger.exception("Exception while executing instrumentor")
@@ -204,51 +213,71 @@ def setup_opentelemetry_tracer_provider(
     raise_on_exception: Optional[bool] = None,
 ) -> None:
 
-    is_cold_start = store.is_cold_start_for_optional_execution_id()
-    logger.debug({"is_cold_start": is_cold_start})
+    if tracer_provider is None:
+        resource = get_aggregated_resources(
+            detectors=[
+                ChrisGuidryProcessResourceDetector(),
+                AwsLambdaResourceDetector(),
+                SlsExtensionResourceDetector(),
+                # This comes last because we want it to override `service.name` if it is present.
+                OTELResourceDetector(),
+            ]
+        )
 
-    # If this is a cold start then we should initialize the global tracer.  We currently don't attempt to provide a
-    # customized and filtered span processor where we could work with an inherited tracer and add a span processor to
-    # it.
-    if is_cold_start:
+        tracer_provider = cast(
+            TracerProvider,
+            TracerProvider(
+                id_generator=AwsXRayIdGenerator(),
+                active_span_processor=ConcurrentMultiSpanProcessor(),
+                resource=resource,
+            ),
+        )
 
-        if tracer_provider is None:
-            resource = get_aggregated_resources(
-                detectors=[
-                    ProcessResourceDetector(),
-                    AwsLambdaResourceDetector(),
-                    SlsExtensionResourceDetector(),
-                    # This comes last because we want it to override `service.name` if it is present.
-                    OTELResourceDetector(),
-                ]
-            )
+        set_tracer_provider(tracer_provider)
 
-            tracer_provider = cast(
-                TracerProvider,
-                TracerProvider(
-                    id_generator=AwsXRayIdGenerator(),
-                    active_span_processor=ConcurrentMultiSpanProcessor(),
-                    resource=resource,
-                ),
-            )
+        # Change the behaviour of the global textmap to propagate xray trace headers instead of the default.
+        set_global_textmap(AwsXRayPropagator())
 
-            set_tracer_provider(tracer_provider)
+    span_processor_markers = []
 
-            # Change the behaviour of the global textmap to propagate xray trace headers instead of the default.
-            set_global_textmap(AwsXRayPropagator())
+    for span_processor in tracer_provider._active_span_processor._span_processors:
+        span_processor_marker = getattr(span_processor, SLS_MARKER_KEY, None)
+        if span_processor_marker:
+            span_processor_markers.append(span_processor_marker)
 
-        tracer_provider.add_span_processor(SimpleSpanProcessor(SlsExtensionSpanExporter()))
+    if SLS_MARKER_EXTENSION not in span_processor_markers:
+        sls_extension_span_processor = SimpleSpanProcessor(SlsExtensionSpanExporter())
+        setattr(sls_extension_span_processor, SLS_MARKER_KEY, SLS_MARKER_EXTENSION)
+        tracer_provider.add_span_processor(sls_extension_span_processor)
 
-        # If we have debugging enabled then this span processor will be used to dump the spans to stdout.
-        tracer_provider.add_span_processor(SimpleSpanProcessor(SlsLoggingSpanExporter()))
+    # If we have debugging enabled then this span processor will be used to dump the spans to stdout.
+    if SLS_MARKER_DEBUG not in span_processor_markers:
+        sls_debug_span_processor = SimpleSpanProcessor(SlsLoggingSpanExporter())
+        setattr(sls_debug_span_processor, SLS_MARKER_KEY, SLS_MARKER_DEBUG)
+        tracer_provider.add_span_processor(sls_debug_span_processor)
 
 
 def sls_extension_initialize(
+    org_id: Optional[str] = None,
+    namespace: Optional[str] = None,
+    environment: Optional[str] = None,
     tracer_provider: Optional[TracerProvider] = None,
     raise_on_exception: Optional[bool] = None,
 ):
 
-    logging.getLogger(PACKAGE_NAMESPACE).setLevel(SETTINGS_SLS_EXTENSION_LOG_LEVEL)
+    is_cold_start = store.is_cold_start_for_optional_execution_id()
 
-    setup_opentelemetry_tracer_provider(tracer_provider=tracer_provider, raise_on_exception=raise_on_exception)
-    setup_opentelemetry_instrumentation(tracer_provider=tracer_provider, raise_on_exception=raise_on_exception)
+    if is_cold_start:
+        logging.getLogger(PACKAGE_NAMESPACE).setLevel(SETTINGS_SLS_EXTENSION_LOG_LEVEL)
+
+        if org_id is not None:
+            SETTINGS_SLS_EXTENSION_OVERRIDE["orgId"] = org_id
+
+        if namespace is not None:
+            SETTINGS_SLS_EXTENSION_OVERRIDE["namespace"] = namespace
+
+        if environment is not None:
+            SETTINGS_SLS_EXTENSION_OVERRIDE["environment"] = environment
+
+        setup_opentelemetry_tracer_provider(tracer_provider=tracer_provider, raise_on_exception=raise_on_exception)
+        setup_opentelemetry_instrumentation(tracer_provider=tracer_provider, raise_on_exception=raise_on_exception)
