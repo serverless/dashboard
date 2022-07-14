@@ -45,7 +45,6 @@ s.namespace: "api"
 s.service: "aws-api-prod-getPoster"
 s.region: "us-east-1"
 s.duration: 1032 // Maps to the AWS Lambda Cloudwatch Logs Report "Billed Duration"
-s.trace_id:
 
 /* Tags: AWS */
 
