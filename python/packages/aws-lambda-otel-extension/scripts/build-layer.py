@@ -104,6 +104,8 @@ def docker_download_wheels_from_matrix(args: BuildLayerNamespace):
                             set -ex
                             python{python_version} -m venv /tmp/.venv \
                                 && source /tmp/.venv/bin/activate
+                            python{python_version} -m pip --cache-dir {docker_cache_path} install \
+                                --upgrade pip setuptools wheel
                             python{python_version} -m pip --cache-dir {docker_cache_path} download \
                                 --prefer-binary /project \
                                 --dest {docker_downloads_path}
@@ -205,6 +207,8 @@ def docker_install_wheels_from_matrix(args: BuildLayerNamespace):
                             set -ex
                             python{python_version} -m venv /tmp/.venv \
                                 && source /tmp/.venv/bin/activate
+                            python{python_version} -m pip --cache-dir {docker_cache_path} install \
+                                --upgrade pip setuptools wheel
                             python{python_version} -m pip --cache-dir {docker_cache_path} install \
                                 --no-compile \
                                 --requirement {docker_common_requirements_path} \
