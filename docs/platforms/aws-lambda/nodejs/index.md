@@ -20,7 +20,7 @@ Here is a table of contents of Spans we currently capture, in an example hierarc
 
 # Spans
 
-## `aws.lambda`
+## aws.lambda
 
 This is the parent Span (aka the Trace) for an AWS Lambda. It measures the combined lifecyle phases of AWS Lambda Initialization and Invocation, and any logic performed within the Invocation phase.
 
