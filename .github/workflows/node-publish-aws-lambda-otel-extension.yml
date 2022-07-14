@@ -105,7 +105,7 @@ jobs:
             --bucket-name sls-dev-layers-registry \
             --layer-basename sls-otel-extension-node \
             --version $VERSION \
-            --layer-filename packages/aws-lambda-otel-extension/dist/extension.zip \
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension.zip
           ./scripts/publish-extension-layers.js \
             --bucket-name sls-dev-layers-registry \
             --layer-basename sls-otel-extension-external \
@@ -130,17 +130,17 @@ jobs:
             --bucket-name sls-layers-registry \
             --layer-basename sls-otel-extension-node \
             --version $VERSION \
-            --layer-filename packages/aws-lambda-otel-extension/dist/extension.zip
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension.zip \
             --github-tag $TAG
           ./scripts/publish-extension-layers.js \
             --bucket-name sls-layers-registry \
             --layer-basename sls-otel-extension-external \
             --version $VERSION \
-            --layer-filename packages/aws-lambda-otel-extension/dist/extension-external.zip
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension-external.zip \
             --github-tag $TAG
           ./scripts/publish-extension-layers.js \
             --bucket-name sls-layers-registry \
             --layer-basename sls-otel-extension-internal-node \
             --version $VERSION \
-            --layer-filename packages/aws-lambda-otel-extension/dist/extension-internal.zip
+            --layer-filename packages/aws-lambda-otel-extension/dist/extension-internal.zip \
             --github-tag $TAG

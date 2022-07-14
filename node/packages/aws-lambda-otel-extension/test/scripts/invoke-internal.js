@@ -5,9 +5,13 @@
 
 'use strict';
 
+require('essentials');
+require('log-node')();
+
 const http = require('http');
 const path = require('path');
 const isThenable = require('type/thenable/is');
+const log = require('log').get('test');
 const ensureNpmDependencies = require('../../scripts/lib/ensure-npm-dependencies');
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures');
@@ -22,6 +26,7 @@ const payload = {};
 (async () => {
   ensureNpmDependencies('internal/otel-extension-internal-node');
   ensureNpmDependencies('test/fixtures/lambdas');
+  process.env.SLS_TEST_EXTENSION_REPORT_DESTINATION = 'log';
   process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
   process.env.AWS_REGION = 'us-east-1';
   process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');
@@ -50,7 +55,7 @@ const payload = {};
 
           if (logsQueue.length > 1) {
             server.close();
-            resolve();
+            resolve(logsQueue);
           }
         });
       }
@@ -60,7 +65,7 @@ const payload = {};
   server.listen(OTEL_SERVER_PORT);
 
   try {
-    await require('../../internal/otel-extension-internal-node');
+    const { keepAliveAgent } = await require('../../internal/otel-extension-internal-node');
     await new Promise((resolve, reject) => {
       const maybeThenable = require('../../internal/otel-extension-internal-node/wrapper').handler(
         payload,
@@ -78,7 +83,9 @@ const payload = {};
       if (isThenable(maybeThenable)) resolve(maybeThenable);
     });
 
-    await deferredResultProcessing;
+    const logs = await deferredResultProcessing;
+    keepAliveAgent.destroy();
+    log.info(logs);
   } finally {
     server.close();
   }

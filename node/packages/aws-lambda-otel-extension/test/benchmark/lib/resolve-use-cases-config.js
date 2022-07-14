@@ -145,6 +145,15 @@ module.exports = (benchmarkVariantsConfig, options) => {
           ))(),
       },
     ],
+    [
+      'requires',
+      {
+        configuration: {
+          Timeout: 20,
+        },
+        variants: cloneMap(benchmarkVariantsConfig),
+      },
+    ],
   ]);
 
   return options.useCases

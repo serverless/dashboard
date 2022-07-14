@@ -88,6 +88,22 @@ module.exports = async (distFilename, options = {}) => {
               '--bundle',
               '--platform=node',
               '--external:./user-settings',
+              '--external:require-in-the-middle',
+            ])
+          ).stdoutBuffer
+        );
+        zip.addFile(
+          'otel-extension-internal-node/node_modules/require-in-the-middle.js',
+          (
+            await spawn(esbuildFilename, [
+              path.resolve(
+                path.resolve(
+                  internalDir,
+                  'otel-extension-internal-node/node_modules/require-in-the-middle/index.js'
+                )
+              ),
+              '--bundle',
+              '--platform=node',
             ])
           ).stdoutBuffer
         );

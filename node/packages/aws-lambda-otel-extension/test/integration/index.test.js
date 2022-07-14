@@ -21,6 +21,21 @@ describe('integration', function () {
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          [
+            'invalidSettings',
+            {
+              isInstrumentationDisabled: true,
+              configuration: {
+                Environment: {
+                  Variables: {
+                    AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
+                    SLS_DEBUG_EXTENSION: '1',
+                    SLS_EXTENSION: '{}',
+                  },
+                },
+              },
+            },
+          ],
         ]),
       },
     ],
@@ -131,9 +146,9 @@ describe('integration', function () {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
-      const { expectedOutcome } = testConfig;
+      const { expectedOutcome, isInstrumentationDisabled } = testConfig;
       const { invocationsData } = testResult;
-      if (expectedOutcome !== 'error:unhandled') {
+      if (expectedOutcome !== 'error:unhandled' && !isInstrumentationDisabled) {
         // Current timeout handling is unreliable, therefore do not attempt to confirm
         // on all reports
 
@@ -149,40 +164,47 @@ describe('integration', function () {
       }
 
       const allInvocationReports = invocationsData.map(({ reports }) => reports).flat();
-      const metricsReport = allInvocationReports.find(
-        ([reportType]) => reportType === 'metrics'
-      )[1];
+      if (isInstrumentationDisabled) {
+        expect(allInvocationReports.length).to.equal(0);
+        if (testConfig.test) testConfig.test({ invocationsData });
+      } else {
+        const metricsReport = allInvocationReports.find(
+          ([reportType]) => reportType === 'metrics'
+        )[1];
 
-      const tracesReport = allInvocationReports.find(([reportType]) => reportType === 'traces')[1];
-      const resourceMetrics = normalizeOtelAttributes(
-        metricsReport.resourceMetrics[0].resource.attributes
-      );
-      expect(resourceMetrics['faas.name']).to.equal(testConfig.configuration.FunctionName);
-      const resourceSpans = normalizeOtelAttributes(
-        tracesReport.resourceSpans[0].resource.attributes
-      );
-      expect(resourceSpans['faas.name']).to.equal(testConfig.configuration.FunctionName);
+        const tracesReport = allInvocationReports.find(
+          ([reportType]) => reportType === 'traces'
+        )[1];
+        const resourceMetrics = normalizeOtelAttributes(
+          metricsReport.resourceMetrics[0].resource.attributes
+        );
+        expect(resourceMetrics['faas.name']).to.equal(testConfig.configuration.FunctionName);
+        const resourceSpans = normalizeOtelAttributes(
+          tracesReport.resourceSpans[0].resource.attributes
+        );
+        expect(resourceSpans['faas.name']).to.equal(testConfig.configuration.FunctionName);
 
-      const instrumentationSpans = {};
-      for (const {
-        instrumentationLibrary: { name: instrumentationLibraryName },
-        spans,
-      } of tracesReport.resourceSpans[0].instrumentationLibrarySpans) {
-        instrumentationSpans[instrumentationLibraryName] = spans.map((span) => ({
-          ...span,
-          attributes: normalizeOtelAttributes(span.attributes),
-        }));
-      }
-      log.debug('instrumentationSpans %o', instrumentationSpans);
-      if (testConfig.test) {
-        testConfig.test({
-          invocationsData,
-          metricsReport,
-          tracesReport,
-          resourceMetrics,
-          resourceSpans,
-          instrumentationSpans,
-        });
+        const instrumentationSpans = {};
+        for (const {
+          instrumentationLibrary: { name: instrumentationLibraryName },
+          spans,
+        } of tracesReport.resourceSpans[0].instrumentationLibrarySpans) {
+          instrumentationSpans[instrumentationLibraryName] = spans.map((span) => ({
+            ...span,
+            attributes: normalizeOtelAttributes(span.attributes),
+          }));
+        }
+        log.debug('instrumentationSpans %o', instrumentationSpans);
+        if (testConfig.test) {
+          testConfig.test({
+            invocationsData,
+            metricsReport,
+            tracesReport,
+            resourceMetrics,
+            resourceSpans,
+            instrumentationSpans,
+          });
+        }
       }
     });
   }

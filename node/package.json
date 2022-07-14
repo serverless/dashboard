@@ -15,11 +15,11 @@
     ]
   },
   "devDependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "^3.127.0",
-    "@aws-sdk/client-iam": "^3.127.0",
-    "@aws-sdk/client-lambda": "^3.127.0",
-    "@aws-sdk/client-s3": "^3.127.0",
-    "@aws-sdk/client-sts": "^3.127.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.128.0",
+    "@aws-sdk/client-iam": "^3.128.0",
+    "@aws-sdk/client-lambda": "^3.128.0",
+    "@aws-sdk/client-s3": "^3.129.0",
+    "@aws-sdk/client-sts": "^3.128.0",
     "@commitlint/cli": "^17.0.3",
     "@commitlint/lint": "^17.0.3",
     "@octokit/rest": "^19.0.3",

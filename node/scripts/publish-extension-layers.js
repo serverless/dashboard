@@ -19,9 +19,13 @@ if (!version) throw new Error('--version param is required');
 const layerFilename = argv.layerFilename;
 if (!layerFilename) throw new Error('--layer-filename param is required');
 
+const githubTag = argv.githubTag;
+
 const fsp = require('fs').promises;
 const publishPublicLayers = require('../lib/publish-public-layers');
 
 fsp
   .readFile(layerFilename)
-  .then((content) => publishPublicLayers({ bucketName, layerBasename, version, content }));
+  .then((content) =>
+    publishPublicLayers({ bucketName, layerBasename, version, content, githubTag })
+  );
