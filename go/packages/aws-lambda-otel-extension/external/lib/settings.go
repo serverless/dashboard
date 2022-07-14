@@ -61,6 +61,13 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	}
 	ingestionServerUrl := backendUrl + "/ingestion/kinesis"
 
+	sandboxHostname := os.Getenv("SLS_TEST_EXTENSION_HOSTNAME")
+	if sandboxHostname != "" {
+		extensionSettings.SandboxHostname = sandboxHostname
+	} else {
+		extensionSettings.SandboxHostname = "sandbox"
+	}
+
 	if testDestination == "log" {
 		return extensionSettings, nil
 	} else if testDestination != "" {
@@ -72,13 +79,6 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	extensionSettings.Traces.Destination = ingestionServerUrl + "/v1/traces"
 	extensionSettings.Request.Destination = ingestionServerUrl + "/v1/request-response"
 	extensionSettings.Response.Destination = ingestionServerUrl + "/v1/request-response"
-
-	sandboxHostname := os.Getenv("SLS_TEST_EXTENSION_HOSTNAME")
-	if sandboxHostname != "" {
-		extensionSettings.SandboxHostname = sandboxHostname
-	} else {
-		extensionSettings.SandboxHostname = "sandbox"
-	}
 
 	// TODO: remove above lines when we finish the var migration
 	customSettingsText := os.Getenv("SLS_OTEL_USER_SETTINGS")
