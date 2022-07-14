@@ -155,9 +155,9 @@ func Test_readLogs(t *testing.T) {
 				},
 			})
 			// remove automatic fields
-			got.Attributes = nil
-			for i := range *got.Logs {
-				(*got.Logs)[i].ProcessingOrderId = nil
+			got[0].Attributes = nil
+			for i := range *got[0].Logs {
+				(*got[0].Logs)[i].ProcessingOrderId = nil
 			}
 
 			if (err != nil) != tt.wantErr {

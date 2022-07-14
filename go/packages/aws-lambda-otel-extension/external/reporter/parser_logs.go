@@ -165,7 +165,7 @@ func ParseLogsAPIPayload(data []byte) ([]LogMessage, error) {
 	return messages, nil
 }
 
-func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs types.LogJson, err error) {
+func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs []types.LogJson, err error) {
 	// Get first / unique key from EventData
 	var key string
 	for k := range eventData.EventData {
@@ -218,11 +218,13 @@ func ReadLogs(msgs []LogMessage, eventData *types.EventDataPayload) (logs types.
 		})
 	}
 
-	return types.LogJson{
-		Logs:       &logLines,
-		Attributes: resourcesAtt,
-		// Resource:          metricsAtt,
-		TraceId: &eventData.Span.TraceID,
-		SpanId:  &eventData.Span.SpanID,
+	return []types.LogJson{
+		{
+			Logs:       &logLines,
+			Attributes: resourcesAtt,
+			// Resource:          metricsAtt,
+			TraceId: &eventData.Span.TraceID,
+			SpanId:  &eventData.Span.SpanID,
+		},
 	}, err
 }
