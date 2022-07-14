@@ -5,7 +5,15 @@ const {
   debugLog,
   keepAliveAgents: { https: keepAliveAgent },
 } = require('./helper');
-const userSettings = require('./user-settings');
+
+const userSettings = (() => {
+  try {
+    return require('./user-settings');
+  } catch (error) {
+    return null;
+  }
+})();
+if (!userSettings) return;
 
 const altDestination = userSettings._altDestination;
 
