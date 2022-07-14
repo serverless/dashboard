@@ -45,7 +45,6 @@ s.service: "aws-api-prod-getPoster"
 s.region: "us-east-1"
 s.trace.id: "db8e08ae5e6c71c35320ddad5ffb56a5"
 s.span.id: "e8a4e2a264145041" // This Span's ID
-s.span.parent.id: "" // This Span's parent Span ID.  Will be blank here.
 s.span.timestamp: "2022-07-13T20:10:48.794945024Z" // This Span's time.  Same as start_time.
 s.span.start_time: "2022-07-13T20:10:48.794945024Z" // This Span's start time.
 s.span.end_time: "2022-07-13T20:10:48.799375104Z" // This Span's end time.
