@@ -11,7 +11,7 @@ Before the handler of your AWS Lambda function runs, our Extension loads our SDK
 ```javascript
 import serverless from 'serverless-sdk-aws-lambda'
 
-serverless.autoInstrument(params)
+serverless.instrument(params)
 
 // Your handler is called next...
 ```
