@@ -43,6 +43,7 @@ s.environment: "prod"
 s.namespace: "api"
 s.service: "aws-api-prod-getPoster"
 s.region: "us-east-1"
+s.request.id: "2be6c182-955a-4da9-9c39-d9e9d9febbaa" // Identifies this unique request
 s.trace.id: "db8e08ae5e6c71c35320ddad5ffb56a5"
 s.span.id: "e8a4e2a264145041" // This Span's ID
 s.span.timestamp: "2022-07-13T20:10:48.794945024Z" // This Span's time.  Same as start_time.
