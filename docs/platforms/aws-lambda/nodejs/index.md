@@ -434,6 +434,8 @@ If an HTTP request is made from your AWS Lambda function, a Span is created.
 
 These are the Tags attached to this Span:
 
+**Note:** If Express is introspected and understood, `http` tags will also be added to the parent `aws.lambda` Span.
+
 ```javascript
 /* Tags: Standard */
 
