@@ -6,6 +6,16 @@ AWS Lambda is a serverless compute service that lets you run code without provis
 
 If you use Serverless Console's AWS Lambda Extension for Node.js, it will automatically trace your AWS Lambda invocations, providing a timeline rich with information we curated to help you assess, optimize and troubleshoot, as well as trace services and data that triggered your AWS Lambda functions.
 
+Before the handler of your AWS Lambda function runs, our Extension loads our SDK and performs the auto-instrumentation logic.  This is what it looks like:
+
+```javascript
+import serverless from 'serverless-sdk-aws-lambda'
+
+serverless.autoInstrument(params)
+
+// Your handler is called next...
+```
+
 Every AWS Lambda function invocation instrumented with our Extension generates a Trace.  This Trace contains the following Spans, some of which are optional depending on the modules you use within your code.  We put great effort into enriching this Trace with Tags useful for debugging across code, AWS Services and more.
 
 Here is a table of contents of Spans we currently capture, in an example hierarchical format:
