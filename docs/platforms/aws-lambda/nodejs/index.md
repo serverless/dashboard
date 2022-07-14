@@ -1,24 +1,28 @@
 # AWS Lambda: Node.js
 
-AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers.  You can measure Metrics, Traces and Logs of AWS Lambda via Serverless Console.
+AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers.  You can measure Metrics, Traces and Logs of AWS Lambda via Serverless Console.  
 
-# Trace
+# Tracing
 
-Every AWS Lambda function invocation instrumented with our Extension generates a Trace.  This Trace contains the following Spans, some of which are optional depending on the modules you use within your code.  We put extra effort into enriching this Trace with Tags useful for debugging across code, AWS Services and more.
+If you use Serverless Console's AWS Lambda Extension for Node.js, it will automatically trace your AWS Lambda invocations, providing a timeline rich with information we curated to help you assess, optimize and troubleshoot, as well as trace services and data that triggered your AWS Lambda functions.
 
-* [aws-lambda](#aws-lambda)
-  * [initialization](#initialization)
-  * [invocation](#invocation)
+Every AWS Lambda function invocation instrumented with our Extension generates a Trace.  This Trace contains the following Spans, some of which are optional depending on the modules you use within your code.  We put great effort into enriching this Trace with Tags useful for debugging across code, AWS Services and more.
+
+Here is a table of contents of Spans we currently capture, in an example hierarchical format:
+
+* [aws.lambda](#aws.lambda)
+  * [aws.lambda.initialization](#aws.lambda.initialization)
+  * [aws.lambda.invocation](#aws.lambda.invocation)
     * [express](#express)
-      * [https](#https)
-      * [http](#http)
-      * [aws-sdk](#aws-sdk)
+      * [node.https](#node.https)
+      * [node.http](#node.http)
+      * [aws.sdk](#aws.sdk)
 
 # Spans
 
 ## `aws.lambda`
 
-This is the parent Span (aka the Trace) for an AWS Lambda, wcich specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown, and any logic performed within the Invocation phase.
+This is the parent Span (aka the Trace) for an AWS Lambda. It measures the combined lifecyle phases of AWS Lambda Initialization and Invocation, and any logic performed within the Invocation phase.
 
 Additionally, the duration of this Span is what AWS Lambda bills for, based on 1ms increments. Duration charges apply to initialization code that is declared outside of the handler in the Initiatlization phase, code that runs in the handler of a function during the Invocation phase, as well as the time it takes for code in any last running Extensions to finish executing during Shutdown phase.
 
@@ -30,7 +34,7 @@ These are the Tags attached to this Span:
 
 ```javascript
 
-/* Tags: Metadata */
+/* Tags: Standard */
 
 s.sdk.name: "s-aws-lambda-nodejs"
 s.sdk.version: "0.0.1"
@@ -40,15 +44,14 @@ s.environment: "prod"
 s.namespace: "api"
 s.service: "aws-api-prod-getPoster"
 s.region: "us-east-1"
-
-/* Tags: Standard */
- 
-duration: 1032 // Maps to the AWS Lambda Cloudwatch Logs Report "Billed Duration"
+s.duration: 1032 // Maps to the AWS Lambda Cloudwatch Logs Report "Billed Duration"
+s.trace_id:
 
 /* Tags: AWS */
 
 aws.account.id: "670455222476"
 aws.resource.arn: "arn:aws:lambda:us-east-1:423234:function:aws-api-prod-getPoster"
+aws.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0" // Optional. If available
 
 /* Tags: AWS Lambda */
 
@@ -65,30 +68,55 @@ aws.lambda.error_timeout: false
 aws.lambda.event_type: "aws.apigatewayv2.http"
 aws.lambda.log_group: "/aws/lambda/aws-api-prod-getMoviePoster"
 aws.lambda.log_stream_name: "2022/07/13/[$LATEST]3f82942bb5e9484d87899e3b4cc0719e"
-aws.lambda.max_memory: "1024"
+aws.lambda.max_memory: 1024
 aws.lambda.name: "aws-api-prod-getPoster"
 aws.lambda.request_id: "2be6c182-955a-4da9-9c39-d9e9d9febbaa"
 aws.lambda.request_time_epoch: 1657743048772
 aws.lambda.version: "$LATEST"
-aws.lambda.xray_trace_id: "Root=1-62136c8-56d0adcsafa323790afa;Parent=16b66safasf23e2ab3794;Sampled=0"
 
-/* Tags: HTTP - Optional. If the Lambda is handling HTTP requests in anyway (API Gateway, Express.js), we'll attempt to create these tags */
+/* Tags: HTTP - Optional. If the Lambda is handling HTTP requests via any method (API Gateway, Function URLs, code-defined routes in Express.js), we will auto-inspect those methods and attempt to populate these tags */
 
-aws.lambda.http_domain: "api.planetmojo.io"
-aws.lambda.http_method: "GET"
-aws.lambda.http_path: "/collectible/movie-poster/metadata/{id}"
-aws.lambda.http_raw_path: "/collectible/movie-poster/metadata/2293"
-aws.lambda.http_status_code: 200
+http.protocol: "HTTP/1.1" // Must be in this format
+http.domain: "api.planetmojo.io"
+http.method: "GET"
+http.path: "/collectible/movie-poster/metadata/{id}" // Must not include parameterized values, only variables.
+http.status_code: 200
 
-/* Tags: API Gateway - Optional. If the function is handling an API Gateway event */
+/* Tags: AWS API Gateway - Optional. If the function is handling an API Gateway event.  This data is consistently collected across all API Gateway event versions */
 
-api_gateway.api_id: "pagbl1123133b91"
-api_gateway.request_id: "2be123182-951a-4d139-9f49-d913f1231abaa"
+aws.api_gateway.account.id: "123456789012"
+aws.api_gateway.api.id: "pagbl1123133b91"
+aws.api_gateway.api.stage: "prod"
+aws.api_gateway.request.id: "2be123182-951a-4d139-9f49-d913f1231abaa"
+aws.api_gateway.request.time: 1583798639428 // Epoch format
+aws.api_gateway.request.protocol: "HTTP/1.1"
+aws.api_gateway.request.domain: "70ixmpl4fl.execute-api.us-east-2.amazonaws.com"
+aws.api_gateway.request.headers: {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9",
+        "cookie": "s_fid=7AAB6XMPLAFD9BBF-0643XMPL09956DE2; regStatus=pre-register",
+        "X-Amzn-Trace-Id": "Root=1-5e66d96f-7491f09xmpl79d18acf3d050",
+        "X-Forwarded-For": "52.255.255.12",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https"
+    }
+aws.api_gateway.request.method: "GET"
+aws.api_gateway.request.path: "/users"
+aws.api_gateway.request.pathParameters: { "userID": 712308019 } // Defaults to {}
+aws.api_gateway.request.query_string_parameters: { "number": 9 } // Defaults to {}
 
-/* Tags: SQS - Optional. If the function is handling an SQS event */
+/* Tags: AWS SQS - Optional. If the function is handling an SQS event */
 
-sqs.message.ids: [""]
+aws.sqs.queue_name: "MyQueue" // Taken from the eventSourceARN
+aws.sqs.operation: "receive" // Must be "receive"
+aws.sqs.message_ids: ["fja98jafs"] // Introspected from the events records
 
+/* Tags: AWS SNS - Optional. If the function is handling an SNS event */
+
+aws.sns.topic.name: "sns-lambda" // Taken from the TopicArn
+aws.sns.operation: "receive" // Must be "receive"
+aws.sns.message_ids: ["fja98jafs"] // Introspected from the events records
 
 ```
 
@@ -118,7 +146,7 @@ These are the Tags attached to this Span:
 
 /* Tags: Standard */
  
-duration: 600, // Maps to the AWS Lambda Cloudwatch Logs Report "Init Duration"
+s.duration: 600, // Maps to the AWS Lambda Cloudwatch Logs Report "Init Duration"
 ```
 
 ## `aws.lambda.invocation`
@@ -145,7 +173,7 @@ These are the Tags attached to this Span:
 
 /* Tags: Standard */
 
-duration: 432, // Maps to the AWS Lambda Cloudwatch Logs Report "Duration"
+s.duration: 432, // Maps to the AWS Lambda Cloudwatch Logs Report "Duration"
 ```
 
 ## `aws.sdk.<service>.<operation>`
@@ -158,7 +186,7 @@ The title of the Span is all lowercase.
 
 /* Tags: Standard */
  
-duration: 231
+s.duration: 231
 
 /* Tags: aws-sdk */
 
@@ -170,30 +198,136 @@ aws.sdk.request_id: "01234123123567-89aab-cde4f-0123-af919asf" // Request unique
 aws.sdk.error: "UriParameterError: Expected uri parameter to have length >= 1, but found "" for params.Bucket" // Information about a service or networking error, as returned from AWS
 ```
 
-### `aws.sdk.sqs.sendmessage`
+### `aws.sdk.dynamodb.batchgetitem`
 
-If you use the `aws-sdk` module in Node.js with AWS SQS and perform a `sendMessage` operation, the following occurs to help us trace the lifecycle of the SQS message being sent:
-
-* We inspect the message being sent to see if it has the AWS SQS Message System Attribute `AWSTraceHeader`.
-* If it does not, we populate it according to the type expected, then copy it.
-* If it does, we copy it.
-* The value is put into the following tag on the `aws.sdk.<service>.<operation>` Span:
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
 
 ```javascript
-s.trace_ids: ["jlkasfoja"]
+aws.dynamodb.table_names: ["Users", ...]
+```
+
+### `aws.sdk.dynamodb.batchwriteitem`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users", ...]
+```
+
+### `aws.sdk.dynamodb.deleteitem`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+```
+
+### `aws.sdk.dynamodb.describetable`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+```
+
+### `aws.sdk.dynamodb.getitem`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+aws.dynamodb.projection: "Title, Description, RelatedItems, ProductReviews" // The value of the ProjectionExpression request parameter.
+```
+
+### `aws.sdk.dynamodb.putitem`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+```
+
+### `aws.sdk.dynamodb.query`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+aws.dynamodb.scan_forward: true // The value of the ScanIndexForward request parameter.
+aws.dynamodb.attributes_to_get: ["lives", "id"] // The value of the AttributesToGet request parameter.
+aws.dynamodb.consistent_read: true // The value of the ConsistentRead request parameter.
+aws.dynamodb.index_name: "my_index" // The value of the IndexName request parameter.
+aws.dynamodb.limit: 50 // The value of the Limit request parameter.
+aws.dynamodb.projection: "Title, Description, RelatedItems, ProductReviews" // The value of the ProjectionExpression request parameter.
+aws.dynamodb.select: "ALL_ATTRIBUTES" // The value of the Select request parameter.
+```
+
+
+### `aws.sdk.dynamodb.scan`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+aws.dynamodb.segment: 10 // The value of the Segment request parameter.
+aws.dynamodb.total_segments: 100 // The value of the TotalSegments request parameter.
+aws.dynamodb.count: 5 // The value of the Count request parameter
+aws.dynamodb.scanned_count: 5 // The value of the ScannedCount request parameter.
+aws.dynamodb.attributes_to_get: ["lives", "id"] // The value of the AttributesToGet request parameter.
+aws.dynamodb.consistent_read: true // The value of the ConsistentRead request parameter.
+aws.dynamodb.index_name: "my_index" // The value of the IndexName request parameter.
+aws.dynamodb.limit: 50 // The value of the Limit request parameter.
+aws.dynamodb.projection: "Title, Description, RelatedItems, ProductReviews" // The value of the ProjectionExpression request parameter.
+aws.dynamodb.select: "ALL_ATTRIBUTES" // The value of the Select request parameter.
+```
+
+### `aws.sdk.dynamodb.updateitem`
+
+If you use the `aws-sdk` module in Node.js with AWS DynamoDB and perform this operation these Tags are added to the Span:
+
+```javascript
+aws.dynamodb.table_names: ["Users"]
+```
+
+### `aws.sdk.sqs.sendmessage`
+
+If you use the `aws-sdk` module in Node.js with AWS SQS and perform a `SendMessage` operation these Tags are added to the Span:
+
+```javascript
+aws.sqs.queue_name: "MyQueue" // Taken from the Queue URL
+aws.sqs.operation: "send" // Must be "send"
+aws.sqs.message_ids: ["fja98jafs"] // An array with the message ID provided in the SDK operation response.  Must be an array.
 ```
 
 ### `aws.sdk.sqs.sendmessagebatch`
 
-If you use the `aws-sdk` module in Node.js with AWS SQS and perform a `sendMessageBatch` operation, the following occurs to help us trace the lifecycle of the SQS messages being sent:
-
-* We inspect the messages being sent to see if they have the AWS SQS Message System Attribute `AWSTraceHeader`.
-* If they do not, we populate it according to the type expected, then copy them.
-* If they do, we copy them.
-* The valuesare put into the following tag on the `aws.sdk.<service>.<operation>` Span:
+If you use the `aws-sdk` module in Node.js with AWS SQS and perform a `SendMessageBatch` operation these Tags are added to the Span:
 
 ```javascript
-s.trace_ids: ["jlkasfoja", ...]
+aws.sqs.queue_name: "MyQueue" // Taken from the Queue URL
+aws.sqs.operation: "send" // Must be "send"
+aws.sqs.message_ids: ["fja98jafs", ...] // An array with the message IDs provided in the SDK operation response.
+```
+
+
+### `aws.sdk.sns.publish`
+
+If you use the `aws-sdk` module in Node.js with AWS SNS and perform a `Publish` operation these Tags are added to the Span:
+
+```javascript
+aws.sns.topic.name: "sns-lambda" // Taken from the TopicArn
+aws.sns.operation: "send" // Must be "send"
+aws.sns.message_ids: ["fja98jafs"] // Introspected from the response of this SDK operation
+```
+
+### `aws.sdk.sns.publishbatch`
+
+If you use the `aws-sdk` module in Node.js with AWS SNS and perform a `PublishBatch` operation these Tags are added to the Span:
+
+```javascript
+aws.sns.topic.name: "sns-lambda" // Taken from the TopicArn
+aws.sns.operation: "send" // Must be "send"
+aws.sns.message_ids: ["fja98jafs", ...] // Introspected from the response of this SDK operation
 ```
 
 ## `node.http`
@@ -208,7 +342,7 @@ These are the Tags attached to this Span:
 
 /* Tags: Standard */
  
-duration: 231
+s.duration: 231
 
 /* Tags: http */
 
@@ -230,7 +364,7 @@ These are the Tags attached to this Span:
 
 /* Tags: Standard */
  
-duration: 331
+s.duration: 331
 
 /* Tags: https */
 
@@ -252,7 +386,7 @@ These are the Tags attached to this Span:
 
 /* Tags: Standard */
  
-duration: 291
+s.duration: 291
 
 /* Tags: express */
 
