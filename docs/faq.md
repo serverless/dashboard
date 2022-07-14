@@ -231,16 +231,15 @@ are distinct.
 
 **What data is stored by Serverless Console and for how long?**
 
-We store a limited set of specified [metrics](product/metrics.md) and [tags](/product/tags.md)
-in our systems for up to 30 days. While this does include meta data about your
-systems limited sensitive information is included.
+We store all trace data including request and response payloads
+in our systems for 30 days before being deleted.
 
 Logs are stored for 7 days before being deleted. 
 
 **How can I disable log and event data collection?**
 Log and event data can contain sensitive information. 
 To disable log, and/or request response data collection 
-set the following properties.
+set the following properties in your `serverless.yaml` file.
 
 ```yaml
 org: myorg
@@ -255,3 +254,8 @@ console:
 service: myservice
 frameworkVersion: '3'
 ```
+
+**Can I request to have my data deleted?**
+Yes, we can accomodate data deletion requests on an ad-hoc basis.
+Please reach out to support@serverless.com if you wish to have your
+console data removed.

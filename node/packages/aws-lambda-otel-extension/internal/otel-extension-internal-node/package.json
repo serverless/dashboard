@@ -24,6 +24,7 @@
     "@opentelemetry/sdk-trace-base": "^1.4.0",
     "@opentelemetry/sdk-trace-node": "^1.4.0",
     "lodash.clone": "^4.5.0",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "require-in-the-middle": "^5.1.0"
   }
 }
