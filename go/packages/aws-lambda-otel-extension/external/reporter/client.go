@@ -20,6 +20,7 @@ type PostData struct {
 	path       string
 	isProtobuf bool
 	retries    int
+	name       string
 }
 
 type ReporterClient struct {
@@ -65,12 +66,13 @@ func (c *ReporterClient) Flush() {
 	}
 }
 
-func (c *ReporterClient) post(path string, body []byte, isProtobuf bool) error {
+func (c *ReporterClient) post(path string, body []byte, name string, isProtobuf bool) error {
 	data := PostData{
 		body:       body,
 		path:       path,
 		isProtobuf: isProtobuf,
 		retries:    0,
+		name:       name,
 	}
 	if path == "" {
 		return c.syncPostLog(&data)
@@ -78,7 +80,7 @@ func (c *ReporterClient) post(path string, body []byte, isProtobuf bool) error {
 	return c.syncPost(&data)
 }
 
-func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod protoreflect.ProtoMessage) {
+func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod protoreflect.ProtoMessage, name string) {
 	var isProtobuf bool
 	var data []byte
 	var err error
@@ -95,14 +97,15 @@ func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod pro
 	}
 
 	c.eg.Go(func() error {
-		return c.post(use.Destination, data, isProtobuf)
+		return c.post(use.Destination, data, name, isProtobuf)
 	})
 }
 
 func (c *ReporterClient) syncPostLog(postData *PostData) (err error) {
-	start := time.Now()
-	c.logger.Info("DATA", zap.ByteString("data", postData.body))
-	c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
+	fmt.Printf("⚡ %s: %s\n", postData.name, postData.body)
+	// start := time.Now()
+	// c.logger.Info("DATA", zap.ByteString("data", postData.body))
+	// c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
 	return nil
 }
 
@@ -156,27 +159,27 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 
 func (c *ReporterClient) PostLogs(logs []byte) {
 	c.eg.Go(func() error {
-		return c.post(c.settings.Logs.Destination, logs, false)
+		return c.post(c.settings.Logs.Destination, logs, "logs", false)
 	})
 }
 
 func (c *ReporterClient) PostMetrics(metrics *protoc.MetricsData) {
-	c.postProto(c.settings.Metrics, metrics)
+	c.postProto(c.settings.Metrics, metrics, "metrics")
 }
 
 func (c *ReporterClient) PostTrace(trace *protoc.TracesData) {
-	c.postProto(c.settings.Traces, trace)
+	c.postProto(c.settings.Traces, trace, "traces")
 }
 
 func (c *ReporterClient) PostRequest(request []byte) {
 	c.eg.Go(func() error {
-		return c.post(c.settings.Request.Destination, request, false)
+		return c.post(c.settings.Request.Destination, request, "request", false)
 	})
 }
 
 func (c *ReporterClient) PostResponse(response []byte) {
 	c.eg.Go(func() error {
-		return c.post(c.settings.Response.Destination, response, false)
+		return c.post(c.settings.Response.Destination, response, "response", false)
 	})
 }
 
@@ -207,8 +210,10 @@ func (c *ReporterClient) WaitRequests(waitTime time.Duration) error {
 }
 
 func (c *ReporterClient) Shutdown() error {
+	c.logger.Debug("Shutting down reporter client")
 	err := c.WaitRequests(time.Second * 2)
 	c.ReporterClient.CloseIdleConnections()
+	c.logger.Debug("Shutdown complete")
 	return err
 }
 

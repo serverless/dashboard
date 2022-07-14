@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 )
 
@@ -143,8 +142,8 @@ func createHistogramMetric(count uint64, sum float64, record map[string]interfac
 					Count:             count,
 					Sum:               sum,
 					BucketCounts:      []uint64{1, 0},
-					ExplicitBounds:    []float64{math.Inf(1)},
-					Attributes:        attributes,
+					// ExplicitBounds:    []float64{math.Inf(1)},
+					Attributes: attributes,
 				},
 			},
 		},

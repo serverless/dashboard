@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -137,7 +138,7 @@ func processEvents(ctx context.Context, logger *lib.Logger, reportAgent *reporte
 		// Exit if we receive a SHUTDOWN event
 		if res.EventType == extension.Shutdown {
 			logger.Debug("Received SHUTDOWN event, Exiting")
-			return err
+			return errors.New("SHUTDOWN")
 		} else if res.EventType == extension.Invoke {
 			currentRequestData.SetUniqueName("invoke")
 			logger.Debug("Invoke received")

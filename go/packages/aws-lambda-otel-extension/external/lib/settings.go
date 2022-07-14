@@ -47,7 +47,7 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	testDestination := os.Getenv("SLS_TEST_EXTENSION_REPORT_DESTINATION")
 	platformStage := os.Getenv("SLS_PLATFORM_STAGE")
 
-	if testJson {
+	if testJson || testDestination == "log" {
 		extensionSettings.Metrics.ForceJson = true
 		extensionSettings.Logs.ForceJson = true
 		extensionSettings.Traces.ForceJson = true
