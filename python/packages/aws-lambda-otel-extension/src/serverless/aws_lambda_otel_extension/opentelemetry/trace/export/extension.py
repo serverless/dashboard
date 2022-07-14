@@ -36,9 +36,9 @@ def telemetry_formatted_span(span: ReadableSpan) -> Dict:
 
     if span.parent is not None:
         if isinstance(span.parent, Span):
-            parent_id = format_span_id(span.parent.get_span_context().span_id)
+            parent_id = span.parent.get_span_context().span_id
         if isinstance(span.parent, SpanContext):
-            parent_id = format_span_id(span.parent.span_id)
+            parent_id = span.parent.span_id
 
     events = []
 
@@ -72,7 +72,7 @@ def telemetry_formatted_span(span: ReadableSpan) -> Dict:
         "name": span._name,
         "traceId": format_trace_id(span.context.trace_id),
         "spanId": format_span_id(span.context.span_id),
-        "parentSpanId": parent_id,
+        "parentSpanId": None,
         "kind": f"SPAN_KIND_{span.kind.name}",
         "startTimeUnixNano": str(span._start_time),
         "endTimeUnixNano": str(span._end_time),
@@ -84,6 +84,9 @@ def telemetry_formatted_span(span: ReadableSpan) -> Dict:
         "links": links,
         "status": {},
     }
+
+    if parent_id is not None:
+        data["parentSpanId"] = format_span_id(parent_id)
 
     return data
 
