@@ -125,6 +125,8 @@ module.exports = async (coreConfig, options) => {
           Variables: {
             AWS_LAMBDA_EXEC_WRAPPER: '/opt/otel-extension-internal-node/exec-wrapper.sh',
             SLS_DEBUG_EXTENSION: '1',
+            SLS_PLATFORM_STAGE: process.env.SERVERLESS_PLATFORM_STAGE,
+            SERVERLESS_PLATFORM_STAGE: process.env.SERVERLESS_PLATFORM_STAGE,
             SLS_EXTENSION: JSON.stringify({
               orgId,
               ingestToken: token,
