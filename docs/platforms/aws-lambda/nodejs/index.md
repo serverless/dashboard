@@ -10,17 +10,17 @@ Every AWS Lambda function invocation instrumented with our Extension generates a
 
 Here is a table of contents of Spans we currently capture, in an example hierarchical format:
 
-* [aws.lambda](#aws.lambda)
-  * [aws.lambda.initialization](#aws.lambda.initialization)
-  * [aws.lambda.invocation](#aws.lambda.invocation)
-    * [express](#express)
-      * [node.https](#node.https)
-      * [node.http](#node.http)
-      * [aws.sdk](#aws.sdk)
+* aws.lambda
+  * aws.lambda.initialization
+  * aws.lambda.invocation
+    * express
+      * node.https
+      * node.http
+      * aws.sdk
 
 # Spans
 
-## aws.lambda
+## `aws.lambda`
 
 This is the parent Span (aka the Trace) for an AWS Lambda. It measures the combined lifecyle phases of AWS Lambda Initialization and Invocation, and any logic performed within the Invocation phase.
 
