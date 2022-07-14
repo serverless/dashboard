@@ -5,10 +5,7 @@ from typing import List
 from urllib.request import Request as HTTPRequest
 from urllib.request import urlopen
 
-from opentelemetry.context import _SUPPRESS_INSTRUMENTATION_KEY
-from opentelemetry.context import attach as context_attach
-from opentelemetry.context import detach as context_detach
-from opentelemetry.context import set_value as set_context_value
+from opentelemetry.context import _SUPPRESS_INSTRUMENTATION_KEY, attach, detach, set_value
 from tenacity import RetryError, Retrying, stop_after_attempt
 from tenacity.wait import wait_fixed
 
@@ -22,22 +19,22 @@ class HTTPClientWorkerPool:
         self._num_threads = num_threads
         self._executor = ThreadPoolExecutor(max_workers=num_threads)
 
-    def _fire_and_forget(self, request: HTTPRequest):
+    def _urlopen(self, request: HTTPRequest):
         try:
             for attempt in Retrying(wait=wait_fixed(0.25), stop=stop_after_attempt(3)):
                 with attempt:
-                    token = context_attach(set_context_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+                    token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                     if request.full_url.lower().startswith("http://") or request.full_url.lower().startswith(
                         "https://"
                     ):
                         urlopen(request, timeout=5)  # noqa: S310 (properly validated above)
-                    context_detach(token)
+                    detach(token)
         except RetryError:
             logger.exception("Failed to send request")
 
     def submit_request(self, request: HTTPRequest):
         with self._lock:
-            future = self._executor.submit(self._fire_and_forget, request)
+            future = self._executor.submit(self._urlopen, request)
             self._futures.append(future)
 
     def force_flush(self, timeout: float = None):

@@ -50,7 +50,7 @@ INSTRUMENTATION_MAP = {
     ],
 }
 
-JUST_PLAIN_DO_NOT_INSTRUMENT = [
+REGRESSION_DO_NOT_INSTRUMENT = [
     # FIXME: There appears to be a serious issue introduced in opentelemetry 0.32b0 to deal with how dbapi is wrapped..
     # need to get down to the bottom of this.
     "sqlite3",

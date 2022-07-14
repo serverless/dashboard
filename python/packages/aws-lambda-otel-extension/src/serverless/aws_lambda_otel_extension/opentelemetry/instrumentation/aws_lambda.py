@@ -7,9 +7,9 @@ from traceback import TracebackException
 from typing import Any, Callable, Collection, Dict, Optional, Tuple, cast
 
 import psutil
-from opentelemetry.attributes import BoundedAttributes  # type: ignore
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context.context import Context
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor  # type: ignore
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.propagators.aws.aws_xray_propagator import TRACE_HEADER_KEY

@@ -19,9 +19,9 @@ def response_hook(span: Span, *args, **kwargs):
     response = args[0]
 
     if isinstance(response, HttpRequest) and not span.name:
-        span.update_name(response.path)
         updates["name.old"] = span.name
         updates["name.new"] = response.path
+        span.update_name(response.path)
 
     if updates:
         span.add_event(
