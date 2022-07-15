@@ -30,6 +30,7 @@ module.exports = (emitter) => {
 
   return {
     listenerEmitter,
+    sendLogs,
     server: http.createServer((request, response) => {
       log.get('request').debug('%s %s %o', request.method, request.url, request.headers);
       if (request.url.endsWith('/register') && request.method === 'POST') {

@@ -27,7 +27,7 @@ describe('external', () => {
   it('should handle plain success invocation', async () => {
     const requestId = 'bf8bcf52-ff05-4f30-85cc-8a8bb1a27ae0';
     const emitter = new EventEmitter();
-    const { server, listenerEmitter } = getExtensionServerMock(emitter, { requestId });
+    const { server, listenerEmitter, sendLogs } = getExtensionServerMock(emitter, { requestId });
 
     server.listen(port);
     const [extensionCommand, ...extensionArgs] = (() => {
@@ -211,23 +211,26 @@ describe('external', () => {
       },
     ]);
     await new Promise((resolve) => listenerEmitter.once('listener', resolve));
-    emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
-    emitter.emit('logs', [
-      {
-        time: '2022-02-14T15:31:26.742Z',
-        type: 'platform.report',
-        record: {
-          requestId,
-          metrics: {
-            durationMs: 2064.05,
-            billedDurationMs: 2065,
-            memorySizeMB: 128,
-            maxMemoryUsedMB: 67,
-            initDurationMs: 238.12,
+    await new Promise((resolve) =>
+      sendLogs({ 'Content-Type': 'application/json' }, [
+        {
+          time: '2022-02-14T15:31:26.742Z',
+          type: 'platform.report',
+          record: {
+            requestId,
+            metrics: {
+              durationMs: 2064.05,
+              billedDurationMs: 2065,
+              memorySizeMB: 128,
+              maxMemoryUsedMB: 67,
+              initDurationMs: 238.12,
+            },
           },
         },
-      },
-    ]);
+      ]).then(resolve)
+    );
+
+    emitter.emit('event', { eventType: 'SHUTDOWN', requestId });
 
     const stdoutData = (await extensionProcess).stdoutBuffer.toString();
     server.close();
@@ -247,16 +250,23 @@ describe('external', () => {
     const logReport = reports.logs[0][0];
 
     const resourceMetrics = normalizeOtelAttributes(
-      metricsReport.resourceMetrics[0].resource.attributes
+      metricsReport.resourceMetrics
+        ? metricsReport.resourceMetrics[0].resource.attributes
+        : metricsReport.resource_metrics[0].resource.attributes
     );
     expect(resourceMetrics['faas.name']).to.equal('test-otel-extension-success');
     const resourceSpans = normalizeOtelAttributes(
-      tracesReport.resourceSpans[0].resource.attributes
+      tracesReport.resourceSpans
+        ? tracesReport.resourceSpans[0].resource.attributes
+        : tracesReport.resource_spans[0].resource.attributes
     );
+    log.debug('resourceSpans %o', tracesReport.resource_spans[0].resource.attributes);
     expect(resourceSpans['faas.name']).to.equal('test-otel-extension-success');
-
-    expect(logReport.Body).to.equal(`2022-02-14T13:01:30.307Z\t${requestId}\tINFO\tHi mom`);
-    expect(logReport.Attributes['faas.name']).to.equal('testFunction');
-    expect(logReport.Resource['faas.arch']).to.equal('x86');
+    expect(logReport.logs[0].body).to.equal(`2022-02-14T13:01:30.307Z\t${requestId}\tINFO\tHi mom`);
+    expect(
+      logReport.Attributes ? logReport.Attributes['faas.name'] : logReport.attributes['faas.name']
+    ).to.equal('testFunction');
+    // removed while we don't send Resource
+    // expect(logReport.Resource['faas.arch']).to.equal('x86');
   });
 });
