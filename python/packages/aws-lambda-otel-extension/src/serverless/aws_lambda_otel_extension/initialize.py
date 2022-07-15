@@ -165,7 +165,8 @@ def setup_opentelemetry_instrumentation(
                                 failed.append(entry_point.name)
                                 logger.exception("Instrumenting of %s failed", entry_point.name)
                                 instrumentor_span.record_exception(exc, escaped=True)
-                                raise exc
+                                if raise_on_exception:
+                                    raise exc
 
                     for entry_point in iter_entry_points("opentelemetry_post_instrument"):
                         entry_point.load()()
@@ -203,9 +204,12 @@ def setup_opentelemetry_instrumentation(
 
                 except Exception:
                     logger.exception("Exception while executing instrumentor")
-                    raise
+                    if raise_on_exception:
+                        raise
         except Exception:
             logger.exception("Exception while starting instrumentor span")
+            if raise_on_exception:
+                raise
 
 
 def setup_opentelemetry_tracer_provider(
