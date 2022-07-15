@@ -2,12 +2,24 @@
 
 const { expect } = require('chai');
 
+const path = require('path');
 const log = require('log').get('test');
 const normalizeOtelAttributes = require('../utils/normalize-otel-attributes');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
 const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
+
+for (const name of [
+  'TEST_LAYER_FILENAME',
+  'TEST_EXTERNAL_LAYER_FILENAME',
+  'TEST_INTERNAL_LAYER_FILENAME',
+]) {
+  // In tests, current working directory is mocked,
+  // so if relative path is provided in env var it won't be resolved properly
+  // with this patch we resolve it before cwd mocking
+  if (process.env[name]) process.env[name] = path.resolve(process.env[name]);
+}
 
 describe('integration', function () {
   this.timeout(120000);
@@ -131,7 +143,12 @@ describe('integration', function () {
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
 
   before(async () => {
-    await createCoreResources(coreConfig);
+    await createCoreResources(coreConfig, {
+      layerTypes:
+        process.env.TEST_EXTERNAL_LAYER_FILENAME || process.env.TEST_INTERNAL_LAYER_FILENAME
+          ? ['external', 'nodeInternal']
+          : ['nodeAll'],
+    });
     for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to

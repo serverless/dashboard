@@ -47,6 +47,8 @@ npm run test:performance
 
 How extensions behave, for various testing purposes, can be tweaked with following environment variables:
 
+### Variables handled in extension logic
+
 - `SERVERLESS_PLATFORM_STAGE` - Ingestion server stage to which reports should be propagated (default is `prod`, with this setting it can be overridden to `dev`)
 - `SLS_DEBUG_EXTENSION` - Log debug messages, of which scope is to:
   - Mark certain processing points
@@ -58,4 +60,10 @@ How extensions behave, for various testing purposes, can be tweaked with followi
 - `SLS_TEST_EXTENSION_REPORT_DESTINATION` - Telemetry reports normally are sent to the Console ingestion servers, with this variable this can be overridden:
   - Set to `s3://<bucket>//<root-key>` to send reports to S3 bucket
   - Set to `log` to just log reports into process stdout
+
+### Variables handled by test suite
+
 - `SLS_TEST_EXTENSION_COMMAND` - _(Processed only in context of the external extension unit test)_ A command to run external extension process (e.g. `node path/to/external-extension/module.js`)
+- `TEST_LAYER_FILENAME` - Path to `.zip` file of a layer which contains both external and internal Node.js extensions, against which tests should be run
+- `TEST_EXTERNAL_LAYER_FILENAME` - Path to `.zip` file of a layer which contains external (runtime agnostic) extension. Triggers mode in which two layers are attached to the lambda (one with external and other with internal extension)
+- `TEST_INTERNAL_LAYER_FILENAME` - Path to `.zip` file of a layer which contains just internal Node.js extension. Triggers mode in which two layers are attached to the lambda (one with external and other with internal extension)
