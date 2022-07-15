@@ -69,14 +69,14 @@ let shutdownStartTime;
 
   let lastTelemetryData;
 
-  let ongoingInvocationDeferred;
+  let invocationEndDeferred;
   const tmpStorageFile = path.resolve(os.tmpdir(), 'sls-otel-extension-storage');
 
   const monitorLogs = async (extensionIndentifier) => {
-    let resolveOngoingInvocationDeferred;
-    const closeOngoingInvocation = () => {
-      if (resolveOngoingInvocationDeferred) resolveOngoingInvocationDeferred();
-      ongoingInvocationDeferred = resolveOngoingInvocationDeferred = null;
+    let resolveInvocationEndDeferred;
+    const endInvocation = () => {
+      if (resolveInvocationEndDeferred) resolveInvocationEndDeferred();
+      invocationEndDeferred = resolveInvocationEndDeferred = null;
     };
 
     // Setup a logs listener server
@@ -122,8 +122,8 @@ let shutdownStartTime;
                   debugLog('Extension platform log: start');
                   getCurrentRequestContext('start');
                   // eslint-disable-next-line no-loop-func
-                  ongoingInvocationDeferred = new Promise((resolve) => {
-                    resolveOngoingInvocationDeferred = resolve;
+                  invocationEndDeferred = new Promise((resolve) => {
+                    resolveInvocationEndDeferred = resolve;
                   });
                   break;
                 case 'platform.runtimeDone':
@@ -136,7 +136,7 @@ let shutdownStartTime;
                     fs.writeFileSync(tmpStorageFile, JSON.stringify(lastTelemetryData));
                     debugLog('Extension: Store telemetry data for the next process');
                   }
-                  closeOngoingInvocation();
+                  endInvocation();
                   break;
                 case 'platform.report':
                   debugLog('Extension platform log: report');
@@ -158,7 +158,7 @@ let shutdownStartTime;
                       )
                     );
                   }
-                  closeOngoingInvocation();
+                  endInvocation();
                   break;
                 default:
               }
@@ -260,7 +260,7 @@ let shutdownStartTime;
       switch (event.eventType) {
         case 'SHUTDOWN':
           shutdownStartTime = process.hrtime.bigint();
-          await Promise.resolve(ongoingInvocationDeferred).then(waitUntilAllReportsAreSent);
+          await Promise.resolve(invocationEndDeferred).then(waitUntilAllReportsAreSent);
           break;
         case 'INVOKE':
           getCurrentRequestContext('invoke');
