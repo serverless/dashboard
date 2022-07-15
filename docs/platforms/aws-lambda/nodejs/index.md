@@ -24,9 +24,9 @@ Here is a table of contents of Spans we currently capture, in an example hierarc
   * **aws.lambda.initialization**
   * **aws.lambda.invocation**
     * **express**
-      * **node.https**
-      * **node.http**
-      * **aws.sdk**
+      * **node.https.request**
+      * **node.http.request**
+      * **aws.sdk._service_._operation_**
 
 # Spans
 
@@ -391,9 +391,9 @@ aws.sns.operation: "send" // Must be "send"
 aws.sns.message_ids: ["fja98jafs", ...] // Introspected from the response of this SDK operation
 ```
 
-## `node.http`
+## `node.http.request`
 
-If you use the `http` module in Node.js, this Span is created.
+If you use the `http` module in Node.js, and the `request` logic, this Span is created.
 
 ### Tags
 
@@ -408,17 +408,17 @@ s.span.timestamp: "2022-07-13T20:10:48.794945024Z" // This Span's time.  Same as
 s.span.start_time: "2022-07-13T20:10:48.794945024Z" // This Span's start time.
 s.span.end_time: "2022-07-13T20:10:48.799375104Z" // This Span's end time.
 
-/* Tags: node.http */
+/* Tags: node.http.request */
 
-node.http.url: "http://myapp.com"
-node.http.method: "get"
-node.http.path: "/helloworld"
-node.http.status_code: 401
+node.http.request.url: "http://myapp.com"
+node.http.request.method: "get"
+node.http.request.path: "/helloworld"
+node.http.request.status_code: 401
 ```
 
-## `node.https`
+## `node.https.request`
 
-If you use the `https` module in Node.js, this Span is created.
+If you use the `https` module in Node.js, and the `request` logic, this Span is created.
 
 ### Tags
 
@@ -433,12 +433,12 @@ s.span.timestamp: "2022-07-13T20:10:48.794945024Z" // This Span's time.  Same as
 s.span.start_time: "2022-07-13T20:10:48.794945024Z" // This Span's start time.
 s.span.end_time: "2022-07-13T20:10:48.799375104Z" // This Span's end time.
 
-/* Tags: node.https */
+/* Tags: node.https.request */
 
-node.https.url: "http://myapp.com"
-node.https.method: "get"
-node.https.path: "/helloworld"
-node.https.status_code: 500
+node.https.request.url: "http://myapp.com"
+node.https.request.method: "get"
+node.https.request.path: "/helloworld"
+node.https.request.status_code: 500
 ```
 
 ## `express`
