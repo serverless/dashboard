@@ -35,7 +35,7 @@ const createLayers = async (config, layerTypes) => {
           if (process.env.TEST_LAYER_FILENAME) {
             config.layerArn = await createLayer({
               layerName: basename,
-              filename: process.env.TEST_LAYER_FILENAME,
+              filename: path.resolve(process.env.TEST_LAYER_FILENAME),
               skipBuild: true,
             });
             return;
@@ -49,7 +49,7 @@ const createLayers = async (config, layerTypes) => {
           if (process.env.TEST_EXTERNAL_LAYER_FILENAME) {
             config.layerExternalArn = await createLayer({
               layerName: `${basename}-external`,
-              filename: process.env.TEST_EXTERNAL_LAYER_FILENAME,
+              filename: path.resolve(process.env.TEST_EXTERNAL_LAYER_FILENAME),
               skipBuild: true,
             });
             return;
@@ -64,7 +64,7 @@ const createLayers = async (config, layerTypes) => {
           if (process.env.TEST_INTERNAL_LAYER_FILENAME) {
             config.layerExternalArn = await createLayer({
               layerName: `${basename}-internal`,
-              filename: process.env.TEST_INTERNAL_LAYER_FILENAME,
+              filename: path.resolve(process.env.TEST_INTERNAL_LAYER_FILENAME),
               skipBuild: true,
             });
             return;

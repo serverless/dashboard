@@ -4,7 +4,19 @@
 
 const { expect } = require('chai');
 
+const path = require('path');
 const runBenchmarks = require('./');
+
+for (const name of [
+  'TEST_LAYER_FILENAME',
+  'TEST_EXTERNAL_LAYER_FILENAME',
+  'TEST_INTERNAL_LAYER_FILENAME',
+]) {
+  // In tests, current working directory is mocked,
+  // so if relative path is provided in env var it won't be resolved properly
+  // with this patch we resolve it before cwd mocking
+  if (process.env[name]) process.env[name] = path.resolve(process.env[name]);
+}
 
 describe('performance', function () {
   this.timeout(120000);
@@ -14,6 +26,10 @@ describe('performance', function () {
     const resultsMap = await runBenchmarks({
       benchmarkVariants: new Set(['console']),
       useCases: new Set(['callback']),
+      extensionLayersMode:
+        process.env.TEST_EXTERNAL_LAYER_FILENAME || process.env.TEST_INTERNAL_LAYER_FILENAME
+          ? 'dual'
+          : 'single',
     });
     ({ results } = resultsMap.get('callback').get('console'));
   });
