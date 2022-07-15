@@ -2,15 +2,17 @@ package reporter
 
 import (
 	"aws-lambda-otel-extension/external/lib"
-	"aws-lambda-otel-extension/external/protoc"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
+	metricspb "go.opentelemetry.io/proto/otlp/metrics/v1"
+	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
+
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -85,7 +87,7 @@ func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod pro
 	var data []byte
 	var err error
 	if use.ForceJson {
-		data, err = json.Marshal(protod)
+		data, err = (protojson.MarshalOptions{}).Marshal(protod)
 		isProtobuf = false
 	} else {
 		data, err = proto.Marshal(protod)
@@ -163,11 +165,11 @@ func (c *ReporterClient) PostLogs(logs []byte) {
 	})
 }
 
-func (c *ReporterClient) PostMetrics(metrics *protoc.MetricsData) {
+func (c *ReporterClient) PostMetrics(metrics *metricspb.MetricsData) {
 	c.postProto(c.settings.Metrics, metrics, "metrics")
 }
 
-func (c *ReporterClient) PostTrace(trace *protoc.TracesData) {
+func (c *ReporterClient) PostTrace(trace *tracepb.TracesData) {
 	c.postProto(c.settings.Traces, trace, "traces")
 }
 

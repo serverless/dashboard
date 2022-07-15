@@ -2,9 +2,10 @@ package reporter
 
 import (
 	"aws-lambda-otel-extension/external/lib"
-	"aws-lambda-otel-extension/external/protoc"
 	"fmt"
 	"time"
+
+	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 )
 
 type AttributeHelper struct {
@@ -208,35 +209,35 @@ var LogsSeverityNumber map[string]int = map[string]int{
 
 // Protobuf helpers
 
-func getAnyValue(value interface{}) *protoc.AnyValue {
+func getAnyValue(value interface{}) *commonpb.AnyValue {
 	switch value.(type) {
 	case string:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_StringValue{
+		return &commonpb.AnyValue{
+			Value: &commonpb.AnyValue_StringValue{
 				StringValue: value.(string),
 			},
 		}
 	case int64:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_IntValue{
+		return &commonpb.AnyValue{
+			Value: &commonpb.AnyValue_IntValue{
 				IntValue: value.(int64),
 			},
 		}
 	case int32:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_IntValue{
+		return &commonpb.AnyValue{
+			Value: &commonpb.AnyValue_IntValue{
 				IntValue: int64(value.(int32)),
 			},
 		}
 	case int:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_IntValue{
+		return &commonpb.AnyValue{
+			Value: &commonpb.AnyValue_IntValue{
 				IntValue: int64(value.(int)),
 			},
 		}
 	case bool:
-		return &protoc.AnyValue{
-			Value: &protoc.AnyValue_BoolValue{
+		return &commonpb.AnyValue{
+			Value: &commonpb.AnyValue_BoolValue{
 				BoolValue: value.(bool),
 			},
 		}
@@ -244,16 +245,16 @@ func getAnyValue(value interface{}) *protoc.AnyValue {
 	return nil
 }
 
-func getJsonValue(pv *protoc.AnyValue) interface{} {
+func getJsonValue(pv *commonpb.AnyValue) interface{} {
 	if pv == nil {
 		return nil
 	}
 	switch pv.Value.(type) {
-	case *protoc.AnyValue_StringValue:
+	case *commonpb.AnyValue_StringValue:
 		return pv.GetStringValue()
-	case *protoc.AnyValue_IntValue:
+	case *commonpb.AnyValue_IntValue:
 		return pv.GetIntValue()
-	case *protoc.AnyValue_BoolValue:
+	case *commonpb.AnyValue_BoolValue:
 		return pv.GetBoolValue()
 	}
 	return nil

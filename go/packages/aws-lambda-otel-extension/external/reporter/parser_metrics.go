@@ -1,13 +1,17 @@
 package reporter
 
 import (
-	"aws-lambda-otel-extension/external/protoc"
 	"aws-lambda-otel-extension/external/types"
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
+
+	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
+	metricspb "go.opentelemetry.io/proto/otlp/metrics/v1"
+	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
+	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 )
 
 const MaxSpansPerBatch = 100
@@ -39,20 +43,20 @@ func ParseTelemetryDataPayload(data json.RawMessage) (*types.TelemetryDataPayloa
 	return payload, nil
 }
 
-func createMetricAttributes(fun map[string]interface{}, record *types.PlatformObjectRecord) []*protoc.KeyValue {
-	var attributes []*protoc.KeyValue
+func createMetricAttributes(fun map[string]interface{}, record *types.PlatformObjectRecord) []*commonpb.KeyValue {
+	var attributes []*commonpb.KeyValue
 
 	// for loop to iterate MeasureAttributes
 	for _, ra := range MeasureAttributes {
 		if ra.value != "" {
-			attributes = append(attributes, &protoc.KeyValue{
+			attributes = append(attributes, &commonpb.KeyValue{
 				Key:   ra.key,
 				Value: getAnyValue(ra.value),
 			})
 		} else {
 			if ra.source != "" {
 				if val, ok := fun[ra.source]; ok {
-					attributes = append(attributes, &protoc.KeyValue{
+					attributes = append(attributes, &commonpb.KeyValue{
 						Key:   ra.key,
 						Value: getAnyValue(val),
 					})
@@ -61,21 +65,21 @@ func createMetricAttributes(fun map[string]interface{}, record *types.PlatformOb
 		}
 	}
 
-	attributes = append(attributes, &protoc.KeyValue{
+	attributes = append(attributes, &commonpb.KeyValue{
 		Key:   "faas.error",
 		Value: getAnyValue(fun["error"]),
 	})
 
 	if record != nil {
-		attributes = append(attributes, &protoc.KeyValue{
+		attributes = append(attributes, &commonpb.KeyValue{
 			Key:   "faas.duration",
 			Value: getAnyValue(record.ReportLogItem.DurationMs),
 		})
-		attributes = append(attributes, &protoc.KeyValue{
+		attributes = append(attributes, &commonpb.KeyValue{
 			Key:   "faas.billed_duration",
 			Value: getAnyValue(record.ReportLogItem.BilledDurationMs),
 		})
-		attributes = append(attributes, &protoc.KeyValue{
+		attributes = append(attributes, &commonpb.KeyValue{
 			Key:   "faas.max_memory_used_mb",
 			Value: getAnyValue(record.ReportLogItem.MaxMemoryUsedMB),
 		})
@@ -88,7 +92,7 @@ func createMetricAttributes(fun map[string]interface{}, record *types.PlatformOb
 		hasErrorTimeout = et == "timeout"
 	}
 
-	attributes = append(attributes, &protoc.KeyValue{
+	attributes = append(attributes, &commonpb.KeyValue{
 		Key:   "faas.error_timeout",
 		Value: getAnyValue(hasErrorTimeout),
 	})
@@ -96,20 +100,20 @@ func createMetricAttributes(fun map[string]interface{}, record *types.PlatformOb
 	return attributes
 }
 
-func createResourceAttributes(fun map[string]interface{}) []*protoc.KeyValue {
-	var attributes []*protoc.KeyValue
+func createResourceAttributes(fun map[string]interface{}) []*commonpb.KeyValue {
+	var attributes []*commonpb.KeyValue
 
 	// for loop to iterate ResourceAttributes
 	for _, ra := range ResourceAttributes {
 		if ra.value != "" {
-			attributes = append(attributes, &protoc.KeyValue{
+			attributes = append(attributes, &commonpb.KeyValue{
 				Key:   ra.key,
 				Value: getAnyValue(ra.value),
 			})
 		} else {
 			if ra.source != "" {
 				if val, ok := fun[ra.source]; ok {
-					attributes = append(attributes, &protoc.KeyValue{
+					attributes = append(attributes, &commonpb.KeyValue{
 						Key:   ra.key,
 						Value: getAnyValue(val),
 					})
@@ -131,11 +135,11 @@ func getTimeUnixNanoInterval(record map[string]interface{}) (uint64, uint64) {
 	return startTimeUnixNano, endTimeUnixNano
 }
 
-func createHistogramMetric(count uint64, sum float64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Histogram {
+func createHistogramMetric(count uint64, sum float64, record map[string]interface{}, attributes []*commonpb.KeyValue) *metricspb.Metric_Histogram {
 	startTime, endTime := getTimeUnixNanoInterval(record)
-	return &protoc.Metric_Histogram{
-		Histogram: &protoc.Histogram{
-			DataPoints: []*protoc.HistogramDataPoint{
+	return &metricspb.Metric_Histogram{
+		Histogram: &metricspb.Histogram{
+			DataPoints: []*metricspb.HistogramDataPoint{
 				{
 					StartTimeUnixNano: startTime,
 					TimeUnixNano:      endTime,
@@ -150,56 +154,56 @@ func createHistogramMetric(count uint64, sum float64, record map[string]interfac
 	}
 }
 
-func createCountMetric(count uint64, asInt int64, record map[string]interface{}, attributes []*protoc.KeyValue) *protoc.Metric_Sum {
+func createCountMetric(count uint64, asInt int64, record map[string]interface{}, attributes []*commonpb.KeyValue) *metricspb.Metric_Sum {
 	startTime, endTime := getTimeUnixNanoInterval(record)
-	return &protoc.Metric_Sum{
-		Sum: &protoc.Sum{
-			DataPoints: []*protoc.NumberDataPoint{
+	return &metricspb.Metric_Sum{
+		Sum: &metricspb.Sum{
+			DataPoints: []*metricspb.NumberDataPoint{
 				{
 					StartTimeUnixNano: startTime,
 					TimeUnixNano:      endTime,
 					Attributes:        attributes,
-					Value:             &protoc.NumberDataPoint_AsInt{AsInt: asInt},
+					Value:             &metricspb.NumberDataPoint_AsInt{AsInt: asInt},
 				},
 			},
 		},
 	}
 }
 
-func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *types.PlatformObjectRecord) *protoc.MetricsData {
+func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *types.PlatformObjectRecord) *metricspb.MetricsData {
 
 	metricAttributes := createMetricAttributes(fun, record)
 
-	metricAttributes = append(metricAttributes, &protoc.KeyValue{
+	metricAttributes = append(metricAttributes, &commonpb.KeyValue{
 		Key:   "faas.execution",
 		Value: getAnyValue(requestId),
 	})
 
 	if v, ok := fun["httpStatusCode"]; ok {
-		metricAttributes = append(metricAttributes, &protoc.KeyValue{
+		metricAttributes = append(metricAttributes, &commonpb.KeyValue{
 			Key:   "http.status_code",
 			Value: getAnyValue(v),
 		})
 	}
 
 	if v, ok := fun["httpPath"]; ok {
-		metricAttributes = append(metricAttributes, &protoc.KeyValue{
+		metricAttributes = append(metricAttributes, &commonpb.KeyValue{
 			Key:   "http.path",
 			Value: getAnyValue(v),
 		})
 	}
 
-	metrics := []*protoc.Metric{}
+	metrics := []*metricspb.Metric{}
 
 	if record == nil {
-		metrics = append(metrics, &protoc.Metric{
+		metrics = append(metrics, &metricspb.Metric{
 			Name: "faas.invoke",
 			Unit: "1",
 			Data: createCountMetric(1, 1, fun, metricAttributes),
 		})
 
 	} else {
-		metrics = append(metrics, &protoc.Metric{
+		metrics = append(metrics, &metricspb.Metric{
 			Name: "faas.duration",
 			Unit: "1",
 			Data: createHistogramMetric(1, record.ReportLogItem.DurationMs, fun, metricAttributes),
@@ -207,14 +211,14 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 
 		memory := (float64(record.ReportLogItem.MaxMemoryUsedMB) / float64(record.ReportLogItem.MemorySizeMB)) * 100
 
-		metrics = append(metrics, &protoc.Metric{
+		metrics = append(metrics, &metricspb.Metric{
 			Name: "faas.memory",
 			Unit: "1",
 			Data: createHistogramMetric(1, memory, fun, metricAttributes),
 		})
 
 		if record.ReportLogItem.InitDurationMs > 0 {
-			metrics = append(metrics, &protoc.Metric{
+			metrics = append(metrics, &metricspb.Metric{
 				Name: "faas.coldstart_duration",
 				Unit: "1",
 				Data: createHistogramMetric(1, record.ReportLogItem.InitDurationMs, fun, metricAttributes),
@@ -222,15 +226,15 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 		}
 	}
 
-	return &protoc.MetricsData{
-		ResourceMetrics: []*protoc.ResourceMetrics{
+	return &metricspb.MetricsData{
+		ResourceMetrics: []*metricspb.ResourceMetrics{
 			{
-				Resource: &protoc.Resource{
+				Resource: &resourcepb.Resource{
 					Attributes: createResourceAttributes(fun),
 				},
-				InstrumentationLibraryMetrics: []*protoc.InstrumentationLibraryMetrics{
+				InstrumentationLibraryMetrics: []*metricspb.InstrumentationLibraryMetrics{
 					{
-						InstrumentationLibrary: &protoc.InstrumentationLibrary{
+						InstrumentationLibrary: &commonpb.InstrumentationLibrary{
 							Name:    "serverless-meter",
 							Version: "1.0.0",
 						},
@@ -244,11 +248,11 @@ func CreateMetricsPayload(requestId string, fun map[string]interface{}, record *
 
 // Traces logic
 
-func batchOverflowSpans(traces *protoc.TracesData) *protoc.TracesData {
-	var batches []*protoc.InstrumentationLibrarySpans
+func batchOverflowSpans(traces *tracepb.TracesData) *tracepb.TracesData {
+	var batches []*tracepb.InstrumentationLibrarySpans
 
 	for _, libSpans := range traces.ResourceSpans[0].InstrumentationLibrarySpans {
-		var cutSpans []*protoc.Span
+		var cutSpans []*tracepb.Span
 		lenSpans := len(libSpans.Spans)
 		iSpan := 0
 		for (lenSpans - iSpan) > 0 {
@@ -259,7 +263,7 @@ func batchOverflowSpans(traces *protoc.TracesData) *protoc.TracesData {
 				cutSpans = libSpans.Spans[iSpan:]
 				iSpan += len(cutSpans)
 			}
-			batches = append(batches, &protoc.InstrumentationLibrarySpans{
+			batches = append(batches, &tracepb.InstrumentationLibrarySpans{
 				InstrumentationLibrary: libSpans.InstrumentationLibrary,
 				Spans:                  cutSpans,
 			})
@@ -267,8 +271,8 @@ func batchOverflowSpans(traces *protoc.TracesData) *protoc.TracesData {
 		}
 	}
 
-	return &protoc.TracesData{
-		ResourceSpans: []*protoc.ResourceSpans{
+	return &tracepb.TracesData{
+		ResourceSpans: []*tracepb.ResourceSpans{
 			{
 				Resource:                    traces.ResourceSpans[0].Resource,
 				InstrumentationLibrarySpans: batches,
@@ -277,7 +281,7 @@ func batchOverflowSpans(traces *protoc.TracesData) *protoc.TracesData {
 	}
 }
 
-func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) (*protoc.TracesData, error) {
+func CreateTracePayload(requestId string, fun map[string]interface{}, traces *types.Traces) (*tracepb.TracesData, error) {
 
 	if traces == nil {
 		return nil, nil
@@ -288,20 +292,20 @@ func CreateTracePayload(requestId string, fun map[string]interface{}, traces *ty
 		return nil, errors.New("no resource spans found")
 	}
 
-	instLibSpans := make([]*protoc.InstrumentationLibrarySpans, len(traces.ResourceSpans[0].InstrumentationLibrarySpans))
+	instLibSpans := make([]*tracepb.InstrumentationLibrarySpans, len(traces.ResourceSpans[0].InstrumentationLibrarySpans))
 
 	for libIndex, librarySpans := range traces.ResourceSpans[0].InstrumentationLibrarySpans {
 		if librarySpans.Spans == nil {
 			return nil, errors.New("no spans found")
 		}
-		cSpans := make([]*protoc.Span, len(librarySpans.Spans))
+		cSpans := make([]*tracepb.Span, len(librarySpans.Spans))
 
 		for spanIndex, span := range librarySpans.Spans {
 			// finally convert spans to key-value format
-			var attribs []*protoc.KeyValue
+			var attribs []*commonpb.KeyValue
 			existingAttribs := map[string]bool{}
 			for k, v := range span.Attributes {
-				attribs = append(attribs, &protoc.KeyValue{
+				attribs = append(attribs, &commonpb.KeyValue{
 					Key:   k,
 					Value: getAnyValue(v),
 				})
@@ -319,7 +323,7 @@ func CreateTracePayload(requestId string, fun map[string]interface{}, traces *ty
 			startTime, _ := strconv.ParseInt(span.StartTimeUnixNano, 10, 64)
 			endTime, _ := strconv.ParseInt(span.EndTimeUnixNano, 10, 64)
 
-			cSpans[spanIndex] = &protoc.Span{
+			cSpans[spanIndex] = &tracepb.Span{
 				Attributes:        attribs,
 				TraceId:           traceId,
 				SpanId:            spanId,
@@ -330,9 +334,9 @@ func CreateTracePayload(requestId string, fun map[string]interface{}, traces *ty
 			}
 		}
 
-		instLibSpans[libIndex] = &protoc.InstrumentationLibrarySpans{
+		instLibSpans[libIndex] = &tracepb.InstrumentationLibrarySpans{
 
-			InstrumentationLibrary: &protoc.InstrumentationLibrary{
+			InstrumentationLibrary: &commonpb.InstrumentationLibrary{
 				Name:    librarySpans.InstrumentationLibrary.Name,
 				Version: librarySpans.InstrumentationLibrary.Version,
 			},
@@ -340,15 +344,15 @@ func CreateTracePayload(requestId string, fun map[string]interface{}, traces *ty
 		}
 	}
 
-	resourceSpans := []*protoc.ResourceSpans{
+	resourceSpans := []*tracepb.ResourceSpans{
 		{
-			Resource: &protoc.Resource{
+			Resource: &resourcepb.Resource{
 				Attributes: createResourceAttributes(fun),
 			},
 			InstrumentationLibrarySpans: instLibSpans,
 		},
 	}
-	return batchOverflowSpans(&protoc.TracesData{
+	return batchOverflowSpans(&tracepb.TracesData{
 		ResourceSpans: resourceSpans,
 	}), nil
 

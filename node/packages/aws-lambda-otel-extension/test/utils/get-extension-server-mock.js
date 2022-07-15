@@ -8,7 +8,7 @@ const http = require('http');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 
-module.exports = (emitter) => {
+module.exports = ({ emitter, functionName, region }) => {
   const lambdaExtensionIdentifier = uuidv4();
 
   let logsUrl;
@@ -25,12 +25,14 @@ module.exports = (emitter) => {
     });
   };
   emitter.on('logs', (data) => {
+    for (const logEvent of data) {
+      if (!logEvent.time) logEvent.time = new Date().toISOString();
+    }
     sendLogs({ 'Content-Type': 'application/json' }, data);
   });
 
   return {
     listenerEmitter,
-    sendLogs,
     server: http.createServer((request, response) => {
       log.get('request').debug('%s %s %o', request.method, request.url, request.headers);
       if (request.url.endsWith('/register') && request.method === 'POST') {
@@ -63,9 +65,20 @@ module.exports = (emitter) => {
         request.on('data', () => {});
         request.on('end', () => {
           log.get('listener')('emit next ready');
-          listenerEmitter.emit('listener');
+          listenerEmitter.emit('next');
           emitter.once('event', (data) => {
             const statusCode = 200;
+            if (data.eventType === 'INVOKE') {
+              data.deadlineMs = Date.now() + 8000;
+              data.invokedFunctionArn = `arn:aws:lambda:${region}:992311060759:function:${functionName}`;
+              data.tracing = {
+                type: 'X-Amzn-Trace-Id',
+                value: 'Root=1-62971da1-6dcad18541c031653bce35ac;Parent=6a51e17e405247ac;Sampled=0',
+              };
+            } else {
+              data.deadlineMs = Date.now() + 3000;
+              if (!data.shutdownReason) data.shutdownReason = 'spindown';
+            }
             const responseBody = data;
             const responseBodyString = JSON.stringify(responseBody);
             const headers = {
@@ -115,7 +128,7 @@ module.exports = (emitter) => {
             .then((res) => res.text())
             .then(() => {
               log.get('listener')('emit logs subscription ready');
-              listenerEmitter.emit('logsSubscription');
+              listenerEmitter.emit('logsSubscription', data);
             });
         });
       } else {
