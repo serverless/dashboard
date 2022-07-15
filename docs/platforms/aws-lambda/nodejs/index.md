@@ -38,6 +38,8 @@ Additionally, the duration of this Span is what AWS Lambda bills for, based on 1
 
 It’s important to note that duration of this Span for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
 
+AWS Lambda will also retry failed invocations if it's configured to do so.  In this case, the instrumentation is reinitialized, however the number of retry attempts and the `s.trace.id`'s of each retry is saved to the span (see the `aws.lambda.retry` Tags), to demonstrate a retry has occurred within the Serverless Console, and link to the Traces of each retry.
+
 ### Tags
 
 These are the Tags attached to this Span:
@@ -89,6 +91,8 @@ aws.lambda.name: "aws-api-prod-getPoster"
 aws.lambda.request_id: "2be6c182-955a-4da9-9c39-d9e9d9febbaa"
 aws.lambda.request_time_epoch: 1657743048772
 aws.lambda.version: "$LATEST"
+aws.lambda.retry.number: 0 // If this is the first invocation and not a retry, this number is zero.  The first retry is number 1.
+aws.lambda.retry.s_trace_ids: [] // These are our Trace IDs "s.trace.id" as shown above.  The array order should contain the first retry as the first item, and the last retry as the last item.
 
 /* Tags: http - Optional. If the Lambda is handling HTTP requests via any method (API Gateway, Function URLs, code-defined routes in Express.js), we will auto-inspect those methods and attempt to populate these tags */
 
