@@ -9,7 +9,7 @@ If you use Serverless Console's AWS Lambda Extension for Node.js, it will automa
 Before the handler of your AWS Lambda function runs, our Extension loads our SDK and performs the auto-instrumentation logic.  This is what it looks like:
 
 ```javascript
-import serverless from 'serverless-sdk-aws-lambda'
+import serverless from '@serverless/aws-lambda-sdk'
 
 serverless.instrument(params)
 
