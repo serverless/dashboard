@@ -699,6 +699,42 @@ describe('external', () => {
     await promise;
   });
 
+  it('should handle case where platform.runtimeDone arrives before invoke', async () => {
+    const { extensionProcess, promise } = extensionProcessHandler(
+      { region, functionName },
+      async (testUtils) => {
+        emitter = testUtils.emitter;
+
+        emitExtensionReady();
+
+        // First invocation
+        requestId = uuidv4();
+        emitPlatformStart();
+
+        await sendEventData();
+
+        await sendTelemetryData();
+        emitPlatformRuntimeDone();
+
+        emitInvoke();
+
+        await new Promise((resolve) => testUtils.listenerEmitter.once('next', resolve));
+
+        reports = resolveReports();
+        expect(reports.map(([name]) => name)).to.deep.equal(['metrics', 'traces']);
+
+        // Shutdown
+        emitShutdown();
+        emitPlaftormEndAndReport();
+
+        reports = await waitForReports();
+        expect(reports.map(([name]) => name)).to.deep.equal(['metrics']);
+      }
+    );
+    extensionProcess.stdout.on('data', (line) => stdoutLines.push(line));
+    await promise;
+  });
+
   it('should restore previous telemetry data in case of crash', async () => {
     requestId = uuidv4();
     const firstInvocation = extensionProcessHandler({ region, functionName }, async (testUtils) => {
