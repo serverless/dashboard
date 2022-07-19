@@ -79,6 +79,11 @@ The following command will create one called sample.json
 echo '{ "orgId":"'$ORG_ID'","ingestToken":"'$INGEST_TOKEN'","namespace":"'$NAMESPACE'", "environment" : "'$ENVIRONMENT'"}'  > sample.json
 ```
 
+```
+ARN=eval "curl -sL https://github.com/serverless/console/releases/latest/download/sls-otel-extension-node.json -H \"Accept: application/json\" | jq -r '.\"$REGION\"')
+```
+
+
 ### 3. Setup your environment variables
 
 ```text
