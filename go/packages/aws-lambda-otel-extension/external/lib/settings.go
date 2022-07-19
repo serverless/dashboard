@@ -37,9 +37,11 @@ type ExtensionSettings struct {
 func GetExtensionSettings() (ExtensionSettings, error) {
 	var extensionSettings ExtensionSettings
 	extensionSettingsText := os.Getenv("SLS_EXTENSION")
-	err := json.Unmarshal([]byte(extensionSettingsText), &extensionSettings)
-	if err != nil {
-		return ExtensionSettings{}, err
+	if extensionSettingsText != "" {
+		err := json.Unmarshal([]byte(extensionSettingsText), &extensionSettings)
+		if err != nil {
+			return ExtensionSettings{}, err
+		}
 	}
 
 	// Custom settings
@@ -84,7 +86,7 @@ func GetExtensionSettings() (ExtensionSettings, error) {
 	customSettingsText := os.Getenv("SLS_OTEL_USER_SETTINGS")
 	if customSettingsText != "" {
 		var customSettings UserSettings
-		err = json.Unmarshal([]byte(customSettingsText), &customSettings)
+		err := json.Unmarshal([]byte(customSettingsText), &customSettings)
 		if err != nil {
 			return ExtensionSettings{}, err
 		}

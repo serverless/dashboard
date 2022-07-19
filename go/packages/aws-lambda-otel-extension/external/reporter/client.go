@@ -68,7 +68,7 @@ func (c *ReporterClient) Flush() {
 	}
 }
 
-func (c *ReporterClient) post(path string, body []byte, name string, isProtobuf bool) error {
+func (c *ReporterClient) post(path string, body []byte, name string, isProtobuf bool) {
 	data := PostData{
 		body:       body,
 		path:       path,
@@ -77,9 +77,12 @@ func (c *ReporterClient) post(path string, body []byte, name string, isProtobuf 
 		name:       name,
 	}
 	if path == "" {
-		return c.syncPostLog(&data)
+		c.syncPostLog(&data)
+	} else {
+		c.eg.Go(func() error {
+			return c.syncPost(&data)
+		})
 	}
-	return c.syncPost(&data)
 }
 
 func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod protoreflect.ProtoMessage, name string) {
@@ -98,17 +101,15 @@ func (c *ReporterClient) postProto(use lib.ExtensionSettingsEndpoint, protod pro
 		c.logger.Error("Error marshalling", zap.Error(err), zap.String("endpoint", use.Destination))
 	}
 
-	c.eg.Go(func() error {
-		return c.post(use.Destination, data, name, isProtobuf)
-	})
+	c.post(use.Destination, data, name, isProtobuf)
 }
 
-func (c *ReporterClient) syncPostLog(postData *PostData) (err error) {
+func (c *ReporterClient) syncPostLog(postData *PostData) {
 	fmt.Printf("⚡ %s: %s\n", postData.name, postData.body)
+	// time.Sleep(time.Millisecond * 50)
 	// start := time.Now()
 	// c.logger.Info("DATA", zap.ByteString("data", postData.body))
 	// c.logger.Debug("Post sent", zap.String("path", postData.path), zap.Duration("time", time.Now().Sub(start)))
-	return nil
 }
 
 func (c *ReporterClient) syncPost(postData *PostData) (err error) {
@@ -160,9 +161,7 @@ func (c *ReporterClient) syncPost(postData *PostData) (err error) {
 }
 
 func (c *ReporterClient) PostLogs(logs []byte) {
-	c.eg.Go(func() error {
-		return c.post(c.settings.Logs.Destination, logs, "logs", false)
-	})
+	c.post(c.settings.Logs.Destination, logs, "logs", false)
 }
 
 func (c *ReporterClient) PostMetrics(metrics *metricspb.MetricsData) {
@@ -174,15 +173,11 @@ func (c *ReporterClient) PostTrace(trace *tracepb.TracesData) {
 }
 
 func (c *ReporterClient) PostRequest(request []byte) {
-	c.eg.Go(func() error {
-		return c.post(c.settings.Request.Destination, request, "request", false)
-	})
+	c.post(c.settings.Request.Destination, request, "request", false)
 }
 
 func (c *ReporterClient) PostResponse(response []byte) {
-	c.eg.Go(func() error {
-		return c.post(c.settings.Response.Destination, response, "response", false)
-	})
+	c.post(c.settings.Response.Destination, response, "response", false)
 }
 
 func (c *ReporterClient) SetDone() {
