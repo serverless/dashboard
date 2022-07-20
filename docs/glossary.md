@@ -9,39 +9,7 @@ menuOrder: 4
 
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
-# Serverless
-
-We define "serverless" as any managed service from a cloud vendor that scales to zero with respects to pricing and utilization.  Serverless Console specializes in all "serverless" and "managed" services.
-
-# Organization
-
-An organization is a unique tenant within the Serverless suite of products (including Serverless Dashboard, Serverless Cloud, and Serverless Console).
-
-# Tags
-
-All Traces, Logs and Metrics share a specific set of semantic tags. These Tags are used for filtering and querying data within Serverless Console.
-
-# Scopes
-
-A Scope is a set of Tags used to identify patterns as use-cases or architectural patterns that are auto-detected and consolidated for a better user experience in Serverless Console. All Metrics, Logs, and Traces must match a recognized scope to be ingested into Serverless Console.
-
-# Metrics
-
-Metrics are numerical data about the performance of your applications and its underlying infrastructure.
-
-Metrics in Serverless Console contain Tags so that they can be queried via the same Tags contained in Traces and Metrics.
-
-In Serverless Console, Metrics are collected, ingested and stored separately from Traces, Logs, and everything else, enabling users to use Metrics without using any other features.
-
-# Logs
-
-Logs in Serverless Console are the logs directly published from your business logic as well as any logs published from your applications' underlying infrastructure.
-
-Logs in Serverless Console contain Tags so that they can be queried via the same Tags contained in Traces and Metrics.
-
-In Serverless Console, Logs are collected, ingested and stored separately from Traces, Metrics, and everything else.
-
-# Traces
+## Traces
 
 A Trace is Serverless Console's parent unit of measurement, covering all that happened when your application handled an HTTP request or an AWS Lambda invocation. A Trace can contain one or many Spans, depending on what it's measuring.
 
@@ -97,19 +65,15 @@ This phase includes:
 
 Additional time is allocated to your AWS Lambda function's timeout limit for Shutdown.
 
-# AWS Lambda
-
-AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers.
-
-## Handler
+### Handler
 
 The handler of an AWS Lambda function is where your business logic resides.
 
-## Extension
+### Extension
 
 An AWS Lambda Extension is extra code which you can add to your AWS Lambda Function via an AWS Lambda Layer in order to track telemetry data about each Invocation.  Serverless Console uses a sophisticated AWS Lambda Extension for collecting telemetry data in AWS Lambda Functions.
 
-## Cold-Start
+### Cold-Start
 
 When an AWS Lambda function recieves a request, and it has not been used before, or for several minutes, its environment and code must first be Initialized.  This process is known as an AWS Lambda Cold-Start.  This process adds latency to the overall invocation duration.
 
@@ -117,11 +81,11 @@ After the execution completes, the execution environment is frozen. To improve r
 
 According to an analysis of production Lambda workloads, cold starts typically occur in under 1% of invocations. The duration of a cold start varies from under 100 ms to over 1 second.
 
-## Warm-Start
+### Warm-Start
 
 When an AWS Lambda function instance receives a request after having received previous requests within the last few minutes.  The Initialization phase does not happen and this is known as a Warm-Start.
 
-## Timeout
+### Timeout
 
 A timeout is a configurable limit for the duration of your AWS Lambda.
 
