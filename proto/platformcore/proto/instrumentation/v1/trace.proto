@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package platformcore.proto.instrumentation.v1;
+
+import "platformcore/proto/common/v1/common.proto";
+
+
+// A TracePayload is a message that will contain any number
+// of Spans plus the global tags required by our Serverless Ingest
+// Platform. A TracePayload DOES NOT necessarily mean that it is a
+// complete Trace. It may contain only a subset of Spans that
+// will make up the complete Trace. 
+message TracePayload {
+    platformcore.proto.common.v1.SlsTags sls_tags = 1;
+
+
+    // A list of Spans to be ingest. Ingest does not impose a limit on the 
+    // number of Spans in a single payload. It is the responsibility of the
+    // Span producers to limit the size of payloads based on their own requirements.
+    repeated platformcore.proto.instrumentation.v1.Span spans = 3;
+}
+
+message Span {
+    // The Span ID, this will be a random 8-byte ID encoded as a length 16 lowercase hex string.
+    bytes id = 1;
+
+    // The Trace ID, this will be a random 16-byte ID encoded as a length 32 lowercase hex string.
+    // The Trace ID is what is used to group all spans for specific trace together.
+    bytes trace_id = 2;
+
+    // An optional Parent Span ID to be used to create a trace's Span Dependency graph.
+    // In practical terms, every span except the root span will have a parent span ID.
+    optional bytes parent_span_id = 3;
+
+    // The name of the span. 
+    string name = 4;
+
+    // The start time of the span in nanoseconds from EPOCH.
+    fixed64 start_time_unix_nano = 5;
+
+    // The end time of the span in nanoseconds from EPOCH.
+    // An important invariant to keep in mind is that the root span will always have
+    // the latest end time.
+    fixed64 end_time_unix_nano = 6;
+
+    // An array of tags to be associated with the span. Ingest only validates the
+    // types of the tags are correct, it will do no other validation.
+    repeated platformcore.proto.common.v1.KeyValue tags = 7;
+}
