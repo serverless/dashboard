@@ -1,6 +1,6 @@
 <!--
 title: Sending Data to Console 
-menuText: Sending Data to Console 
+menuText: Instrumentation
 description: Compatible Serverless Console Platform
 menuOrder: 3
 -->
