@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package serverless.proto.instrumentation.tagset.v1;
+
+import "serverless/proto/common/v1/common.proto";
+
+message Tags {
+    serverless.proto.common.v1.SlsTags sls = 1;
+
+    // Defined TagSets start at field number 4000
+    optional AwsLambdaTags aws_lambda_tags = 4000;
+    optional HttpTags http_tags = 4001;
+}
+
+message SlsSdkTags {
+    string name = 1;
+    string version = 2;
+}
+
+message AwsLambdaTags {
+    string arch = 1;
+    bool coldstart = 2;
+    fixed64 duration = 3;
+    string event_type = 5;
+    string event_source = 6;
+    string log_group = 7;
+    string log_stream_name = 8;
+    fixed64 max_memory = 9;
+    string name = 10;
+    string request_id = 11;
+    fixed64 request_time_epoch = 12;
+    string version = 13;
+
+    bool error = 14;
+    bool error_timeout = 15;
+    optional string error_culprit = 16;
+    optional string error_exception_message = 17;
+    optional string error_exception_stacktrace = 18;
+    optional string error_exception_type = 19;
+}
+
+message HttpTags {
+    string path = 1;
+    string method = 2;
+    string protocol = 3;
+    fixed64 status_code = 4;
+}
