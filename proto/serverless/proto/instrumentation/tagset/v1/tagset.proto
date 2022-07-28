@@ -2,19 +2,53 @@ syntax = "proto3";
 
 package serverless.proto.instrumentation.tagset.v1;
 
-import "serverless/proto/common/v1/common.proto";
-
 message Tags {
-    serverless.proto.common.v1.SlsTags sls = 1;
+    SlsSdkTags sls = 1;
 
     // Defined TagSets start at field number 4000
     optional AwsLambdaTags aws_lambda_tags = 4000;
-    optional HttpTags http_tags = 4001;
+    optional AwsLambdaInitializationTags aws_lambda_initialization_tags = 4001;
+    optional AwsLambdaInvocationTags aws_lambda_invocation_tags = 4002;
+    optional AwsSdkDynamodbTags aws_sdk_dynamodb_tags = 4003;
+    optional AwsSdkSqsTags aws_sdk_sqs_tags = 4004;
+    optional AwsSdkSnsTags aws_sdk_sns_tags = 4005;
+    optional HttpTags http_tags = 4006;
+    optional HttpTags https_tags = 4007;
 }
 
 message SlsSdkTags {
-    string name = 1;
-    string version = 2;
+    string org_id = 1;
+    string sdk_name = 2;
+    string sdk_version = 3;
+    string platform = 4;
+    optional string environment = 5;
+    optional string namespace = 6;
+    string service = 7;
+    string region = 8;
+}
+
+message AwsTags {
+    string account_id = 1;
+    string resource_arn = 2;
+    optional string xray_trace_id = 3;
+}
+
+message AwsApiGatewayTags {
+    string account_id = 1;
+    string api_id = 2;
+    string api_stage = 3;
+    string request_id = 4;
+    fixed64 request_time_epoch = 5;
+    string request_protocol = 6;
+    string request_domain = 7;
+    // JSON string containing Request Headers
+    string request_headers = 8;
+    string request_method = 9;
+    string request_path = 10;
+    // JSON string containing Request Path Parameters
+    string request_path_parameters = 11;
+    // JSON string contain Query String Parameters
+    string query_string_parameters = 12;
 }
 
 message AwsLambdaTags {
@@ -37,6 +71,24 @@ message AwsLambdaTags {
     optional string error_exception_message = 17;
     optional string error_exception_stacktrace = 18;
     optional string error_exception_type = 19;
+
+    // Optional Event Tags are from 500 on
+    AwsSqsEventTags sqs_event_tags = 500;
+    AwsSnsEventTags sns_event_tags = 501;
+    HttpTags http_event_tags = 502;
+    AwsApiGatewayTags api_gateway_tags = 503;
+}
+
+message AwsSqsEventTags {
+    string queue_name = 1;
+    string operation = 2;
+    repeated string message_ids = 3;
+}
+
+message AwsSnsEventTags {
+    string topic_name = 1;
+    string operation = 3;
+    repeated string message_ids = 4;
 }
 
 message HttpTags {
@@ -44,4 +96,65 @@ message HttpTags {
     string method = 2;
     string protocol = 3;
     fixed64 status_code = 4;
+}
+
+message AwsLambdaInitializationTags {
+    fixed64 initialization_duration = 1;
+}
+
+message AwsLambdaInvocationTags {
+    fixed64 invocation_duration = 1;
+}
+
+message AwsSdkBaseTags {
+    string region = 1;
+    string signature_version = 2;
+    string aws_service = 3;
+    string operation = 4;
+    string request_id = 5;
+    optional string error = 6;
+}
+
+message AwsSdkDynamodbTags {
+    AwsSdkBaseTags aws_sdk_tags = 1;
+    string operation = 2;
+    repeated string table_names = 3;
+    optional string projection = 4;
+    optional bool scan_forward = 5;
+    repeated string attributes_to_get = 6;
+    optional bool consistent_read = 7;
+    optional string index_name = 8;
+    optional uint32 limit = 9;
+    optional string select = 10;
+    optional uint32 segment = 11;
+    optional uint64 total_segments = 12;
+    optional uint64 count = 13;
+    optional uint64 scanned_count = 14;
+}
+
+message AwsSdkSqsTags {
+    AwsSdkBaseTags aws_sdk_tags = 1;
+    optional string queue_name = 2;
+    repeated string message_ids = 3;
+    optional string operation = 4;
+}
+
+message AwsSdkSnsTags {
+    AwsSdkBaseTags aws_sdk_tags = 1;
+    optional string topic_name = 2;
+    optional string operation = 3;
+    repeated string message_ids = 4;
+}
+
+message NodeHttpTags {
+    string url = 1;
+    string method = 2;
+    string path = 3;
+    uint32 status_code = 4;
+}
+
+message ExpressTags {
+    string method = 1;
+    string path = 2;
+    uint32 status_code = 3;
 }
