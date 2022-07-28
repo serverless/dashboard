@@ -1,0 +1,20 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "dist/dts",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "outDir": "./dist",
+    "sourceMap": true
+  },
+  "include": [
+    "out/**/*"
+  ],
+  "exclude": [
+    "src/output",
+  ],
+  "ts-node": {
+    "files": true
+  }
+}
