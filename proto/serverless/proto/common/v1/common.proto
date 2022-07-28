@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package platformcore.proto.common.v1;
+package serverless.proto.common.v1;
 
 message SlsTags {
     string org_id = 1;
@@ -21,14 +21,14 @@ message AnyValue {
         KeyValueList kvlist_value = 6;
     }
 }
-  
+
 // ArrayValue is a list of AnyValue messages. We need ArrayValue as a message
 // since oneof in AnyValue does not allow repeated fields.
 message ArrayValue {
     // Array of values. The array may be empty (contain 0 elements).
     repeated AnyValue values = 1;
 }
-  
+
 // KeyValueList is a list of KeyValue messages. We need KeyValueList as a message
 // since `oneof` in AnyValue does not allow repeated fields. Everywhere else where we need
 // a list of KeyValue messages (e.g. in Span) we use `repeated KeyValue` directly to
@@ -39,14 +39,14 @@ message KeyValueList {
     // contain 0 elements).
     repeated KeyValue values = 1;
 }
-  
+
 // KeyValue is a key-value pair that is used to store Span attributes, Link
 // attributes, etc.
 message KeyValue {
   string key = 1;
   AnyValue value = 2;
 }
-  
+
 // StringKeyValue is a pair of key/value strings. This is the simpler (and faster) version
 // of KeyValue that only supports string values.
 message StringKeyValue {

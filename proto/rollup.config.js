@@ -6,11 +6,10 @@ import dts from "rollup-plugin-dts";
 export default [
   {
     input: [
-      "out/platformcore/proto/common/v1/common.pb.ts",
-      "out/platformcore/proto/instrumentation/v1/collector.pb.ts",
-      "out/platformcore/proto/instrumentation/v1/log.pb.ts",
-      "out/platformcore/proto/instrumentation/v1/metric.pb.ts",
-      "out/platformcore/proto/instrumentation/v1/trace.pb.ts",
+      "out/serverless/proto/common/v1/common.pb.ts",
+      "out/serverless/proto/instrumentation/v1/log.pb.ts",
+      "out/serverless/proto/instrumentation/v1/metric.pb.ts",
+      "out/serverless/proto/instrumentation/v1/trace.pb.ts",
     ],
     // input: "src/index.ts",
     output: [
@@ -30,7 +29,6 @@ export default [
   {
     input: [
       "dist/dts/common/v1/common.pb.d.ts",
-      "dist/dts/instrumentation/v1/collector.pb.d.ts",
       "dist/dts/instrumentation/v1/log.pb.d.ts",
       "dist/dts/instrumentation/v1/metric.pb.d.ts",
       "dist/dts/instrumentation/v1/trace.pb.d.ts",
