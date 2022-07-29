@@ -39,10 +39,6 @@ jobs:
           path: node/packages/aws-lambda-otel-extension/node_modules
           key: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/aws-lambda-otel-extension/package.json') }}
           restore-keys: packages/aws-lambda-otel-extension/node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Install Node.js and npm
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16.x
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
