@@ -1,0 +1,35 @@
+name: "Node: @serverless/sdk-schema: Integrate"
+
+on:
+  push:
+    branches: [main]
+    paths: ["proto/**"]
+
+defaults:
+  run:
+    working-directory: ./proto
+jobs:
+  bufLint:
+    name: "Buf Lint, Build & Generate"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Buf Setup
+        uses: bufbuild/buf-setup-action@v1
+      - name: Test
+        run: |
+          echo "Dir: $(pwd)"
+          ls
+      - name: Buf Lint
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: 'proto'
+      - name: Tag if new version
+        run: |
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} proto/package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          if [ -n "$NEW_VERSION" ];
+          then
+            git tag @serverless/sdk-schema@$NEW_VERSION
+            git push --tags
+          fi
