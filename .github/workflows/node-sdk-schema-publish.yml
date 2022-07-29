@@ -1,0 +1,37 @@
+name: "Node: Publish @serverless/sdk-schema"
+
+on:
+  push:
+    tags:
+      - "@serverless/sdk-schema@[0-9]+.[0-9]+.[0-9]+"
+
+defaults:
+  run:
+    working-directory: ./proto
+
+jobs:
+  publishNewSdkSchemaVersion:
+    name: Publish new version
+    runs-on: ubuntu-latest
+    env:
+      # It'll work with secrets.GITHUB_TOKEN (which is provided by GitHub unconditionally)
+      # Still then release author would be "github-actions". It's better if it's dedicated repo bot
+      GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Buf Setup
+        uses: bufbuild/buf-setup-action@v1
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Publish New Version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          run: npm publish
