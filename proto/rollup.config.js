@@ -2,6 +2,7 @@ import typescript from "@rollup/plugin-typescript";
 import pkg from "./package.json";
 import multi from "@rollup/plugin-multi-entry";
 import dts from "rollup-plugin-dts";
+import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 export default [
   {
@@ -11,7 +12,6 @@ export default [
       "out/serverless/proto/instrumentation/v1/metric.pb.ts",
       "out/serverless/proto/instrumentation/v1/trace.pb.ts",
     ],
-    // input: "src/index.ts",
     output: [
       {
         file: pkg.main,
@@ -24,7 +24,7 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins: [typescript(), multi()],
+    plugins: [nodeResolve(), typescript(), multi()],
   },
   {
     input: [
