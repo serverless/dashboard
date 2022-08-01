@@ -1,12 +1,12 @@
 {
   "name": "@serverless/sdk-schema",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf -rf ./dist && rimraf -rf ./out && buf build && buf generate && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts"
+    "build": "rimraf -rf ./dist && rimraf -rf ./out && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts"
   },
   "author": "Serverless, Inc.",
   "license": "MIT",

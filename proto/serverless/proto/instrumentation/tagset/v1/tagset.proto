@@ -30,6 +30,9 @@ message Tags {
 
   // The HTTPS Tags.
   optional HttpTags https_tags = 4007;
+
+  // The Express Tags.
+  optional ExpressTags express_tags = 4008;
 }
 
 message SlsSdkTags {

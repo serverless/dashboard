@@ -1,8 +1,8 @@
 version: v1
 plugins:
   - name: protoc-gen-twirpscript
-    path: ./node_modules/twirpscript/compiler.js
-    out: ./out
+    path: ../node_modules/twirpscript/compiler.js
+    out: ../node/packages/sdk-schema/out
     opt:
       - language=typescript
     strategy: all
