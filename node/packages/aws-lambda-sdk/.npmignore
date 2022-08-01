@@ -1,0 +1,7 @@
+/dist
+/internal-extension
+/scripts
+/test
+node_modules
+.eslintrc.js
+commitlint.config.js

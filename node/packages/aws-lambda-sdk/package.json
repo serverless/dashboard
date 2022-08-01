@@ -1,0 +1,50 @@
+{
+  "name": "@serverless/aws-lambda-sdk",
+  "repository": "serverless/runtime",
+  "version": "0.0.0",
+  "author": "Serverless, Inc.",
+  "typesVersions": {
+    "*": {
+      "*": [
+        ".ts-types/*"
+      ]
+    }
+  },
+  "standard-version": {
+    "tagPrefix": "@serverless/aws-lambda-sdk@",
+    "path": ".",
+    "skip": {
+      "commit": true,
+      "tag": true
+    },
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "perf",
+        "section": "Performance Improvements"
+      },
+      {
+        "type": "refactor",
+        "section": "Maintenance Improvements"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "./scripts/build.js dist/extension.internal.zip",
+    "prepare-release": "standard-version && prettier --write CHANGELOG.md",
+    "test": "mocha \"test/unit/**/*.test.js\"",
+    "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
+    "test:integration": "mocha \"test/integration/**/*.test.js\""
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}

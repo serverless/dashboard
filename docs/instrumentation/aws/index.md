@@ -2,7 +2,7 @@
 title: AWS Lambda
 menuText: AWS Lambda
 description: An overview of the AWS Lamba Integration
-menuOrder: 6
+menuOrder: 7
 -->
 
 # AWS Lambda
