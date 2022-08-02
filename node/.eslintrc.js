@@ -11,5 +11,5 @@ module.exports = {
       },
     ],
   },
-  ignorePatterns: ['!.mocharc.js'],
+  ignorePatterns: ['!.mocharc.js', 'rollup.config.js'],
 };

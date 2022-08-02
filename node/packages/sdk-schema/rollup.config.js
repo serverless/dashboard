@@ -1,42 +1,60 @@
-import typescript from "@rollup/plugin-typescript";
-import pkg from "./package.json";
-import multi from "@rollup/plugin-multi-entry";
-import dts from "rollup-plugin-dts";
-import { nodeResolve } from '@rollup/plugin-node-resolve'
+import typescript from '@rollup/plugin-typescript';
+import pkg from './package.json';
+import multi from '@rollup/plugin-multi-entry';
+import dts from 'rollup-plugin-dts';
+import fg from 'fast-glob';
+
+const getInputFiles = () => {
+  const inputFiles = fg.sync('out/serverless/**/*.ts');
+  return inputFiles.map((input) => ({
+    input,
+    outputFile: input.replace('out/serverless/proto/', 'dist/').replace('.ts', '.js'),
+  }));
+};
+
+const inputFiles = getInputFiles();
 
 export default [
-  {
-    input: [
-      "out/serverless/proto/common/v1/common.pb.ts",
-      "out/serverless/proto/instrumentation/v1/log.pb.ts",
-      "out/serverless/proto/instrumentation/v1/metric.pb.ts",
-      "out/serverless/proto/instrumentation/v1/trace.pb.ts",
+  ...inputFiles.map(({ input, outputFile }) => ({
+    input,
+    output: {
+      file: outputFile,
+      format: 'cjs',
+      sourcemap: true,
+    },
+    plugins: [
+      typescript({
+        tsconfig: 'tsconfig.rollup.json',
+      }),
     ],
+  })),
+  {
+    input: 'out/serverless/**/*.ts',
     output: [
       {
         file: pkg.main,
-        format: "cjs",
+        format: 'cjs',
         sourcemap: true,
       },
       {
         file: pkg.module,
-        format: "es",
+        format: 'es',
         sourcemap: true,
       },
     ],
-    plugins: [nodeResolve(), typescript(), multi()],
+    plugins: [
+      typescript({
+        tsconfig: 'tsconfig.rollup.json',
+      }),
+      multi(),
+    ],
   },
   {
-    input: [
-      "dist/dts/common/v1/common.pb.d.ts",
-      "dist/dts/instrumentation/v1/log.pb.d.ts",
-      "dist/dts/instrumentation/v1/metric.pb.d.ts",
-      "dist/dts/instrumentation/v1/trace.pb.d.ts",
-    ],
+    input: 'dist/dts/**/*.d.ts',
     output: [
       {
         file: pkg.types,
-        format: "es",
+        format: 'es',
       },
     ],
     plugins: [multi(), dts()],

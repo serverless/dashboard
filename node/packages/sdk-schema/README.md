@@ -1,6 +1,5 @@
 # Serverless Console Schema
 
-
 ## Building Node.js Library
 
 ### Prerequisites
