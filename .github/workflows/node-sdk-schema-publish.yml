@@ -5,10 +5,6 @@ on:
     tags:
       - "@serverless/sdk-schema@[0-9]+.[0-9]+.[0-9]+"
 
-defaults:
-  run:
-    working-directory: ./proto
-
 jobs:
   publishNewSdkSchemaVersion:
     name: Publish new version
@@ -28,10 +24,21 @@ jobs:
           node-version: 16.x
           registry-url: https://registry.npmjs.org
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd ./node
+          npm install
+          cd packages/sdk-schema
+          npm install
+      - name: Build Protobufs
+        working-directory: ./proto
+        run: |
+          buf build
+          buf generate
       - name: Build
         run: npm run build
+        working-directory: ./node/packages/sdk-schema
       - name: Publish New Version
+        working-directory: ./node/packages/sdk-schema
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          run: npm publish
+        run: npm publish
