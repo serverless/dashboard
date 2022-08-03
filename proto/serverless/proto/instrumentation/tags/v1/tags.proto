@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package serverless.proto.instrumentation.tagset.v1;
+package serverless.proto.instrumentation.tags.v1;
 
 message Tags {
   // The required set of tags for The Serverless Ingest Platform. Payloads without all these tags will be rejected.
@@ -11,48 +11,55 @@ message Tags {
   // ========================================== //
 
   // The root AWS Lambda Span tags.
-  optional AwsLambdaTags aws_lambda_tags = 100;
+  optional AwsLambdaTags aws_lambda = 100;
 
   // The AWS Lambda Initialization tags.
-  optional AwsLambdaInitializationTags aws_lambda_initialization_tags = 101;
+  optional AwsLambdaInitializationTags aws_lambda_initialization = 101;
 
   // The AWS Lambda Invocation tags.
-  optional AwsLambdaInvocationTags aws_lambda_invocation_tags = 102;
+  optional AwsLambdaInvocationTags aws_lambda_invocation = 102;
 
   // The AWS SDK Tags.
-  optional AwsSdkDynamodbTags aws_sdk_dynamodb_tags = 103;
-  optional AwsSdkSqsTags aws_sdk_sqs_tags = 104;
-  optional AwsSdkSnsTags aws_sdk_sns_tags = 105;
+  optional AwsSdkDynamodbTags aws_sdk_dynamodb = 103;
+  optional AwsSdkSqsTags aws_sdk_sqs = 104;
+  optional AwsSdkSnsTags aws_sdk_sns = 105;
 
 
   // The HTTP Tags.
-  optional HttpTags http_tags = 106;
+  optional HttpTags http = 106;
 
   // The HTTPS Tags.
-  optional HttpTags https_tags = 107;
+  optional HttpTags https = 107;
 
   // The Express Tags.
-  optional ExpressTags express_tags = 108;
+  optional ExpressTags express = 108;
 }
 
 message SlsSdkTags {
   // A Serverless Platform OrgId.
   string org_id = 1;
-  // The Name of the Serverless SDK used to instrument.
-  string sdk_name = 2;
-  // The version of the Serverless SDK used to instrument.
-  string sdk_version = 3;
   // The platform that was instrumented. Currently Lambda is the only supported platform.
-  string platform = 4;
+  string platform = 2;
   // The service that was instrumented. For Lambda this will be the function name by default.
-  string service = 5;
+  string service = 3;
   // The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use.
-  string region = 6;
+  string region = 4;
+
+  message SdkTags {
+    // The Name of the Serverless SDK used to instrument.
+    string sdk_name = 1;
+    // The version of the Serverless SDK used to instrument.
+    string sdk_version = 2;
+  }
+
+  SdkTags sdk = 5;
 
   // An optional environment that can be attached.
   optional string environment = 16;
   // An optional namespace that can be attached.
   optional string namespace = 17;
+
+
 }
 
 message AwsTags {
@@ -72,26 +79,32 @@ message AwsApiGatewayTags {
   string api_id = 2;
   // The stage of the API GW endpoint that was called.
   string api_stage = 3;
-  // The unique API GW Request ID.
-  string request_id = 4;
-  // The request time in milliseconds from epoch.
-  fixed64 request_time_epoch = 5;
-  // The HTTP protocol of the request.
-  string request_protocol = 6;
-  // The domain name of the request.
-  string request_domain = 7;
-  // JSON string containing Request Headers
-  string request_headers = 8;
-  // The HTTP method of the request.
-  string request_method = 9;
-  // The HTTP Path of the request.
-  string request_path = 10;
+
+  message AwsApiGatewayRequestTags {
+    // The unique API GW Request ID.
+    string id = 1;
+    // The request time in milliseconds from epoch.
+    fixed64 time_epoch = 2;
+    // The HTTP protocol of the request.
+    string protocol = 3;
+    // The domain name of the request.
+    string domain = 4;
+    // JSON string containing Request Headers
+    string headers = 5;
+    // The HTTP method of the request.
+    string method = 6;
+    // The HTTP Path of the request.
+    string path = 7;
 
 
-  // JSON string containing Request Path Parameters
-  optional string request_path_parameters = 16;
-  // JSON string contain Query String Parameters
-  optional string query_string_parameters = 17;
+    // JSON string containing Request Path Parameters
+    optional string path_parameters = 16;
+    // JSON string contain Query String Parameters
+    optional string string_parameters = 17;
+  }
+
+  AwsApiGatewayRequestTags request = 15;
+
 }
 
 message AwsLambdaTags {
@@ -137,13 +150,13 @@ message AwsLambdaTags {
   // Optional Event Tags are from 100 on
 
   // Will be set if the function is handling a SQS event
-  AwsSqsEventTags sqs_event_tags = 100;
+  optional AwsSqsEventTags sqs = 100;
   // Will be set if the function is handling a SNS event
-  AwsSnsEventTags sns_event_tags = 101;
+  optional AwsSnsEventTags sns = 101;
   // Will be set if the function is handlling HTTP requests via any method, API GW, Function URLs, etc.
-  HttpTags http_event_tags = 102;
+  optional HttpTags http = 102;
   // Will be set if the function is handling HTTP requests via AWS API GW
-  AwsApiGatewayTags api_gateway_tags = 103;
+  optional AwsApiGatewayTags api_gateway = 103;
 }
 
 message AwsSqsEventTags {
