@@ -7,32 +7,32 @@ message Tags {
   SlsSdkTags sls = 1;
 
   // ============================================ //
-  // Defined TagSets start at field number 4000  //
+  // Defined TagSets start at field number 100  //
   // ========================================== //
 
   // The root AWS Lambda Span tags.
-  optional AwsLambdaTags aws_lambda_tags = 4000;
+  optional AwsLambdaTags aws_lambda_tags = 100;
 
   // The AWS Lambda Initialization tags.
-  optional AwsLambdaInitializationTags aws_lambda_initialization_tags = 4001;
+  optional AwsLambdaInitializationTags aws_lambda_initialization_tags = 101;
 
   // The AWS Lambda Invocation tags.
-  optional AwsLambdaInvocationTags aws_lambda_invocation_tags = 4002;
+  optional AwsLambdaInvocationTags aws_lambda_invocation_tags = 102;
 
   // The AWS SDK Tags.
-  optional AwsSdkDynamodbTags aws_sdk_dynamodb_tags = 4003;
-  optional AwsSdkSqsTags aws_sdk_sqs_tags = 4004;
-  optional AwsSdkSnsTags aws_sdk_sns_tags = 4005;
+  optional AwsSdkDynamodbTags aws_sdk_dynamodb_tags = 103;
+  optional AwsSdkSqsTags aws_sdk_sqs_tags = 104;
+  optional AwsSdkSnsTags aws_sdk_sns_tags = 105;
 
 
   // The HTTP Tags.
-  optional HttpTags http_tags = 4006;
+  optional HttpTags http_tags = 106;
 
   // The HTTPS Tags.
-  optional HttpTags https_tags = 4007;
+  optional HttpTags https_tags = 107;
 
   // The Express Tags.
-  optional ExpressTags express_tags = 4008;
+  optional ExpressTags express_tags = 108;
 }
 
 message SlsSdkTags {
@@ -134,16 +134,16 @@ message AwsLambdaTags {
   // The billed duration of the invocation in milliseconds. This will not be available
   // when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
   optional fixed64 duration = 20;
-  // Optional Event Tags are from 500 on
+  // Optional Event Tags are from 100 on
 
   // Will be set if the function is handling a SQS event
-  AwsSqsEventTags sqs_event_tags = 500;
+  AwsSqsEventTags sqs_event_tags = 100;
   // Will be set if the function is handling a SNS event
-  AwsSnsEventTags sns_event_tags = 501;
+  AwsSnsEventTags sns_event_tags = 101;
   // Will be set if the function is handlling HTTP requests via any method, API GW, Function URLs, etc.
-  HttpTags http_event_tags = 502;
+  HttpTags http_event_tags = 102;
   // Will be set if the function is handling HTTP requests via AWS API GW
-  AwsApiGatewayTags api_gateway_tags = 503;
+  AwsApiGatewayTags api_gateway_tags = 103;
 }
 
 message AwsSqsEventTags {

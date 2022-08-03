@@ -8,7 +8,11 @@ const getInputFiles = () => {
   const inputFiles = fg.sync('out/serverless/**/*.ts');
   return inputFiles.map((input) => ({
     input,
-    outputFile: input.replace('out/serverless/proto/', 'dist/').replace('.ts', '.js'),
+    outputFile: input
+      .replace('out/serverless/proto/', 'dist/')
+      .replace('.ts', '.js')
+      .replace('v1/', '')
+      .replace('instrumentation/', ''),
   }));
 };
 
