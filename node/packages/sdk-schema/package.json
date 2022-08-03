@@ -5,6 +5,7 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test": "mocha \"test/unit/**/*.test.js\"",
     "build": "rimraf -rf ./dist && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts"
   },
   "author": "Serverless, Inc.",
