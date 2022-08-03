@@ -11,7 +11,7 @@ module.exports = {
       'error',
       {
         devDependencies: ['**/scripts/**', '**/test/**', 'prettier.config.js'],
-        packageDir: [projectDir, path.resolve(projectDir, 'packages/aws-lambda-sdk')],
+        packageDir: [projectDir, path.resolve(projectDir, 'packages/sdk-schema')],
       },
     ],
   },
@@ -23,4 +23,5 @@ module.exports = {
       },
     },
   ],
+  ignorePatterns: ['rollup.config.js', '!*.test.js', '**/test/**/*.test.js'],
 };
