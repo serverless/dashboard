@@ -419,6 +419,8 @@ jobs:
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
+          # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
+          export PATH="$PWD/node/node_modules/.bin:$PATH"
           cd proto
           buf build
           buf generate
