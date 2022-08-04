@@ -3,6 +3,11 @@
   "repository": "serverless/runtime",
   "version": "0.0.0",
   "author": "Serverless, Inc.",
+  "dependencies": {
+    "d": "^1.0.1",
+    "type": "^2.6.1",
+    "uuid": "^8.3.2"
+  },
   "typesVersions": {
     "*": {
       "*": [
