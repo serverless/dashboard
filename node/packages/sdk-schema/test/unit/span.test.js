@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 
-const { SpanJSON } = require('../../dist/index.cjs');
+const { Span } = require('../../dist/index.cjs');
 
 const expectedLambdaRootSpan = `{
   "id": "Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk",
@@ -39,6 +39,7 @@ const expectedLambdaRootSpan = `{
         "apiStage": "dev",
         "request": {
           "id": "2e4d98fe-1603-477f-b976-1013e84ea4a6",
+          "headers": "",
           "timeEpoch": "1659551935837",
           "protocol": "HTTP/1.1",
           "domain": "abc.example.com",
@@ -60,7 +61,7 @@ const milliNow = 1659551935837;
 
 describe('span-schema', () => {
   it('should parse AWS Lambda Root Span', () => {
-    const span = SpanJSON.encode({
+    const span = Span.toJSON({
       id: Buffer.from(spanId, 'utf-8'),
       traceId: Buffer.from(traceId, 'utf-8'),
       name: 'test',
@@ -102,13 +103,14 @@ describe('span-schema', () => {
               id: apiGatewayRequestId,
               protocol: 'HTTP/1.1',
               timeEpoch: milliNow,
+              headers: '',
             },
           },
         },
       },
     });
 
-    const parsedSpan = SpanJSON.encode(SpanJSON.decode(expectedLambdaRootSpan));
+    const parsedSpan = Span.toJSON(Span.fromJSON(JSON.parse(expectedLambdaRootSpan)));
 
     expect(span).to.deep.equal(parsedSpan);
   });
