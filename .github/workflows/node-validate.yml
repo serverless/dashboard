@@ -231,6 +231,7 @@ jobs:
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd node/packages/sdk-schema
+          npm run build
           npm test
 
   linuxNode14:
