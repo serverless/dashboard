@@ -25,7 +25,6 @@ export default [
       file: outputFile,
       format: 'cjs',
       sourcemap: true,
-      external: ['long', 'protobuf'],
     },
     plugins: [
       typescript({
@@ -40,13 +39,11 @@ export default [
         file: pkg.main,
         format: 'cjs',
         sourcemap: true,
-        external: ['long', 'protobuf'],
       },
       {
         file: pkg.module,
         format: 'es',
         sourcemap: true,
-        external: ['long', 'protobuf'],
       },
     ],
     plugins: [
