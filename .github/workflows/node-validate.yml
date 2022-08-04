@@ -40,6 +40,8 @@ jobs:
               - 'node/packages/aws-lambda-sdk/**'
             sdkSchema:
               - 'node/packages/@serverless/sdk-schema/**'
+            proto:
+              - 'proto/**'
 
       - name: Retrieve ~/.npm from cache
         uses: actions/cache@v2
@@ -212,21 +214,21 @@ jobs:
           npm test
 
       - name: Buf Setup
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
       - name: Buf Lint
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-lint-action@v1
         with:
           input: 'proto'
       - name: Build /sdk-schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd proto
           buf build
           buf generate
       - name: Unit tests /sdk-schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd node/packages/sdk-schema
           npm test
