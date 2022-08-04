@@ -38,6 +38,8 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            sdkSchema:
+              - 'node/packages/@serverless/sdk-schema/**'
 
       - name: Retrieve ~/.npm from cache
         uses: actions/cache@v2
@@ -109,6 +111,15 @@ jobs:
           restore-keys: |
             packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-refs/heads/main-
+
+      - name: Retrieve packages/sdk-schema/node_modules from cache
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        id: cacheSdkSchemaNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk-schema/node_modules
+          key: packages/sdk-schema/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk-schema/package.json') }}
+          restore-keys: packages/sdk-schema/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
@@ -198,6 +209,26 @@ jobs:
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd node/packages/aws-lambda-sdk
+          npm test
+
+      - name: Buf Setup
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        uses: bufbuild/buf-setup-action@v1
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: 'proto'
+      - name: Build /sdk-schema
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        run: |
+          cd proto
+          buf build
+          buf generate
+      - name: Unit tests /sdk-schema
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        run: |
+          cd node/packages/sdk-schema
           npm test
 
   linuxNode14:
