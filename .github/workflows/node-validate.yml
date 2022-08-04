@@ -39,7 +39,7 @@ jobs:
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
             sdkSchema:
-              - 'node/packages/@serverless/sdk-schema/**'
+              - 'node/packages/sdk-schema/**'
             proto:
               - 'proto/**'
 
