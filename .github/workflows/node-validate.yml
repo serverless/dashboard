@@ -121,7 +121,9 @@ jobs:
         with:
           path: node/packages/sdk-schema/node_modules
           key: packages/sdk-schema/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk-schema/package.json') }}
-          restore-keys: packages/sdk-schema/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+          restore-keys: |
+            packages/sdk-schema/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+            packages/sdk-schema/node-modules-v16-${{ runner.os }}-refs/heads/main-
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
@@ -158,6 +160,13 @@ jobs:
 
       - name: Install packages/aws-lambda-sdk dependencies
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true' && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/aws-lambda-sdk
+          npm update --no-save
+          npm update --save-dev --no-save
+
+      - name: Install packages/sdk-schema dependencies
+        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/aws-lambda-sdk
           npm update --no-save
@@ -227,11 +236,12 @@ jobs:
           cd proto
           buf build
           buf generate
+          cd ../node/packages/sdk-schema
+          npm run build
       - name: Unit tests /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd node/packages/sdk-schema
-          npm run build
           npm test
 
   linuxNode14:
@@ -249,6 +259,10 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            sdkSchema:
+              - 'node/packages/sdk-schema/**'
+            proto:
+              - 'proto/**'
 
       - name: Retrieve ~/.npm from cache
         uses: actions/cache@v2
@@ -321,6 +335,17 @@ jobs:
             packages/aws-lambda-sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/node-modules-v14-${{ runner.os }}-refs/heads/main-
 
+      - name: Retrieve packages/sdk-schema/node_modules from cache
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        id: cacheSdkSchemaNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk-schema/node_modules
+          key: packages/sdk-schema/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk-schema/package.json') }}
+          restore-keys: |
+            packages/sdk-schema/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
+            packages/sdk-schema/node-modules-v14-${{ runner.os }}-refs/heads/main-
+
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -361,6 +386,13 @@ jobs:
           npm update --no-save
           npm update --save-dev --no-save
 
+      - name: Install packages/sdk-schema dependencies
+        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/aws-lambda-sdk
+          npm update --no-save
+          npm update --save-dev --no-save
+
       - name: Unit tests aws-lambda-otel-extension
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'
         run: |
@@ -374,4 +406,28 @@ jobs:
           # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
           export PATH="$PWD/node/node_modules/.bin:$PATH"
           cd node/packages/aws-lambda-sdk
+          npm run test:isolated
+
+      - name: Buf Setup
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-setup-action@v1
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: 'proto'
+      - name: Build /sdk-schema
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          cd proto
+          buf build
+          buf generate
+          cd ../node/packages/sdk-schema
+          npm run build
+      - name: Unit tests /sdk-schema
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
+          export PATH="$PWD/node/node_modules/.bin:$PATH"
+          cd node/packages/sdk-schema
           npm run test:isolated

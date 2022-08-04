@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha \"test/unit/**/*.test.js\"",
+    "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
     "build": "rimraf -rf ./dist && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts"
   },
   "author": "Serverless, Inc.",
