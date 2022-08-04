@@ -3,6 +3,17 @@
 At Serverless, we use Protobufs to describe the data schemas that will be used in our instrumentation libraries. 
 The Serverless ingest platform only accept Protobufs that are implemented in this repo. To contribute to our Schemas, you must follow the rules below.
 
+## Why Protobufs
+
+We picked Protobufs in order to standardize the data sent from all instrumentation sources. Using Protobufs we can guarantee the data produced from our instrumentation SDKs will be in a format that our ingest services will always be able to parse. 
+
+With Protobufs we get,
+
+1. Strongly typed interfaces for Typescript and Go.
+2. A Standard way for the platform to encode & decode ingest payloads.
+3. Backward Compatibility for protobuf versions. When we make updates to our Protobufs, older versions of our instrumentation SDK and ingest will still be able to parse payloads.
+4. Forward Compatibility. We can add fields to our protobufs for instrumentation without having to coordinate updates to ingest. Ingest will just ignore new fields. When we are ready to use that new field we can update ingest to be aware of it.
+
 ## Implementing New Messages
 
 When creating a new message there are some guidelines to keep in mind,
