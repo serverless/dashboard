@@ -191,11 +191,13 @@ message HttpTags {
 
 message AwsLambdaInitializationTags {
   // The Initialization Duration of the Lambda Function. This is one part of the billed duration.
+  // Maps to the Cloudwatch Logs Report "Init Duration"
   fixed64 initialization_duration = 1;
 }
 
 message AwsLambdaInvocationTags {
   // The Invocation Duration of the Lambda Function. This is one part of the billed duration.
+  // Maps to the Cloudwatch Logs Report "Duration"
   fixed64 invocation_duration = 1;
 }
 
