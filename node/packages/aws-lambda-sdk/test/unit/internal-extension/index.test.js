@@ -37,7 +37,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
   });
 };
 
-describe('internal-extension', () => {
+describe('internal-extension/index.test.js', () => {
   before(() => {
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_REGION = 'us-east-1';
