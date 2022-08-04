@@ -3,7 +3,7 @@ syntax = "proto3";
 package serverless.proto.instrumentation.v1;
 
 import "serverless/proto/common/v1/common.proto";
-import "serverless/proto/instrumentation/tagset/v1/tagset.proto";
+import "serverless/proto/instrumentation/tags/v1/tags.proto";
 
 // ATracePayload is a message that will contain any number
 // of Spans plus the global tags required by our Serverless Ingest
@@ -44,5 +44,5 @@ message Span {
     fixed64 end_time_unix_nano = 6;
 
     // A message containing any number of Tagsets
-    serverless.proto.instrumentation.tagset.v1.Tags tags = 7;
+    serverless.proto.instrumentation.tags.v1.Tags tags = 7;
 }

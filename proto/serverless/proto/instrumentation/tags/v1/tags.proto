@@ -10,6 +10,11 @@ message Tags {
   // Defined TagSets start at field number 100  //
   // ========================================== //
 
+  // ============================================ //
+  // Top level tags will have their underscores replaced //
+  // with periods when flattened. So for `aws_lambda` it will //
+  // be converted to `aws.lambda`//
+
   // The root AWS Lambda Span tags.
   optional AwsLambdaTags aws_lambda = 100;
 
