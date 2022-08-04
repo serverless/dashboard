@@ -389,7 +389,7 @@ jobs:
       - name: Install packages/sdk-schema dependencies
         if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd node/packages/aws-lambda-sdk
+          cd node/packages/sdk-schema
           npm update --no-save
           npm update --save-dev --no-save
 

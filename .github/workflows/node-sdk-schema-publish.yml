@@ -30,15 +30,17 @@ jobs:
           cd packages/sdk-schema
           npm install
       - name: Build Protobufs
-        working-directory: ./proto
         run: |
+          cd ./proto
           buf build
           buf generate
       - name: Build
-        run: npm run build
-        working-directory: ./node/packages/sdk-schema
+        run: |
+          cd ./node/packages/sdk-schema
+          npm run build
       - name: Publish New Version
-        working-directory: ./node/packages/sdk-schema
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish
+        run: |
+          cd ./node/packages/sdk-schema
+          npm publish
