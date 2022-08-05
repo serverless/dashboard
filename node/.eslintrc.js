@@ -7,7 +7,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/scripts/**', '**/test/**', 'lib/**', 'prettier.config.js'],
+        devDependencies: ['scripts/**', 'lib/**', 'commitlint.config', 'prettier.config.js'],
       },
     ],
   },
