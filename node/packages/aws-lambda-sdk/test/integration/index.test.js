@@ -3,6 +3,7 @@
 const { expect } = require('chai');
 
 const path = require('path');
+const log = require('log').get('test');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
@@ -88,12 +89,22 @@ describe('integration', function () {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
+      log.debug('%s test result: %o', testConfig.name, testResult);
       const { expectedOutcome } = testConfig;
       const { invocationsData } = testResult;
       if (expectedOutcome === 'success') {
         for (const { responsePayload } of invocationsData) {
           expect(responsePayload.raw).to.equal('"ok"');
         }
+        expect(invocationsData[0].trace.spans.map(({ name }) => name)).to.deep.equal([
+          'aws.lambda',
+          'aws.lambda.initialization',
+          'aws.lambda.invocation',
+        ]);
+        expect(invocationsData[1].trace.spans.map(({ name }) => name)).to.deep.equal([
+          'aws.lambda',
+          'aws.lambda.invocation',
+        ]);
       }
       if (testConfig.test) {
         testConfig.test({ invocationsData });

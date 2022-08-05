@@ -192,7 +192,7 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('START RequestId: ')) {
-        currentInvocationData = { reports: [], extensionOverheadDurations: {} };
+        currentInvocationData = { extensionOverheadDurations: {} };
         continue;
       }
       if (message.startsWith('⚡ SDK: Overhead duration: Internal request')) {
@@ -202,27 +202,19 @@ const retrieveReports = async (testConfig) => {
         );
         continue;
       }
-      if (message.startsWith('⚡.')) {
-        const reportType = message.slice(2, message.indexOf(':'));
-        if (reportType === 'logs') continue;
-        const reportJsonString = message.slice(message.indexOf(':') + 1);
-        if (reportJsonString.endsWith('\n')) {
-          getCurrentInvocationData().reports.push([
-            reportType,
-            JSON.parse(reportJsonString.trim()),
-          ]);
+      if (message.startsWith('⚡ SDK: Trace: ')) {
+        const traceJsonString = message.slice(message.indexOf('e:') + 3);
+        if (traceJsonString.endsWith('\n')) {
+          getCurrentInvocationData().trace = JSON.parse(traceJsonString.trim());
         } else {
-          startedMessage = { type: reportType, report: reportJsonString };
+          startedMessage = traceJsonString;
         }
         continue;
       }
       if (startedMessage) {
-        startedMessage.report += message;
-        if (startedMessage.report.endsWith('\n')) {
-          getCurrentInvocationData().reports.push([
-            startedMessage.type,
-            JSON.parse(startedMessage.report.trim()),
-          ]);
+        startedMessage += message;
+        if (startedMessage.endsWith('\n')) {
+          getCurrentInvocationData().trace = JSON.parse(startedMessage.trim());
           startedMessage = null;
           continue;
         }

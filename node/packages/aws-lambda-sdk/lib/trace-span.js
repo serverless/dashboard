@@ -9,17 +9,14 @@ const ensureIterable = require('type/iterable/ensure');
 const isDate = require('type/date/is');
 const isObject = require('type/object/is');
 const resolveException = require('type/lib/resolve-exception');
-const uuid = require('uuid');
+const crypto = require('crypto');
 
 const isValidSpanName = RegExp.prototype.test.bind(/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/);
 const isValidTagName = RegExp.prototype.test.bind(
   /^[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/
 );
 
-const generateId = () =>
-  Array.from(uuid.parse(uuid.v4()))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+const generateId = () => crypto.randomBytes(16).toString('hex');
 
 const resolveEpochTimestampString = (() => {
   const diff = BigInt(Date.now()) * BigInt(1000000) - process.hrtime.bigint();
