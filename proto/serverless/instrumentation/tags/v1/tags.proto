@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package serverless.proto.instrumentation.tags.v1;
+package serverless.instrumentation.tags.v1;
 
 message Tags {
   // The required set of tags for The Serverless Ingest Platform. Payloads without all these tags will be rejected.

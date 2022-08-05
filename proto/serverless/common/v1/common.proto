@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package serverless.proto.common.v1;
+package serverless.common.v1;
 
 message SlsTags {
     string org_id = 1;

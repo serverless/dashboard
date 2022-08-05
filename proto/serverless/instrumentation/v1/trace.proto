@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package serverless.proto.instrumentation.v1;
+package serverless.instrumentation.v1;
 
-import "serverless/proto/common/v1/common.proto";
-import "serverless/proto/instrumentation/tags/v1/tags.proto";
+import "serverless/common/v1/common.proto";
+import "serverless/instrumentation/tags/v1/tags.proto";
 
 // ATracePayload is a message that will contain any number
 // of Spans plus the global tags required by our Serverless Ingest
@@ -11,13 +11,13 @@ import "serverless/proto/instrumentation/tags/v1/tags.proto";
 // complete Trace. It may contain only a subset of Spans that
 // will make up the complete Trace.
 message TracePayload {
-    serverless.proto.common.v1.SlsTags sls_tags = 1;
+    serverless.common.v1.SlsTags sls_tags = 1;
 
 
     // A list of Spans to be ingest. Ingest does not impose a limit on the
     // number of Spans in a single payload. It is the responsibility of the
     // Span producers to limit the size of payloads based on their own requirements.
-    repeated serverless.proto.instrumentation.v1.Span spans = 3;
+    repeated serverless.instrumentation.v1.Span spans = 3;
 }
 
 message Span {
@@ -44,5 +44,5 @@ message Span {
     fixed64 end_time_unix_nano = 6;
 
     // A message containing any number of Tagsets
-    serverless.proto.instrumentation.tags.v1.Tags tags = 7;
+    serverless.instrumentation.tags.v1.Tags tags = 7;
 }

@@ -9,7 +9,7 @@ const getInputFiles = () => {
   return inputFiles.map((input) => ({
     input,
     outputFile: input
-      .replace('out/serverless/proto/', 'dist/')
+      .replace('out/serverless/', 'dist/')
       .replace('.ts', '.js')
       .replace('v1/', '')
       .replace('instrumentation/', ''),
