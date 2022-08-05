@@ -14,7 +14,6 @@ module.exports = {
         packageDir: [__dirname],
       },
     ],
-    'no-console': 'off',
   },
   ignorePatterns: ['proto.js'],
 };
