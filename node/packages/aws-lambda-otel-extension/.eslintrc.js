@@ -10,17 +10,9 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/scripts/**', '**/test/**', 'prettier.config.js'],
+        devDependencies: ['**/test/**'],
         packageDir: [projectDir, path.resolve(projectDir, 'packages/aws-lambda-otel-extension')],
       },
     ],
   },
-  overrides: [
-    {
-      files: ['test/**/*.js'],
-      rules: {
-        'no-loop-func': 'off',
-      },
-    },
-  ],
 };

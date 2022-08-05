@@ -56,7 +56,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm update --no-save
-          npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
         run: |
           cd node/packages/aws-lambda-otel-extension/external/otel-extension-external

@@ -119,7 +119,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm update --no-save
-          npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true' && steps.cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -141,7 +140,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-sdk
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Install packages/sdk-schema dependencies
         if: steps.pathChanges.outputs.sdkSchema == 'true' && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
@@ -283,7 +281,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm update --no-save
-          npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true' && steps.cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -305,7 +302,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-sdk
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Install packages/sdk-schema dependencies
         if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
