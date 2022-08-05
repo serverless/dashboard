@@ -20,7 +20,16 @@ module.exports = async (distFilename) => {
     mkdir(path.dirname(distFilename), { intermediate: true, silent: true }),
     (async () => {
       zip.addLocalFile(path.resolve(internalDir, 'exec-wrapper.sh'), extensionDirname);
-      zip.addLocalFile(path.resolve(internalDir, 'index.js'), extensionDirname);
+      zip.addFile(
+        `${extensionDirname}/index.js`,
+        (
+          await spawn(esbuildFilename, [
+            path.resolve(path.resolve(internalDir, 'index.js')),
+            '--bundle',
+            '--platform=node',
+          ])
+        ).stdoutBuffer
+      );
       zip.addFile(
         `${extensionDirname}/wrapper.js`,
         (
@@ -28,6 +37,7 @@ module.exports = async (distFilename) => {
             path.resolve(path.resolve(internalDir, 'wrapper.js')),
             '--bundle',
             '--platform=node',
+            '--external:./',
           ])
         ).stdoutBuffer
       );

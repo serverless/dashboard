@@ -53,8 +53,12 @@ const doesModuleExist = (filename) => {
   }
 };
 
+EvalError.$serverlessAwsLambdaInitializationStartTime = processStartTime;
+global.serverlessSdk = require('../');
+
 let hasInitializationFailed = false;
 const startTime = process.hrtime.bigint();
+
 const handlerModule = (() => {
   try {
     if (importEsm) {

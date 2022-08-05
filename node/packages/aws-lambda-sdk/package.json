@@ -5,8 +5,7 @@
   "author": "Serverless, Inc.",
   "dependencies": {
     "d": "^1.0.1",
-    "type": "^2.6.1",
-    "uuid": "^8.3.2"
+    "type": "^2.6.1"
   },
   "typesVersions": {
     "*": {
