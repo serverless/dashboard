@@ -126,7 +126,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm update --no-save
-          npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true' && steps.cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -148,7 +147,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-sdk
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Validate Prettier formatting
         run: |
@@ -303,7 +301,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-otel-extension
           npm update --no-save
-          npm update --save-dev --no-save
       - name: Install packages/aws-lambda-otel-extension/external/otel-extension-external dependencies
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true' && steps.cacheAwsLambdaOtelExtensionExternalOtelExtensionExternalNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -325,7 +322,6 @@ jobs:
         run: |
           cd node/packages/aws-lambda-sdk
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Unit tests aws-lambda-otel-extension
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'
