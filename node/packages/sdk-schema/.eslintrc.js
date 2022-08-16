@@ -10,18 +10,10 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/scripts/**', '**/test/**', 'prettier.config.js'],
+        devDependencies: ['**/scripts/**', '**/test/**'],
         packageDir: [projectDir, path.resolve(projectDir, 'packages/sdk-schema')],
       },
     ],
   },
-  overrides: [
-    {
-      files: ['test/**/*.js'],
-      rules: {
-        'no-loop-func': 'off',
-      },
-    },
-  ],
   ignorePatterns: ['rollup.config.js', '!*.test.js', '**/test/**/*.test.js'],
 };
