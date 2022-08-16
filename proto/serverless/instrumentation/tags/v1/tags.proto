@@ -142,11 +142,12 @@ message AwsLambdaTags {
   // A Lambda function invocation can have one of the following
   // outcomes upon completion.
   enum Outcome {
-    SUCCESS = 0;
-    ERROR_INITIALIZATION = 1;
-    ERROR_UNHANDLED = 2;
-    ERROR_TIMEOUT = 3;
-    ERROR_HANDLED = 4;
+    OUTCOME_UNSPECIFIED = 0;
+    OUTCOME_SUCCESS = 1;
+    OUTCOME_ERROR_INITIALIZATION = 2;
+    OUTCOME_ERROR_UNHANDLED = 3;
+    OUTCOME_ERROR_TIMEOUT = 4;
+    OUTCOME_ERROR_HANDLED = 5;
   }
 
   // The Outcome of the Lambda invocation
