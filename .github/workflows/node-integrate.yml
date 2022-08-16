@@ -5,7 +5,9 @@ name: "Node: Integrate"
 on:
   push:
     branches: [main]
-    paths: ["node/**"]
+    paths:
+      - node/**
+      - proto/**
 
 env:
   FORCE_COLOR: 1
@@ -144,9 +146,8 @@ jobs:
       - name: Install packages/sdk-schema dependencies
         if: steps.pathChanges.outputs.sdkSchema == 'true' && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd node/packages/aws-lambda-sdk
+          cd node/packages/sdk-schema
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Unit tests /aws-lambda-otel-extension
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'
@@ -154,7 +155,7 @@ jobs:
           cd node/packages/aws-lambda-otel-extension
           npm test
       - name: Unit tests /aws-lambda-sdk
-        if: steps.pathChanges.outputs.awsLambdaSdk == 'true' || steps.pathChanges.outputs.proto == 'true'
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd node/packages/aws-lambda-sdk
           npm test
@@ -304,11 +305,10 @@ jobs:
           npm update --no-save
 
       - name: Install packages/sdk-schema dependencies
-        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
+        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/sdk-schema
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Unit tests aws-lambda-otel-extension
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'

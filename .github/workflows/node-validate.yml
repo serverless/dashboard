@@ -5,7 +5,9 @@ name: "Node: Validate"
 on:
   pull_request:
     branches: [main]
-    paths: ["node/**"]
+    paths:
+      - node/**
+      - proto/**
 
 env:
   FORCE_COLOR: 1
@@ -164,11 +166,10 @@ jobs:
           npm update --no-save
 
       - name: Install packages/sdk-schema dependencies
-        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
+        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/aws-lambda-sdk
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Validate Prettier formatting
         run: |
@@ -383,11 +384,10 @@ jobs:
           npm update --no-save
 
       - name: Install packages/sdk-schema dependencies
-        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
+        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/sdk-schema
           npm update --no-save
-          npm update --save-dev --no-save
 
       - name: Unit tests aws-lambda-otel-extension
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'
