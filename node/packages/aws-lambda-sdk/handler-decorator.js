@@ -2,6 +2,8 @@
 
 'use strict';
 
+const { traceSpans } = global.serverlessSdk || require('./');
+
 const debugLog = (...args) => {
   if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);
 };
@@ -9,15 +11,31 @@ const debugLog = (...args) => {
 module.exports = (originalHandler) => {
   let currentInvocationId = 0;
 
+  traceSpans.awsLambdaInitialization.close();
   return (event, context, awsCallback) => {
     const requestStartTime = process.hrtime.bigint();
-    EvalError.$serverlessInvocationStart = Date.now();
     debugLog('Invocation: start');
     let isResolved = false;
     let responseStartTime;
     isResolved = false;
     const invocationId = ++currentInvocationId;
-    const logResponseDuration = () => {
+    if (invocationId > 1) {
+      // Reset root span ids and startTime with every next invocation
+      delete traceSpans.awsLambda.traceId;
+      delete traceSpans.awsLambda.id;
+      delete traceSpans.awsLambda.endTime;
+      traceSpans.awsLambda.startTime = requestStartTime;
+      traceSpans.awsLambda.subSpans.clear();
+    }
+    traceSpans.awsLambdaInvocation = traceSpans.awsLambda.createSubSpan('aws.lambda.invocation', {
+      startTime: requestStartTime,
+    });
+    const closeInvocation = () => {
+      traceSpans.awsLambda.close();
+      debugLog(
+        'Trace:',
+        JSON.stringify({ id: traceSpans.awsLambda.traceId, spans: traceSpans.awsLambda.spans })
+      );
       debugLog(
         'Overhead duration: Internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
@@ -33,7 +51,7 @@ module.exports = (originalHandler) => {
         responseStartTime = process.hrtime.bigint();
         // TODO: Insert eventual response processing
         process.nextTick(() => someAwsCallback(...args));
-        logResponseDuration();
+        closeInvocation();
       };
     const originalDone = context.done;
     let contextDone = wrapAwsCallback(originalDone);
@@ -56,7 +74,7 @@ module.exports = (originalHandler) => {
         isResolved = true;
         responseStartTime = process.hrtime.bigint();
         // TODO: Insert eventual response processing
-        logResponseDuration();
+        closeInvocation();
       })
       .finally(() => {
         // AWS internally uses context methods to resolve promise result

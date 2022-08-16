@@ -5,7 +5,7 @@ const path = require('path');
 const projectDir = path.resolve(__dirname, '../../../../');
 
 module.exports = {
-  extends: path.resolve(projectDir, '.eslintrc.js'),
+  extends: path.resolve(projectDir, 'packages/aws-lambda-otel-extension/.eslintrc.js'),
   rules: {
     'import/no-extraneous-dependencies': [
       'error',
