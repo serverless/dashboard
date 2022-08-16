@@ -38,6 +38,9 @@ message Tags {
 
   // The Express Tags.
   optional ExpressTags express = 108;
+
+  // The AWS Trace Context Tags.
+  optional AwsTags aws = 109;
 }
 
 message SlsSdkTags {
@@ -52,9 +55,9 @@ message SlsSdkTags {
 
   message SdkTags {
     // The Name of the Serverless SDK used to instrument.
-    string sdk_name = 1;
+    string name = 1;
     // The version of the Serverless SDK used to instrument.
-    string sdk_version = 2;
+    string version = 2;
   }
 
   SdkTags sdk = 5;
