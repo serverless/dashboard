@@ -33,6 +33,7 @@ const expectedLambdaRootSpan = `{
       "requestId": "bdb40738-ff36-48c0-9842-9befd0141cd6",
       "requestTimeEpoch": "1659551935837",
       "version": "$LATEST",
+      "outcome": "OUTCOME_SUCCESS",
       "apiGateway": {
         "accountId": "012345678901",
         "apiId": "abc123",
@@ -92,6 +93,7 @@ describe('span-schema', () => {
           requestId: lambdaRequestId,
           requestTimeEpoch: milliNow,
           version: '$LATEST',
+          outcome: 'OUTCOME_SUCCESS',
           apiGateway: {
             accountId: '012345678901',
             apiId: 'abc123',
