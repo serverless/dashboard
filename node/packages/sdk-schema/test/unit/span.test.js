@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 
-const { Span } = require('../../dist/index.cjs');
+const { Span, AwsLambdaTags_Outcome } = require('../../dist/index.cjs');
 
 const expectedLambdaRootSpan = `{
   "id": "Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk",
@@ -93,7 +93,7 @@ describe('span-schema', () => {
           requestId: lambdaRequestId,
           requestTimeEpoch: milliNow,
           version: '$LATEST',
-          outcome: 'OUTCOME_SUCCESS',
+          outcome: AwsLambdaTags_Outcome.OUTCOME_SUCCESS,
           apiGateway: {
             accountId: '012345678901',
             apiId: 'abc123',
