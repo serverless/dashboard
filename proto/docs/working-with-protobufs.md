@@ -57,7 +57,7 @@ As we can see, with this message it is very clear what this message represents a
 
 ## Updating Messages
 
-The only supported updated to messages is adding fields, and where absolutely necessary removing a field. You cannot change any part of an existing field.
+The only supported update to messages is adding fields, and where absolutely necessary removing a field. You cannot change any part of an existing field.
 
 ### Adding a Field
 

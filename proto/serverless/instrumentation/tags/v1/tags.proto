@@ -139,22 +139,27 @@ message AwsLambdaTags {
   // The Lambda Function version.
   string version = 11;
 
-  // Was the invocation an error?
-  bool error = 14;
-  // Was the invocation a timeout?
-  bool error_timeout = 15;
-  // Optional error description.
-  optional string error_culprit = 16;
+  // A Lambda function invocation can have one of the following
+  // outcomes upon completion.
+  enum Outcome {
+    SUCCESS = 0;
+    ERROR_INITIALIZATION = 1;
+    ERROR_UNHANDLED = 2;
+    ERROR_TIMEOUT = 3;
+    ERROR_HANDLED = 4;
+  }
+
+  // The Outcome of the Lambda invocation
+  Outcome outcome = 14;
+
   // Optional error exception message.
-  optional string error_exception_message = 17;
+  optional string error_exception_message = 15;
   // Optional error exception stacktrace.
-  optional string error_exception_stacktrace = 18;
-  // Optional error exception type.
-  optional string error_exception_type = 19;
+  optional string error_exception_stacktrace = 16;
 
   // The billed duration of the invocation in milliseconds. This will not be available
   // when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
-  optional fixed64 duration = 20;
+  optional fixed64 duration = 17;
   // Optional Event Tags are from 100 on
 
   // Will be set if the function is handling a SQS event
