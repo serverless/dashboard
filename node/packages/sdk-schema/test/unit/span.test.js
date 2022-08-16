@@ -17,8 +17,8 @@ const expectedLambdaRootSpan = `{
       "service": "my-test-function",
       "region": "us-east-1",
       "sdk": {
-        "sdkName": "aws-lambda-sdk",
-        "sdkVersion": "0.0.1"
+        "name": "aws-lambda-sdk",
+        "version": "0.0.1"
       }
     },
     "awsLambda": {
@@ -71,8 +71,8 @@ describe('span-schema', () => {
         sls: {
           orgId: 'abc123',
           sdk: {
-            sdkName: 'aws-lambda-sdk',
-            sdkVersion: '0.0.1',
+            name: 'aws-lambda-sdk',
+            version: '0.0.1',
           },
           platform: 'lambda',
           region: 'us-east-1',
