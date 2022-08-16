@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package serverless.instrumentation.tags.v1;
 
+option go_package = ".;protoc";
+
 message Tags {
   // The required set of tags for The Serverless Ingest Platform. Payloads without all these tags will be rejected.
   SlsSdkTags sls = 1;

@@ -4,6 +4,8 @@ package serverless.instrumentation.v1;
 
 import "serverless/common/v1/common.proto";
 
+option go_package = ".;protoc";
+
 // A LogPayload is a message that will contain any number of
 // LogEvents plus the global tags required by our Serverless Ingest Platform.
 message LogPayload {

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package serverless.common.v1;
 
+option go_package = ".;protoc";
+
 message SlsTags {
     string org_id = 1;
 }
