@@ -43,7 +43,6 @@ describe('integration', function () {
       'callback',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
@@ -53,7 +52,6 @@ describe('integration', function () {
       'esbuild-from-esm-callback',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
@@ -63,7 +61,6 @@ describe('integration', function () {
       'thenable',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),

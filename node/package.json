@@ -23,7 +23,7 @@
     "@commitlint/cli": "^17.0.3",
     "@commitlint/lint": "^17.0.3",
     "@octokit/rest": "^19.0.3",
-    "@serverless/eslint-config": "^4.0.1",
+    "@serverless/eslint-config": "^5.0.1",
     "@serverless/test": "^11.0.1",
     "@serverless/utils": "^6.7.0",
     "adm-zip": "^0.5.9",
@@ -65,7 +65,7 @@
     "prettify:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier --write"
   },
   "engines": {
-    "node": ">=12.0"
+    "node": ">=14.0"
   },
   "license": "MIT"
 }
