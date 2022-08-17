@@ -225,7 +225,7 @@ jobs:
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
       - name: Buf Lint
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        if: steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-lint-action@v1
         with:
           input: 'proto'
@@ -407,11 +407,6 @@ jobs:
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
-      - name: Buf Lint
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
-        uses: bufbuild/buf-lint-action@v1
-        with:
-          input: 'proto'
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |

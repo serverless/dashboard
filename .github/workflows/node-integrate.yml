@@ -37,7 +37,7 @@ jobs:
             sdkSchema:
               - 'node/packages/sdk-schema/**'
             proto:
-              - 'node/packages/proto/**'
+              - 'proto/**'
 
       - name: Retrieve ~/.npm from cache
         uses: actions/cache@v2
@@ -163,7 +163,7 @@ jobs:
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
       - name: Buf Lint
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        if: steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-lint-action@v1
         with:
           input: 'proto'
@@ -328,11 +328,6 @@ jobs:
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
-      - name: Buf Lint
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
-        uses: bufbuild/buf-lint-action@v1
-        with:
-          input: 'proto'
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
@@ -506,7 +501,7 @@ jobs:
     name: Integrate
     runs-on: ubuntu-latest
     needs: [linuxNode16, linuxNode14]
-    if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode14.outputs.pathChangedProto == 'true'
+    if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode16.outputs.pathChangedProto == 'true'
     timeout-minutes: 30
     steps:
       # We should have real integration tests here, but for now we are just going to tag a release if unit tests pass
