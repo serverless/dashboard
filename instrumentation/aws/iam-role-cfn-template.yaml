@@ -24,7 +24,8 @@ Resources:
     Type: AWS::CloudFormation::CustomResource
     Version: "1.0"
     Properties:
-      ServiceToken: arn:aws:lambda:us-east-1:486128539022:function:platform-core-integration-aws-prod-stackReporter
+      ServiceToken:
+        Ref: ReportServiceToken
       ExternalId:
         Ref: ExternalId
       Version:
@@ -37,7 +38,15 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::486128539022:root
+              AWS:
+                Fn::Join:
+                  - ":"
+                  - - "arn"
+                    - "aws"
+                    - "iam"
+                    - ""
+                    - Ref: AccountId
+                    - "root"
             Action:
               - sts:AssumeRole
             Condition:
@@ -45,6 +54,9 @@ Resources:
                 sts:ExternalId:
                   Ref: ExternalId
       Path: "/"
+      ManagedPolicyArns:
+        # The AWS managed policy provides read-only access to AWS services and resources
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
       RoleName: ServerlessRole
       Policies:
         - PolicyName: "serverless-read-policy-1"
@@ -56,69 +68,10 @@ Resources:
                   #
                   ##
                   ###
-                  #### READ PERMISSIONS
+                  #### EXTRA READ PERMISSIONS
                   ###
                   ##
                   #
-
-                  #
-                  ## API Gateway V1
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_Operations.html
-
-                  - "apigateway:GetAccount"
-                  - "apigateway:GetAuthorizer"
-                  - "apigateway:GetAuthorizers"
-                  - "apigateway:GetBasePathMapping"
-                  - "apigateway:GetBasePathMappings"
-                  - "apigateway:GetClientCertificate"
-                  - "apigateway:GetClientCertificates"
-                  - "apigateway:GetDeployment"
-                  - "apigateway:GetDeployments"
-                  - "apigateway:GetDocumentationPart"
-                  - "apigateway:GetDocumentationParts"
-                  - "apigateway:GetDocumentationVersion"
-                  - "apigateway:GetDocumentationVersions"
-                  - "apigateway:GetDomainName"
-                  - "apigateway:GetDomainNames"
-                  - "apigateway:GetExport"
-                  - "apigateway:GetGatewayResponse"
-                  - "apigateway:GetGatewayResponses"
-                  - "apigateway:GetIntegration"
-                  - "apigateway:GetIntegrationResponse"
-                  - "apigateway:GetMethod"
-                  - "apigateway:GetMethodResponse"
-                  - "apigateway:GetModel"
-                  - "apigateway:GetModels"
-                  - "apigateway:GetModelTemplate"
-                  - "apigateway:GetRequestValidator"
-                  - "apigateway:GetRequestValidators"
-                  - "apigateway:GetResource"
-                  - "apigateway:GetResources"
-                  - "apigateway:GetRestApi"
-                  - "apigateway:GetRestApis"
-                  - "apigateway:GetStage"
-                  - "apigateway:GetStages"
-                  - "apigateway:GetTags"
-                  - "apigateway:GetUsage"
-                  - "apigateway:GetUsagePlan"
-                  - "apigateway:GetUsagePlans"
-                  - "apigateway:GetVpcLink"
-
-                  #
-                  ## API Gateway V2
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/operations.html
-                  # Serverless Inc. Comments: API Gateway V1 & V2 have overlapping IAM Actions.  However, V2 (AKA HTTP API) has additional IAM Actions, and we cover those here.
-
-                  - "apigateway:GetApi"
-                  - "apigateway:GetApis"
-                  - "apigateway:GetApiMapping"
-                  - "apigateway:GetIntegrationResponses"
-                  - "apigateway:GetIntegrations"
-                  - "apigateway:GetIntegrations"
-                  - "apigateway:GetRoute"
-                  - "apigateway:GetRoutes"
-                  - "apigateway:GetRouteResponse"
-                  - "apigateway:GetRouteResponses"
 
                   #
                   ## App Runner
@@ -139,527 +92,27 @@ Resources:
                   - "apprunner:ListVpcConnectors"
 
                   #
-                  ## AppSync
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_Operations.html
-
-                  - "appsync:GetApiAssociation"
-                  - "appsync:GetDataSource"
-                  - "appsync:GetDomainName"
-                  - "appsync:GetFunction"
-                  - "appsync:GetGraphqlApi"
-                  - "appsync:GetIntrospectionSchema"
-                  - "appsync:GetResolver"
-                  - "appsync:GetSchemaCreationStatus"
-                  - "appsync:ListDataSources"
-                  - "appsync:ListDomainNames"
-                  - "appsync:ListFunctions"
-                  - "appsync:ListGraphqlApis"
-                  - "appsync:ListResolvers"
-                  - "appsync:ListResolversByFunction"
-                  - "appsync:ListTagsForResource"
-
-                  #
-                  ## Autoscaling
-                  # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_Operations.html
-
-                  - "autoscaling:DescribeScalingPlanResources"
-                  - "autoscaling:DescribeScalingPlans"
-
-                  #
-                  ## Backup
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_Operations.html
-
-                  - "backup:ListBackupPlans"
-                  - "backup:ListBackupPlanVersions"
-                  - "backup:ListBackupSelections"
-                  - "backup:ListBackupVaults"
-                  - "backup:ListFrameworks"
-                  - "backup:ListProtectedResources"
-                  - "backup:ListTags"
-
-                  #
-                  ## CloudFormation
-                  # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_Operations.html
-
-                  - "DescribePublisher"
-                  - "DescribeStackInstance"
-                  - "DescribeStackResource"
-                  - "DescribeStackResources"
-                  - "DescribeStackSet"
-                  - "DescribeStacks"
-                  - "ListStackInstances"
-                  - "ListStackResources"
-                  - "ListStackSets"
-                  - "ListStacks"
-
-                  #
-                  ## CloudFront
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
-
-                  - "cloudfront:DescribeFunction"
-                  - "cloudfront:GetCachePolicy"
-                  - "cloudfront:GetCachePolicyConfig"
-                  - "cloudfront:GetDistribution"
-                  - "cloudfront:GetDistributionConfig"
-                  - "cloudfront:ListDistributions"
-                  - "cloudfront:ListDistributionsByCachePolicyId"
-                  - "cloudfront:ListFunctions"
-                  - "cloudfront:ListTagsForResource"
-
-                  #
-                  ## CloudTrail
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_Operations.html
-
-                  - "cloudtrail:DescribeTrails"
-                  - "cloudtrail:GetTrailStatus"
-                  - "cloudtrail:ListTags"
-                  - "cloudtrail:ListTrails"
-                  - "cloudtrail:LookupEvents"
-
-                  #
-                  ## Cloudwatch
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Operations.html
-
-                  - "cloudwatch:DescribeAlarmHistory"
-                  - "cloudwatch:DescribeAlarms"
-                  - "cloudwatch:DescribeAlarmsForMetric"
-                  - "cloudwatch:DescribeAnomalyDetectors"
-                  - "cloudwatch:DescribeInsightRules"
-                  - "cloudwatch:GetDashboard"
-                  - "cloudwatch:GetInsightRuleReport"
-                  - "cloudwatch:GetMetricData"
-                  - "cloudwatch:GetMetricStatistics"
-                  - "cloudwatch:GetMetricStream"
-                  - "cloudwatch:GetMetricWidgetImage"
-                  - "cloudwatch:ListDashboards"
-                  - "cloudwatch:ListMetricStreams"
-                  - "cloudwatch:ListMetrics"
-                  - "cloudwatch:ListTagsForResource"
-
-                  #
-                  ## Cloudwatch Logs
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
-
-                  - "logs:DescribeLogGroups"
-                  - "logs:DescribeLogStreams"
-                  - "logs:DescribeSubscriptionFilters"
-                  - "logs:FilterLogEvents"
-                  - "logs:ListTagsLogGroup"
-                  - "logs:TestMetricFilter"
-
-                  #
-                  ## CodeBuild
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_Operations.html
-
-                  - "codebuild:BatchGetBuildBatches"
-                  - "codebuild:BatchGetBuilds"
-                  - "codebuild:BatchGetProjects"
-                  - "codebuild:ListBuildBatches"
-                  - "codebuild:ListBuildBatchesForProject"
-                  - "codebuild:ListBuilds"
-                  - "codebuild:ListBuildsForProject"
-                  - "codebuild:ListProjects"
-                  - "codebuild:ListSharedProjects"
-
-                  #
-                  ## CodeDeploy
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_Operations.html
-
-                  - "codedeploy:BatchGetApplicationRevisions"
-                  - "codedeploy:BatchGetApplications"
-                  - "codedeploy:BatchGetDeploymentGroups"
-                  - "codedeploy:BatchGetDeploymentInstances"
-                  - "codedeploy:BatchGetDeploymentTargets"
-                  - "codedeploy:BatchGetDeployments"
-                  - "codedeploy:GetApplication"
-                  - "codedeploy:GetApplicationRevision"
-                  - "codedeploy:GetDeployment"
-                  - "codedeploy:GetDeploymentConfig"
-                  - "codedeploy:GetDeploymentGroup"
-                  - "codedeploy:GetDeploymentInstance"
-                  - "codedeploy:GetDeploymentTarget"
-                  - "codedeploy:ListApplicationRevisions"
-                  - "codedeploy:ListApplications"
-                  - "codedeploy:ListDeploymentConfigs"
-                  - "codedeploy:ListDeploymentGroups"
-                  - "codedeploy:ListDeploymentInstances"
-                  - "codedeploy:ListDeploymentTargets"
-                  - "codedeploy:ListDeployments"
-                  - "codedeploy:ListTagsForResource"
-
-                  #
                   ## Cost Explorer
                   # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Operations_AWS_Cost_Explorer_Service.html
 
-                  - "ce:DescribeCostCategoryDefinition"
-                  - "ce:GetCostAndUsage"
-                  - "ce:GetCostAndUsageWithResources"
-                  - "ce:GetCostCategories"
-                  - "ce:GetTags"
                   - "ce:ListCostAllocationTags"
-                  - "ce:ListCostCategoryDefinitions"
-                  - "ce:ListTagsForResource"
-
-                  #
-                  ## DynamoDB
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations_Amazon_DynamoDB.html
-
-                  - "dynamodb:DescribeBackup"
-                  - "dynamodb:DescribeContinuousBackups"
-                  - "dynamodb:DescribeContributorInsights"
-                  - "dynamodb:DescribeExport"
-                  - "dynamodb:DescribeGlobalTable"
-                  - "dynamodb:DescribeGlobalTableSettings"
-                  - "dynamodb:DescribeKinesisStreamingDestination"
-                  - "dynamodb:DescribeLimits"
-                  - "dynamodb:DescribeReservedCapacity"
-                  - "dynamodb:DescribeReservedCapacityOfferings"
-                  - "dynamodb:DescribeStream"
-                  - "dynamodb:DescribeTable"
-                  - "dynamodb:DescribeTableReplicaAutoScaling"
-                  - "dynamodb:DescribeTimeToLive"
-                  - "dynamodb:ListBackups"
-                  - "dynamodb:ListContributorInsights"
-                  - "dynamodb:ListExports"
-                  - "dynamodb:ListGlobalTables"
-                  - "dynamodb:ListStreams"
-                  - "dynamodb:ListTables"
-                  - "dynamodb:ListTagsOfResource"
-
-                  #
-                  ## ECS
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
-
-                  - "ecs:DescribeCapacityProviders"
-                  - "ecs:DescribeClusters"
-                  - "ecs:DescribeContainerInstances"
-                  - "ecs:DescribeServices"
-                  - "ecs:DescribeTaskDefinition"
-                  - "ecs:DescribeTaskSets"
-                  - "ecs:DescribeTasks"
-                  - "ecs:ListAccountSettings"
-                  - "ecs:ListAttributes"
-                  - "ecs:ListClusters"
-                  - "ecs:ListContainerInstances"
-                  - "ecs:ListServices"
-                  - "ecs:ListTagsForResource"
-                  - "ecs:ListTaskDefinitionFamilies"
-                  - "ecs:ListTaskDefinitions"
-                  - "ecs:ListTasks"
-
-                  #
-                  ## ElastiCache
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_Operations.html
-
-                  - "elasticache:DescribeCacheClusters"
-                  - "elasticache:DescribeCacheEngineVersions"
-                  - "elasticache:DescribeCacheParameterGroups"
-                  - "elasticache:DescribeCacheParameters"
-                  - "elasticache:DescribeCacheSubnetGroups"
-                  - "elasticache:DescribeEngineDefaultParameters"
-                  - "elasticache:DescribeEvents"
-                  - "elasticache:DescribeGlobalReplicationGroups"
-                  - "elasticache:DescribeReplicationGroups"
-                  - "elasticache:DescribeReservedCacheNodes"
-                  - "elasticache:DescribeUpdateActions"
-                  - "elasticache:DescribeUserGroups"
-                  - "elasticache:DescribeUsers"
-                  - "elasticache:ListAllowedNodeTypeModifications"
-                  - "elasticache:ListTagsForResource"
-
-                  #
-                  ## ELB (Elastic Load Balancing) V1
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_Operations.html
-
-                  - "elasticloadbalancing:DescribeInstanceHealth"
-                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
-                  - "elasticloadbalancing:DescribeLoadBalancerPolicies"
-                  - "elasticloadbalancing:DescribeLoadBalancerPolicyTypes"
-                  - "elasticloadbalancing:DescribeLoadBalancers"
-                  - "elasticloadbalancing:DescribeTags"
-
-                  #
-                  ## ELB (Elastic Load Balancing) V2
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Operations.html
-
-                  - "elasticloadbalancing:DescribeAccountLimits"
-                  - "elasticloadbalancing:DescribeListeners"
-                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
-                  - "elasticloadbalancing:DescribeLoadBalancers"
-                  - "elasticloadbalancing:DescribeRules"
-                  - "elasticloadbalancing:DescribeTags"
-                  - "elasticloadbalancing:DescribeTargetGroupAttributes"
-                  - "elasticloadbalancing:DescribeTargetGroups"
-                  - "elasticloadbalancing:DescribeTargetHealth"
-
-                  #
-                  ## EMR (Elastic Map Reduce)
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_Operations.html
-
-                  - "elasticmapreduce:DescribeCluster"
-                  - "elasticmapreduce:DescribeStep"
-                  - "elasticmapreduce:DescribeStudio"
-                  - "elasticmapreduce:ListBootstrapActions"
-                  - "elasticmapreduce:ListClusters"
-                  - "elasticmapreduce:ListInstanceFleets"
-                  - "elasticmapreduce:ListInstanceGroups"
-                  - "elasticmapreduce:ListInstances"
-                  - "elasticmapreduce:ListSteps"
-                  - "elasticmapreduce:ListStudioSessionMappings"
-                  - "elasticmapreduce:ListStudios"
-
-                  #
-                  ## ES (ElasticSearch)
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
-
-                  - "es:DescribeDomain"
-                  - "es:DescribeDomainAutoTunes"
-                  - "es:DescribeDomainConfig"
-                  - "es:DescribeDomains"
-                  - "es:DescribeElasticsearchDomain"
-                  - "es:DescribeElasticsearchDomainConfig"
-                  - "es:DescribeElasticsearchDomains"
-                  - "es:DescribePackages"
-                  - "es:ListDomainNames"
-                  - "es:ListDomainsForPackage"
-                  - "es:ListElasticsearchInstanceTypeDetails"
-                  - "es:ListElasticsearchInstanceTypes"
-                  - "es:ListInstanceTypeDetails"
-                  - "es:ListPackagesForDomain"
-                  - "es:ListTags"
-
-                  #
-                  ## Health
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_Operations.html
-
-                  - "health:DescribeAffectedAccountsForOrganization"
-                  - "health:DescribeAffectedEntities"
-                  - "health:DescribeAffectedEntitiesForOrganization"
-                  - "health:DescribeEntityAggregates"
-                  - "health:DescribeEventAggregates"
-                  - "health:DescribeEventDetails"
-                  - "health:DescribeEventDetailsForOrganization"
-                  - "health:DescribeEventTypes"
-                  - "health:DescribeEvents"
-                  - "health:DescribeEventsForOrganization"
-                  - "health:DescribeHealthServiceStatusForOrganization"
-
-                  #
-                  ## Kinesis
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_Operations.html
-
-                  - "kinesis:DescribeStream"
-                  - "kinesis:DescribeStreamConsumer"
-                  - "kinesis:DescribeStreamSummary"
-                  - "kinesis:ListShards"
-                  - "kinesis:ListStreamConsumers"
-                  - "kinesis:ListStreams"
-                  - "kinesis:ListTagsForStream"
-
-                  #
-                  ## Lambda
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Operations.html
-
-                  - "lambda:GetAccountSettings"
-                  - "lambda:GetAlias"
-                  - "lambda:GetEventSourceMapping"
-                  - "lambda:GetFunctionConfiguration"
-                  - "lambda:GetFunctionConcurrency"
-                  - "lambda:GetFunctionEventInvokeConfig"
-                  - "lambda:GetFunctionUrlConfig"
-                  - "lambda:GetLayerVersion"
-                  - "lambda:GetLayerVersionPolicy"
-                  - "lambda:GetPolicy"
-                  - "lambda:GetProvisionedConcurrencyConfig"
-                  - "lambda:ListAliases"
-                  - "lambda:ListCodeSigningConfigs"
-                  - "lambda:ListEventSourceMappings"
-                  - "lambda:ListFunctionEventInvokeConfigs"
-                  - "lambda:ListFunctionUrlConfigs"
-                  - "lambda:ListFunctions"
-                  - "lambda:ListFunctionsByCodeSigningConfig"
-                  - "lambda:ListLayerVersions"
-                  - "lambda:ListLayers"
-                  - "lambda:ListProvisionedConcurrencyConfigs"
-                  - "lambda:ListTags"
-                  - "lambda:ListVersionsByFunction"
-
-                  #
-                  ## Organizations
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_Operations.html
-
-                  - "organizations:DescribeAccount"
-                  - "organizations:DescribeEffectivePolicy"
-                  - "organizations:DescribeOrganization"
-                  - "organizations:DescribeOrganizationalUnit"
-                  - "organizations:DescribePolicy"
-                  - "organizations:ListAWSServiceAccessForOrganization"
-                  - "organizations:ListAccounts"
-                  - "organizations:ListAccountsForParent"
-                  - "organizations:ListChildren"
-                  - "organizations:ListDelegatedAdministrators"
-                  - "organizations:ListDelegatedServicesForAccount"
-                  - "organizations:ListOrganizationalUnitsForParent"
-                  - "organizations:ListParents"
-                  - "organizations:ListPolicies"
-                  - "organizations:ListPoliciesForTarget"
-                  - "organizations:ListTagsForResource"
-                  - "organizations:ListTargetsForPolicy"
-
-                  #
-                  ## Resource Group Tagging
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_Operations.html
-
-                  - "tag:GetResources"
-                  - "tag:GetTagKeys"
-                  - "tag:GetTagValues"
-
-                  #
-                  ## RDS (Relational Database Service)
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html
-
-                  - "rds:DescribeDBClusterParameterGroups"
-                  - "rds:DescribeDBClusterParameters"
-                  - "rds:DescribeDBClusters"
-                  - "rds:DescribeDBEngineVersions"
-                  - "rds:DescribeDBInstances"
-                  - "rds:DescribeDBParameterGroups"
-                  - "rds:DescribeDBParameters"
-                  - "rds:DescribeDBProxies"
-                  - "rds:DescribeDBProxyEndpoints"
-                  - "rds:DescribeDBProxyTargetGroups"
-                  - "rds:DescribeDBProxyTargets"
-                  - "rds:DescribeDBSecurityGroups"
-                  - "rds:DescribeDBSubnetGroups"
-                  - "rds:DescribeEventCategories"
-                  - "rds:DescribeEventSubscriptions"
-                  - "rds:DescribeEvents"
-                  - "rds:DescribeSourceRegions"
-                  - "rds:ListTagsForResource"
-
-                  #
-                  ## Route 53
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_Operations_Amazon_Route_53.html
-
-                  - "route53:ListCidrBlocks"
-                  - "route53:ListCidrCollections"
-                  - "route53:ListCidrLocations"
-                  - "route53:ListGeoLocations"
-                  - "route53:ListHealthChecks"
-                  - "route53:ListHostedZones"
-                  - "route53:ListHostedZonesByName"
-                  - "route53:ListHostedZonesByVPC"
-                  - "route53:ListQueryLoggingConfigs"
-                  - "route53:ListResourceRecordSets"
-                  - "route53:ListReusableDelegationSets"
-                  - "route53:ListTagsForResource"
 
                   #
                   ## S3
                   # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations_Amazon_Simple_Storage_Service.html
 
                   - "s3:DescribeMultiRegionAccessPointOperation"
-                  - "s3:GetAccessPoint"
-                  - "s3:GetAccessPointConfigurationForObjectLambda"
-                  - "s3:GetAccessPointForObjectLambda"
-                  - "s3:GetAccessPointPolicyStatus"
-                  - "s3:GetAccessPointPolicyStatusForObjectLambda"
-                  - "s3:GetAccountPublicAccessBlock"
-                  - "s3:GetBucketAcl"
-                  - "s3:GetBucketCORS"
-                  - "s3:GetBucketLocation"
-                  - "s3:GetBucketLogging"
-                  - "s3:GetBucketNotification"
-                  - "s3:GetBucketOwnershipControls"
-                  - "s3:GetBucketPolicy"
-                  - "s3:GetBucketTagging"
-                  - "s3:GetBucketVersioning"
-                  - "s3:GetBucketWebsite"
-                  - "s3:GetMetricsConfiguration"
-                  - "s3:GetMultiRegionAccessPoint"
-                  - "s3:GetMultiRegionAccessPointPolicy"
-                  - "s3:ListAccessPoints"
-                  - "s3:ListAccessPointsForObjectLambda"
-                  - "s3:ListAllMyBuckets"
-                  - "s3:ListBucketVersions"
-
-                  #
-                  ## SES (Simple Email Service) V1
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_Operations.html
-
-                  - "ses:GetAccountSendingEnabled"
-                  - "ses:GetSendStatistics"
-                  - "ses:GetTemplate"
-                  - "ses:ListTemplates"
-                  - "ses:ListVerifiedEmailAddresses"
-
-                  #
-                  ## SES (Simple Email Service) V2
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_Operations.html
-
-                  - "ses:GetAccount"
-                  - "ses:GetDeliverabilityTestReport"
-                  - "ses:GetDomainDeliverabilityCampaign"
-                  - "ses:GetDomainStatisticsReport"
-                  - "ses:GetEmailTemplate"
-                  - "ses:ListDeliverabilityTestReports"
-                  - "ses:ListDomainDeliverabilityCampaigns"
-                  - "ses:ListEmailIdentities"
-                  - "ses:ListEmailTemplates"
-                  - "ses:ListTagsForResource"
-
-                  #
-                  ## SNS (Simple Notification System)
-                  # https://docs.aws.amazon.com/sns/latest/api/API_Operations.html
-
-                  - "sns:ListSubscriptions"
-                  - "sns:ListSubscriptionsByTopic"
-                  - "sns:ListTagsForResource"
-                  - "sns:ListTopics"
-
-                  #
-                  ## SQS (Simple Queue Service)
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_Operations.html
-
-                  - "sqs:GetQueueAttributes"
-                  - "sqs:GetQueueUrl"
-                  - "sqs:ListDeadLetterSourceQueues"
-                  - "sqs:ListQueueTags"
-                  - "sqs:ListQueues"
 
                   #
                   ## Step Functions
                   # https://docs.aws.amazon.com/step-functions/latest/apireference/API_Operations.html
 
-                  - "states:DescribeActivity"
-                  - "states:DescribeExecution"
-                  - "states:DescribeStateMachine"
-                  - "states:DescribeStateMachineForExecution"
                   - "states:GetActivityTask"
-                  - "states:GetExecutionHistory"
-                  - "states:ListActivities"
-                  - "states:ListExecutions"
-                  - "states:ListStateMachines"
-                  - "states:ListTagsForResource"
 
                   #
                   ## X-Ray
                   # https://docs.aws.amazon.com/xray/latest/api/API_Operations.html
 
-                  - "xray:BatchGetTraces"
-                  - "xray:GetGroup"
-                  - "xray:GetGroups"
-                  - "xray:GetInsight"
-                  - "xray:GetInsightEvents"
-                  - "xray:GetInsightImpactGraph"
-                  - "xray:GetInsightSummaries"
-                  - "xray:GetSamplingRules"
-                  - "xray:GetSamplingStatisticSummaries"
-                  - "xray:GetSamplingTargets"
-                  - "xray:GetServiceGraph"
-                  - "xray:GetTimeSeriesServiceStatistics"
-                  - "xray:GetTraceGraph"
-                  - "xray:GetTraceSummaries"
                   - "xray:ListTagsForResource"
 
                   #
@@ -864,7 +317,130 @@ Resources:
                   - "xray:TagResource"
                   - "xray:UntagResource"
                 Resource: "*"
+        - PolicyName: "serverless-metrics-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "cloudwatch:GetMetricStream"
+                  - "cloudwatch:PutMetricStream"
+                  - "cloudwatch:DeleteMetricStream"
+                Resource:
+                  - Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:metric-stream/serverless_metric-stream"
+              - Effect: Allow
+                Action:
+                  - "firehose:DescribeDeliveryStream"
+                  - "firehose:CreateDeliveryStream"
+                  - "firehose:DeleteDeliveryStream"
+                Resource:
+                  - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
+              - Effect: Allow
+                Action:
+                  - "s3:GetBucketLocation"
+                  - "s3:CreateBucket"
+                  - "s3:DeleteBucket"
+                Resource:
+                  # The bucket name will include unique id to avoid bucket duplication
+                  - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
+  ServerlessMetricsRoleStack:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+              Service:
+                - streams.metrics.cloudwatch.amazonaws.com
+                - firehose.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId:
+                  Ref: AWS::AccountId
+      Path: "/"
+      RoleName: ServerlessMetricsRole
+      Policies:
+        - PolicyName: "serverless-metric-stream-polices"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "firehose:PutRecord"
+                  - "firehose:PutRecordBatch"
+                Resource:
+                  - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose-*"
+        - PolicyName: "serverless-kinesis-firehose-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "glue:GetTable"
+                  - "glue:GetTableVersion"
+                  - "glue:GetTableVersions"
+                Resource:
+                  - !Sub "arn:aws:glue:*:${AWS::AccountId}:catalog"
+                  - !Sub "arn:aws:glue:*:${AWS::AccountId}:database/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                  - !Sub "arn:aws:glue:*:${AWS::AccountId}:table/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+              - Effect: Allow
+                Action:
+                  - "s3:AbortMultipartUpload"
+                  - "s3:GetBucketLocation"
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                  - "s3:ListBucketMultipartUploads"
+                  - "s3:PutObject"
+                Resource:
+                  - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
+                  - "arn:aws:s3:::serverless.metrics-firehose-backup-*/*"
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                  - "lambda:GetFunctionConfiguration"
+                Resource:
+                  - !Sub "arn:aws:lambda:*:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+              - Effect: Allow
+                Action:
+                  - "kms:GenerateDataKey"
+                  - "kms:Decrypt"
+                Resource:
+                  - !Sub "arn:aws:kms:*:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+              - Effect: Allow
+                Action:
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/kinesisfirehose/serverless_metrics-firehose-*:log-stream:*"
+                  - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%:log-stream:*"
+              - Effect: Allow
+                Action:
+                  - "kinesis:DescribeStream"
+                  - "kinesis:GetShardIterator"
+                  - "kinesis:GetRecords"
+                  - "kinesis:ListShards"
+                Resource:
+                  - !Sub "arn:aws:kinesis:*:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+              - Effect: Allow
+                Action:
+                  - "kms:Decrypt"
+                Resource:
+                  - !Sub "arn:aws:kms:*:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+              - Effect: Allow
+                Action:
+                  - "iam:PassRole"
+                Resource:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessRole"
 Parameters:
+  AccountId:
+    Description: "[!Do not change!] The Serverless AWS accountId"
+    Type: String
+  ReportServiceToken:
+    Description: "[!Do not change!] The Stack status report Service ARN"
+    Type: String
   ExternalId:
     Description: "[!Do not change!] External ID for securing the role"
     Type: String
