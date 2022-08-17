@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package serverless.instrumentation.v1;
 
-import "serverless/common/v1/common.proto";
 import "serverless/instrumentation/tags/v1/tags.proto";
 
 option go_package = ".;protoc";
@@ -13,7 +12,7 @@ option go_package = ".;protoc";
 // complete Trace. It may contain only a subset of Spans that
 // will make up the complete Trace.
 message TracePayload {
-    serverless.common.v1.SlsTags sls_tags = 1;
+    serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
 
 
     // A list of Spans to be ingest. Ingest does not impose a limit on the

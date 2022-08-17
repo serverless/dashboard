@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package serverless.instrumentation.v1;
 
-import "serverless/common/v1/common.proto";
+import "serverless/instrumentation/tags/v1/tags.proto";
 
 option go_package = ".;protoc";
 
 // A LogPayload is a message that will contain any number of
 // LogEvents plus the global tags required by our Serverless Ingest Platform.
 message LogPayload {
-    serverless.common.v1.SlsTags sls_tags = 1;
+    serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
 
     // A list of LogEvents to be ingested. Ingest does not impose a limit on the
     // number of LogEvents in a single payload. It is the responsibility of

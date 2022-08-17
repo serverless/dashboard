@@ -5,9 +5,6 @@ package serverless.instrumentation.tags.v1;
 option go_package = ".;protoc";
 
 message Tags {
-  // The required set of tags for The Serverless Ingest Platform. Payloads without all these tags will be rejected.
-  SlsSdkTags sls = 1;
-
   // ============================================ //
   // Defined TagSets start at field number 100  //
   // ========================================== //
@@ -40,12 +37,9 @@ message Tags {
 
   // The Express Tags.
   optional ExpressTags express = 108;
-
-  // The AWS Trace Context Tags.
-  optional AwsTags aws = 109;
 }
 
-message SlsSdkTags {
+message SlsTags {
   // A Serverless Platform OrgId.
   string org_id = 1;
   // The platform that was instrumented. Currently Lambda is the only supported platform.
@@ -70,16 +64,6 @@ message SlsSdkTags {
   optional string namespace = 17;
 
 
-}
-
-message AwsTags {
-  // The AWS Account ID that instrumentation was performed in.
-  string account_id = 1;
-  // The ARN of the instrumented AWS resource.
-  string resource_arn = 2;
-
-  // The optional X-Ray TraceId from AWS. This will only be available if X-Ray was enabled in the instrumented Account & Service.
-  optional string xray_trace_id = 16;
 }
 
 message AwsApiGatewayTags {
@@ -136,8 +120,6 @@ message AwsLambdaTags {
   string name = 8;
   // The Request ID for the invocation.
   string request_id = 9;
-  // The request time in milliseconds since epoch.
-  fixed64 request_time_epoch = 10;
   // The Lambda Function version.
   string version = 11;
 
@@ -169,7 +151,7 @@ message AwsLambdaTags {
   optional AwsSqsEventTags sqs = 100;
   // Will be set if the function is handling a SNS event
   optional AwsSnsEventTags sns = 101;
-  // Will be set if the function is handlling HTTP requests via any method, API GW, Function URLs, etc.
+  // Will be set if the function is handling HTTP requests via any method, API GW, Function URLs, etc.
   optional HttpTags http = 102;
   // Will be set if the function is handling HTTP requests via AWS API GW
   optional AwsApiGatewayTags api_gateway = 103;
@@ -218,18 +200,20 @@ message AwsLambdaInvocationTags {
 }
 
 message AwsSdkBaseTags {
+  // The AWS Account Id this SDK call is being made against.
+  string account_id = 1;
   // The AWS Region this SDK call is being made against.
-  string region = 1;
+  string region = 2;
   // AWS Authentication signature version of the request.
-  string signature_version = 2;
+  string signature_version = 3;
   // The name of the service to which a request is made.
-  string aws_service = 3;
+  string aws_service = 4;
   // The name of the operation corresponding to the request.
-  string operation = 4;
+  string operation = 5;
   // The unique ID of the request.
-  string request_id = 5;
+  string request_id = 6;
   // An optional error returned from the AWS APIs.
-  optional string error = 6;
+  optional string error = 7;
 }
 
 message AwsSdkDynamodbTags {

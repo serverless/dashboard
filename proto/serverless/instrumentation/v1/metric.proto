@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package serverless.instrumentation.v1;
 
-import "serverless/common/v1/common.proto";
+import "serverless/instrumentation/tags/v1/tags.proto";
 
 option go_package = ".;protoc";
 
 // A MetricPayload is a message that will contain any number of
 // Metrics plus the global tags required by our Serverless Ingest Platform.
 message MetricPayload {
-    serverless.common.v1.SlsTags sls_tags = 1;
+    serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
 
     // A list of Metrics to be ingested. Ingest does not impose a limit on the
     // number of Metrics in a single payload. It is the responsibility of
@@ -37,9 +37,10 @@ message Metric {
     // it will be the Cloudwatch endTime property.
     fixed64 end_time_unix_nano = 4;
 
+
     // Tags for the Metric. Any tags can be placed in this field, however,
     // ingest will only write allowlisted, low cardinality tags to Influx.
-    repeated serverless.common.v1.KeyValue tags = 5;
+    string tags = 5;
 
     // The number of datapoints for the Metric. If this is a Metric from the Metric stream,
     // it will be the SampleCount from Cloudwatch
