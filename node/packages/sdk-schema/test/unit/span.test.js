@@ -1,3 +1,5 @@
+/* eslint-disable import/no-unresolved */
+/* eslint-disable camelcase */
 'use strict';
 
 const { expect } = require('chai');
