@@ -327,7 +327,7 @@ Resources:
                   - "cloudwatch:PutMetricStream"
                   - "cloudwatch:DeleteMetricStream"
                 Resource:
-                  - Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:metric-stream/serverless_metric-stream"
+                  - Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:metric-stream/serverless_metrics-stream"
               - Effect: Allow
                 Action:
                   - "firehose:DescribeDeliveryStream"
@@ -373,7 +373,7 @@ Resources:
                   - "firehose:PutRecord"
                   - "firehose:PutRecordBatch"
                 Resource:
-                  - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose-*"
+                  - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
         - PolicyName: "serverless-kinesis-firehose-policy"
           PolicyDocument:
             Version: "2012-10-17"
@@ -414,7 +414,7 @@ Resources:
                 Action:
                   - "logs:PutLogEvents"
                 Resource:
-                  - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/kinesisfirehose/serverless_metrics-firehose-*:log-stream:*"
+                  - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/kinesisfirehose/serverless_metrics-firehose:log-stream:*"
                   - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%:log-stream:*"
               - Effect: Allow
                 Action:
