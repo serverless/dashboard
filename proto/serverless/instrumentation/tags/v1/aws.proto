@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package serverless.instrumentation.tags.v1;
+
+import "serverless/instrumentation/tags/v1/common.proto";
+
+option go_package = ".;protoc";
+
+message AwsApiGatewayTags {
+  // The AWS Account ID of the API GW.
+  string account_id = 1;
+  // The unique id used for the API GW.
+  string api_id = 2;
+  // The stage of the API GW endpoint that was called.
+  string api_stage = 3;
+
+  message AwsApiGatewayRequestTags {
+    // The unique API GW Request ID.
+    string id = 1;
+    // The request time in milliseconds from epoch.
+    fixed64 time_epoch = 2;
+    // The HTTP protocol of the request.
+    string protocol = 3;
+    // The domain name of the request.
+    string domain = 4;
+    // JSON string containing Request Headers
+    string headers = 5;
+    // The HTTP method of the request.
+    string method = 6;
+    // The HTTP Path of the request.
+    string path = 7;
+
+
+    // JSON string containing Request Path Parameters
+    optional string path_parameters = 16;
+    // JSON string contain Query String Parameters
+    optional string string_parameters = 17;
+  }
+
+  AwsApiGatewayRequestTags request = 15;
+
+}
+
+message AwsLambdaTags {
+  // The architecture of the Lambda function, currently either amd64 or arm64.
+  string arch = 1;
+  // Was the invocation a cold start?
+  bool coldstart = 2;
+  // The event type for the invocation.
+  string event_type = 3;
+  // The event source for the invocation.
+  string event_source = 4;
+  // The Log Group for the Lambda Function.
+  string log_group = 5;
+  // The Log Stream for the invocation.
+  string log_stream_name = 6;
+  // The Max Memory that is configured for the Lambda Function.
+  fixed64 max_memory = 7;
+  // The Lambda Function name.
+  string name = 8;
+  // The Request ID for the invocation.
+  string request_id = 9;
+  // The Lambda Function version.
+  string version = 11;
+
+  // A Lambda function invocation can have one of the following
+  // outcomes upon completion.
+  enum Outcome {
+    OUTCOME_UNSPECIFIED = 0;
+    OUTCOME_SUCCESS = 1;
+    OUTCOME_ERROR_INITIALIZATION = 2;
+    OUTCOME_ERROR_UNHANDLED = 3;
+    OUTCOME_ERROR_TIMEOUT = 4;
+    OUTCOME_ERROR_HANDLED = 5;
+  }
+
+  // The Outcome of the Lambda invocation
+  Outcome outcome = 14;
+
+  // Optional error exception message.
+  optional string error_exception_message = 15;
+  // Optional error exception stacktrace.
+  optional string error_exception_stacktrace = 16;
+
+  // The billed duration of the invocation in milliseconds. This will not be available
+  // when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
+  optional fixed64 duration = 17;
+  // Optional Event Tags are from 100 on
+
+  // Will be set if the function is handling a SQS event
+  optional AwsSqsEventTags sqs = 100;
+  // Will be set if the function is handling a SNS event
+  optional AwsSnsEventTags sns = 101;
+  // Will be set if the function is handling HTTP requests via any method, API GW, Function URLs, etc.
+  optional serverless.instrumentation.tags.v1.HttpTags http = 102;
+  // Will be set if the function is handling HTTP requests via AWS API GW
+  optional AwsApiGatewayTags api_gateway = 103;
+}
+
+message AwsSqsEventTags {
+  // Taken from the eventSourceARN
+  string queue_name = 1;
+  // The operation of the SQS Event Trigger. Will always be 'receive' currently
+  string operation = 2;
+  // Introspected from the events records
+  repeated string message_ids = 3;
+}
+
+message AwsSnsEventTags {
+  // Taken from the TopicARN
+  string topic_name = 1;
+  // The operation of the SNS Event Trigger. Will always be 'receive' currently
+  string operation = 3;
+  // Introspected from the events records
+  repeated string message_ids = 4;
+}
+
+message AwsLambdaInitializationTags {
+  // The Initialization Duration of the Lambda Function. This is one part of the billed duration.
+  // Maps to the Cloudwatch Logs Report "Init Duration"
+  fixed64 initialization_duration = 1;
+}
+
+message AwsLambdaInvocationTags {
+  // The Invocation Duration of the Lambda Function. This is one part of the billed duration.
+  // Maps to the Cloudwatch Logs Report "Duration"
+  fixed64 invocation_duration = 1;
+}
+
+message AwsSdkBaseTags {
+  // The AWS Account Id this SDK call is being made against.
+  string account_id = 1;
+  // The AWS Region this SDK call is being made against.
+  string region = 2;
+  // AWS Authentication signature version of the request.
+  string signature_version = 3;
+  // The name of the service to which a request is made.
+  string aws_service = 4;
+  // The name of the operation corresponding to the request.
+  string operation = 5;
+  // The unique ID of the request.
+  string request_id = 6;
+  // An optional error returned from the AWS APIs.
+  optional string error = 7;
+}
+
+message AwsSdkDynamodbTags {
+  // The AWS SDK base tags that all instrumented AWS SDK calls have.
+  AwsSdkBaseTags aws_sdk_tags = 1;
+  // The Dynamodb operation that was performed. Ex. GetItem, PutItem, Query, etc.
+  string operation = 2;
+  // The DynamoDB table name or names that the operation was performed on.
+  repeated string table_names = 3;
+  // The value of the ProjectionExpression request parameter.
+  optional string projection = 4;
+  // The value of the ScanIndexForward request parameter.
+  optional bool scan_forward = 5;
+  // The value of the AttributesToGet request parameter.
+  repeated string attributes_to_get = 6;
+  // The value of the ConsistentRead request parameter.
+  optional bool consistent_read = 7;
+  // The value of the IndexName request parameter.
+  optional string index_name = 8;
+  // The value of the Limit request parameter.
+  optional uint32 limit = 9;
+  // The value of the Select request parameter.
+  optional string select = 10;
+  // The value of the Segment request parameter.
+  optional uint32 segment = 11;
+  // The value of the TotalSegments request parameter.
+  optional uint64 total_segments = 12;
+  // The value of the Count response parameter.
+  optional uint64 count = 13;
+  // The value of the ScannedCount response parameter.
+  optional uint64 scanned_count = 14;
+}
+
+message AwsSdkSqsTags {
+  // The AWS SDK base tags that all instrumented AWS SDK calls have.
+  AwsSdkBaseTags aws_sdk_tags = 1;
+  // The SQS queue URL.
+  optional string queue_name = 2;
+  // The message IDs provided in the SDK operation response.
+  repeated string message_ids = 3;
+  // The SQS Operation that was performed.
+  optional string operation = 4;
+}
+
+message AwsSdkSnsTags {
+  // The AWS SDK base tags that all instrumented AWS SDK calls have.
+  AwsSdkBaseTags aws_sdk_tags = 1;
+  // The SNS Topic ARN, from the TopicArn request parameter.
+  optional string topic_name = 2;
+  // The SNS Operation that was performed.
+  optional string operation = 3;
+  // The message IDs provided in the SDK operation response.
+  repeated string message_ids = 4;
+}
