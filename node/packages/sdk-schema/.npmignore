@@ -1,4 +1,5 @@
-out/
-rollup.config.js
-tsconfig.json
-tsconfig.rollup.json
+/out
+/test
+/rollup.config.js
+/tsconfig.json
+/tsconfig.rollup.json
