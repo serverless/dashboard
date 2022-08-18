@@ -70,14 +70,8 @@ Resources:
                   - "apigateway:GetAuthorizers"
                   - "apigateway:GetBasePathMapping"
                   - "apigateway:GetBasePathMappings"
-                  - "apigateway:GetClientCertificate"
-                  - "apigateway:GetClientCertificates"
                   - "apigateway:GetDeployment"
                   - "apigateway:GetDeployments"
-                  - "apigateway:GetDocumentationPart"
-                  - "apigateway:GetDocumentationParts"
-                  - "apigateway:GetDocumentationVersion"
-                  - "apigateway:GetDocumentationVersions"
                   - "apigateway:GetDomainName"
                   - "apigateway:GetDomainNames"
                   - "apigateway:GetExport"
@@ -166,18 +160,6 @@ Resources:
                   - "autoscaling:DescribeScalingPlans"
 
                   #
-                  ## Backup
-                  # https://docs.aws.amazon.com/aws-backup/latest/devguide/API_Operations.html
-
-                  - "backup:ListBackupPlans"
-                  - "backup:ListBackupPlanVersions"
-                  - "backup:ListBackupSelections"
-                  - "backup:ListBackupVaults"
-                  - "backup:ListFrameworks"
-                  - "backup:ListProtectedResources"
-                  - "backup:ListTags"
-
-                  #
                   ## CloudFormation
                   # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_Operations.html
 
@@ -246,46 +228,6 @@ Resources:
                   - "logs:FilterLogEvents"
                   - "logs:ListTagsLogGroup"
                   - "logs:TestMetricFilter"
-
-                  #
-                  ## CodeBuild
-                  # https://docs.aws.amazon.com/codebuild/latest/APIReference/API_Operations.html
-
-                  - "codebuild:BatchGetBuildBatches"
-                  - "codebuild:BatchGetBuilds"
-                  - "codebuild:BatchGetProjects"
-                  - "codebuild:ListBuildBatches"
-                  - "codebuild:ListBuildBatchesForProject"
-                  - "codebuild:ListBuilds"
-                  - "codebuild:ListBuildsForProject"
-                  - "codebuild:ListProjects"
-                  - "codebuild:ListSharedProjects"
-
-                  #
-                  ## CodeDeploy
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_Operations.html
-
-                  - "codedeploy:BatchGetApplicationRevisions"
-                  - "codedeploy:BatchGetApplications"
-                  - "codedeploy:BatchGetDeploymentGroups"
-                  - "codedeploy:BatchGetDeploymentInstances"
-                  - "codedeploy:BatchGetDeploymentTargets"
-                  - "codedeploy:BatchGetDeployments"
-                  - "codedeploy:GetApplication"
-                  - "codedeploy:GetApplicationRevision"
-                  - "codedeploy:GetDeployment"
-                  - "codedeploy:GetDeploymentConfig"
-                  - "codedeploy:GetDeploymentGroup"
-                  - "codedeploy:GetDeploymentInstance"
-                  - "codedeploy:GetDeploymentTarget"
-                  - "codedeploy:ListApplicationRevisions"
-                  - "codedeploy:ListApplications"
-                  - "codedeploy:ListDeploymentConfigs"
-                  - "codedeploy:ListDeploymentGroups"
-                  - "codedeploy:ListDeploymentInstances"
-                  - "codedeploy:ListDeploymentTargets"
-                  - "codedeploy:ListDeployments"
-                  - "codedeploy:ListTagsForResource"
 
                   #
                   ## Cost Explorer
@@ -485,28 +427,6 @@ Resources:
                   - "lambda:ListVersionsByFunction"
 
                   #
-                  ## Organizations
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_Operations.html
-
-                  - "organizations:DescribeAccount"
-                  - "organizations:DescribeEffectivePolicy"
-                  - "organizations:DescribeOrganization"
-                  - "organizations:DescribeOrganizationalUnit"
-                  - "organizations:DescribePolicy"
-                  - "organizations:ListAWSServiceAccessForOrganization"
-                  - "organizations:ListAccounts"
-                  - "organizations:ListAccountsForParent"
-                  - "organizations:ListChildren"
-                  - "organizations:ListDelegatedAdministrators"
-                  - "organizations:ListDelegatedServicesForAccount"
-                  - "organizations:ListOrganizationalUnitsForParent"
-                  - "organizations:ListParents"
-                  - "organizations:ListPolicies"
-                  - "organizations:ListPoliciesForTarget"
-                  - "organizations:ListTagsForResource"
-                  - "organizations:ListTargetsForPolicy"
-
-                  #
                   ## Resource Group Tagging
                   # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_Operations.html
 
@@ -601,7 +521,6 @@ Resources:
                   - "ses:GetDeliverabilityTestReport"
                   - "ses:GetDomainDeliverabilityCampaign"
                   - "ses:GetDomainStatisticsReport"
-                  - "ses:GetEmailTemplate"
                   - "ses:ListDeliverabilityTestReports"
                   - "ses:ListDomainDeliverabilityCampaigns"
                   - "ses:ListEmailIdentities"
@@ -678,41 +597,6 @@ Resources:
                   # Changes information about a Stage resource.
                   - "apigateway:UpdateStage"
 
-                  #
-                  ## App Runner
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_Operations.html
-
-                  - "apprunner:TagResource"
-                  - "apprunner:UntagResource"
-
-                  #
-                  ## AppSync
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_Operations.html
-
-                  - "appsync:TagResource"
-                  - "appsync:UntagResource"
-
-                  #
-                  ## Cloudfront
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
-
-                  - "cloudfront:TagResource"
-                  - "cloudfront:UntagResource"
-
-                  #
-                  ## CloudTrail
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_Operations.html
-
-                  - "cloudtrail:AddTags"
-                  - "cloudtrail:RemoveTags"
-
-                  #
-                  ## Cloudwatch
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Operations.html
-
-                  - "cloudwatch:TagResource"
-                  - "cloudwatch:UntagResource"
-
                   ##
                   ## Cloudwatch Logs
                   # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
@@ -725,78 +609,6 @@ Resources:
                   - "logs:PutDestinationPolicy"
                   - "logs:PutSubscriptionFilter"
                   - "logs:DeleteSubscriptionFilter"
-                  - "logs:TagLogGroup"
-                  - "logs:UntagLogGroup"
-
-                  #
-                  ## CodeDeploy
-                  # https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_Operations.html
-
-                  - "codedeploy:TagResource"
-                  - "codedeploy:UntagResource"
-
-                  #
-                  ## Cost Explorer
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Operations_AWS_Cost_Explorer_Service.html
-
-                  - "ce:TagResource"
-                  - "ce:UntagResource"
-
-                  #
-                  ## DynamoDB
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations_Amazon_DynamoDB.html
-
-                  - "dynamodb:TagResource"
-                  - "dynamodb:UntagResource"
-
-                  #
-                  ## ECS
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
-
-                  - "ecs:TagResource"
-                  - "ecs:UntagResource"
-
-                  #
-                  ## ElastiCache
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_Operations.html
-
-                  - "elasticache:AddTagsToResource"
-                  - "elasticache:RemoveTagsFromResource"
-
-                  #
-                  ## ELB (Elastic Load Balancing) V1
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_Operations.html
-
-                  - "elasticloadbalancing:AddTags"
-                  - "elasticloadbalancing:RemoveTags"
-
-                  #
-                  ## ELB (Elastic Load Balancing) V2
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Operations.html
-
-                  - "elasticloadbalancing:AddTags"
-                  - "elasticloadbalancing:RemoveTags"
-
-                  #
-                  ## EMR (Elastic Map Reduce)
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_Operations.html
-
-                  - "elasticmapreduce:AddTags"
-                  - "elasticmapreduce:RemoveTags"
-
-                  #
-                  ## ES (ElasticSearch)
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
-
-                  - "es:AddTags"
-                  - "es:RemoveTags"
-
-                  #
-                  ## Kinesis
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_Operations.html
-
-                  - "kinesis:AddTagsToStream"
-                  - "kinesis:RemoveTagsFromStream"
 
                   #
                   ## Lambda
@@ -805,64 +617,13 @@ Resources:
                   - "lambda:UpdateFunctionConfiguration"
                   - "lambda:InvokeAsync"
                   - "lambda:InvokeFunction"
-                  - "lambda:TagResource"
-                  - "lambda:UntagResource"
-
-                  #
-                  ## Organizations
-                  # https://docs.aws.amazon.com/organizations/latest/APIReference/API_Operations.html
-
-                  - "organizations:TagResource"
-                  - "organizations:UntagResource"
-
-                  #
-                  ## Resource Group Tagging
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_Operations.html
-
-                  - "tag:TagResources"
-                  - "tag:TagResources"
-
-                  #
-                  ## RDS (Relational Database Service)
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html
-
-                  - "rds:AddTagsToResource"
-                  - "rds:RemoveTagsFromResource"
-
+        
                   #
                   ## S3
                   # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations_Amazon_Simple_Storage_Service.html
 
                   - "s3:PutBucketNotification"
-                  - "s3:PutBucketTagging"
 
-                  #
-                  ## SES (Simple Email Service) V2
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_Operations.html
-
-                  - "ses:TagResource"
-                  - "ses:UntagResource"
-
-                  #
-                  ## SQS (Simple Queue Service)
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_Operations.html
-
-                  - "sqs:TagQueue"
-                  - "sqs:UntagQueue"
-
-                  #
-                  ## Step Functions
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_Operations.html
-
-                  - "states:TagResource"
-                  - "states:UntagResource"
-
-                  #
-                  ## X-Ray
-                  # https://docs.aws.amazon.com/xray/latest/api/API_Operations.html
-
-                  - "xray:TagResource"
-                  - "xray:UntagResource"
                 Resource: "*"
 Parameters:
   ExternalId:
