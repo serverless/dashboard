@@ -9,6 +9,12 @@ if (!process.env._HANDLER.includes('.') || process.env._HANDLER.includes('..')) 
   // Bad handler, let error naturally surface
   return;
 }
+if (!process.env.SLS_ORG_ID) {
+  process.stderr.write(
+    'Serverless SDK Error: Cannot instrument function: Missing "SLS_ORG_ID" environment variable\n'
+  );
+  return;
+}
 
 const debugLog = (...args) => {
   if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);

@@ -34,6 +34,7 @@ const create = async (testConfig, coreConfig) => {
     Environment: {
       Variables: {
         AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+        SLS_ORG_ID: process.env.SLS_ORG_ID,
         SLS_SDK_DEBUG: '1',
       },
     },

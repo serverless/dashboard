@@ -3,15 +3,29 @@
 'use strict';
 
 const ensurePlainFunction = require('type/plain-function/ensure');
+const isObject = require('type/object/is');
+const ensureString = require('type/string/ensure');
 
-const { traceSpans } = global.serverlessSdk || require('./');
+const serverlessSdk = global.serverlessSdk || require('./');
+
+const { traceSpans } = serverlessSdk;
 
 const debugLog = (...args) => {
   if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);
 };
 
-module.exports = (originalHandler) => {
+module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
+  if (!isObject(options)) options = {};
+  const orgId = ensureString(options.orgId, { isOptional: true, name: 'options.orgId' });
+  if (orgId) serverlessSdk.orgId = orgId;
+  if (!serverlessSdk.orgId) {
+    throw new Error(
+      'Serverless SDK Error: Cannot instrument function: "orgId" not provided. ' +
+        'Ensure "SLS_ORG_ID" environment variable is set, ' +
+        'or pass it with the options\n'
+    );
+  }
   let currentInvocationId = 0;
 
   traceSpans.awsLambdaInitialization.close();
