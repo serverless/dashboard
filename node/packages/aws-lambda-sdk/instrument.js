@@ -2,6 +2,8 @@
 
 'use strict';
 
+const ensurePlainFunction = require('type/plain-function/ensure');
+
 const { traceSpans } = global.serverlessSdk || require('./');
 
 const debugLog = (...args) => {
@@ -9,6 +11,7 @@ const debugLog = (...args) => {
 };
 
 module.exports = (originalHandler) => {
+  ensurePlainFunction(originalHandler, { name: 'originalHandler' });
   let currentInvocationId = 0;
 
   traceSpans.awsLambdaInitialization.close();
