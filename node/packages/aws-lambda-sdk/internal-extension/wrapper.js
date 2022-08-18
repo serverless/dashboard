@@ -13,7 +13,7 @@ if (!EvalError.$serverlessHandlerFunction && !EvalError.$serverlessHandlerDeferr
   throw handlerError;
 }
 
-const handlerDecorator = require('../handler-decorator');
+const instrument = require('../instrument');
 
 if (EvalError.$serverlessHandlerDeferred) {
   const handlerDeferred = EvalError.$serverlessHandlerDeferred;
@@ -38,7 +38,7 @@ if (EvalError.$serverlessHandlerDeferred) {
     const handlerFunction = handlerContext[handlerFunctionName];
     if (typeof handlerFunction !== 'function') return handlerModule;
 
-    return { handler: handlerDecorator(handlerFunction) };
+    return { handler: instrument(handlerFunction) };
   });
   return;
 }
@@ -46,4 +46,4 @@ if (EvalError.$serverlessHandlerDeferred) {
 const originalHandler = EvalError.$serverlessHandlerFunction;
 delete EvalError.$serverlessHandlerFunction;
 
-module.exports.handler = handlerDecorator(originalHandler);
+module.exports.handler = instrument(originalHandler);
