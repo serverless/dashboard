@@ -1,2 +1,2 @@
-declare function instrument(value: Function): Function;
+declare function instrument(handler: Function): Function;
 export default instrument;
