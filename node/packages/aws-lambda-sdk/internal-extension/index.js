@@ -7,6 +7,7 @@ const processStartTime = process.hrtime.bigint();
 
 if (!process.env._HANDLER.includes('.') || process.env._HANDLER.includes('..')) {
   // Bad handler, let error naturally surface
+  return;
 }
 
 const debugLog = (...args) => {
