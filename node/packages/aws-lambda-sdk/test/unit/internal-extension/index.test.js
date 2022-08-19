@@ -35,6 +35,10 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
     });
     return { response, trace: require('../../../')._lastTrace };
   });
+  expect(result.trace.slsTags).to.deep.equal({
+    orgId: process.env.SLS_ORG_ID,
+    service: functionName,
+  });
   expect(result.response).to.equal('ok');
 };
 
