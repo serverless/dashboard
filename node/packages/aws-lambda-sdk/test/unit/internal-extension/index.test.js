@@ -14,10 +14,10 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
     : handlerModuleName;
   process.env.AWS_LAMBDA_FUNCTION_NAME = functionName;
 
-  await requireUncached(async () => {
+  const result = await requireUncached(async () => {
     await require('../../../internal-extension');
     const handlerModule = await require('../../../internal-extension/wrapper');
-    const result = await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const maybeThenable = handlerModule.handler(
         payload,
         {
@@ -33,8 +33,8 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
       );
       if (isThenable(maybeThenable)) resolve(maybeThenable);
     });
-    expect(result).to.equal('ok');
   });
+  expect(result).to.equal('ok');
 };
 
 describe('internal-extension/index.test.js', () => {
