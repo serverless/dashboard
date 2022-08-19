@@ -17,7 +17,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
   const result = await requireUncached(async () => {
     await require('../../../internal-extension');
     const handlerModule = await require('../../../internal-extension/wrapper');
-    return new Promise((resolve, reject) => {
+    const response = await new Promise((resolve, reject) => {
       const maybeThenable = handlerModule.handler(
         payload,
         {
@@ -33,8 +33,9 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
       );
       if (isThenable(maybeThenable)) resolve(maybeThenable);
     });
+    return { response, trace: require('../../../')._lastTrace };
   });
-  expect(result).to.equal('ok');
+  expect(result.response).to.equal('ok');
 };
 
 describe('internal-extension/index.test.js', () => {

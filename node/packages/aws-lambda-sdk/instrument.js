@@ -49,10 +49,11 @@ module.exports = (originalHandler, options = {}) => {
     });
     const closeInvocation = () => {
       traceSpans.awsLambda.close();
-      debugLog(
-        'Trace:',
-        JSON.stringify({ id: traceSpans.awsLambda.traceId, spans: traceSpans.awsLambda.spans })
-      );
+      const trace = (serverlessSdk._lastTrace = {
+        id: traceSpans.awsLambda.traceId,
+        spans: traceSpans.awsLambda.spans,
+      });
+      debugLog('Trace:', JSON.stringify(trace));
       debugLog(
         'Overhead duration: Internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
