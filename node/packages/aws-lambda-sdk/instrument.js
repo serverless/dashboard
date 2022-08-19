@@ -51,6 +51,7 @@ module.exports = (originalHandler, options = {}) => {
       traceSpans.awsLambda.close();
       const trace = (serverlessSdk._lastTrace = {
         id: traceSpans.awsLambda.traceId,
+        slsTags: { orgId: serverlessSdk.orgId, service: process.env.AWS_LAMBDA_FUNCTION_NAME },
         spans: traceSpans.awsLambda.spans,
       });
       debugLog('Trace:', JSON.stringify(trace));

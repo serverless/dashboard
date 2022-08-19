@@ -6,7 +6,10 @@ For each function invocation single AWS Lambda SDK Trace is generated.
 
 _Tags exposed on top trace_
 
-_None_
+| Name      | Value                              |
+| --------- | ---------------------------------- |
+| `orgId`   | Serverless Console organization id |
+| `service` | AWS Lambda function name           |
 
 ## Trace spans
 
