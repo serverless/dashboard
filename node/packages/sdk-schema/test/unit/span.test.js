@@ -30,7 +30,7 @@ const expectedLambdaRootSpan = `{
     },
     "awsLambda": {
       "arch": "arm64",
-      "coldstart": true,
+      "isColdstart": true,
       "eventType": "aws.apigatewayv2",
       "eventSource": "aws.apigatewayv2",
       "logGroup": "abc12",
@@ -88,7 +88,7 @@ describe('span-schema', () => {
         },
         awsLambda: {
           arch: 'arm64',
-          coldstart: true,
+          isColdstart: true,
           error: false,
           errorTimeout: false,
           eventSource: 'aws.apigatewayv2',
