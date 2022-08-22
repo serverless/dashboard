@@ -23,12 +23,39 @@ jobs:
         with:
           node-version: 16.x
           registry-url: https://registry.npmjs.org
-      - name: Install dependencies
+      - name: Retrieve ~/.npm from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/**package*.json') }}
+          restore-keys: npm-v16-${{ runner.os }}-refs/heads/main-
+
+      - name: Retrieve node_modules from cache
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/node_modules
+          key: node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/package.json') }}
+          restore-keys: node-modules-v16-${{ runner.os }}-refs/heads/main-A
+      - name: Retrieve packages/sdk-schema/node_modules from cache
+        id: cacheSdkSchemaNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk-schema/node_modules
+          key: packages/sdk-schema/node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/packages/sdk-schema/package.json') }}
+          restore-keys: packages/sdk-schema/node-modules-v16-${{ runner.os }}-refs/heads/main-
+
+      - name: Install main project dependencies
+        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
         run: |
-          cd ./node
+          cd node
+          npm update --save-dev --no-save
+      - name: Install packages/sdk-schema dependencies
+        if: steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/sdk-schema
           npm install
-          cd packages/sdk-schema
-          npm install
+
       - name: Build Protobufs
         run: |
           cd ./proto
@@ -44,3 +71,8 @@ jobs:
         run: |
           cd ./node/packages/sdk-schema
           npm publish
+      - name: Publish release notes
+        run: |
+          cd node/packages/sdk-schema
+          TAG=${GITHUB_REF:10}
+          npx github-release-from-cc-changelog $TAG
