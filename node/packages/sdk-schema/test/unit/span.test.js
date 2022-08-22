@@ -1,10 +1,15 @@
-/* eslint-disable import/no-unresolved */
-/* eslint-disable camelcase */
 'use strict';
+
+const path = require('path');
+
+const projectDir = path.resolve(__dirname, '../..');
 
 const { expect } = require('chai');
 
-const { Span, AwsLambdaTags_Outcome } = require('../../dist/index.cjs');
+const {
+  Span,
+  AwsLambdaTags_Outcome: AwsLambdaTagsOutcome,
+} = require(`${projectDir}/dist/index.cjs`);
 
 const expectedLambdaRootSpan = `{
   "id": "Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk",
@@ -95,7 +100,7 @@ describe('span-schema', () => {
           requestId: lambdaRequestId,
           requestTimeEpoch: milliNow,
           version: '$LATEST',
-          outcome: AwsLambdaTags_Outcome.OUTCOME_SUCCESS,
+          outcome: AwsLambdaTagsOutcome.OUTCOME_SUCCESS,
           apiGateway: {
             accountId: '012345678901',
             apiId: 'abc123',
