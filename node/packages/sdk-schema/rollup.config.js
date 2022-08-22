@@ -1,8 +1,10 @@
-import typescript from '@rollup/plugin-typescript';
-import pkg from './package.json';
-import multi from '@rollup/plugin-multi-entry';
-import dts from 'rollup-plugin-dts';
-import fg from 'fast-glob';
+'use strict';
+
+const typescript = require('@rollup/plugin-typescript');
+const pkg = require('./package.json');
+const multi = require('@rollup/plugin-multi-entry');
+const { default: dts } = require('rollup-plugin-dts');
+const fg = require('fast-glob');
 
 const getInputFiles = () => {
   const inputFiles = fg.sync('out/serverless/**/*.ts');
@@ -18,7 +20,7 @@ const getInputFiles = () => {
 
 const inputFiles = getInputFiles();
 
-export default [
+module.exports = [
   ...inputFiles.map(({ input, outputFile }) => ({
     input,
     output: {

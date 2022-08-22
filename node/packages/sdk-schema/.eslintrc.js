@@ -10,10 +10,10 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/scripts/**', '**/test/**'],
+        devDependencies: ['**/*.config.js', '**/test/**'],
         packageDir: [projectDir, path.resolve(projectDir, 'packages/sdk-schema')],
       },
     ],
   },
-  ignorePatterns: ['rollup.config.js', 'dist/**/*.js', 'out/**/*.js'],
+  ignorePatterns: ['dist/**/*.js', 'out/**/*.js'],
 };
