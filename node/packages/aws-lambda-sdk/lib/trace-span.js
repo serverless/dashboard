@@ -6,6 +6,7 @@ const ensureBigInt = require('type/big-int/ensure');
 const ensureIterable = require('type/iterable/ensure');
 const isDate = require('type/date/is');
 const isObject = require('type/object/is');
+const ensurePlainObject = require('type/plain-object/ensure');
 const resolveException = require('type/lib/resolve-exception');
 const d = require('d');
 const lazy = require('d/lazy');
@@ -109,6 +110,11 @@ class TraceSpan {
         });
       }
     }
+    if (options.tags) {
+      for (const [tagName, tagValue] of Object.entries(options.tags)) {
+        this.tags.set(tagName, tagValue);
+      }
+    }
   }
   createSubSpan(name, options = {}) {
     if (this.endTime) {
@@ -133,6 +139,11 @@ class TraceSpan {
       immediateDescendants: ensureIterable(options.immediateDescendants, {
         isOptional: true,
         ensureItem: ensureSpanName,
+      }),
+      tags: ensurePlainObject(options.tags, {
+        isOptional: true,
+        name: 'options.tags',
+        ensurePropertyValue: ensureTagValue,
       }),
     });
     this.subSpans.add(span);

@@ -49,6 +49,12 @@ describe('lib/trace-span.test.js', () => {
     expect(rootSpan.createSubSpan('child', { startTime }).startTime).to.equal(startTime);
   });
 
+  it('should support initial `tags`', () => {
+    expect(
+      Array.from(rootSpan.createSubSpan('child', { tags: { foo: 'bar' } }).tags)
+    ).to.deep.equal([['foo', 'bar']]);
+  });
+
   it('should support injection of `endTime`', () => {
     const childSpan = rootSpan.createSubSpan('child');
     const endTime = process.hrtime.bigint();
