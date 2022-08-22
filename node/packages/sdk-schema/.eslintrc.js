@@ -10,7 +10,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/*.config.js', '**/test/**'],
+        devDependencies: ['rollup.config.js', '**/test/**'],
         packageDir: [projectDir, path.resolve(projectDir, 'packages/sdk-schema')],
       },
     ],
