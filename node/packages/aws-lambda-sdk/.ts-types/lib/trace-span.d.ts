@@ -10,7 +10,7 @@ declare class TraceSpan {
   tags: TraceSpanTags;
   createSubSpan(
     name: string,
-    options?: { startTime: bigint; immediateDescendants: string[] }
+    options?: { startTime?: bigint; immediateDescendants?: string[] }
   ): TraceSpan;
   close(): TraceSpan;
   spans(): Set<TraceSpan>;
