@@ -132,6 +132,14 @@ class TraceSpan {
           { code: 'FUTURE_SPAN_START_TIME' }
         );
       }
+      if (startTime < this.startTime) {
+        throw Object.assign(
+          new Error(
+            'Cannot intialize span: Start time cannot be older than start time of parent span'
+          ),
+          { code: 'PAST_PARENTSPAN_START_TIME' }
+        );
+      }
     }
     const span = new TraceSpan(name, {
       parentSpan: this,
