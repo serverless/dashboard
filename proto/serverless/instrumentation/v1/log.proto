@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package serverless.instrumentation.v1;
+
+import "serverless/instrumentation/tags/v1/tags.proto";
+
+option go_package = ".;protoc";
+
+// A LogPayload is a message that will contain any number of
+// LogEvents plus the global tags required by our Serverless Ingest Platform.
+message LogPayload {
+    serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
+
+    // A list of LogEvents to be ingested. Ingest does not impose a limit on the
+    // number of LogEvents in a single payload. It is the responsibility of
+    // the LogEvents' producers to limit the size of payloads based on their
+    // own requirements.
+    repeated LogEvent log_events = 2;
+}
+
+message LogEvent {
+
+    // The LogEvent's body.
+    string message = 1;
+
+    // The timestamp of when the LogEvent was created.
+    fixed64 timestamp = 2;
+
+    // The monotonically increasing sequence id for a LogEvent. This is used
+    // to determine the ordering of messages in a given stream of logs.
+    // If this is a LogEvent coming from Cloudwatch Logs, it will be provided
+    // otherwise it is the responsibility of the log producer to generate
+    // a sequence id.
+    string sequence_id = 3;
+
+    // The Cloudwatch Log Group name.
+    optional string log_group = 4;
+
+    // The Cloudwatch Log Group Stream id.
+    optional string log_stream = 5;
+
+    // The Owner Account Id of the Cloudwatch Log Group.
+    optional string account_id = 6;
+
+    // The Lambda request Id that the log's are linked to.
+    // When ingesting LogEvents, ingest will attempt to infer
+    // the request_id from the payload and attach it. If it is not
+    // able to, then it will attempt to reconcile later.
+    optional string request_id = 7;
+
+    // The Trace Id that the log's are linked to.
+    // When ingesting LogEvents, ingest will attempt to infer
+    // the request_id from the payload and attach it. If it is not
+    // able to, then it will attempt to reconcile later.
+    optional string trace_id = 8;
+}

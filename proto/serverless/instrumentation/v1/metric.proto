@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package serverless.instrumentation.v1;
+
+import "serverless/instrumentation/tags/v1/tags.proto";
+
+option go_package = ".;protoc";
+
+// A MetricPayload is a message that will contain any number of
+// Metrics plus the global tags required by our Serverless Ingest Platform.
+message MetricPayload {
+    serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
+
+    // A list of Metrics to be ingested. Ingest does not impose a limit on the
+    // number of Metrics in a single payload. It is the responsibility of
+    // the metrics' producers to limit the size of payloads based on their
+    // own requirements.
+    repeated serverless.instrumentation.v1.Metric metrics = 2;
+}
+
+message Metric {
+
+    // A unique id for the metric measurement. If this is a Metric from,
+    // The metric stream then it will be a randomly generated UUID at ingest time.
+    bytes id = 1;
+
+    // The name of the metric. If this is a Metric from the Metric stream,
+    // it will be in the format amazonaws.com/<metric_namespace>/<metric_name>.
+    // The name is what will be mapped into influx.
+    string name = 2;
+
+    // The start time of the measure. If this is a Metric from the Metric stream,
+    // it will be the Cloudwatch startTime property.
+    fixed64 start_time_unix_nano = 3;
+
+    // The end time of the measure. If this is a Metric from the Metric stream,
+    // it will be the Cloudwatch endTime property.
+    fixed64 end_time_unix_nano = 4;
+
+
+    // Tags for the Metric. Any tags can be placed in this field, however,
+    // ingest will only write allowlisted, low cardinality tags to Influx.
+    string tags = 5;
+
+    // The number of datapoints for the Metric. If this is a Metric from the Metric stream,
+    // it will be the SampleCount from Cloudwatch
+    fixed64 count = 6;
+
+    // The sum of the datapoints for the Metric.
+    double sum = 7;
+
+    // A value at a given quantile of the distribution.
+    // If a Metric has multiple samples, the Min and Max will be represented by,
+    // 1. Quantile = 1.0, is the max value
+    // 2. Quantile = 0.0, is the min value
+    message ValueAtQuantile {
+        double quantile = 1;
+        double value = 2;
+    }
+
+    // List of quantile values. If this is a Metric from the Metric stream,
+    // it will by default have quantile 0.0 and 1.0 to represent the min and max values.
+    // If defined during Metric's Stream setup it will have additional quantiles as well.
+    repeated ValueAtQuantile quantile_values = 8;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@serverless/sdk-schema",
+  "repository": "serverless/console",
+  "version": "0.0.0",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "mocha \"test/unit/**/*.test.js\"",
+    "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
+    "build": "rimraf -rf ./dist && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts"
+  },
+  "author": "Serverless, Inc.",
+  "license": "MIT",
+  "dependencies": {
+    "long": "^5.2.0",
+    "protobufjs": "^7.0.0"
+  }
+}

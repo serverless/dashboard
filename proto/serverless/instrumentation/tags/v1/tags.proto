@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package serverless.instrumentation.tags.v1;
+
+import "serverless/instrumentation/tags/v1/aws.proto";
+import "serverless/instrumentation/tags/v1/common.proto";
+import "serverless/instrumentation/tags/v1/nodejs.proto";
+
+option go_package = ".;protoc";
+
+message Tags {
+  // ============================================ //
+  // Defined TagSets start at field number 100  //
+  // ========================================== //
+
+  // ============================================ //
+  // Top level tags will have their underscores replaced //
+  // with periods when flattened. So for `aws_lambda` it will //
+  // be converted to `aws.lambda`//
+
+  // The root AWS Lambda Span tags.
+  optional serverless.instrumentation.tags.v1.AwsLambdaTags aws_lambda = 100;
+
+  // The AWS Lambda Initialization tags.
+  optional serverless.instrumentation.tags.v1.AwsLambdaInitializationTags aws_lambda_initialization = 101;
+
+  // The AWS Lambda Invocation tags.
+  optional serverless.instrumentation.tags.v1.AwsLambdaInvocationTags aws_lambda_invocation = 102;
+
+  // The AWS SDK Tags.
+  optional serverless.instrumentation.tags.v1.AwsSdkDynamodbTags aws_sdk_dynamodb = 103;
+  optional serverless.instrumentation.tags.v1.AwsSdkSqsTags aws_sdk_sqs = 104;
+  optional serverless.instrumentation.tags.v1.AwsSdkSnsTags aws_sdk_sns = 105;
+
+
+  // The HTTP Tags.
+  optional serverless.instrumentation.tags.v1.HttpTags http = 106;
+
+  // The HTTPS Tags.
+  optional serverless.instrumentation.tags.v1.HttpTags https = 107;
+
+  // The Express Tags.
+  optional serverless.instrumentation.tags.v1.ExpressTags express = 108;
+}
+
+message SlsTags {
+  // A Serverless Platform OrgId.
+  string org_id = 1;
+  // The platform that was instrumented. Currently Lambda is the only supported platform.
+  string platform = 2;
+  // The service that was instrumented. For Lambda this will be the function name by default.
+  string service = 3;
+  // The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use.
+  string region = 4;
+
+  message SdkTags {
+    // The Name of the Serverless SDK used to instrument.
+    string name = 1;
+    // The version of the Serverless SDK used to instrument.
+    string version = 2;
+  }
+
+  SdkTags sdk = 5;
+
+  // An optional environment that can be attached.
+  optional string environment = 16;
+  // An optional namespace that can be attached.
+  optional string namespace = 17;
+}
