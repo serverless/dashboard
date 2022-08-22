@@ -54,6 +54,7 @@ Create a sub span of an ongoing span. (invoking this method on closed span will 
 - `options` - Optional setup:
   - `startTime` _(bigInt)_ - Externally recorded span _start time_. If not provided, it's resolved automatically on span creation. It cannot be set in a future, and must not be past of `traceSpan.startTime`
   - `immediateDescendants` _([...string])_ - If intention is to create sub span descenant sub spans at once, names of those spans can be passed with this option. Descendant spans will be created automatically and will share same `startTime` as top sub span
+  - `tags` _(object)_ - Tags to be set on created span (does not apply to eventual descendants as enforced via `immediateDescendants` option)
 
 ### `close([options])`
 
