@@ -117,7 +117,7 @@ jobs:
             packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-refs/heads/main-
 
       - name: Retrieve packages/sdk-schema/node_modules from cache
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
         uses: actions/cache@v2
         with:
@@ -335,7 +335,7 @@ jobs:
             packages/aws-lambda-sdk/node-modules-v14-${{ runner.os }}-refs/heads/main-
 
       - name: Retrieve packages/sdk-schema/node_modules from cache
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
         uses: actions/cache@v2
         with:

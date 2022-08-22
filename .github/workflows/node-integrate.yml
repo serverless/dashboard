@@ -97,7 +97,7 @@ jobs:
           restore-keys: packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
 
       - name: Retrieve packages/sdk-schema/node_modules from cache
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
         uses: actions/cache@v2
         with:
@@ -144,7 +144,7 @@ jobs:
           npm update --no-save
 
       - name: Install packages/sdk-schema dependencies
-        if: steps.pathChanges.outputs.sdkSchema == 'true' && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
+        if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/sdk-schema
           npm update --no-save
@@ -258,7 +258,7 @@ jobs:
           restore-keys: packages/aws-lambda-sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
 
       - name: Retrieve packages/sdk-schema/node_modules from cache
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
         uses: actions/cache@v2
         with:
