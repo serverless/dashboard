@@ -45,7 +45,7 @@ message AwsLambdaTags {
   // The architecture of the Lambda function, currently either amd64 or arm64.
   string arch = 1;
   // Was the invocation a cold start?
-  bool coldstart = 2;
+  bool is_coldstart = 2;
   // The event type for the invocation.
   string event_type = 3;
   // The event source for the invocation.
