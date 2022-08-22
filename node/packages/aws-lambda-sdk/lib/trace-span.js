@@ -3,12 +3,12 @@
 const ensureString = require('type/string/ensure');
 const ensureFinite = require('type/finite/ensure');
 const ensureBigInt = require('type/big-int/ensure');
-const d = require('d');
-const lazy = require('d/lazy');
 const ensureIterable = require('type/iterable/ensure');
 const isDate = require('type/date/is');
 const isObject = require('type/object/is');
 const resolveException = require('type/lib/resolve-exception');
+const d = require('d');
+const lazy = require('d/lazy');
 const crypto = require('crypto');
 
 const isValidSpanName = RegExp.prototype.test.bind(/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/);
