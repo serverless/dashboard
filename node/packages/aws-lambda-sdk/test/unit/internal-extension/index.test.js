@@ -41,6 +41,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
     service: functionName,
   });
   expect(awsLambdaSpan.tags.get('aws.lambda.is_coldstart')).to.be.true;
+  expect(awsLambdaSpan.tags.get('aws.lambda.name')).to.equal(functionName);
   expect(result.response).to.equal('ok');
 };
 
