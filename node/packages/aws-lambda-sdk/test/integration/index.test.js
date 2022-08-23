@@ -93,17 +93,19 @@ describe('integration', function () {
         for (const { responsePayload } of invocationsData) {
           expect(responsePayload.raw).to.equal('"ok"');
         }
-        const traces = invocationsData.map(({ trace }) => trace);
-        expect(traces[0].spans.map(({ name }) => name)).to.deep.equal([
-          'aws.lambda',
-          'aws.lambda.initialization',
-          'aws.lambda.invocation',
-        ]);
-        expect(traces[1].spans.map(({ name }) => name)).to.deep.equal([
-          'aws.lambda',
-          'aws.lambda.invocation',
-        ]);
-        for (const trace of traces) {
+        for (const [index, trace] of invocationsData.map((data) => data.trace).entries()) {
+          if (index === 0) {
+            expect(trace.spans.map(({ name }) => name)).to.deep.equal([
+              'aws.lambda',
+              'aws.lambda.initialization',
+              'aws.lambda.invocation',
+            ]);
+          } else {
+            expect(trace.spans.map(({ name }) => name)).to.deep.equal([
+              'aws.lambda',
+              'aws.lambda.invocation',
+            ]);
+          }
           expect(trace.slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
             service: testConfig.configuration.FunctionName,
