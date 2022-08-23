@@ -9,6 +9,8 @@ const ensureString = require('type/string/ensure');
 const serverlessSdk = global.serverlessSdk || require('./');
 
 const { traceSpans } = serverlessSdk;
+const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
+  traceSpans;
 
 const debugLog = (...args) => {
   if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);
@@ -28,7 +30,7 @@ module.exports = (originalHandler, options = {}) => {
   }
   let currentInvocationId = 0;
 
-  traceSpans.awsLambdaInitialization.close();
+  awsLambdaInitializationSpan.close();
   return (event, context, awsCallback) => {
     const requestStartTime = process.hrtime.bigint();
     debugLog('Invocation: start');
@@ -38,21 +40,21 @@ module.exports = (originalHandler, options = {}) => {
     const invocationId = ++currentInvocationId;
     if (invocationId > 1) {
       // Reset root span ids and startTime with every next invocation
-      delete traceSpans.awsLambda.traceId;
-      delete traceSpans.awsLambda.id;
-      delete traceSpans.awsLambda.endTime;
-      traceSpans.awsLambda.startTime = requestStartTime;
-      traceSpans.awsLambda.subSpans.clear();
+      delete awsLambdaSpan.traceId;
+      delete awsLambdaSpan.id;
+      delete awsLambdaSpan.endTime;
+      awsLambdaSpan.startTime = requestStartTime;
+      awsLambdaSpan.subSpans.clear();
     }
-    traceSpans.awsLambdaInvocation = traceSpans.awsLambda.createSubSpan('aws.lambda.invocation', {
+    traceSpans.awsLambdaInvocation = awsLambdaSpan.createSubSpan('aws.lambda.invocation', {
       startTime: requestStartTime,
     });
     const closeInvocation = () => {
-      traceSpans.awsLambda.close();
+      awsLambdaSpan.close();
       const trace = (serverlessSdk._lastTrace = {
-        id: traceSpans.awsLambda.traceId,
+        id: awsLambdaSpan.traceId,
         slsTags: { orgId: serverlessSdk.orgId, service: process.env.AWS_LAMBDA_FUNCTION_NAME },
-        spans: traceSpans.awsLambda.spans,
+        spans: awsLambdaSpan.spans,
       });
       debugLog('Trace:', JSON.stringify(trace));
       debugLog(
