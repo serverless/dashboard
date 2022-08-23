@@ -53,7 +53,14 @@ module.exports = (originalHandler, options = {}) => {
     traceSpans.awsLambdaInvocation = awsLambdaSpan.createSubSpan('aws.lambda.invocation', {
       startTime: requestStartTime,
     });
-    const closeInvocation = () => {
+    const closeInvocation = (outcome) => {
+      if (invocationId !== currentInvocationId) return;
+      if (isResolved) return;
+      responseStartTime = process.hrtime.bigint();
+      isResolved = true;
+
+      awsLambdaSpan.tags.set('aws.lambda.outcome', outcome);
+
       awsLambdaSpan.close();
       const trace = (serverlessSdk._lastTrace = {
         id: awsLambdaSpan.traceId,
@@ -69,16 +76,8 @@ module.exports = (originalHandler, options = {}) => {
     const wrapAwsCallback =
       (someAwsCallback) =>
       (...args) => {
-        // Callback invoked directly by Lambda logic, it'll invoke otel wrap callback
-        if (invocationId !== currentInvocationId) return;
-        if (isResolved) return;
-        responseStartTime = process.hrtime.bigint();
-        isResolved = true;
-
-        awsLambdaSpan.tags.set('aws.lambda.outcome', args[0] == null ? 'success' : 'error:handled');
-
-        process.nextTick(() => someAwsCallback(...args));
-        closeInvocation();
+        closeInvocation(args[0] == null ? 'success' : 'error:handled');
+        someAwsCallback(...args);
       };
     const originalDone = context.done;
     let contextDone = wrapAwsCallback(originalDone);
@@ -97,25 +96,11 @@ module.exports = (originalHandler, options = {}) => {
     return Promise.resolve(eventualResult)
       .then(
         (result) => {
-          if (invocationId !== currentInvocationId) return result;
-          if (isResolved) return result;
-          responseStartTime = process.hrtime.bigint();
-          isResolved = true;
-
-          awsLambdaSpan.tags.set('aws.lambda.outcome', 'success');
-
-          closeInvocation();
+          closeInvocation('success');
           return result;
         },
         (error) => {
-          if (invocationId !== currentInvocationId) throw error;
-          if (isResolved) throw error;
-          responseStartTime = process.hrtime.bigint();
-          isResolved = true;
-
-          awsLambdaSpan.tags.set('aws.lambda.outcome', 'error:handled');
-
-          closeInvocation();
+          closeInvocation('error:handled');
           throw error;
         }
       )
