@@ -114,6 +114,9 @@ describe('integration', function () {
             service: testConfig.configuration.FunctionName,
           });
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.arch');
+          expect(awsLambdaSpan.tags['aws.lambda.name']).to.equal(
+            testConfig.configuration.FunctionName
+          );
         }
       }
       if (testConfig.test) {

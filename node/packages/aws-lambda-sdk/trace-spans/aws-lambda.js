@@ -5,6 +5,7 @@ const TraceSpan = require('../lib/trace-span');
 const awsLambdaSpan = new TraceSpan('aws.lambda', {
   startTime: EvalError.$serverlessAwsLambdaInitializationStartTime,
   immediateDescendants: ['aws.lambda.initialization'],
+  tags: { 'aws.lambda.name': process.env.AWS_LAMBDA_FUNCTION_NAME },
 });
 
 const arch = (() => {

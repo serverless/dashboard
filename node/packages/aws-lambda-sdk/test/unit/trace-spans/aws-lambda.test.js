@@ -2,12 +2,14 @@
 
 const { expect } = require('chai');
 
-const TraceSpan = require('../../../lib/trace-span');
-
-const awsLambdaTraceSpan = require('../../../trace-spans/aws-lambda');
-
 describe('trace-spans/aws-lambda.test.js', () => {
-  it('should be TraceSpan instance', () => expect(awsLambdaTraceSpan).to.be.instanceOf(TraceSpan));
+  let awsLambdaTraceSpan;
+  before(() => {
+    process.env.AWS_LAMBDA_FUNCTION_NAME = 'test';
+    awsLambdaTraceSpan = require('../../../trace-spans/aws-lambda');
+  });
+  it('should be TraceSpan instance', () =>
+    expect(awsLambdaTraceSpan.constructor.name).to.equal('TraceSpan'));
   it('should be root span', () => expect(awsLambdaTraceSpan.parentSpan).to.be.null);
   it('should be named "aws.lambda"', () => expect(awsLambdaTraceSpan.name).to.equal('aws.lambda'));
 });
