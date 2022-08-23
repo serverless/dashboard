@@ -504,6 +504,15 @@ jobs:
     if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode16.outputs.pathChangedProto == 'true'
     timeout-minutes: 30
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # Ensure to have complete history of commits pushed with given push operation
+          # It's loose and imperfect assumption that no more than 30 commits will be pushed at once
+          fetch-depth: 30
+          # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
+          # Hence we're passing 'serverless-ci' user authentication token
+          token: ${{ secrets.USER_GITHUB_TOKEN }}
       # We should have real integration tests here, but for now we are just going to tag a release if unit tests pass
       - name: Tag if new version
         run: |

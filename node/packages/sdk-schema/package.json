@@ -8,7 +8,8 @@
   "scripts": {
     "test": "mocha \"test/unit/**/*.test.js\"",
     "test:isolated": "mocha-isolated \"test/unit/**/*.test.js\"",
-    "build": "rimraf -rf ./dist && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts"
+    "build": "rimraf -rf ./dist && tsc --emitDeclarationOnly && rollup --config && rimraf -rf ./dist/dts",
+    "prepare-release": "standard-version && prettier --write CHANGELOG.md"
   },
   "author": "Serverless, Inc.",
   "license": "MIT",
@@ -41,5 +42,8 @@
         "section": "Maintenance Improvements"
       }
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
