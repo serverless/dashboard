@@ -5,6 +5,7 @@ const { expect } = require('chai');
 describe('trace-spans/aws-lambda.test.js', () => {
   let awsLambdaTraceSpan;
   before(() => {
+    process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'test';
     awsLambdaTraceSpan = require('../../../trace-spans/aws-lambda');
   });

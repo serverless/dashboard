@@ -7,6 +7,7 @@ const TraceSpan = require('../../lib/trace-span');
 describe('index.test.js', () => {
   let serverlessSdk;
   before(() => {
+    process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'test';
     serverlessSdk = require('../../');
   });
