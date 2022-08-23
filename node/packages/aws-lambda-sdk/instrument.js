@@ -4,6 +4,7 @@
 
 const ensurePlainFunction = require('type/plain-function/ensure');
 const isObject = require('type/object/is');
+const isError = require('type/error/is');
 const coerceToString = require('type/string/coerce');
 const ensureString = require('type/string/ensure');
 
@@ -49,6 +50,7 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaSpan.tags.delete('aws.lambda.request_id');
       awsLambdaSpan.tags.delete('aws.lambda.outcome');
       awsLambdaSpan.tags.delete('aws.lambda.error_exception_message');
+      awsLambdaSpan.tags.delete('aws.lambda.error_exception_stacktrace');
       awsLambdaSpan.subSpans.clear();
     }
     awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
@@ -69,6 +71,9 @@ module.exports = (originalHandler, options = {}) => {
             'aws.lambda.error_exception_message',
             errorMessage.length > 1000 ? `${errorMessage.slice(0, 1000)}[…]` : errorMessage
           );
+          if (isError(outcomeResult) && outcomeResult.stack) {
+            awsLambdaSpan.tags.set('aws.lambda.error_exception_stacktrace', outcomeResult.stack);
+          }
         }
       }
 

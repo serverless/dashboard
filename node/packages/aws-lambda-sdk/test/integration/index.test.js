@@ -146,6 +146,7 @@ describe('integration', function () {
           } else {
             expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('error:handled');
             expect(awsLambdaSpan.tags).to.have.property('aws.lambda.error_exception_message');
+            expect(awsLambdaSpan.tags).to.have.property('aws.lambda.error_exception_stacktrace');
           }
         }
       }
