@@ -23,7 +23,9 @@ Root span for each function invocation. In case of first invocation it contains 
 
 #### Tags
 
-_None_
+| Name              | Value                                                                                                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aws.lambda.arch` | Type of computer processor that Lambda uses to run the function. Check [AWS Lambda Architectures](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html) |
 
 ---
 
