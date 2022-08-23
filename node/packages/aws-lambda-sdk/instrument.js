@@ -4,6 +4,7 @@
 
 const ensurePlainFunction = require('type/plain-function/ensure');
 const isObject = require('type/object/is');
+const coerceToString = require('type/string/coerce');
 const ensureString = require('type/string/ensure');
 
 const serverlessSdk = global.serverlessSdk || require('./');
@@ -47,19 +48,29 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaSpan.tags.delete('aws.lambda.is_coldstart');
       awsLambdaSpan.tags.delete('aws.lambda.request_id');
       awsLambdaSpan.tags.delete('aws.lambda.outcome');
+      awsLambdaSpan.tags.delete('aws.lambda.error_exception_message');
       awsLambdaSpan.subSpans.clear();
     }
     awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
     traceSpans.awsLambdaInvocation = awsLambdaSpan.createSubSpan('aws.lambda.invocation', {
       startTime: requestStartTime,
     });
-    const closeInvocation = (outcome) => {
+    const closeInvocation = (outcome, outcomeResult) => {
       if (invocationId !== currentInvocationId) return;
       if (isResolved) return;
       responseStartTime = process.hrtime.bigint();
       isResolved = true;
 
       awsLambdaSpan.tags.set('aws.lambda.outcome', outcome);
+      if (outcome === 'error:handled') {
+        const errorMessage = outcomeResult?.message || coerceToString(outcomeResult);
+        if (errorMessage) {
+          awsLambdaSpan.tags.set(
+            'aws.lambda.error_exception_message',
+            errorMessage.length > 1000 ? `${errorMessage.slice(0, 1000)}[…]` : errorMessage
+          );
+        }
+      }
 
       awsLambdaSpan.close();
       const trace = (serverlessSdk._lastTrace = {
@@ -76,7 +87,10 @@ module.exports = (originalHandler, options = {}) => {
     const wrapAwsCallback =
       (someAwsCallback) =>
       (...args) => {
-        closeInvocation(args[0] == null ? 'success' : 'error:handled');
+        closeInvocation(
+          args[0] == null ? 'success' : 'error:handled',
+          args[0] == null ? args[1] : args[0]
+        );
         someAwsCallback(...args);
       };
     const originalDone = context.done;
@@ -96,11 +110,11 @@ module.exports = (originalHandler, options = {}) => {
     return Promise.resolve(eventualResult)
       .then(
         (result) => {
-          closeInvocation('success');
+          closeInvocation('success', result);
           return result;
         },
         (error) => {
-          closeInvocation('error:handled');
+          closeInvocation('error:handled', error);
           throw error;
         }
       )

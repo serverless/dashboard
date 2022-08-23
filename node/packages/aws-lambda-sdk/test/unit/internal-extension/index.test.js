@@ -53,6 +53,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
 
   if (options.outcome === 'error') {
     expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('error:handled');
+    expect(typeof awsLambdaSpan.tags.get('aws.lambda.error_exception_message')).to.equal('string');
   } else {
     if (outcome.error) throw outcome.error;
     expect(outcome.result).to.equal('ok');
