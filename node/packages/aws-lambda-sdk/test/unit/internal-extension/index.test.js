@@ -41,6 +41,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     }
     return { result, error, trace: require('../../../')._lastTrace };
   });
+  if (!outcome.trace && outcome.error) throw outcome.error;
   const [awsLambdaSpan] = outcome.trace.spans;
   expect(outcome.trace.slsTags).to.deep.equal({
     orgId: process.env.SLS_ORG_ID,
