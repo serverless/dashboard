@@ -20,4 +20,8 @@ const arch = (() => {
 })();
 if (arch) awsLambdaSpan.tags.set('aws.lambda.arch', arch);
 
+if (process.env.AWS_LAMBDA_INITIALIZATION_TYPE === 'on-demand') {
+  awsLambdaSpan.tags.set('aws.lambda.is_coldstart', true);
+}
+
 module.exports = awsLambdaSpan;

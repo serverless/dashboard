@@ -94,23 +94,25 @@ describe('integration', function () {
           expect(responsePayload.raw).to.equal('"ok"');
         }
         for (const [index, trace] of invocationsData.map((data) => data.trace).entries()) {
+          const awsLambdaSpan = trace.spans[0];
           if (index === 0) {
             expect(trace.spans.map(({ name }) => name)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.initialization',
               'aws.lambda.invocation',
             ]);
+            expect(awsLambdaSpan.tags['aws.lambda.is_coldstart']).to.be.true;
           } else {
             expect(trace.spans.map(({ name }) => name)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.invocation',
             ]);
+            expect(awsLambdaSpan.tags).to.not.have.property('aws.lambda.is_coldstart');
           }
           expect(trace.slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
             service: testConfig.configuration.FunctionName,
           });
-          const awsLambdaSpan = trace.spans[0];
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.arch');
         }
       }
