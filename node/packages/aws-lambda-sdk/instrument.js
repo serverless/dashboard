@@ -45,8 +45,10 @@ module.exports = (originalHandler, options = {}) => {
       delete awsLambdaSpan.endTime;
       awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.delete('aws.lambda.is_coldstart');
+      awsLambdaSpan.tags.delete('aws.lambda.request_id');
       awsLambdaSpan.subSpans.clear();
     }
+    awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
     traceSpans.awsLambdaInvocation = awsLambdaSpan.createSubSpan('aws.lambda.invocation', {
       startTime: requestStartTime,
     });
