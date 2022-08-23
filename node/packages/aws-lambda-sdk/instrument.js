@@ -71,8 +71,8 @@ module.exports = (originalHandler, options = {}) => {
         // Callback invoked directly by Lambda logic, it'll invoke otel wrap callback
         if (invocationId !== currentInvocationId) return;
         if (isResolved) return;
-        isResolved = true;
         responseStartTime = process.hrtime.bigint();
+        isResolved = true;
         // TODO: Insert eventual response processing
         process.nextTick(() => someAwsCallback(...args));
         closeInvocation();
@@ -95,8 +95,8 @@ module.exports = (originalHandler, options = {}) => {
       .finally(() => {
         if (invocationId !== currentInvocationId) return;
         if (isResolved) return;
-        isResolved = true;
         responseStartTime = process.hrtime.bigint();
+        isResolved = true;
         // TODO: Insert eventual response processing
         closeInvocation();
       })
