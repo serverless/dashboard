@@ -6,6 +6,7 @@ describe('trace-spans/aws-lambda-initialization.test.js', () => {
   let awsLambdaTraceSpan;
   let awsLambdaInitializationTraceSpan;
   before(() => {
+    process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'test';
     awsLambdaTraceSpan = require('../../../trace-spans/aws-lambda');
     awsLambdaInitializationTraceSpan = require('../../../trace-spans/aws-lambda-initialization');

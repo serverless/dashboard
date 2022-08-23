@@ -29,6 +29,7 @@ Root span for each function invocation. In case of first invocation it contains 
 | `aws.lambda.is_coldstart` | Whether it's a cold start invocation                                                                                                                                 |
 | `aws.lambda.name`         | AWS Lambda function name                                                                                                                                             |
 | `aws.lambda.request_id`   | The identifier of the invocation request                                                                                                                             |
+| `aws.lambda.version`      | The version of the function                                                                                                                                          |
 
 ---
 
