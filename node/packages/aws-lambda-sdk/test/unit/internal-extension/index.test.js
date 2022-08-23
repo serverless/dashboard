@@ -44,6 +44,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
   expect(awsLambdaSpan.tags.get('aws.lambda.name')).to.equal(functionName);
   expect(awsLambdaSpan.tags.get('aws.lambda.request_id')).to.equal('123');
   expect(awsLambdaSpan.tags.get('aws.lambda.version')).to.equal('$LATEST');
+  expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('success');
   expect(result.response).to.equal('ok');
 };
 
