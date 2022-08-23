@@ -46,6 +46,7 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.delete('aws.lambda.is_coldstart');
       awsLambdaSpan.tags.delete('aws.lambda.request_id');
+      awsLambdaSpan.tags.delete('aws.lambda.outcome');
       awsLambdaSpan.subSpans.clear();
     }
     awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
@@ -73,7 +74,9 @@ module.exports = (originalHandler, options = {}) => {
         if (isResolved) return;
         responseStartTime = process.hrtime.bigint();
         isResolved = true;
-        // TODO: Insert eventual response processing
+
+        awsLambdaSpan.tags.set('aws.lambda.outcome', args[0] == null ? 'success' : 'error:handled');
+
         process.nextTick(() => someAwsCallback(...args));
         closeInvocation();
       };
@@ -88,18 +91,34 @@ module.exports = (originalHandler, options = {}) => {
       'Overhead duration: Internal request:',
       `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
     );
-    const result = originalHandler(event, context, wrapAwsCallback(awsCallback));
-    if (!result) return result;
-    if (typeof result.then !== 'function') return result;
-    return Promise.resolve(result)
-      .finally(() => {
-        if (invocationId !== currentInvocationId) return;
-        if (isResolved) return;
-        responseStartTime = process.hrtime.bigint();
-        isResolved = true;
-        // TODO: Insert eventual response processing
-        closeInvocation();
-      })
+    const eventualResult = originalHandler(event, context, wrapAwsCallback(awsCallback));
+    if (!eventualResult) return eventualResult;
+    if (typeof eventualResult.then !== 'function') return eventualResult;
+    return Promise.resolve(eventualResult)
+      .then(
+        (result) => {
+          if (invocationId !== currentInvocationId) return result;
+          if (isResolved) return result;
+          responseStartTime = process.hrtime.bigint();
+          isResolved = true;
+
+          awsLambdaSpan.tags.set('aws.lambda.outcome', 'success');
+
+          closeInvocation();
+          return result;
+        },
+        (error) => {
+          if (invocationId !== currentInvocationId) throw error;
+          if (isResolved) throw error;
+          responseStartTime = process.hrtime.bigint();
+          isResolved = true;
+
+          awsLambdaSpan.tags.set('aws.lambda.outcome', 'error:handled');
+
+          closeInvocation();
+          throw error;
+        }
+      )
       .finally(() => {
         // AWS internally uses context methods to resolve promise result
         contextDone = originalDone;

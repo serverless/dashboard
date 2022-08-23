@@ -30,6 +30,7 @@ Root span for each function invocation. In case of first invocation it contains 
 | `aws.lambda.name`         | AWS Lambda function name                                                                                                                                             |
 | `aws.lambda.request_id`   | The identifier of the invocation request                                                                                                                             |
 | `aws.lambda.version`      | The version of the function                                                                                                                                          |
+| `aws.lambda.outcome`      | The outcome of a function. Possible values are `'success'` and `'error:handled'`                                                                                     |
 
 ---
 

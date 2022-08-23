@@ -119,6 +119,7 @@ describe('integration', function () {
           );
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.request_id');
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.version');
+          expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('success');
         }
       }
       if (testConfig.test) {
