@@ -35,16 +35,19 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
     });
     return { response, trace: require('../../../')._lastTrace };
   });
+  const [awsLambdaSpan] = result.trace.spans;
   expect(result.trace.slsTags).to.deep.equal({
     orgId: process.env.SLS_ORG_ID,
     service: functionName,
   });
+  expect(awsLambdaSpan.tags.get('aws.lambda.is_coldstart')).to.be.true;
   expect(result.response).to.equal('ok');
 };
 
 describe('internal-extension/index.test.js', () => {
   before(() => {
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
+    process.env.AWS_LAMBDA_INITIALIZATION_TYPE = 'on-demand';
     process.env.AWS_REGION = 'us-east-1';
     process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');
     process.env.LAMBDA_RUNTIME_DIR = path.resolve(fixturesDirname, 'runtime');
