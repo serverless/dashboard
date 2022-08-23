@@ -60,12 +60,14 @@ const ensureTagName = (() => {
 
 const ensureTagValue = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_TAG_VALUE';
-  return (inputValue) => {
+  return (inputValue, tagName) => {
     if (typeof inputValue === 'string') return inputValue;
     if (typeof inputValue === 'number') {
       return ensureFinite(inputValue, {
         errorCode,
-        errorMessage: 'Invalid trace span tag value: Number must be finite, received "%v"',
+        errorMessage:
+          `Invalid trace span tag value for "${tagName}": ` +
+          'Number must be finite, received "%v"',
       });
     }
     if (typeof inputValue === 'boolean') return inputValue;
@@ -73,7 +75,8 @@ const ensureTagValue = (() => {
     return resolveException(inputValue, null, {
       errorCode,
       errorMessage:
-        'Invalid trace span tag value: Value must be either boolean, number, string, or date. Received "%v"',
+        `Invalid trace span tag value for "${tagName}": ` +
+        'Value must be either boolean, number, string, or date. Received "%v"',
     });
   };
 })();
@@ -92,7 +95,7 @@ class TraceSpanTags extends Map {
         code: 'DUPLICATE_TRACE_SPAN_TAG_NAME',
       });
     }
-    return super.set(name, ensureTagValue(value));
+    return super.set(name, ensureTagValue(value, name));
   }
 }
 
@@ -151,7 +154,6 @@ class TraceSpan {
       tags: ensurePlainObject(options.tags, {
         isOptional: true,
         name: 'options.tags',
-        ensurePropertyValue: ensureTagValue,
       }),
     });
     this.subSpans.add(span);
