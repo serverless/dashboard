@@ -66,6 +66,26 @@ describe('integration', function () {
         ]),
       },
     ],
+    [
+      'callback-error',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:handled' },
+      },
+    ],
+    [
+      'thenable-error',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:handled' },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
@@ -89,9 +109,11 @@ describe('integration', function () {
       log.debug('%s test result: %o', testConfig.name, testResult);
       const { expectedOutcome } = testConfig;
       const { invocationsData } = testResult;
-      if (expectedOutcome === 'success') {
-        for (const { responsePayload } of invocationsData) {
-          expect(responsePayload.raw).to.equal('"ok"');
+      if (expectedOutcome === 'success' || expectedOutcome === 'error:handled') {
+        if (expectedOutcome === 'success') {
+          for (const { responsePayload } of invocationsData) {
+            expect(responsePayload.raw).to.equal('"ok"');
+          }
         }
         for (const [index, trace] of invocationsData.map((data) => data.trace).entries()) {
           const awsLambdaSpan = trace.spans[0];
@@ -119,7 +141,11 @@ describe('integration', function () {
           );
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.request_id');
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.version');
-          expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('success');
+          if (expectedOutcome === 'success') {
+            expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('success');
+          } else {
+            expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('error:handled');
+          }
         }
       }
       if (testConfig.test) {

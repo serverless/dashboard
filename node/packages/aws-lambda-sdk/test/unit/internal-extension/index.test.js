@@ -7,36 +7,42 @@ const requireUncached = require('ncjsm/require-uncached');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
 
-const handleSuccess = async (handlerModuleName, payload = {}) => {
+const handleInvocation = async (handlerModuleName, options = {}) => {
   process.env._HANDLER = `${handlerModuleName}.handler`;
   const functionName = handlerModuleName.includes(path.sep)
     ? path.dirname(handlerModuleName)
     : handlerModuleName;
   process.env.AWS_LAMBDA_FUNCTION_NAME = functionName;
 
-  const result = await requireUncached(async () => {
+  const outcome = await requireUncached(async () => {
     await require('../../../internal-extension');
     const handlerModule = await require('../../../internal-extension/wrapper');
-    const response = await new Promise((resolve, reject) => {
-      const maybeThenable = handlerModule.handler(
-        payload,
-        {
-          awsRequestId: '123',
-          functionName,
-          invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
-          getRemainingTimeInMillis: () => 3000,
-        },
-        (error, value) => {
-          if (error) reject(error);
-          else resolve(value);
-        }
-      );
-      if (isThenable(maybeThenable)) resolve(maybeThenable);
-    });
-    return { response, trace: require('../../../')._lastTrace };
+    let result;
+    let error;
+    try {
+      result = await new Promise((resolve, reject) => {
+        const maybeThenable = handlerModule.handler(
+          options.payload || {},
+          {
+            awsRequestId: '123',
+            functionName,
+            invokedFunctionArn: `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`,
+            getRemainingTimeInMillis: () => 3000,
+          },
+          (invocationError, value) => {
+            if (invocationError) reject(invocationError);
+            else resolve(value);
+          }
+        );
+        if (isThenable(maybeThenable)) resolve(maybeThenable);
+      });
+    } catch (invocationError) {
+      error = invocationError;
+    }
+    return { result, error, trace: require('../../../')._lastTrace };
   });
-  const [awsLambdaSpan] = result.trace.spans;
-  expect(result.trace.slsTags).to.deep.equal({
+  const [awsLambdaSpan] = outcome.trace.spans;
+  expect(outcome.trace.slsTags).to.deep.equal({
     orgId: process.env.SLS_ORG_ID,
     service: functionName,
   });
@@ -44,8 +50,14 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
   expect(awsLambdaSpan.tags.get('aws.lambda.name')).to.equal(functionName);
   expect(awsLambdaSpan.tags.get('aws.lambda.request_id')).to.equal('123');
   expect(awsLambdaSpan.tags.get('aws.lambda.version')).to.equal('$LATEST');
-  expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('success');
-  expect(result.response).to.equal('ok');
+
+  if (options.outcome === 'error') {
+    expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('error:handled');
+  } else {
+    if (outcome.error) throw outcome.error;
+    expect(outcome.result).to.equal('ok');
+    expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('success');
+  }
 };
 
 describe('internal-extension/index.test.js', () => {
@@ -62,10 +74,14 @@ describe('internal-extension/index.test.js', () => {
     delete process.env.AWS_LAMBDA_FUNCTION_NAME;
   });
 
-  it('should handle "ESM callback"', async () => handleSuccess('esm-callback/index'));
-  it('should handle "ESM thenable"', async () => handleSuccess('esm-thenable/index'));
-  it('should handle "callback"', async () => handleSuccess('callback'));
-  it('should handle "thenable"', async () => handleSuccess('thenable'));
+  it('should handle "ESM callback"', async () => handleInvocation('esm-callback/index'));
+  it('should handle "ESM thenable"', async () => handleInvocation('esm-thenable/index'));
+  it('should handle "callback"', async () => handleInvocation('callback'));
+  it('should handle "thenable"', async () => handleInvocation('thenable'));
   it('should handle "esbuild from ESM callback', async () =>
-    handleSuccess('esbuild-from-esm-callback'));
+    handleInvocation('esbuild-from-esm-callback'));
+  it('should handle "callback error"', async () =>
+    handleInvocation('callback-error', { outcome: 'error' }));
+  it('should handle "thenable error"', async () =>
+    handleInvocation('thenable-error', { outcome: 'error' }));
 });
