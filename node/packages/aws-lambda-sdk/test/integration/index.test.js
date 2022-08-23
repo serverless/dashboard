@@ -117,6 +117,7 @@ describe('integration', function () {
           expect(awsLambdaSpan.tags['aws.lambda.name']).to.equal(
             testConfig.configuration.FunctionName
           );
+          expect(awsLambdaSpan.tags).to.have.property('aws.lambda.request_id');
         }
       }
       if (testConfig.test) {

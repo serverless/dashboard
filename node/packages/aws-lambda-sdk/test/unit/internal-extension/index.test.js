@@ -42,6 +42,7 @@ const handleSuccess = async (handlerModuleName, payload = {}) => {
   });
   expect(awsLambdaSpan.tags.get('aws.lambda.is_coldstart')).to.be.true;
   expect(awsLambdaSpan.tags.get('aws.lambda.name')).to.equal(functionName);
+  expect(awsLambdaSpan.tags.get('aws.lambda.request_id')).to.equal('123');
   expect(result.response).to.equal('ok');
 };
 
