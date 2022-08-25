@@ -11,53 +11,53 @@ const {
   AwsLambdaTags_Outcome: AwsLambdaTagsOutcome,
 } = require(`${projectDir}/dist/index.cjs`);
 
-const expectedLambdaRootSpan = `{
-  "id": "Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk",
-  "traceId": "YTZkZTMxMzgtMmM0ZS00M2QxLTk0YTAtMDVmMjQ0NzJlNjg1",
-  "name": "test",
-  "startTimeUnixNano": "1659551935837000000",
-  "endTimeUnixNano": "1659551935837000000",
-  "tags": {
-    "sls": {
-      "orgId": "abc123",
-      "platform": "lambda",
-      "service": "my-test-function",
-      "region": "us-east-1",
-      "sdk": {
-        "name": "aws-lambda-sdk",
-        "version": "0.0.1"
-      }
+const expectedLambdaRootSpan = {
+  id: 'Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk',
+  traceId: 'YTZkZTMxMzgtMmM0ZS00M2QxLTk0YTAtMDVmMjQ0NzJlNjg1',
+  name: 'test',
+  startTimeUnixNano: '1659551935837000000',
+  endTimeUnixNano: '1659551935837000000',
+  tags: {
+    sls: {
+      orgId: 'abc123',
+      platform: 'lambda',
+      service: 'my-test-function',
+      region: 'us-east-1',
+      sdk: {
+        name: 'aws-lambda-sdk',
+        version: '0.0.1',
+      },
     },
-    "awsLambda": {
-      "arch": "arm64",
-      "isColdstart": true,
-      "eventType": "aws.apigatewayv2",
-      "eventSource": "aws.apigatewayv2",
-      "logGroup": "abc12",
-      "logStreamName": "abc123",
-      "maxMemory": "1024",
-      "name": "my-test-function",
-      "requestId": "bdb40738-ff36-48c0-9842-9befd0141cd6",
-      "requestTimeEpoch": "1659551935837",
-      "version": "$LATEST",
-      "outcome": "OUTCOME_SUCCESS",
-      "apiGateway": {
-        "accountId": "012345678901",
-        "apiId": "abc123",
-        "apiStage": "dev",
-        "request": {
-          "id": "2e4d98fe-1603-477f-b976-1013e84ea4a6",
-          "headers": "",
-          "timeEpoch": "1659551935837",
-          "protocol": "HTTP/1.1",
-          "domain": "abc.example.com",
-          "method": "GET",
-          "path": "/test"
-        }
-      }
-    }
-  }
-}`;
+    awsLambda: {
+      arch: 'arm64',
+      isColdstart: true,
+      eventType: 'aws.apigatewayv2',
+      eventSource: 'aws.apigatewayv2',
+      logGroup: 'abc12',
+      logStreamName: 'abc123',
+      maxMemory: '1024',
+      name: 'my-test-function',
+      requestId: 'bdb40738-ff36-48c0-9842-9befd0141cd6',
+      requestTimeEpoch: '1659551935837',
+      version: '$LATEST',
+      outcome: 'OUTCOME_SUCCESS',
+      apiGateway: {
+        accountId: '012345678901',
+        apiId: 'abc123',
+        apiStage: 'dev',
+        request: {
+          id: '2e4d98fe-1603-477f-b976-1013e84ea4a6',
+          headers: '',
+          timeEpoch: '1659551935837',
+          protocol: 'HTTP/1.1',
+          domain: 'abc.example.com',
+          method: 'GET',
+          path: '/test',
+        },
+      },
+    },
+  },
+};
 
 const spanId = 'cc81e067-1cfb-4ff1-a69b-05a9484fffad';
 const traceId = 'a6de3138-2c4e-43d1-94a0-05f24472e685';
@@ -119,7 +119,7 @@ describe('span-schema', () => {
       },
     });
 
-    const parsedSpan = Span.toJSON(Span.fromJSON(JSON.parse(expectedLambdaRootSpan)));
+    const parsedSpan = Span.toJSON(Span.fromJSON(expectedLambdaRootSpan));
 
     expect(span).to.deep.equal(parsedSpan);
   });
