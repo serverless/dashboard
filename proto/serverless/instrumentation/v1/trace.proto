@@ -23,7 +23,7 @@ message TracePayload {
 
 message Span {
     // The Span ID, this will be a random 8-byte ID encoded as a length 16 lowercase hex string.
-    bytes id = 1;
+    bytes span_id = 1;
 
     // The Trace ID, this will be a random 16-byte ID encoded as a length 32 lowercase hex string.
     // The Trace ID is what is used to group all spans for specific trace together.

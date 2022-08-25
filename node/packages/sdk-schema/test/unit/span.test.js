@@ -27,7 +27,7 @@ const testTracePayload = {
   },
   spans: [
     {
-      id: Buffer.from('Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk'),
+      spanId: Buffer.from('Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk'),
       traceId: Buffer.from('YTZkZTMxMzgtMmM0ZS00M2QxLTk0YTAtMDVmMjQ0NzJlNjg1'),
       name: 'test',
       startTimeUnixNano: longValue,
