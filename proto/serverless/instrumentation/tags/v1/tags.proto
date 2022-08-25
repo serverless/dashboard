@@ -13,25 +13,8 @@ message Tags {
   // Defined TagSets start at field number 100  //
   // ========================================== //
 
-  // ============================================ //
-  // Top level tags will have their underscores replaced //
-  // with periods when flattened. So for `aws_lambda` it will //
-  // be converted to `aws.lambda`//
-
-  // The root AWS Lambda Span tags.
-  optional serverless.instrumentation.tags.v1.AwsLambdaTags aws_lambda = 100;
-
-  // The AWS Lambda Initialization tags.
-  optional serverless.instrumentation.tags.v1.AwsLambdaInitializationTags aws_lambda_initialization = 101;
-
-  // The AWS Lambda Invocation tags.
-  optional serverless.instrumentation.tags.v1.AwsLambdaInvocationTags aws_lambda_invocation = 102;
-
-  // The AWS SDK Tags.
-  optional serverless.instrumentation.tags.v1.AwsSdkDynamodbTags aws_sdk_dynamodb = 103;
-  optional serverless.instrumentation.tags.v1.AwsSdkSqsTags aws_sdk_sqs = 104;
-  optional serverless.instrumentation.tags.v1.AwsSdkSnsTags aws_sdk_sns = 105;
-
+  // The AWS tags
+  optional serverless.instrumentation.tags.v1.AwsTags aws = 100;
 
   // The HTTP Tags.
   optional serverless.instrumentation.tags.v1.HttpTags http = 106;

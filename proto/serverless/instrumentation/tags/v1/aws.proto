@@ -6,6 +6,13 @@ import "serverless/instrumentation/tags/v1/common.proto";
 
 option go_package = ".;protoc";
 
+message AwsTags {
+  // The root AWS Lambda Span tags
+  optional AwsLambdaTags lambda = 100;
+  // The AWS SDK Tags
+  optional AwsSdkTags sdk = 101;
+}
+
 message AwsApiGatewayTags {
   // The AWS Account ID of the API GW.
   string account_id = 1;
@@ -95,6 +102,11 @@ message AwsLambdaTags {
   optional serverless.instrumentation.tags.v1.HttpTags http = 102;
   // Will be set if the function is handling HTTP requests via AWS API GW
   optional AwsApiGatewayTags api_gateway = 103;
+
+  // The root AWS Lambda Span tags.
+  optional AwsLambdaInitializationTags initialization = 104;
+  // The AWS Lambda Invocation tags.
+  optional AwsLambdaInvocationTags invocation = 105;
 }
 
 message AwsSqsEventTags {
@@ -125,6 +137,12 @@ message AwsLambdaInvocationTags {
   // The Invocation Duration of the Lambda Function. This is one part of the billed duration.
   // Maps to the Cloudwatch Logs Report "Duration"
   fixed64 invocation_duration = 1;
+}
+
+message AwsSdkTags {
+  optional AwsSdkDynamodbTags dynamodb = 100;
+  optional AwsSdkSqsTags sqs = 101;
+  optional AwsSdkSnsTags sns = 102;
 }
 
 message AwsSdkBaseTags {
