@@ -8,6 +8,7 @@ const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
 const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
+const pkgJson = require('../../package');
 
 for (const name of ['TEST_INTERNAL_LAYER_FILENAME']) {
   // In tests, current working directory is mocked,
@@ -132,8 +133,10 @@ describe('integration', function () {
             expect(awsLambdaSpan.tags).to.not.have.property('aws.lambda.is_coldstart');
           }
           expect(trace.slsTags).to.deep.equal({
-            orgId: process.env.SLS_ORG_ID,
-            service: testConfig.configuration.FunctionName,
+            'orgId': process.env.SLS_ORG_ID,
+            'service': testConfig.configuration.FunctionName,
+            'sdk.name': pkgJson.name,
+            'sdk.version': pkgJson.version,
           });
           expect(awsLambdaSpan.tags).to.have.property('aws.lambda.arch');
           expect(awsLambdaSpan.tags['aws.lambda.name']).to.equal(

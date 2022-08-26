@@ -7,6 +7,7 @@ const isObject = require('type/object/is');
 const isError = require('type/error/is');
 const coerceToString = require('type/string/coerce');
 const ensureString = require('type/string/ensure');
+const pkgJson = require('./package');
 
 const serverlessSdk = global.serverlessSdk || require('./');
 
@@ -80,7 +81,12 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaSpan.close();
       const trace = (serverlessSdk._lastTrace = {
         id: awsLambdaSpan.traceId,
-        slsTags: { orgId: serverlessSdk.orgId, service: process.env.AWS_LAMBDA_FUNCTION_NAME },
+        slsTags: {
+          'orgId': serverlessSdk.orgId,
+          'service': process.env.AWS_LAMBDA_FUNCTION_NAME,
+          'sdk.name': pkgJson.name,
+          'sdk.version': pkgJson.version,
+        },
         spans: awsLambdaSpan.spans,
       });
       debugLog('Trace:', JSON.stringify(trace));
