@@ -4,6 +4,7 @@ const { expect } = require('chai');
 const path = require('path');
 const isThenable = require('type/thenable/is');
 const requireUncached = require('ncjsm/require-uncached');
+const pkgJson = require('../../../package');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
 
@@ -44,8 +45,10 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   if (!outcome.trace && outcome.error) throw outcome.error;
   const [awsLambdaSpan] = outcome.trace.spans;
   expect(outcome.trace.slsTags).to.deep.equal({
-    orgId: process.env.SLS_ORG_ID,
-    service: functionName,
+    'orgId': process.env.SLS_ORG_ID,
+    'service': functionName,
+    'sdk.name': pkgJson.name,
+    'sdk.version': pkgJson.version,
   });
   expect(awsLambdaSpan.tags.get('aws.lambda.is_coldstart')).to.be.true;
   expect(awsLambdaSpan.tags.get('aws.lambda.name')).to.equal(functionName);
