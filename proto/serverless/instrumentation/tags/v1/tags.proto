@@ -30,11 +30,11 @@ message SlsTags {
   // A Serverless Platform OrgId.
   string org_id = 1;
   // The platform that was instrumented. Currently Lambda is the only supported platform.
-  string platform = 2;
+  optional string platform = 2;
   // The service that was instrumented. For Lambda this will be the function name by default.
   string service = 3;
   // The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use.
-  string region = 4;
+  optional string region = 4;
 
   message SdkTags {
     // The Name of the Serverless SDK used to instrument.

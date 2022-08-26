@@ -54,15 +54,15 @@ message AwsLambdaTags {
   // Was the invocation a cold start?
   bool is_coldstart = 2;
   // The event type for the invocation.
-  string event_type = 3;
+  optional string event_type = 3;
   // The event source for the invocation.
-  string event_source = 4;
+  optional string event_source = 4;
   // The Log Group for the Lambda Function.
-  string log_group = 5;
+  optional string log_group = 5;
   // The Log Stream for the invocation.
-  string log_stream_name = 6;
+  optional string log_stream_name = 6;
   // The Max Memory that is configured for the Lambda Function.
-  fixed64 max_memory = 7;
+  optional fixed64 max_memory = 7;
   // The Lambda Function name.
   string name = 8;
   // The Request ID for the invocation.
