@@ -1,0 +1,33 @@
+name: "Proto: Generate Documentation"
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - proto/**
+
+jobs:
+  generateProtoDocumentation:
+    name: "Generate Protobuf Documentation"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - name: Generate Docs
+        run: |
+          go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
+          which protoc-gen-doc
+          which protoc
+          cd proto/
+          mkdir -p ./docs/schema
+          protoc --doc_out=./docs/schema --doc_opt=markdown,docs.md ./serverless/instrumentation/tags/v1/*.proto ./serverless/instrumentation/v1/*.proto
+      - name: Add Doc Commit
+        uses: EndBug/add-and-commit@v9
+        add: ./proto/docs/schema/docs.md
+        message: Update Protobuf Documentation
