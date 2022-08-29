@@ -10,6 +10,7 @@ const ensurePlainObject = require('type/plain-object/ensure');
 const resolveException = require('type/lib/resolve-exception');
 const d = require('d');
 const lazy = require('d/lazy');
+const Long = require('long');
 const crypto = require('crypto');
 
 const isValidSpanName = RegExp.prototype.test.bind(/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/);
@@ -23,6 +24,32 @@ const resolveEpochTimestampString = (() => {
   const diff = BigInt(Date.now()) * BigInt(1000000) - process.hrtime.bigint();
   return (uptimeTimestamp) => String(uptimeTimestamp + diff);
 })();
+
+const toLong = (value) => {
+  const data = Long.fromString(String(value));
+  return new Long(data.low, data.high, true);
+};
+
+const resolvePorotbufValue = (key, value) => {
+  switch (key) {
+    // enum cases
+    case 'aws.lambda.outcome':
+      switch (value) {
+        case 'success':
+          return 1;
+        case 'error:handled':
+          return 5;
+        default:
+          // Will error in tests
+          return null;
+      }
+    default:
+      return typeof value === 'number' ? toLong(value) : value;
+  }
+};
+
+const snakeToCamelCase = (string) =>
+  string.replace(/_(.)/g, (ignore, letter) => letter.toUpperCase());
 
 const ensureSpanName = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_NAME';
@@ -195,6 +222,28 @@ class TraceSpan {
       startTime: resolveEpochTimestampString(this.startTime),
       endTime: this.endTime && resolveEpochTimestampString(this.endTime),
       tags: Object.fromEntries(this.tags),
+    };
+  }
+  toProtobufObject() {
+    const tags = {};
+    for (const [key, value] of this.tags) {
+      let context = tags;
+      const keyTokens = key.split('.').map((token) => snakeToCamelCase(token));
+      const lastToken = keyTokens.pop();
+      for (const token of keyTokens) {
+        if (!context[token]) context[token] = {};
+        context = context[token];
+      }
+      context[lastToken] = resolvePorotbufValue(key, value);
+    }
+    return {
+      id: Buffer.from(this.id),
+      traceId: Buffer.from(this.traceId),
+      parentSpanId: this.parentSpan ? Buffer.from(this.parentSpan.id) : undefined,
+      name: this.name,
+      startTimeUnixNano: toLong(resolveEpochTimestampString(this.startTime)),
+      endTimeUnixNano: this.endTime ? toLong(resolveEpochTimestampString(this.endTime)) : undefined,
+      tags,
     };
   }
   get spans() {

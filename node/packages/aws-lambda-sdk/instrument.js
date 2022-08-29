@@ -7,6 +7,7 @@ const isObject = require('type/object/is');
 const isError = require('type/error/is');
 const coerceToString = require('type/string/coerce');
 const ensureString = require('type/string/ensure');
+const traceProto = require('@serverless/sdk-schema/dist/trace');
 const pkgJson = require('./package');
 
 const serverlessSdk = global.serverlessSdk || require('./');
@@ -89,6 +90,18 @@ module.exports = (originalHandler, options = {}) => {
         },
         spans: awsLambdaSpan.spans,
       });
+      const protoTrace = (serverlessSdk._lastProtoTrace = {
+        slsTags: {
+          orgId: serverlessSdk.orgId,
+          service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+          sdk: { name: pkgJson.name, version: pkgJson.version },
+        },
+        spans: Array.from(awsLambdaSpan.spans).map((span) => span.toProtobufObject()),
+      });
+      const protoTraceBuffer = (serverlessSdk._lastProtoTraceBuffer =
+        traceProto.TracePayload.encode(protoTrace).finish());
+      process._rawDebug(`⚡T.${protoTraceBuffer.toString('base64')}`);
+
       debugLog('Trace:', JSON.stringify(trace));
       debugLog(
         'Overhead duration: Internal response:',

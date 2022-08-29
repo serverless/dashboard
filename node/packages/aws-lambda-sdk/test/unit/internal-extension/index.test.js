@@ -8,6 +8,16 @@ const pkgJson = require('../../../package');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
 
+const normalizeObject = (obj) => {
+  const entries = Array.isArray(obj) ? obj.entries() : Object.entries(obj);
+  for (const [key, value] of entries) {
+    if (value == null) delete obj[key];
+    else if (Array.isArray(value)) normalizeObject(value);
+    else if (typeof value === 'object') normalizeObject(value);
+  }
+  return obj;
+};
+
 const handleInvocation = async (handlerModuleName, options = {}) => {
   process.env._HANDLER = `${handlerModuleName}.handler`;
   const functionName = handlerModuleName.includes(path.sep)
@@ -40,7 +50,15 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     } catch (invocationError) {
       error = invocationError;
     }
-    return { result, error, trace: require('../../../')._lastTrace };
+    const serverlessSdk = require('../../../');
+    const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+    return {
+      result,
+      error,
+      trace: serverlessSdk._lastTrace,
+      protoTraceInput: serverlessSdk._lastProtoTrace,
+      protoTraceOutput: TracePayload.decode(serverlessSdk._lastProtoTraceBuffer),
+    };
   });
   if (!outcome.trace && outcome.error) throw outcome.error;
   const [awsLambdaSpan] = outcome.trace.spans;
@@ -66,6 +84,11 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     expect(outcome.result).to.equal('ok');
     expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('success');
   }
+
+  const input = normalizeObject(outcome.protoTraceInput);
+  const output = normalizeObject(outcome.protoTraceOutput);
+
+  expect(output.spans[0]).to.deep.equal(input.spans[0]);
 };
 
 describe('internal-extension/index.test.js', () => {
