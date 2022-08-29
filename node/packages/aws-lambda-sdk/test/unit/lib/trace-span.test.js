@@ -2,6 +2,8 @@
 
 const { expect } = require('chai');
 
+const Long = require('long');
+
 const TraceSpan = require('../../../lib/trace-span');
 
 describe('lib/trace-span.test.js', () => {
@@ -119,6 +121,34 @@ describe('lib/trace-span.test.js', () => {
       endTime: jsonValue.endTime,
       tags: { foo: 12 },
     });
+  });
+
+  it('should prepare Protobuf ready object', () => {
+    const childSpan = rootSpan.createSubSpan('child');
+    childSpan.tags.set('toptag', '1');
+    childSpan.tags.set('top.nested', '2');
+    childSpan.tags.set('top.deep.nested', '3');
+    childSpan.tags.set('top_snake.deep_snake.nested_snake', '3');
+    childSpan.tags.set('some.boolean', true);
+    childSpan.tags.set('some.number', 123);
+    childSpan.close();
+    const protoJson = childSpan.toProtobufObject();
+    expect(protoJson).to.deep.equal({
+      id: Buffer.from(childSpan.id),
+      traceId: Buffer.from(childSpan.traceId),
+      parentSpanId: Buffer.from(rootSpan.id),
+      name: 'child',
+      startTimeUnixNano: protoJson.startTimeUnixNano,
+      endTimeUnixNano: protoJson.endTimeUnixNano,
+      tags: {
+        toptag: '1',
+        top: { nested: '2', deep: { nested: '3' } },
+        topSnake: { deepSnake: { nestedSnake: '3' } },
+        some: { boolean: true, number: new Long(123, 0, true) },
+      },
+    });
+    expect(Long.isLong(protoJson.startTimeUnixNano)).to.be.true;
+    expect(Long.isLong(protoJson.endTimeUnixNano)).to.be.true;
   });
 
   describe('tags', () => {
