@@ -7,6 +7,46 @@ menuOrder: 5
 
 # FAQ
 
+## Integrations and Instrumentation Updates
+
+In mid September, Serverless Console is planning a series of changes
+regarding how we integrate with AWS accounts, and how we Instrument workloads.
+
+### Why is instrumentation changing?
+The primary reason we are changing our approach to instrumentation is performance.
+Our current instrumentation can add considerable computation time and cost to 
+Lambda execution and based on feedback from our users we have chose a new path for instrumenting Lambda Workloads.
+
+Another benefit for these changes is that we'll be able to support 
+all run time, and any development tool. We expect you'll find instrumenting your functions
+easier, and more flexible with these changes. 
+
+### What is changing?
+We're changing our approach in two main ways. First we are taking an account wide approach
+for instrumenting your entire AWS Account through an [IAM Role](https://github.com/serverless/instrumentation/aws/iam-role-cfn-template.yaml). This role enables the second major
+change which is that we are removing Our Lambda extension, and instead gathering observability data directly from Cloud Watch with those permissions. This means we can instrument all the metrics across
+the Lambdas in your account in one single step.
+
+
+
+### Why are we adding integrations?
+We're adding a simple abstraction within Serverless Console for managing the process of setting up the IAM role to ingest data. This means you'll be able to quickly connect AWS Accounts to Serverless Console from the browser.
+
+### How does this change what data is sent to Serverless Console?
+The main change is that we'll be receiving metrics across all of the Lambda's in your AWS Account. Sending logs and Traces will still require an opt-in like we support now.
+
+### What will happen to historical data?
+While no data will be deleted explicitly the ability to query historical metrics, traces and logs will no longer be available after the launch. Once you attach your AWS account the most recent 24 hours of metrics will added to your org in Console. 
+
+### Will there be pricing changes? What will happen to my September usage (will I be charged for it)?
+Pricing will be changing slightly, but your overall costs should not change much. Instead of our current Transaction based model, there will be distinct costs for Metrics, and Traces. 
+
+Because historical data is not being migrated we are going to reset all usage for September. Once you add your AWS account you'll be able to start with a much more generous free tier before revised Pro pricing kicks in for that month. 
+
+
+### How will this affect my development process?
+This should not change your development process. You can still use Serverless Framework - but it will be easier than ever to use other deployment tools as well. 
+
 ## Configuring apps and services
 
 **How do I start using Serverless Console with my app?**
