@@ -166,7 +166,7 @@ jobs:
         if: steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-lint-action@v1
         with:
-          input: 'proto'
+          input: "proto"
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
@@ -431,7 +431,7 @@ jobs:
           fi
 
   integrateAwsLambdaSdk:
-    name: Integrate
+    name: Integrate @serverless/aws-lambda-sdk
     runs-on: ubuntu-latest
     needs: [linuxNode16, linuxNode14]
     if: needs.linuxNode16.outputs.pathChangedAwsLambdaSdk == 'true'
@@ -498,7 +498,7 @@ jobs:
           fi
 
   integrateSdkSchema:
-    name: Integrate
+    name: Integrate @serverless/sdk-schema
     runs-on: ubuntu-latest
     needs: [linuxNode16, linuxNode14]
     if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode16.outputs.pathChangedProto == 'true'
