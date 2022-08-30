@@ -25,9 +25,10 @@ jobs:
           which protoc-gen-doc
           which protoc
           cd proto/
-          mkdir -p ./docs/schema
-          protoc --doc_out=./docs/schema --doc_opt=markdown,docs.md ./serverless/instrumentation/tags/v1/*.proto ./serverless/instrumentation/v1/*.proto
+          mkdir -p ./docs
+          protoc --doc_out=./docs --doc_opt=markdown,schema.md ./serverless/instrumentation/tags/v1/*.proto ./serverless/instrumentation/v1/*.proto
       - name: Add Doc Commit
         uses: EndBug/add-and-commit@v9
-        add: ./proto/docs/schema/docs.md
-        message: Update Protobuf Documentation
+        with:
+          add: ./proto/docs/schema.md
+          message: Update Protobuf Documentation
