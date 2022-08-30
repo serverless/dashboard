@@ -40,7 +40,6 @@ module.exports = (originalHandler, options = {}) => {
     debugLog('Invocation: start');
     let isResolved = false;
     let responseStartTime;
-    isResolved = false;
     const invocationId = ++currentInvocationId;
     if (invocationId > 1) {
       // Reset root span ids and startTime with every next invocation
