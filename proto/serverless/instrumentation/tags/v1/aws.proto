@@ -69,6 +69,8 @@ message AwsLambdaTags {
   string request_id = 9;
   // The Lambda Function version.
   string version = 11;
+  // The AWS Account ID of the Lambda Function
+  optional string account_id = 12;
 
   // A Lambda function invocation can have one of the following
   // outcomes upon completion.
