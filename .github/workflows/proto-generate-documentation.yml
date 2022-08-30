@@ -1,7 +1,7 @@
 name: "Proto: Generate Documentation"
 
 on:
-  pull_request:
+  push:
     branches: [main]
     paths:
       - proto/**
