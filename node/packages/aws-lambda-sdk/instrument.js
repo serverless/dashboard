@@ -100,7 +100,7 @@ module.exports = (originalHandler, options = {}) => {
       });
       const protoTraceBuffer = (serverlessSdk._lastProtoTraceBuffer =
         traceProto.TracePayload.encode(protoTrace).finish());
-      process._rawDebug(`⚡T.${protoTraceBuffer.toString('base64')}`);
+      process._rawDebug(`SERVERLESS_TELEMETRY.T.${protoTraceBuffer.toString('base64')}`);
 
       debugLog('Trace:', JSON.stringify(trace));
       debugLog(
