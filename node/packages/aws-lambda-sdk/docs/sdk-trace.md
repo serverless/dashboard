@@ -2,6 +2,12 @@
 
 For each function invocation single AWS Lambda SDK Trace is generated.
 
+Before returning the result to AWS Lambda trace payload is written to the console with following log line:
+
+```
+SERVERLESS_TELEMETRY.T.<base64 encoded payload>
+```
+
 ## Trace tags
 
 _Tags exposed on top trace_
