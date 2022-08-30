@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - proto/**
+      - proto/serverless/**
 
 jobs:
   generateProtoDocumentation:
