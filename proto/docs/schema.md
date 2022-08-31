@@ -89,7 +89,7 @@
 | method | [string](#string) |  | The HTTP method of the request. |
 | path | [string](#string) |  | The HTTP Path of the request. |
 | path_parameters | [string](#string) | optional | JSON string containing Request Path Parameters |
-| string_parameters | [string](#string) | optional | JSON string contain Query String Parameters |
+| query_string_parameters | [string](#string) | optional | JSON string contain Query String Parameters |
 
 
 
@@ -136,14 +136,15 @@
 | ----- | ---- | ----- | ----------- |
 | arch | [string](#string) |  | The architecture of the Lambda function, currently either amd64 or arm64. |
 | is_coldstart | [bool](#bool) |  | Was the invocation a cold start? |
-| event_type | [string](#string) |  | The event type for the invocation. |
-| event_source | [string](#string) |  | The event source for the invocation. |
-| log_group | [string](#string) |  | The Log Group for the Lambda Function. |
-| log_stream_name | [string](#string) |  | The Log Stream for the invocation. |
-| max_memory | [fixed64](#fixed64) |  | The Max Memory that is configured for the Lambda Function. |
+| event_type | [string](#string) | optional | The event type for the invocation. |
+| event_source | [string](#string) | optional | The event source for the invocation. |
+| log_group | [string](#string) | optional | The Log Group for the Lambda Function. |
+| log_stream_name | [string](#string) | optional | The Log Stream for the invocation. |
+| max_memory | [fixed64](#fixed64) | optional | The Max Memory that is configured for the Lambda Function. |
 | name | [string](#string) |  | The Lambda Function name. |
 | request_id | [string](#string) |  | The Request ID for the invocation. |
 | version | [string](#string) |  | The Lambda Function version. |
+| account_id | [string](#string) | optional | The AWS Account ID of the Lambda Function |
 | outcome | [AwsLambdaTags.Outcome](#serverless-instrumentation-tags-v1-AwsLambdaTags-Outcome) |  | The Outcome of the Lambda invocation |
 | error_exception_message | [string](#string) | optional | Optional error exception message. |
 | error_exception_stacktrace | [string](#string) | optional | Optional error exception stacktrace. |
@@ -423,9 +424,9 @@ outcomes upon completion.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | org_id | [string](#string) |  | A Serverless Platform OrgId. |
-| platform | [string](#string) |  | The platform that was instrumented. Currently Lambda is the only supported platform. |
+| platform | [string](#string) | optional | The platform that was instrumented. Currently Lambda is the only supported platform. |
 | service | [string](#string) |  | The service that was instrumented. For Lambda this will be the function name by default. |
-| region | [string](#string) |  | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
+| region | [string](#string) | optional | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
 | sdk | [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags) |  |  |
 | environment | [string](#string) | optional | An optional environment that can be attached. |
 | namespace | [string](#string) | optional | An optional namespace that can be attached. |
