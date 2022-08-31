@@ -1,5 +1,6 @@
 declare class TraceSpanTags extends Map {
   set(key: string, value: boolean | number | string | Date): TraceSpanTags;
+  setMany(Object, options?: { prefix?: string }): TraceSpanTags;
 }
 
 declare class TraceSpan {

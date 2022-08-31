@@ -6,6 +6,7 @@
   "dependencies": {
     "@serverless/sdk-schema": "^0.2.0",
     "d": "^1.0.1",
+    "ext": "^1.7.0",
     "long": "^5.2.0",
     "type": "^2.7.2"
   },
