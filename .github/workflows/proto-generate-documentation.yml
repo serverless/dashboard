@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.USER_GITHUB_TOKEN }}
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -32,3 +34,5 @@ jobs:
         with:
           add: ./proto/docs/schema.md
           message: Update Protobuf Documentation
+          committer_name: serverless-ci
+          committer_email: platform@serverless.com
