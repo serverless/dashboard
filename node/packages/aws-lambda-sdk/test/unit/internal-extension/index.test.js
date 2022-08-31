@@ -61,28 +61,28 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     };
   });
   if (!outcome.trace && outcome.error) throw outcome.error;
-  const [awsLambdaSpan] = outcome.trace.spans;
+  const [{ tags }] = outcome.trace.spans;
   expect(outcome.trace.slsTags).to.deep.equal({
     'orgId': process.env.SLS_ORG_ID,
     'service': functionName,
     'sdk.name': pkgJson.name,
     'sdk.version': pkgJson.version,
   });
-  expect(awsLambdaSpan.tags.get('aws.lambda.is_coldstart')).to.be.true;
-  expect(awsLambdaSpan.tags.get('aws.lambda.name')).to.equal(functionName);
-  expect(awsLambdaSpan.tags.get('aws.lambda.request_id')).to.equal('123');
-  expect(awsLambdaSpan.tags.get('aws.lambda.version')).to.equal('$LATEST');
+  expect(tags.get('aws.lambda.is_coldstart')).to.be.true;
+  expect(tags.get('aws.lambda.name')).to.equal(functionName);
+  expect(tags.get('aws.lambda.request_id')).to.equal('123');
+  expect(tags.get('aws.lambda.version')).to.equal('$LATEST');
 
   if (options.outcome === 'error') {
-    expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('error:handled');
-    expect(typeof awsLambdaSpan.tags.get('aws.lambda.error_exception_message')).to.equal('string');
-    expect(typeof awsLambdaSpan.tags.get('aws.lambda.error_exception_stacktrace')).to.equal(
-      'string'
-    );
+    expect(tags.get('aws.lambda.outcome')).to.equal('error:handled');
+    expect(typeof tags.get('aws.lambda.error_exception_message')).to.equal('string');
+    expect(typeof tags.get('aws.lambda.error_exception_stacktrace')).to.equal('string');
   } else {
     if (outcome.error) throw outcome.error;
-    expect(outcome.result).to.equal('ok');
-    expect(awsLambdaSpan.tags.get('aws.lambda.outcome')).to.equal('success');
+    if (options.isApiEndpoint) expect(JSON.parse(outcome.result.body)).to.equal('ok');
+    else expect(outcome.result).to.equal('ok');
+
+    expect(tags.get('aws.lambda.outcome')).to.equal('success');
   }
 
   const input = normalizeObject(outcome.protoTraceInput);
