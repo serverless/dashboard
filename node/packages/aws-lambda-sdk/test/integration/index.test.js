@@ -159,5 +159,5 @@ describe('integration', function () {
     });
   }
 
-  after(async () => cleanup({ skipFunctionsCleanup: true }));
+  after(async () => cleanup({ mode: 'core' }));
 });
