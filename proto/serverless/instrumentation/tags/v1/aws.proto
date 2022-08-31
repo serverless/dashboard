@@ -41,7 +41,7 @@ message AwsApiGatewayTags {
     // JSON string containing Request Path Parameters
     optional string path_parameters = 16;
     // JSON string contain Query String Parameters
-    optional string string_parameters = 17;
+    optional string query_string_parameters = 17;
   }
 
   AwsApiGatewayRequestTags request = 15;
