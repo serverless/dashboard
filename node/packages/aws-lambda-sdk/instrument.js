@@ -47,11 +47,7 @@ module.exports = (originalHandler, options = {}) => {
       delete awsLambdaSpan.id;
       delete awsLambdaSpan.endTime;
       awsLambdaSpan.startTime = requestStartTime;
-      awsLambdaSpan.tags.delete('aws.lambda.is_coldstart');
-      awsLambdaSpan.tags.delete('aws.lambda.request_id');
-      awsLambdaSpan.tags.delete('aws.lambda.outcome');
-      awsLambdaSpan.tags.delete('aws.lambda.error_exception_message');
-      awsLambdaSpan.tags.delete('aws.lambda.error_exception_stacktrace');
+      awsLambdaSpan.tags.reset();
       awsLambdaSpan.subSpans.clear();
     }
     awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
