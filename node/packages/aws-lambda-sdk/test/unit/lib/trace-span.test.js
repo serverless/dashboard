@@ -164,6 +164,23 @@ describe('lib/trace-span.test.js', () => {
       ]);
     });
 
+    it('should support setting many tags at once', () => {
+      const childSpan = rootSpan.createSubSpan('child');
+      childSpan.tags.setMany({ bool: true, string: 'string', num: 23, novalue: null });
+      childSpan.tags.setMany(
+        { bool: true, string: 'string', num: 23, novalue: null },
+        { prefix: 'foo.bar' }
+      );
+      expect(Array.from(childSpan.tags)).to.deep.equal([
+        ['bool', true],
+        ['string', 'string'],
+        ['num', 23],
+        ['foo.bar.bool', true],
+        ['foo.bar.string', 'string'],
+        ['foo.bar.num', 23],
+      ]);
+    });
+
     it('should reject setting tag that alraedy exists', () => {
       const childSpan = rootSpan.createSubSpan('child');
       childSpan.tags.set('tag', true);

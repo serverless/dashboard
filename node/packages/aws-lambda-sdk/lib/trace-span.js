@@ -8,6 +8,7 @@ const isDate = require('type/date/is');
 const isObject = require('type/object/is');
 const ensurePlainObject = require('type/plain-object/ensure');
 const resolveException = require('type/lib/resolve-exception');
+const capitalize = require('ext/string_/capitalize');
 const d = require('d');
 const lazy = require('d/lazy');
 const Long = require('long');
@@ -70,16 +71,18 @@ const ensureSpanName = (() => {
 
 const ensureTagName = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_TAG_NAME';
-  return (inputValue) => {
+  return (inputValue, propertyName = 'name') => {
     const value = ensureString(inputValue, {
       errorCode,
-      errorMessage: 'Invalid trace span tag name: Expected string, received "%v"',
+      errorMessage: `Invalid trace span tag ${propertyName}: Expected string, received "%v"`,
     });
     if (isValidTagName(value)) return value;
     return resolveException(inputValue, null, {
       errorCode,
       errorMessage:
-        'Invalid trace span tag name: Name should contain dot separated tokens that follow ' +
+        `Invalid trace span tag ${propertyName}: ${capitalize.call(
+          propertyName
+        )} should contain dot separated tokens that follow ` +
         '"[a-z][a-z0-9_]*" pattern. Received "%v"',
     });
   };
@@ -123,6 +126,17 @@ class TraceSpanTags extends Map {
       });
     }
     return super.set(name, ensureTagValue(value, name));
+  }
+  setMany(tags, options = {}) {
+    ensurePlainObject(tags, { name: 'tags' });
+    if (!isObject(options)) options = {};
+    const prefix = ensureString(options.prefix, { isOptional: true, name: 'options.prefix' });
+    if (prefix) ensureTagName(prefix, 'prefix');
+    for (const [name, value] of Object.entries(tags)) {
+      if (value == null) continue;
+      this.set(`${prefix ? `${prefix}.` : ''}${name}`, value);
+    }
+    return this;
   }
 }
 

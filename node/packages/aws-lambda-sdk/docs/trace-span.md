@@ -44,6 +44,16 @@ Tag name must be a string that is `.` separated list of `[a-z][a-z0-9]*` tokens
 
 Tag value can be _boolean_, _number_ or _string_. Date can also be passed as a _value_ input, but it'll be normalized to ISO string.
 
+#### `tags.setMany(tags[, options)`
+
+Set many tags at once.
+
+- `tags` - Plain object, key value map of tags
+
+Supported options
+
+- `prefix` - Tag name prefix for all tags
+
 ## Methods
 
 ### `createSubSpan(name[, options])`

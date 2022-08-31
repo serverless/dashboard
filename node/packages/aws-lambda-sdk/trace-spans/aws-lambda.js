@@ -32,7 +32,7 @@ if (process.env.AWS_LAMBDA_INITIALIZATION_TYPE === 'on-demand') {
 
 awsLambdaSpan.tags.reset = function () {
   this.clear();
-  for (const [name, value] of Object.entries(immutableTags)) this.set(name, value);
+  this.setMany(immutableTags);
 };
 
 module.exports = awsLambdaSpan;
