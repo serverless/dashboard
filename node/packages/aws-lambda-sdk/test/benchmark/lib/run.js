@@ -193,6 +193,6 @@ module.exports = async (useCasesConfig, coreConfig) => {
 
     return resultsMap;
   } finally {
-    await cleanup({ skipFunctionsCleanup: true });
+    await cleanup({ mode: 'core' });
   }
 };

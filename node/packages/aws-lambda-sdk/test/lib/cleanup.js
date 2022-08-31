@@ -98,6 +98,7 @@ const deleteRole = async () => {
 
 module.exports = async (options = {}) => {
   log.notice('Cleanup %s', basename);
-  if (!options.skipFunctionsCleanup) await deleteFunctions();
+  const mode = options.mode || 'all';
+  if (mode === 'all') await deleteFunctions();
   await Promise.all([deleteAllLayers(), deleteRole()]);
 };
