@@ -99,14 +99,7 @@ const invoke = async (testConfig) => {
   }
   const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
   const payload = { raw: String(Buffer.from(result.Payload)) };
-  try {
-    payload.json = JSON.parse(payload.raw);
-    log.debug('invoke response payload %O', payload.json);
-    payload.bodyJson = JSON.parse(payload.json.body);
-    log.debug('invoke response parsed payload %O', payload.bodyJson);
-  } catch {
-    /* ignore */
-  }
+  log.debug('invoke response payload %s', payload.raw);
   if (result.FunctionError) {
     if (expectedOutcome.startsWith('error')) return duration;
     throw new Error(`Invocation of ${testConfig.name} errored: ${result.FunctionError}`);
