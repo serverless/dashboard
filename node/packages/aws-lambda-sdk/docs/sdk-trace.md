@@ -31,16 +31,25 @@ Root span for each function invocation. In case of first invocation it contains 
 
 #### Tags
 
-| Name                                    | Value                                                                                                                                                                |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `aws.lambda.arch`                       | Type of computer processor that Lambda uses to run the function. Check [AWS Lambda Architectures](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html) |
-| `aws.lambda.is_coldstart`               | Whether it's a cold start invocation                                                                                                                                 |
-| `aws.lambda.name`                       | AWS Lambda function name                                                                                                                                             |
-| `aws.lambda.request_id`                 | The identifier of the invocation request                                                                                                                             |
-| `aws.lambda.version`                    | The version of the function                                                                                                                                          |
-| `aws.lambda.outcome`                    | The outcome of a function. Possible values are `'success'` and `'error:handled'`                                                                                     |
-| `aws.lambda.error_exception_message`    | In case of `'error:handled'` outcome, eventual error message                                                                                                         |
-| `aws.lambda.error_exception_stacktrace` | In case of `'error:handled'` outcome, eventual error stack trace                                                                                                     |
+##### Always present
+
+| Name                      | Value                                                                                                                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aws.lambda.arch`         | Type of computer processor that Lambda uses to run the function. Check [AWS Lambda Architectures](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html) |
+| `aws.lambda.is_coldstart` | Whether it's a cold start invocation                                                                                                                                 |
+| `aws.lambda.name`         | AWS Lambda function name                                                                                                                                             |
+| `aws.lambda.request_id`   | The identifier of the invocation request                                                                                                                             |
+| `aws.lambda.version`      | The version of the function                                                                                                                                          |
+| `aws.lambda.outcome`      | The outcome of a function. Possible values are `'success'` and `'error:handled'`                                                                                     |
+
+##### Error case
+
+Tags set in case of `'error:handled'` outcome
+
+| Name                                    | Value             |
+| --------------------------------------- | ----------------- |
+| `aws.lambda.error_exception_message`    | Error message     |
+| `aws.lambda.error_exception_stacktrace` | Error stack trace |
 
 ---
 
