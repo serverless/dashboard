@@ -2,6 +2,7 @@
 
 const { IAM } = require('@aws-sdk/client-iam');
 const { Lambda } = require('@aws-sdk/client-lambda');
+const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const awsRequest = require('../utils/aws-request');
@@ -22,6 +23,18 @@ const getAllFunctionNames = async (marker = undefined) => {
   return new Set(functionNames);
 };
 
+const getAllRestApiIds = async (position = undefined) => {
+  const result = await awsRequest(APIGateway, 'getRestApis', { limit: 500, position });
+  const apiIds = result.items
+    .filter(({ name }) => name.startsWith(`${basename}-`))
+    .map(({ id }) => id);
+
+  if (result.position) {
+    apiIds.push(...Array.from(await getAllRestApiIds(result.position)));
+  }
+  return new Set(apiIds);
+};
+
 const deleteFunctions = async () => {
   await Promise.all(
     Array.from(await getAllFunctionNames(), async (functionName) => {
@@ -31,6 +44,14 @@ const deleteFunctions = async () => {
   );
 };
 
+const deleteRestApis = async () => {
+  await Promise.all(
+    Array.from(await getAllRestApiIds(), async (restApiId) => {
+      await awsRequest(APIGateway, 'deleteRestApi', { restApiId });
+      log.notice('Deleted REST API %s', restApiId);
+    })
+  );
+};
 const listLayerVersions = async (layerName, nextMarker = undefined) => {
   const response = await awsRequest(Lambda, 'listLayerVersions', {
     LayerName: layerName,
@@ -99,6 +120,8 @@ const deleteRole = async () => {
 module.exports = async (options = {}) => {
   log.notice('Cleanup %s', basename);
   const mode = options.mode || 'all';
-  if (mode === 'all') await deleteFunctions();
+  if (mode === 'all') {
+    await Promise.all([deleteFunctions(), deleteRestApis()]);
+  }
   await Promise.all([deleteAllLayers(), deleteRole()]);
 };

@@ -51,6 +51,25 @@ Tags set in case of `'error:handled'` outcome
 | `aws.lambda.error_exception_message`    | Error message     |
 | `aws.lambda.error_exception_stacktrace` | Error stack trace |
 
+##### AWS API Gateway (v1) REST API endpoint
+
+Tags collected if event comes from AWS API Gateway REST API endpoint configured with `AWS_PROXY` integration type.
+
+| Name                                                     | Value                                                                               |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `aws.lambda.api_gateway.account_id`                      | Account id of API Gateway                                                           |
+| `aws.lambda.api_gateway.api_id`                          | API id                                                                              |
+| `aws.lambda.api_gateway.api_stage`                       | API stage                                                                           |
+| `aws.lambda.api_gateway.request.id`                      | API Gateway request id                                                              |
+| `aws.lambda.api_gateway.request.time_epoch`              | API Gateway request time                                                            |
+| `aws.lambda.api_gateway.request.protocol`                | Endpoint protocol (e.g. `HTTP/1.1`)                                                 |
+| `aws.lambda.api_gateway.request.domain`                  | Endpoint Domain name                                                                |
+| `aws.lambda.api_gateway.request.headers`                 | JSON string of request headers. Multi value headers are stored as arrays            |
+| `aws.lambda.api_gateway.request.method`                  | Request method                                                                      |
+| `aws.lambda.api_gateway.request.path`                    | Request path                                                                        |
+| `aws.lambda.api_gateway.request.path_parameters`         | JSON string of request path parameters                                              |
+| `aws.lambda.api_gateway.request.query_string_parameters` | JSON string of query string parameters. Multi value parameters are stored as arrays |
+
 ---
 
 ### `aws.lambda.initialization`

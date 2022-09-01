@@ -8,6 +8,7 @@ const isError = require('type/error/is');
 const coerceToString = require('type/string/coerce');
 const ensureString = require('type/string/ensure');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
+const resolveEventTags = require('./lib/resolve-event-tags');
 const pkgJson = require('./package');
 
 const serverlessSdk = global.serverlessSdk || require('./');
@@ -54,6 +55,8 @@ module.exports = (originalHandler, options = {}) => {
     traceSpans.awsLambdaInvocation = awsLambdaSpan.createSubSpan('aws.lambda.invocation', {
       startTime: requestStartTime,
     });
+    resolveEventTags(event);
+
     const closeInvocation = (outcome, outcomeResult) => {
       if (invocationId !== currentInvocationId) return;
       if (isResolved) return;
