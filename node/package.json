@@ -36,7 +36,7 @@
     "chalk": "^4.1.2",
     "child-process-ext": "^2.1.1",
     "deasync": "^0.1.28",
-    "esbuild": "^0.14.54",
+    "esbuild": "^0.15.6",
     "esbuild-plugin-d.ts": "^1.1.0",
     "eslint": "^8.23.0",
     "eslint-plugin-import": "^2.26.0",
