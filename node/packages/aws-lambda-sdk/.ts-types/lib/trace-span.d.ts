@@ -11,7 +11,11 @@ declare class TraceSpan {
   tags: TraceSpanTags;
   createSubSpan(
     name: string,
-    options?: { startTime?: bigint; immediateDescendants?: string[]; tags?: TraceSpanTags }
+    options?: {
+      startTime?: bigint;
+      immediateDescendants?: string[];
+      tags?: Record<string, boolean | number | string | Date | Null>;
+    }
   ): TraceSpan;
   close(): TraceSpan;
   spans(): Set<TraceSpan>;
