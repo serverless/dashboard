@@ -22,6 +22,14 @@ const getAllFunctionNames = async (marker = undefined) => {
   }
   return new Set(functionNames);
 };
+const deleteFunctions = async () => {
+  await Promise.all(
+    Array.from(await getAllFunctionNames(), async (functionName) => {
+      await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionName });
+      log.notice('Deleted function %s', functionName);
+    })
+  );
+};
 
 const getAllRestApiIds = async (position = undefined) => {
   const result = await awsRequest(APIGateway, 'getRestApis', { limit: 500, position });
@@ -34,16 +42,6 @@ const getAllRestApiIds = async (position = undefined) => {
   }
   return new Set(apiIds);
 };
-
-const deleteFunctions = async () => {
-  await Promise.all(
-    Array.from(await getAllFunctionNames(), async (functionName) => {
-      await awsRequest(Lambda, 'deleteFunction', { FunctionName: functionName });
-      log.notice('Deleted function %s', functionName);
-    })
-  );
-};
-
 const deleteRestApis = async () => {
   await Promise.all(
     Array.from(await getAllRestApiIds(), async (restApiId) => {
@@ -52,6 +50,7 @@ const deleteRestApis = async () => {
     })
   );
 };
+
 const listLayerVersions = async (layerName, nextMarker = undefined) => {
   const response = await awsRequest(Lambda, 'listLayerVersions', {
     LayerName: layerName,
