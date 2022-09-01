@@ -89,6 +89,8 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   const output = normalizeObject(outcome.protoTraceOutput);
 
   expect(output.spans[0]).to.deep.equal(input.spans[0]);
+
+  return outcome;
 };
 
 describe('internal-extension/index.test.js', () => {
@@ -115,4 +117,96 @@ describe('internal-extension/index.test.js', () => {
     handleInvocation('callback-error', { outcome: 'error' }));
   it('should handle "thenable error"', async () =>
     handleInvocation('thenable-error', { outcome: 'error' }));
+
+  it('should handle API Gateway REST API event', async () => {
+    const {
+      trace: {
+        spans: [{ tags }],
+      },
+    } = await handleInvocation('api-endpoint', {
+      isApiEndpoint: true,
+      payload: {
+        resource: '/some-path/{param}',
+        path: '/some-path/some-param',
+        httpMethod: 'POST',
+        headers: {
+          'Accept': '*/*',
+          'Accept-Encoding': 'gzip,deflate',
+          'Other': 'Second',
+        },
+        multiValueHeaders: {
+          'Accept': ['*/*'],
+          'Accept-Encoding': ['gzip,deflate'],
+          'Other': ['First', 'Second'],
+        },
+        queryStringParameters: { foo: 'bar', next: 'second' },
+        multiValueQueryStringParameters: { foo: ['bar'], next: ['first', 'second'] },
+        pathParameters: { param: 'some-param' },
+        stageVariables: null,
+        requestContext: {
+          resourceId: 'qrj0an',
+          resourcePath: '/some-path/{param}',
+          httpMethod: 'POST',
+          extendedRequestId: 'XruZgEKYIAMFauw=',
+          requestTime: '30/Aug/2022:15:20:03 +0000',
+          path: '/test/some-path/some-param',
+          accountId: '205994128558',
+          protocol: 'HTTP/1.1',
+          stage: 'test',
+          domainPrefix: 'xxx',
+          requestTimeEpoch: 1661872803090,
+          requestId: 'da6c4e62-62c8-4693-8a4a-d6c4d943ddb4',
+          identity: {
+            cognitoIdentityPoolId: null,
+            accountId: null,
+            cognitoIdentityId: null,
+            caller: null,
+            sourceIp: '80.55.87.22',
+            principalOrgId: null,
+            accessKey: null,
+            cognitoAuthenticationType: null,
+            cognitoAuthenticationProvider: null,
+            userArn: null,
+            userAgent: 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)',
+            user: null,
+          },
+          domainName: 'xxx.execute-api.us-east-1.amazonaws.com',
+          apiId: 'xxx',
+        },
+        body: '"ok"',
+        isBase64Encoded: false,
+      },
+    });
+
+    expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
+    expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
+    expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('test');
+
+    expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal(
+      'da6c4e62-62c8-4693-8a4a-d6c4d943ddb4'
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1661872803090);
+    expect(tags.get('aws.lambda.api_gateway.request.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('aws.lambda.api_gateway.request.domain')).to.equal(
+      'xxx.execute-api.us-east-1.amazonaws.com'
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
+      JSON.stringify({
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip,deflate',
+        'Other': ['First', 'Second'],
+      })
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.method')).to.equal('POST');
+    expect(tags.get('aws.lambda.api_gateway.request.path')).to.equal('/test/some-path/some-param');
+    expect(tags.get('aws.lambda.api_gateway.request.path_parameters')).to.equal(
+      JSON.stringify({ param: 'some-param' })
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.query_string_parameters')).to.equal(
+      JSON.stringify({
+        foo: 'bar',
+        next: ['first', 'second'],
+      })
+    );
+  });
 });

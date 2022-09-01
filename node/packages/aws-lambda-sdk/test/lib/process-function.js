@@ -44,7 +44,8 @@ const create = async (testConfig, coreConfig) => {
     resultConfiguration.Environment.Variables.SERVERLESS_PLATFORM_STAGE = 'dev';
   }
   try {
-    await awsRequest(Lambda, 'createFunction', resultConfiguration);
+    const result = await awsRequest(Lambda, 'createFunction', resultConfiguration);
+    testConfig.functionArn = result.FunctionArn;
   } catch (error) {
     if (
       error.message.includes('The role defined for the function cannot be assumed by Lambda') ||
@@ -271,7 +272,7 @@ module.exports = async (testConfig, coreConfig) => {
     await wait(3000);
     log.info('Invoke function #%d %s', counter, testConfig.name);
     try {
-      invocationsMeta.push(await invoke(testConfig));
+      invocationsMeta.push(await (testConfig.invoke || invoke)(testConfig));
     } catch (error) {
       if (error.message.includes('Lambda was unable to decrypt the environment variables')) {
         // Rare error on AWS side, which we can recover from only by re-creating the lambda
@@ -282,8 +283,10 @@ module.exports = async (testConfig, coreConfig) => {
     }
   } while (++counter <= testConfig.invokeCount);
 
+  if (testConfig.hooks.beforeDelete) await testConfig.hooks.beforeDelete(testConfig, coreConfig);
   log.info('Delete function %s', testConfig.name);
   await deleteFunction(testConfig);
+  if (testConfig.hooks.afterDelete) await testConfig.hooks.afterDelete(testConfig, coreConfig);
 
   log.info('Retrieve list of written reports %s', testConfig.name);
   const reports = await retrieveReports(testConfig);
