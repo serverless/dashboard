@@ -3,6 +3,7 @@
 const { IAM } = require('@aws-sdk/client-iam');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { APIGateway } = require('@aws-sdk/client-api-gateway');
+const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const awsRequest = require('../utils/aws-request');
@@ -47,6 +48,29 @@ const deleteRestApis = async () => {
     Array.from(await getAllRestApiIds(), async (restApiId) => {
       await awsRequest(APIGateway, 'deleteRestApi', { restApiId });
       log.notice('Deleted REST API %s', restApiId);
+    })
+  );
+};
+
+const getAllHttpApiIds = async (nextToken = undefined) => {
+  const result = await awsRequest(ApiGatewayV2, 'getApis', {
+    MaxResults: '100000000',
+    NextToken: nextToken,
+  });
+  const apiIds = result.Items.filter(({ Name: name }) => name.startsWith(`${basename}-`)).map(
+    ({ ApiId: id }) => id
+  );
+
+  if (result.NextToken) {
+    apiIds.push(...Array.from(await getAllHttpApiIds(result.NextToken)));
+  }
+  return new Set(apiIds);
+};
+const deleteHttpApis = async () => {
+  await Promise.all(
+    Array.from(await getAllHttpApiIds(), async (apiId) => {
+      await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: apiId });
+      log.notice('Deleted HTTP API %s', apiId);
     })
   );
 };
@@ -120,7 +144,7 @@ module.exports = async (options = {}) => {
   log.notice('Cleanup %s', basename);
   const mode = options.mode || 'all';
   if (mode === 'all') {
-    await Promise.all([deleteFunctions(), deleteRestApis()]);
+    await Promise.all([deleteFunctions(), deleteRestApis(), deleteHttpApis()]);
   }
   await Promise.all([deleteAllLayers(), deleteRole()]);
 };

@@ -78,7 +78,7 @@ const apiGatewayEventMap = [
 module.exports = (event) => {
   if (!isObject(event)) return;
   if (doesObjectMatchMap(event, apiGatewayEventMap)) {
-    // API Gateway (v1) event
+    // API Gateway v1 REST API or v2 HTTP API (v1 payload) event
     const { requestContext } = event;
     awsLambdaSpan.tags.setMany(
       {
