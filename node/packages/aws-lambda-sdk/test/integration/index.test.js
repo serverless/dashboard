@@ -102,7 +102,7 @@ describe('integration', function () {
                 afterCreate: async (testConfig) => {
                   const restApiId = (testConfig.restApiId = (
                     await awsRequest(APIGateway, 'createRestApi', {
-                      name: testConfig.name,
+                      name: testConfig.configuration.FunctionName,
                     })
                   ).id);
                   const deferredAddPermission = awsRequest(Lambda, 'addPermission', {
