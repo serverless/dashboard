@@ -5,6 +5,7 @@ const { expect } = require('chai');
 const path = require('path');
 const log = require('log').get('test');
 const { APIGateway } = require('@aws-sdk/client-api-gateway');
+const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { default: fetch } = require('node-fetch');
 const cleanup = require('../lib/cleanup');
@@ -196,6 +197,88 @@ describe('integration', function () {
                   expect(tags['aws.lambda.api_gateway.request.path_parameters']).to.equal(
                     JSON.stringify({ param: 'some-param' })
                   );
+                }
+              },
+            },
+          ],
+          [
+            'http-api-v1',
+            {
+              hooks: {
+                afterCreate: async (testConfig) => {
+                  const apiId = (testConfig.apiId = (
+                    await awsRequest(ApiGatewayV2, 'createApi', {
+                      Name: testConfig.configuration.FunctionName,
+                      ProtocolType: 'HTTP',
+                    })
+                  ).ApiId);
+                  const deferredAddPermission = awsRequest(Lambda, 'addPermission', {
+                    FunctionName: testConfig.configuration.FunctionName,
+                    Principal: '*',
+                    Action: 'lambda:InvokeFunction',
+                    SourceArn: `arn:aws:execute-api:${process.env.AWS_REGION}:${coreConfig.accountId}:${apiId}/*`,
+                    StatementId: testConfig.name,
+                  });
+                  const integrationId = (
+                    await awsRequest(ApiGatewayV2, 'createIntegration', {
+                      ApiId: apiId,
+                      IntegrationType: 'AWS_PROXY',
+                      IntegrationUri: `arn:aws:lambda:${process.env.AWS_REGION}:${coreConfig.accountId}:function:${testConfig.configuration.FunctionName}`,
+                      PayloadFormatVersion: '1.0',
+                    })
+                  ).IntegrationId;
+
+                  await awsRequest(ApiGatewayV2, 'createRoute', {
+                    ApiId: apiId,
+                    RouteKey: 'POST /test',
+                    Target: `integrations/${integrationId}`,
+                  });
+
+                  await awsRequest(ApiGatewayV2, 'createStage', {
+                    ApiId: apiId,
+                    StageName: '$default',
+                    AutoDeploy: true,
+                  });
+
+                  await deferredAddPermission;
+                },
+                beforeDelete: async (testConfig) => {
+                  await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+                },
+              },
+              invoke: async (testConfig) => {
+                const startTime = process.hrtime.bigint();
+                const response = await fetch(
+                  `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify({ some: 'content' }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
+                if (response.status !== 200) {
+                  throw new Error(`Unexpected response status: ${response.status}`);
+                }
+                const payload = { raw: await response.text() };
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                log.debug('invoke response payload %s', payload.raw);
+                return { duration, payload };
+              },
+              test: ({ invocationsData, testConfig }) => {
+                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
+                  expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.apiId);
+                  expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('$default');
+                  expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
+                  expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
+                  expect(tags).to.have.property('aws.lambda.api_gateway.request.domain');
+                  expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
+                  expect(tags['aws.lambda.api_gateway.request.method']).to.equal('POST');
+                  expect(tags['aws.lambda.api_gateway.request.path']).to.equal('/test');
                 }
               },
             },

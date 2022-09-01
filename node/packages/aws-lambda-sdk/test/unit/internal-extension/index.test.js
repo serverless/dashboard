@@ -209,4 +209,103 @@ describe('internal-extension/index.test.js', () => {
       })
     );
   });
+
+  it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
+    const {
+      trace: {
+        spans: [{ tags }],
+      },
+    } = await handleInvocation('api-endpoint', {
+      isApiEndpoint: true,
+      payload: {
+        version: '1.0',
+        resource: '/v1',
+        path: '/v1',
+        httpMethod: 'POST',
+        headers: {
+          'Content-Length': '385',
+          'Content-Type':
+            'multipart/form-data; boundary=--------------------------182902192059219621976732',
+          'Multi': 'two',
+        },
+        multiValueHeaders: {
+          'Content-Length': ['385'],
+          'Content-Type': [
+            'multipart/form-data; boundary=--------------------------182902192059219621976732',
+          ],
+          'Multi': ['one,stillone', 'two'],
+        },
+        queryStringParameters: {
+          lone: 'value',
+          multi: 'two',
+        },
+        multiValueQueryStringParameters: {
+          lone: ['value'],
+          multi: ['one,stillone', 'two'],
+        },
+        requestContext: {
+          accountId: '205994128558',
+          apiId: 'xxx',
+          domainName: 'xxx.execute-api.us-east-1.amazonaws.com',
+          domainPrefix: 'xxx',
+          extendedRequestId: 'XyGqvi5mIAMEJtw=',
+          httpMethod: 'POST',
+          identity: {
+            accessKey: null,
+            accountId: null,
+            caller: null,
+            cognitoAmr: null,
+            cognitoAuthenticationProvider: null,
+            cognitoAuthenticationType: null,
+            cognitoIdentityId: null,
+            cognitoIdentityPoolId: null,
+            principalOrgId: null,
+            sourceIp: '80.55.87.22',
+            user: null,
+            userAgent: 'PostmanRuntime/7.29.0',
+            userArn: null,
+          },
+          path: '/v1',
+          protocol: 'HTTP/1.1',
+          requestId: 'XyGqvi5mIAMEJtw=',
+          requestTime: '01/Sep/2022:13:47:10 +0000',
+          requestTimeEpoch: 1662040030156,
+          resourceId: 'POST /v1',
+          resourcePath: '/v1',
+          stage: '$default',
+        },
+        pathParameters: null,
+        stageVariables: null,
+        body: 'LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTE4MjkwMjE5MjA1OTIxOTYyMTk3NjczMg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJMb25lIg0KDQpvbmUNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0xODI5MDIxOTIwNTkyMTk2MjE5NzY3MzINCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibXVsdGkiDQoNCm9uZSxzdGlsbG9uZQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTE4MjkwMjE5MjA1OTIxOTYyMTk3NjczMg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtdWx0aSINCg0KdHdvDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tMTgyOTAyMTkyMDU5MjE5NjIxOTc2NzMyLS0NCg==',
+        isBase64Encoded: true,
+      },
+    });
+
+    expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
+    expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
+    expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('$default');
+
+    expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal('XyGqvi5mIAMEJtw=');
+    expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1662040030156);
+    expect(tags.get('aws.lambda.api_gateway.request.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('aws.lambda.api_gateway.request.domain')).to.equal(
+      'xxx.execute-api.us-east-1.amazonaws.com'
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
+      JSON.stringify({
+        'Content-Length': '385',
+        'Content-Type':
+          'multipart/form-data; boundary=--------------------------182902192059219621976732',
+        'Multi': ['one,stillone', 'two'],
+      })
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.method')).to.equal('POST');
+    expect(tags.get('aws.lambda.api_gateway.request.path')).to.equal('/v1');
+    expect(tags.get('aws.lambda.api_gateway.request.query_string_parameters')).to.equal(
+      JSON.stringify({
+        lone: 'value',
+        multi: ['one,stillone', 'two'],
+      })
+    );
+  });
 });
