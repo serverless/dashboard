@@ -57,10 +57,14 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
       error,
       trace: serverlessSdk._lastTrace,
       protoTraceInput: serverlessSdk._lastProtoTrace,
-      protoTraceOutput: TracePayload.decode(serverlessSdk._lastProtoTraceBuffer),
+      protoTraceOutput:
+        serverlessSdk._lastProtoTraceBuffer &&
+        TracePayload.decode(serverlessSdk._lastProtoTraceBuffer),
     };
   });
-  if (!outcome.trace && outcome.error) throw outcome.error;
+  if (outcome.error && (!outcome.protoTraceOutput || options.outcome !== 'error')) {
+    throw outcome.error;
+  }
   const [{ tags }] = outcome.trace.spans;
   expect(outcome.trace.slsTags).to.deep.equal({
     'orgId': process.env.SLS_ORG_ID,
