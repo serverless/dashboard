@@ -45,6 +45,10 @@ const resolvePorotbufValue = (key, value) => {
           return null;
       }
     default:
+      if (Array.isArray(value)) {
+        if (typeof value[0] === 'number') return value.map(toLong);
+        return value;
+      }
       return typeof value === 'number' ? toLong(value) : value;
   }
 };
@@ -102,11 +106,46 @@ const ensureTagValue = (() => {
     }
     if (typeof inputValue === 'boolean') return inputValue;
     if (isDate(inputValue)) return inputValue.toISOString();
+    if (Array.isArray(inputValue)) {
+      let type = null;
+      return inputValue.map((item) => {
+        if (typeof item === 'string') {
+          if (type == null) type = 'string';
+          if (type === 'string') return item;
+        } else if (typeof item === 'number') {
+          if (type == null) type = 'number';
+          if (type === 'number') {
+            return ensureFinite(item, {
+              errorCode,
+              errorMessage:
+                `Invalid trace span tag value for "${tagName}": ` +
+                'Number must be finite, received "%v"',
+            });
+          }
+        } else if (isDate(inputValue)) {
+          if (type == null) type = 'date';
+          if (type === 'date') return inputValue.toISOString();
+        } else {
+          return resolveException(inputValue, null, {
+            errorCode,
+            errorMessage:
+              `Invalid trace span tag value for "${tagName}": ` +
+              'Unrecognized value type in array:"%v"',
+          });
+        }
+        return resolveException(inputValue, null, {
+          errorCode,
+          errorMessage:
+            `Invalid trace span tag value for "${tagName}": ` +
+            'Array cannot have mixed type values:"%v"',
+        });
+      });
+    }
     return resolveException(inputValue, null, {
       errorCode,
       errorMessage:
         `Invalid trace span tag value for "${tagName}": ` +
-        'Value must be either boolean, number, string, or date. Received "%v"',
+        'Value must be either boolean, number, string, date or array of same values. Received "%v"',
     });
   };
 })();

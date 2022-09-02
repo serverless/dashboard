@@ -1,7 +1,7 @@
 declare class TraceSpanTags extends Map {
-  set(key: string, value: boolean | number | string | Date): TraceSpanTags;
+  set(key: string, value: boolean | number | string | Date | Array): TraceSpanTags;
   setMany(
-    tags: Record<string, boolean | number | string | Date | Null>,
+    tags: Record<string, boolean | number | string | Date | Array | Null>,
     options?: { prefix?: string }
   ): TraceSpanTags;
 }
@@ -17,7 +17,7 @@ declare class TraceSpan {
     options?: {
       startTime?: bigint;
       immediateDescendants?: string[];
-      tags?: Record<string, boolean | number | string | Date | Null>;
+      tags?: Record<string, boolean | number | string | Date | Array | Null>;
     }
   ): TraceSpan;
   close(): TraceSpan;

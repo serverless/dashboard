@@ -42,7 +42,7 @@ Map of tags set on a span.
 
 Tag name must be a string that is `.` separated list of `[a-z][a-z0-9]*` tokens
 
-Tag value can be _boolean_, _number_ or _string_. Date can also be passed as a _value_ input, but it'll be normalized to ISO string.
+Tag value can be singular _boolean_, _number_ or _string_ (Date can also be passed as a _value_ input, but it'll be normalized to ISO string) or an array of same type values, either _numbers_ or _strings_ (similarly array of dates can be passed, and it'll be normnalized into array of ISO strings)
 
 #### `tags.setMany(tags[, options)`
 
