@@ -114,19 +114,15 @@ message AwsLambdaTags {
 message AwsSqsEventTags {
   // Taken from the eventSourceARN
   string queue_name = 1;
-  // The operation of the SQS Event Trigger. Will always be 'receive' currently
-  string operation = 2;
   // Introspected from the events records
-  repeated string message_ids = 3;
+  repeated string message_ids = 2;
 }
 
 message AwsSnsEventTags {
   // Taken from the TopicARN
   string topic_name = 1;
-  // The operation of the SNS Event Trigger. Will always be 'receive' currently
-  string operation = 3;
   // Introspected from the events records
-  repeated string message_ids = 4;
+  repeated string message_ids = 2;
 }
 
 message AwsLambdaInitializationTags {
