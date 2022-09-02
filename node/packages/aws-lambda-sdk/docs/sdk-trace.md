@@ -51,12 +51,12 @@ Tags set in case of `'error:handled'` outcome
 | `aws.lambda.error_exception_message`    | Error message     |
 | `aws.lambda.error_exception_stacktrace` | Error stack trace |
 
-##### AWS API Gateway, v1 REST API endpoint & v2 HTTP API (v1 payload)
+##### AWS API Gateway
 
 Tags collected if event is sourced by either:
 
 - AWS API Gateway v1 REST API endpoint configured with `AWS_PROXY` integration type.
-- AWS API Gateway v2 HTTP API endpoint configured with v1 version of a payload
+- AWS API Gateway v2 HTTP API endpoint configured with either v1 or v2 version of a payload
 
 | Name                                                     | Value                                                                               |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
