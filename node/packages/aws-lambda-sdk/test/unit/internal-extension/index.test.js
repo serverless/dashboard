@@ -312,4 +312,77 @@ describe('internal-extension/index.test.js', () => {
       })
     );
   });
+
+  it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
+    const {
+      trace: {
+        spans: [{ tags }],
+      },
+    } = await handleInvocation('api-endpoint', {
+      isApiEndpoint: true,
+      payload: {
+        version: '2.0',
+        routeKey: 'POST /v2',
+        rawPath: '/v2',
+        rawQueryString: 'lone=value&multi=one,stillone&multi=two',
+        headers: {
+          'content-length': '385',
+          'content-type':
+            'multipart/form-data; boundary=--------------------------419073009317249310175915',
+          'multi': 'one,stillone,two',
+        },
+        queryStringParameters: {
+          lone: 'value',
+          multi: 'one,stillone,two',
+        },
+        requestContext: {
+          accountId: '205994128558',
+          apiId: 'xxx',
+          domainName: 'xxx.execute-api.us-east-1.amazonaws.com',
+          domainPrefix: 'xx',
+          http: {
+            method: 'POST',
+            path: '/v2',
+            protocol: 'HTTP/1.1',
+            sourceIp: '80.55.87.22',
+            userAgent: 'PostmanRuntime/7.29.0',
+          },
+          requestId: 'XyGnwhe0oAMEJJw=',
+          routeKey: 'POST /v2',
+          stage: '$default',
+          time: '01/Sep/2022:13:46:51 +0000',
+          timeEpoch: 1662040011065,
+        },
+        body: 'LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTQxOTA3MzAwOTMxNzI0OTMxMDE3NTkxNQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJMb25lIg0KDQpvbmUNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS00MTkwNzMwMDkzMTcyNDkzMTAxNzU5MTUNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibXVsdGkiDQoNCm9uZSxzdGlsbG9uZQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTQxOTA3MzAwOTMxNzI0OTMxMDE3NTkxNQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtdWx0aSINCg0KdHdvDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tNDE5MDczMDA5MzE3MjQ5MzEwMTc1OTE1LS0NCg==',
+        isBase64Encoded: true,
+      },
+    });
+
+    expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
+    expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
+    expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('$default');
+
+    expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal('XyGnwhe0oAMEJJw=');
+    expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1662040011065);
+    expect(tags.get('aws.lambda.api_gateway.request.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('aws.lambda.api_gateway.request.domain')).to.equal(
+      'xxx.execute-api.us-east-1.amazonaws.com'
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
+      JSON.stringify({
+        'content-length': '385',
+        'content-type':
+          'multipart/form-data; boundary=--------------------------419073009317249310175915',
+        'multi': 'one,stillone,two',
+      })
+    );
+    expect(tags.get('aws.lambda.api_gateway.request.method')).to.equal('POST');
+    expect(tags.get('aws.lambda.api_gateway.request.path')).to.equal('/v2');
+    expect(tags.get('aws.lambda.api_gateway.request.query_string_parameters')).to.equal(
+      JSON.stringify({
+        lone: 'value',
+        multi: 'one,stillone,two',
+      })
+    );
+  });
 });
