@@ -131,6 +131,8 @@ describe('lib/trace-span.test.js', () => {
     childSpan.tags.set('top_snake.deep_snake.nested_snake', '3');
     childSpan.tags.set('some.boolean', true);
     childSpan.tags.set('some.number', 123);
+    childSpan.tags.set('some.strings', ['foo', 'bar']);
+    childSpan.tags.set('some.numbers', [12, 23]);
     childSpan.close();
     const protoJson = childSpan.toProtobufObject();
     expect(protoJson).to.deep.equal({
@@ -144,7 +146,12 @@ describe('lib/trace-span.test.js', () => {
         toptag: '1',
         top: { nested: '2', deep: { nested: '3' } },
         topSnake: { deepSnake: { nestedSnake: '3' } },
-        some: { boolean: true, number: new Long(123, 0, true) },
+        some: {
+          boolean: true,
+          number: new Long(123, 0, true),
+          strings: ['foo', 'bar'],
+          numbers: [new Long(12, 0, true), new Long(23, 0, true)],
+        },
       },
     });
     expect(Long.isLong(protoJson.startTimeUnixNano)).to.be.true;
@@ -157,10 +164,14 @@ describe('lib/trace-span.test.js', () => {
       childSpan.tags.set('bool', true);
       childSpan.tags.set('string', 'string');
       childSpan.tags.set('num', 23);
+      childSpan.tags.set('strings', ['foo', 'bar']);
+      childSpan.tags.set('numbers', [1, 2]);
       expect(Array.from(childSpan.tags)).to.deep.equal([
         ['bool', true],
         ['string', 'string'],
         ['num', 23],
+        ['strings', ['foo', 'bar']],
+        ['numbers', [1, 2]],
       ]);
     });
 
