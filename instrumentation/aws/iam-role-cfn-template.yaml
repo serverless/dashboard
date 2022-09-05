@@ -55,10 +55,10 @@ Resources:
                 sts:ExternalId:
                   Ref: ExternalId
       Path: "/"
-  ServerlessMetricsRole:
+  ServerlessMonitoringRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: ServerlessMetricsRole
+      RoleName: ServerlessMonitoringRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -68,6 +68,7 @@ Resources:
               Service:
                 - streams.metrics.cloudwatch.amazonaws.com
                 - firehose.amazonaws.com
+                - logs.amazonaws.com
             Action:
               - sts:AssumeRole
             Condition:
@@ -1428,6 +1429,34 @@ Resources:
               # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotification.html
               - "s3:PutBucketNotification"
             Resource: "*"
+          - Effect: Allow
+            Action:
+              # Grants permission to delete a specified stack.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeleteStack.html
+              - "cloudformation:DeleteStack"
+              # Grants permission to delete the specified managed policy and remove it from any IAM entities (users, groups, or roles) to which it is attached.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeletePolicy.html
+              - "iam:DeletePolicy"
+              # Grants permission to delete the specified role.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeleteRole.html
+              - "iam:DeleteRole"
+              # Grants permission to detach a managed policy from the specified role.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DetachRolePolicy.html
+              - "iam:DetachRolePolicy"
+              # Grants permission to delete a version from the specified managed policy
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeletePolicyVersion.html
+              - "iam:DeletePolicyVersion"
+              # Grants permission to retrieve information about the specified managed policy, including the policy's default version and the total number of identities to which the policy is attached.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_GetPolicy.html
+              - "iam:GetPolicy"
+              # Grants permission to list information about the versions of the specified managed policy, including the version that is currently set as the policy's default version.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_ListPolicyVersions.html
+              - "iam:ListPolicyVersions"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessRole"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMonitoringRole"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/Serverless-Inc-Role-Stack-PolicyOfServerlessRole*"
+              - !Sub "arn:aws:iam::605087871047:policy/Serverless-Inc-Role-Stack-PolicyOfServerlessMonitoringRole*"
   #
   ##
   ###
@@ -1435,7 +1464,7 @@ Resources:
   ###
   ##
   #
-  PolicyOfServerlessRoleMetricsGroup:
+  PolicyOfServerlessRoleMonitoringGroup:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -1469,7 +1498,39 @@ Resources:
               #
               ##
               ###
-              #### Serverless Metrics - Kinesis Firehose Delivery policies
+              #### Serverless Logs - Cloud Watch Logs Filter
+              ###
+              ##
+              #
+
+              ##
+              ## Cloudwatch Logs
+              #
+              # Serverless Inc. Comments: These enables us to automatically configure and continuously verify configuration exists Subscription filters for Cloudwatch.
+              # Creates or updates a destination. This operation is used only to create destinations for cross-account subscriptions.
+              # A destination encapsulates a physical resource (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time stream of log events for a different account, ingested using PutLogEvents.
+              # Through an access policy, a destination controls what is written to it. By default, PutDestination does not set any access policy with the destination, which means a cross-account user cannot call PutSubscriptionFilter against this destination. To enable this, the destination owner must call PutDestinationPolicy after PutDestination.
+
+              # Grants permissions to create or update a Destination.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestination.html
+              - "logs:PutDestination"
+              # Grants permissions to create or update an access policy associated with an existing Destination.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestinationPolicy.html
+              - "logs:PutDestinationPolicy"
+              # Grants permissions to create or update a subscription filter and associates it with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html
+              - "logs:PutSubscriptionFilter"
+              # Grants permissions to delete a subscription filter associated with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteSubscriptionFilter.html
+              - "logs:DeleteSubscriptionFilter"
+            Resource:
+              - !Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:metric-stream/serverless_metrics-stream"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Monitoring - Kinesis Firehose Delivery policies
               ###
               ##
               #
@@ -1485,6 +1546,7 @@ Resources:
               - "firehose:DeleteDeliveryStream"
             Resource:
               - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
+              - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_logs-firehose"
           - Effect: Allow
             Action:
               #
@@ -1501,12 +1563,19 @@ Resources:
               # Grants permission to create a new bucket.
               # https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html
               - "s3:CreateBucket"
-              # Grants permission to delete the bucket named in the URI
+              # Grants permission to delete the bucket named in the URI.
               # https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucket.html
               - "s3:DeleteBucket"
+              # Grants permission to list some or all of the objects in an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+              - "s3:ListBucket"
+              # Grants permission to remove the null version of an object and insert a delete marker, which becomes the current version of the object.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
+              - "s3:DeleteObject"
             Resource:
               # The bucket name will include unique id to avoid bucket duplication
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
+              - "arn:aws:s3:::serverless.logs-firehose-backup-*"
   #
   ##
   ###
@@ -1528,7 +1597,7 @@ Resources:
               # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html
               - "iam:PassRole"
             Resource:
-              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMetricsRole"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMonitoringRole"
   #
   ##
   ###
@@ -1536,11 +1605,11 @@ Resources:
   ###
   ##
   #
-  PolicyOfServerlessMetricsRoleStreamGroup:
+  PolicyOfServerlessMonitoringRoleStreamGroup:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
-        - !Ref ServerlessMetricsRole
+        - !Ref ServerlessMonitoringRole
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -1549,7 +1618,7 @@ Resources:
               #
               ##
               ###
-              #### Serverless Metrics Stream - Kinesis Firehose policies
+              #### Serverless Monitoring Stream - Kinesis Firehose policies
               ###
               ##
               #
@@ -1562,11 +1631,12 @@ Resources:
               - "firehose:PutRecordBatch"
             Resource:
               - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
-  PolicyOfServerlessMetricsRoleFirehoseGroup:
+              - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_logs-firehose"
+  PolicyOfServerlessMonitoringRoleFirehoseGroup:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
-        - !Ref ServerlessMetricsRole
+        - !Ref ServerlessMonitoringRole
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -1624,6 +1694,8 @@ Resources:
             Resource:
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*/*"
+              - "arn:aws:s3:::serverless.logs-firehose-backup-*"
+              - "arn:aws:s3:::serverless.logs-firehose-backup-*/*"
           - Effect: Allow
             Action:
               #
