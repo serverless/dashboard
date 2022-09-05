@@ -83,7 +83,7 @@ Resources:
   ###
   ##
   #
-  PolicyOfServerlessRoleReadGroupAtoD:
+  ServerlessReadOnlyPolicyAtoD:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -590,7 +590,7 @@ Resources:
               # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTagsOfResource.html
               - "dynamodb:ListTagsOfResource"
             Resource: "*"
-  PolicyOfServerlessRoleReadGroupEtoK:
+  ServerlessReadOnlyPolicyEtoK:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -910,7 +910,7 @@ Resources:
               # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListTagsForStream.html
               - "kinesis:ListTagsForStream"
             Resource: "*"
-  PolicyOfServerlessRoleReadGroupLtoX:
+  ServerlessReadOnlyPolicyLtoX:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -1366,7 +1366,7 @@ Resources:
   ###
   ##
   #
-  PolicyOfServerlessRoleWriteGroup:
+  ServerlessWritePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -1453,18 +1453,18 @@ Resources:
               # https://docs.aws.amazon.com/IAM/latest/APIReference/API_ListPolicyVersions.html
               - "iam:ListPolicyVersions"
             Resource:
+              - !Sub "${AWS::StackId}"
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessRole"
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMonitoringRole"
-              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/Serverless-Inc-Role-Stack-PolicyOfServerlessRole*"
-              - !Sub "arn:aws:iam::605087871047:policy/Serverless-Inc-Role-Stack-PolicyOfServerlessMonitoringRole*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/Serverless-Inc-Role-Stack-Serverless*"
   #
   ##
   ###
-  #### SERVERLESS ROLE Metrics PERMISSIONS
+  #### SERVERLESS ROLE MONITORING PERMISSIONS
   ###
   ##
   #
-  PolicyOfServerlessRoleMonitoringGroup:
+  ServerlessMonitoringPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -1583,7 +1583,7 @@ Resources:
   ###
   ##
   #
-  PolicyOfServerlessRoleAssumeGroup:
+  ServerlessAssumePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -1605,7 +1605,7 @@ Resources:
   ###
   ##
   #
-  PolicyOfServerlessMonitoringRoleStreamGroup:
+  ServerlessMonitoringStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
@@ -1632,7 +1632,7 @@ Resources:
             Resource:
               - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
               - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_logs-firehose"
-  PolicyOfServerlessMonitoringRoleFirehoseGroup:
+  ServerlessMonitoringFirehosePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Roles:
