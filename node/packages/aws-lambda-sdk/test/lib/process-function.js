@@ -290,13 +290,16 @@ module.exports = async (testConfig, coreConfig) => {
 
   log.info('Retrieve list of written reports %s', testConfig.name);
   const reports = await retrieveReports(testConfig);
-  for (let i = 0; i < reports.invocationsData.length; i++) {
-    const invocationMeta = invocationsMeta[i];
-    Object.assign(reports.invocationsData[i], {
-      localDuration: invocationMeta.duration,
-      responsePayload: invocationMeta.payload,
-    });
+  try {
+    for (let i = 0; i < reports.invocationsData.length; i++) {
+      const invocationMeta = invocationsMeta[i];
+      Object.assign(reports.invocationsData[i], {
+        localDuration: invocationMeta.duration,
+        responsePayload: invocationMeta.payload,
+      });
+    }
+  } finally {
+    log.info('Obtained reports %s %o', testConfig.name, reports);
   }
-  log.info('Obtained reports %s %o', testConfig.name, reports);
   return reports;
 };
