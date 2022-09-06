@@ -4,6 +4,7 @@ const { IAM } = require('@aws-sdk/client-iam');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
+const { SQS } = require('@aws-sdk/client-sqs');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const awsRequest = require('../utils/aws-request');
@@ -71,6 +72,50 @@ const deleteHttpApis = async () => {
     Array.from(await getAllHttpApiIds(), async (apiId) => {
       await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: apiId });
       log.notice('Deleted HTTP API %s', apiId);
+    })
+  );
+};
+
+const getAllEventSourceMappings = async (nextMarker) => {
+  const result = await awsRequest(Lambda, 'listEventSourceMappings', {
+    MaxItems: 100,
+    Marker: nextMarker,
+  });
+  const uuids = result.EventSourceMappings.filter(({ FunctionArn: functionArn }) =>
+    functionArn.includes(`:${basename}-`)
+  ).map(({ UUID: uuid }) => uuid);
+
+  if (result.NextMarker) {
+    uuids.push(...Array.from(await getAllEventSourceMappings(result.NextMarker)));
+  }
+  return new Set(uuids);
+};
+const deleteEventSourceMappings = async () => {
+  await Promise.all(
+    Array.from(await getAllEventSourceMappings(), async (uuid) => {
+      await awsRequest(Lambda, 'deleteEventSourceMapping', { UUID: uuid });
+      log.notice('Deleted event source mapping %s', uuid);
+    })
+  );
+};
+
+const getAllSqsQueues = async (nextToken) => {
+  const result = await awsRequest(SQS, 'listQueues', {
+    MaxResults: 1000,
+    NextToken: nextToken,
+  });
+  const queueUrls = result.QueueUrls.filter((queueUrl) => queueUrl.includes(`/${basename}-`));
+
+  if (result.NextToken) {
+    queueUrls.push(...Array.from(await getAllSqsQueues(result.NextMarker)));
+  }
+  return new Set(queueUrls);
+};
+const deleteSqsQueues = async () => {
+  await Promise.all(
+    Array.from(await getAllSqsQueues(), async (queueUrl) => {
+      await awsRequest(SQS, 'deleteQueue', { QueueUrl: queueUrl });
+      log.notice('Deleted SQS queue %s', queueUrl.slice(queueUrl.lastIndexOf('/') + 1));
     })
   );
 };
@@ -144,7 +189,13 @@ module.exports = async (options = {}) => {
   log.notice('Cleanup %s', basename);
   const mode = options.mode || 'all';
   if (mode === 'all') {
-    await Promise.all([deleteFunctions(), deleteRestApis(), deleteHttpApis()]);
+    await Promise.all([
+      deleteFunctions(),
+      deleteRestApis(),
+      deleteHttpApis(),
+      deleteEventSourceMappings(),
+      deleteSqsQueues(),
+    ]);
   }
   await Promise.all([deleteAllLayers(), deleteRole()]);
 };

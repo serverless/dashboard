@@ -385,4 +385,63 @@ describe('internal-extension/index.test.js', () => {
       })
     );
   });
+
+  it('should handle SQS event', async () => {
+    const {
+      trace: {
+        spans: [{ tags }],
+      },
+    } = await handleInvocation('callback', {
+      payload: {
+        Records: [
+          {
+            messageId: '6f606577-4d1f-455c-b504-807abed7ca02',
+            receiptHandle:
+              'AQEB/LOFwavQVbGysR5jhfP3AdX4MVURjti2FpQtoXmpHVtqu+/bYooyXNCiw1isU7Aa+LyAhjX1FiG7EP94Zy+oZOgVYAoBb3yCPRH5IUcRVxlK820ZOBSScsS2/7pgzaC3lZehaQ+haN3w8RZwozPp7CtUEEpNgdWbLsEE/UNI0Yr4iUf7wOXN3UFOu/A5HFgmF3LutB6bHTy7pd0ijycSkRTWGb/WvPMRZk6R496oHVg5cmp0F0OIVBbMdPyCicZcS+k+e8UzwCo+I9V0AKucXQ==',
+            body: '{"foo":"bar2"}',
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1662124100657',
+              SequenceNumber: '18872247843477743616',
+              MessageGroupId: '1662124100026',
+              SenderId: 'AIDAJJ4KIO2BX5KCDWJDM',
+              MessageDeduplicationId: '1662124100026',
+              ApproximateFirstReceiveTimestamp: '1662124100657',
+            },
+            messageAttributes: {},
+            md5OfBody: '1ccead62a3eb3d76d0e305271a7aa0b1',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:us-east-1:992311060759:test.fifo',
+            awsRegion: 'us-east-1',
+          },
+          {
+            messageId: '6f606577-4d1f-455c-0000-807abed7ca02',
+            receiptHandle:
+              'AQEB/LOFwavQVbGysR5jhfP3AdX4MVURjti2FpQtoXmpHVtqu+/bYooyXNCiw1isU7Aa+LyAhjX1FiG7EP94Zy+oZOgVYAoBb3yCPRH5IUcRVxlK820ZOBSScsS2/7pgzaC3lZehaQ+haN3w8RZwozPp7CtUEEpNgdWbLsEE/UNI0Yr4iUf7wOXN3UFOu/A5HFgmF3LutB6bHTy7pd0ijycSkRTWGb/WvPMRZk6R496oHVg5cmp0F0OIVBbMdPyCicZcS+k+e8UzwCo+I9V0AKucXQ==',
+            body: '{"foo":"bar2"}',
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1662124100657',
+              SequenceNumber: '18872247843477743616',
+              MessageGroupId: '1662124100026',
+              SenderId: 'AIDAJJ4KIO2BX5KCDWJDM',
+              MessageDeduplicationId: '1662124100026',
+              ApproximateFirstReceiveTimestamp: '1662124100657',
+            },
+            messageAttributes: {},
+            md5OfBody: '1ccead62a3eb3d76d0e305271a7aa0b1',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:us-east-1:992311060759:test.fifo',
+            awsRegion: 'us-east-1',
+          },
+        ],
+      },
+    });
+
+    expect(tags.get('aws.lambda.sqs.queue_name')).to.equal('test.fifo');
+    expect(tags.get('aws.lambda.sqs.message_ids')).to.deep.equal([
+      '6f606577-4d1f-455c-b504-807abed7ca02',
+      '6f606577-4d1f-455c-0000-807abed7ca02',
+    ]);
+  });
 });
