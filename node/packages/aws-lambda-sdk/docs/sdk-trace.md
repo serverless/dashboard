@@ -73,6 +73,15 @@ Tags collected if event is sourced by either:
 | `aws.lambda.api_gateway.request.path_parameters`         | JSON string of request path parameters                                              |
 | `aws.lambda.api_gateway.request.query_string_parameters` | JSON string of query string parameters. Multi value parameters are stored as arrays |
 
+##### SQS queue message
+
+Tags collected if event is sourced by SQS queue
+
+| Name                         | Value                |
+| ---------------------------- | -------------------- |
+| `aws.lambda.sqs.queue_name`  | Queue name           |
+| `aws.lambda.sqs.message_ids` | Array of message ids |
+
 ---
 
 ### `aws.lambda.initialization`

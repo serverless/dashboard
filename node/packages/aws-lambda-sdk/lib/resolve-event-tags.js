@@ -99,6 +99,36 @@ const httpApiV2EventMap = [
   'isBase64Encoded',
 ];
 
+const sqsEventMap = [
+  [
+    'Records',
+    [
+      [
+        '0',
+        [
+          'messageId',
+          'receiptHandle',
+          'body',
+          [
+            'attributes',
+            [
+              'ApproximateReceiveCount',
+              'SentTimestamp',
+              'SenderId',
+              'ApproximateFirstReceiveTimestamp',
+            ],
+          ],
+          'messageAttributes',
+          'md5OfBody',
+          'eventSource',
+          'eventSourceARN',
+          'awsRegion',
+        ],
+      ],
+    ],
+  ],
+];
+
 module.exports = (event) => {
   if (!isObject(event)) return;
   if (doesObjectMatchMap(event, apiGatewayEventMap)) {
@@ -156,5 +186,17 @@ module.exports = (event) => {
       { prefix: 'aws.lambda.api_gateway.request' }
     );
     return;
+  }
+
+  if (doesObjectMatchMap(event, sqsEventMap)) {
+    // SQS Queue event
+    const queueArn = event.Records[0].eventSourceARN;
+    awsLambdaSpan.tags.setMany(
+      {
+        queue_name: queueArn.slice(queueArn.lastIndexOf(':') + 1),
+        message_ids: event.Records.map(({ messageId }) => messageId),
+      },
+      { prefix: 'aws.lambda.sqs' }
+    );
   }
 };

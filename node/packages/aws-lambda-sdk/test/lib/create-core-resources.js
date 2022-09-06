@@ -96,6 +96,11 @@ const createRole = async (config) => {
             Action: ['logs:PutLogEvents'],
             Resource: `arn:*:logs:*:*:log-group:/aws/lambda/${basename}*:*:*`,
           },
+          {
+            Effect: 'Allow',
+            Action: ['sqs:*'],
+            Resource: '*',
+          },
         ],
       }),
     }).catch((error) => {

@@ -4,9 +4,11 @@ const { expect } = require('chai');
 
 const path = require('path');
 const log = require('log').get('test');
+const wait = require('timers-ext/promise/sleep');
 const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
+const { SQS } = require('@aws-sdk/client-sqs');
 const { default: fetch } = require('node-fetch');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
@@ -64,6 +66,30 @@ describe('integration', function () {
     await deferredAddPermission;
   };
 
+  const createEventSourceMapping = async (functionName, eventSourceArn) => {
+    try {
+      return (
+        await awsRequest(Lambda, 'createEventSourceMapping', {
+          FunctionName: functionName,
+          EventSourceArn: eventSourceArn,
+        })
+      ).UUID;
+    } catch (error) {
+      if (error.message.includes('Please update or delete the existing mapping with UUID')) {
+        const previousUuid = error.message
+          .slice(error.message.indexOf('with UUID ') + 'with UUID '.length)
+          .trim();
+        log.notice(
+          'Found existing event source mapping (%s) for %s, reusing',
+          previousUuid,
+          functionName
+        );
+        return previousUuid;
+      }
+      throw error;
+    }
+  };
+
   const useCasesConfig = new Map([
     [
       'esm-callback/index',
@@ -89,6 +115,91 @@ describe('integration', function () {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          [
+            'sqs',
+            {
+              isAsyncInvocation: true,
+              hooks: {
+                afterCreate: async function self(testConfig) {
+                  const queueName =
+                    (testConfig.queueName = `${testConfig.configuration.FunctionName}.fifo`);
+                  try {
+                    testConfig.queueUrl = (
+                      await awsRequest(SQS, 'createQueue', {
+                        QueueName: queueName,
+                        Attributes: { FifoQueue: true },
+                      })
+                    ).QueueUrl;
+                  } catch (error) {
+                    if (error.code === 'AWS.SimpleQueueService.QueueDeletedRecently') {
+                      log.notice(
+                        'Queue of same name was deleted recently, we must wait up to 60s to continue'
+                      );
+                      await wait(10000);
+                      await self(testConfig);
+                      return;
+                    }
+                    throw error;
+                  }
+                  const queueArn = `arn:aws:sqs:${process.env.AWS_REGION}:${coreConfig.accountId}:${queueName}`;
+                  const sourceMappingUuid = (testConfig.sourceMappingUuid =
+                    await createEventSourceMapping(
+                      testConfig.configuration.FunctionName,
+                      queueArn
+                    ));
+                  let queueState;
+                  do {
+                    await wait(300);
+                    queueState = (
+                      await awsRequest(Lambda, 'getEventSourceMapping', {
+                        UUID: sourceMappingUuid,
+                      })
+                    ).State;
+                  } while (queueState !== 'Enabled');
+                },
+                beforeDelete: async (testConfig) => {
+                  await Promise.all([
+                    awsRequest(Lambda, 'deleteEventSourceMapping', {
+                      UUID: testConfig.sourceMappingUuid,
+                    }),
+                    awsRequest(SQS, 'deleteQueue', { QueueUrl: testConfig.queueUrl }),
+                  ]);
+                },
+              },
+              invoke: async (testConfig) => {
+                const startTime = process.hrtime.bigint();
+                await awsRequest(SQS, 'sendMessage', {
+                  QueueUrl: testConfig.queueUrl,
+                  MessageBody: 'test',
+                  MessageGroupId: String(Date.now()),
+                  MessageDeduplicationId: String(Date.now()),
+                });
+                let pendingMessages;
+                do {
+                  await wait(300);
+                  const { Attributes: attributes } = await awsRequest(SQS, 'getQueueAttributes', {
+                    QueueUrl: testConfig.queueUrl,
+                    AttributeNames: ['All'],
+                  });
+                  pendingMessages =
+                    Number(attributes.ApproximateNumberOfMessages) +
+                    Number(attributes.ApproximateNumberOfMessagesNotVisible) +
+                    Number(attributes.ApproximateNumberOfMessagesDelayed);
+                } while (pendingMessages);
+
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                return { duration };
+              },
+              test: ({ invocationsData, testConfig }) => {
+                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags['aws.lambda.sqs.queue_name']).to.equal(testConfig.queueName);
+                  expect(tags['aws.lambda.sqs.message_ids'].length).to.equal(1);
+                }
+              },
+            },
+          ],
         ]),
       },
     ],
@@ -358,7 +469,7 @@ describe('integration', function () {
       const { expectedOutcome } = testConfig;
       const { invocationsData } = testResult;
       if (expectedOutcome === 'success' || expectedOutcome === 'error:handled') {
-        if (expectedOutcome === 'success') {
+        if (expectedOutcome === 'success' && !testConfig.isAsyncInvocation) {
           for (const { responsePayload } of invocationsData) {
             expect(responsePayload.raw).to.equal('"ok"');
           }
