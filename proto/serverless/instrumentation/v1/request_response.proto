@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package serverless.instrumentation.v1;
+
+import "serverless/instrumentation/tags/v1/tags.proto";
+
+option go_package = ".;protoc";
+
+// RequestResponse is the AWS Lambda Event and Response Data.
+// In the Serverless Platform there will be two of these payloads
+// One for Event payload and then one for the payload returned at the end of 
+// the function invocation.
+message RequestResponse {
+  // The Global Serverless Platform Tags
+  serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
+  // The trace Id of the invocation
+  optional bytes trace_id = 2;
+  // The span id of the root Lambda Span that request data is attached to on ingest.
+  optional bytes span_id = 3;
+  // The Lambda Request Id.
+  optional string request_id = 4;
+
+  // The Request or the Response data. A single payload may only have either request_data
+  // or response_data. Ingest will not accept payloads that contain both.
+  oneof data {
+    string request_data = 5;
+    string response_data = 6;
+  };
+}
