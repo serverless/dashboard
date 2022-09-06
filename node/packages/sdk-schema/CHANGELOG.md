@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.3.0...@serverless/sdk-schema@0.4.0) (2022-09-06)
+
+### ⚠ BREAKING CHANGES
+
+- `aws.lambda.sqs.operation` and `aws.lambda.sns.operation`are removed from schema (been added by mistake as they apply only to AWS SDK spans)
+
+### Bug Fixes
+
+- Remove tags which do not apply to `aws.lambda` span ([705087b](https://github.com/serverless/console/commit/705087b91d655df050849b9cfda326f85a447db8))
+
 ## [0.3.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.2.0...@serverless/sdk-schema@0.3.0) (2022-08-31)
 
 ### ⚠ BREAKING CHANGES
