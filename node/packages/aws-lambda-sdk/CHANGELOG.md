@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.2.0...@serverless/aws-lambda-sdk@0.2.1) (2022-09-06)
+
+### Features
+
+- Instrument API Gateway v2 HTTP API (v1 payload) events ([82fefe2](https://github.com/serverless/console/commit/82fefe27f430e103fdd06019c3289727bb9622f6))
+- Instrument API Gateway v2 HTTP API (v2 payload) events ([f09907e](https://github.com/serverless/console/commit/f09907e4d76c3c78f1fb8d598e4a998f875d86e8))
+- Instrument SNS events ([a228bb7](https://github.com/serverless/console/commit/a228bb719b105b355967ee5295897958b97af89d))
+- Instrument SQS events ([cea70d6](https://github.com/serverless/console/commit/cea70d629184a0b5400648d6134368e092db8ce3))
+- Support arrays as tag values ([def9dfc](https://github.com/serverless/console/commit/def9dfc59bb13435afa9860c73269826aa6cadd7))
+
 ## [0.2.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.1.0...@serverless/aws-lambda-sdk@0.2.0) (2022-09-01)
 
 ### ⚠ BREAKING CHANGES
