@@ -40,6 +40,9 @@
     - [Metric.ValueAtQuantile](#serverless-instrumentation-v1-Metric-ValueAtQuantile)
     - [MetricPayload](#serverless-instrumentation-v1-MetricPayload)
   
+- [serverless/instrumentation/v1/request_response.proto](#serverless_instrumentation_v1_request_response-proto)
+    - [RequestResponse](#serverless-instrumentation-v1-RequestResponse)
+  
 - [serverless/instrumentation/v1/trace.proto](#serverless_instrumentation_v1_trace-proto)
     - [Span](#serverless-instrumentation-v1-Span)
     - [TracePayload](#serverless-instrumentation-v1-TracePayload)
@@ -593,6 +596,45 @@ Metrics plus the global tags required by our Serverless Ingest Platform.
 | ----- | ---- | ----- | ----------- |
 | sls_tags | [serverless.instrumentation.tags.v1.SlsTags](#serverless-instrumentation-tags-v1-SlsTags) |  |  |
 | metrics | [Metric](#serverless-instrumentation-v1-Metric) | repeated | A list of Metrics to be ingested. Ingest does not impose a limit on the number of Metrics in a single payload. It is the responsibility of the metrics&#39; producers to limit the size of payloads based on their own requirements. |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="serverless_instrumentation_v1_request_response-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## serverless/instrumentation/v1/request_response.proto
+
+
+
+<a name="serverless-instrumentation-v1-RequestResponse"></a>
+
+### RequestResponse
+RequestResponse is the AWS Lambda Event and Response Data.
+In the Serverless Platform there will be two of these payloads
+One for Event payload and then one for the payload returned at the end of 
+the function invocation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| sls_tags | [serverless.instrumentation.tags.v1.SlsTags](#serverless-instrumentation-tags-v1-SlsTags) |  | The Global Serverless Platform Tags |
+| trace_id | [bytes](#bytes) | optional | The trace Id of the invocation |
+| span_id | [bytes](#bytes) | optional | The span id of the root Lambda Span that request data is attached to on ingest. |
+| request_id | [string](#string) | optional | The Lambda Request Id. |
+| request_data | [string](#string) |  |  |
+| response_data | [string](#string) |  |  |
 
 
 
