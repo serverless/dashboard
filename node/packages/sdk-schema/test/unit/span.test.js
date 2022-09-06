@@ -6,6 +6,7 @@ const Long = require('long');
 const projectDir = path.resolve(__dirname, '../..');
 
 const { expect } = require('chai');
+const { normalizeObject } = require('../utils');
 
 const {
   TracePayload,
@@ -65,14 +66,6 @@ const testTracePayload = {
       },
     },
   ],
-};
-
-const normalizeObject = (obj) => {
-  for (const [key, value] of Object.entries(obj)) {
-    if (value == null) delete obj[key];
-    else if (typeof value === 'object') normalizeObject(value);
-  }
-  return obj;
 };
 
 describe('span-schema', () => {
