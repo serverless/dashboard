@@ -444,4 +444,67 @@ describe('internal-extension/index.test.js', () => {
       '6f606577-4d1f-455c-0000-807abed7ca02',
     ]);
   });
+
+  it('should handle SNS event', async () => {
+    const {
+      trace: {
+        spans: [{ tags }],
+      },
+    } = await handleInvocation('callback', {
+      payload: {
+        Records: [
+          {
+            EventSource: 'aws:sns',
+            EventVersion: '1.0',
+            EventSubscriptionArn:
+              'arn:aws:sns:us-east-1:xxx:test:89e233cc-10e5-4116-8055-00980269e02d',
+            Sns: {
+              Type: 'Notification',
+              MessageId: '135f0427-2c82-5850-930b-5fb608141554',
+              TopicArn: 'arn:aws:sns:us-east-1:xxx:test',
+              Subject: null,
+              Message: 'test-messsage3',
+              Timestamp: '2022-09-06T10:35:02.094Z',
+              SignatureVersion: '1',
+              Signature:
+                'u2Jbh9dqzF44urgO0/L+Rzo4xQ0i7v5LKzAGHYwBIkBc3JYohiVTDEHru25ygtTP6djC3FSNn54+w2FlyMemli0DlV09BInUkCwt7T2+4B2KPE8iqWMH2byXTYgOhWLoQILKr1VHv44YQA9XyjmW2aUSzitO4I8Fauld5w2kY1NsLO1UX3f/1b6UiS7+N1TiDlHYy/W2fBpcZsLUn/RxmyDTNX0mlS5Ib3fVLPsYVZQpVgHPOrchRK8PvT+UijD0utU1jt3GzURTmGxW2Ys0ICBmb4OzQhUxxHLncXbbJ2HFyVsBGElDE2w6q2kxVf7lWpE6M9F99eoU9DaY0Nhv4w==',
+              SigningCertUrl:
+                'https://sns.us-east-1.amazonaws.com/SimpleNotificationService-56e67fcb41f6fec09b0196692625d385.pem',
+              UnsubscribeUrl:
+                'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:xxx:test:89e233cc-10e5-4116-8055-00980269e02d',
+              MessageAttributes: {},
+            },
+          },
+          {
+            EventSource: 'aws:sns',
+            EventVersion: '1.0',
+            EventSubscriptionArn:
+              'arn:aws:sns:us-east-1:xxx:test:89e233cc-10e5-4116-8055-00980269e02d',
+            Sns: {
+              Type: 'Notification',
+              MessageId: '135f0427-2c82-5850-0000-5fb608141554',
+              TopicArn: 'arn:aws:sns:us-east-1:xxx:test',
+              Subject: null,
+              Message: 'test-messsage3',
+              Timestamp: '2022-09-06T10:35:02.094Z',
+              SignatureVersion: '1',
+              Signature:
+                'u2Jbh9dqzF44urgO0/L+Rzo4xQ0i7v5LKzAGHYwBIkBc3JYohiVTDEHru25ygtTP6djC3FSNn54+w2FlyMemli0DlV09BInUkCwt7T2+4B2KPE8iqWMH2byXTYgOhWLoQILKr1VHv44YQA9XyjmW2aUSzitO4I8Fauld5w2kY1NsLO1UX3f/1b6UiS7+N1TiDlHYy/W2fBpcZsLUn/RxmyDTNX0mlS5Ib3fVLPsYVZQpVgHPOrchRK8PvT+UijD0utU1jt3GzURTmGxW2Ys0ICBmb4OzQhUxxHLncXbbJ2HFyVsBGElDE2w6q2kxVf7lWpE6M9F99eoU9DaY0Nhv4w==',
+              SigningCertUrl:
+                'https://sns.us-east-1.amazonaws.com/SimpleNotificationService-56e67fcb41f6fec09b0196692625d385.pem',
+              UnsubscribeUrl:
+                'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:xxx:test:89e233cc-10e5-4116-8055-00980269e02d',
+              MessageAttributes: {},
+            },
+          },
+        ],
+      },
+    });
+
+    expect(tags.get('aws.lambda.sns.topic_name')).to.equal('test');
+    expect(tags.get('aws.lambda.sns.message_ids')).to.deep.equal([
+      '135f0427-2c82-5850-930b-5fb608141554',
+      '135f0427-2c82-5850-0000-5fb608141554',
+    ]);
+  });
 });

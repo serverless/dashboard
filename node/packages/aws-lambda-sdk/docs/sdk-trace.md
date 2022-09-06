@@ -82,6 +82,15 @@ Tags collected if event is sourced by SQS queue
 | `aws.lambda.sqs.queue_name`  | Queue name           |
 | `aws.lambda.sqs.message_ids` | Array of message ids |
 
+##### SNS topic message
+
+Tags collected if event is sourced by SNS topic subscription
+
+| Name                         | Value                |
+| ---------------------------- | -------------------- |
+| `aws.lambda.sns.topic_name`  | Topic name           |
+| `aws.lambda.sns.message_ids` | Array of message ids |
+
 ---
 
 ### `aws.lambda.initialization`

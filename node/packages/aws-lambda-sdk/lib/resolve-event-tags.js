@@ -129,6 +129,38 @@ const sqsEventMap = [
   ],
 ];
 
+const snsEventMap = [
+  [
+    'Records',
+    [
+      [
+        '0',
+        [
+          'EventVersion',
+          'EventSubscriptionArn',
+          'EventSource',
+          [
+            'Sns',
+            [
+              'SignatureVersion',
+              'Timestamp',
+              'Signature',
+              'SigningCertUrl',
+              'MessageId',
+              'Message',
+              'MessageAttributes',
+              'Type',
+              'UnsubscribeUrl',
+              'TopicArn',
+              'Subject',
+            ],
+          ],
+        ],
+      ],
+    ],
+  ],
+];
+
 module.exports = (event) => {
   if (!isObject(event)) return;
   if (doesObjectMatchMap(event, apiGatewayEventMap)) {
@@ -197,6 +229,18 @@ module.exports = (event) => {
         message_ids: event.Records.map(({ messageId }) => messageId),
       },
       { prefix: 'aws.lambda.sqs' }
+    );
+  }
+
+  if (doesObjectMatchMap(event, snsEventMap)) {
+    // SNS message
+    const topicArn = event.Records[0].Sns.TopicArn;
+    awsLambdaSpan.tags.setMany(
+      {
+        topic_name: topicArn.slice(topicArn.lastIndexOf(':') + 1),
+        message_ids: event.Records.map(({ Sns: { MessageId: messageId } }) => messageId),
+      },
+      { prefix: 'aws.lambda.sns' }
     );
   }
 };
