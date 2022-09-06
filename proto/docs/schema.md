@@ -274,7 +274,6 @@ Optional Event Tags are from 100 on |
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | topic_name | [string](#string) |  | Taken from the TopicARN |
-| operation | [string](#string) |  | The operation of the SNS Event Trigger. Will always be &#39;receive&#39; currently |
 | message_ids | [string](#string) | repeated | Introspected from the events records |
 
 
@@ -291,7 +290,6 @@ Optional Event Tags are from 100 on |
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | queue_name | [string](#string) |  | Taken from the eventSourceARN |
-| operation | [string](#string) |  | The operation of the SQS Event Trigger. Will always be &#39;receive&#39; currently |
 | message_ids | [string](#string) | repeated | Introspected from the events records |
 
 
