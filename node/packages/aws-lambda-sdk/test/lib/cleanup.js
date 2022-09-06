@@ -5,6 +5,7 @@ const { Lambda } = require('@aws-sdk/client-lambda');
 const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { SQS } = require('@aws-sdk/client-sqs');
+const { SNS } = require('@aws-sdk/client-sns');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const awsRequest = require('../utils/aws-request');
@@ -120,6 +121,28 @@ const deleteSqsQueues = async () => {
   );
 };
 
+const getAllSnsTopics = async (nextToken) => {
+  const result = await awsRequest(SNS, 'listTopics', {
+    NextToken: nextToken,
+  });
+  const topicArns = result.Topics.filter(({ TopicArn: topicArn }) =>
+    topicArn.includes(`:${basename}-`)
+  );
+
+  if (result.NextToken) {
+    topicArns.push(...Array.from(await getAllSnsTopics(result.NextToken)));
+  }
+  return new Set(topicArns);
+};
+const deleteSnsTopics = async () => {
+  await Promise.all(
+    Array.from(await getAllSnsTopics(), async (topicArn) => {
+      await awsRequest(SNS, 'deleteTopic', { TopicArn: topicArn });
+      log.notice('Deleted SNS topic %s', topicArn.slice(topicArn.lastIndexOf(':') + 1));
+    })
+  );
+};
+
 const listLayerVersions = async (layerName, nextMarker = undefined) => {
   const response = await awsRequest(Lambda, 'listLayerVersions', {
     LayerName: layerName,
@@ -195,6 +218,7 @@ module.exports = async (options = {}) => {
       deleteHttpApis(),
       deleteEventSourceMappings(),
       deleteSqsQueues(),
+      deleteSnsTopics(),
     ]);
   }
   await Promise.all([deleteAllLayers(), deleteRole()]);

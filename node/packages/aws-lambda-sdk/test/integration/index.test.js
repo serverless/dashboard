@@ -9,6 +9,7 @@ const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { SQS } = require('@aws-sdk/client-sqs');
+const { SNS } = require('@aws-sdk/client-sns');
 const { default: fetch } = require('node-fetch');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
@@ -196,6 +197,59 @@ describe('integration', function () {
 
                   expect(tags['aws.lambda.sqs.queue_name']).to.equal(testConfig.queueName);
                   expect(tags['aws.lambda.sqs.message_ids'].length).to.equal(1);
+                }
+              },
+            },
+          ],
+          [
+            'sns',
+            {
+              isAsyncInvocation: true,
+              hooks: {
+                afterCreate: async function self(testConfig) {
+                  const topicName = (testConfig.topicName = testConfig.configuration.FunctionName);
+                  await awsRequest(SNS, 'createTopic', { Name: topicName });
+                  const topicArn = (testConfig.topicArn =
+                    `arn:aws:sns:${process.env.AWS_REGION}:` +
+                    `${coreConfig.accountId}:${topicName}`);
+                  await Promise.all([
+                    awsRequest(Lambda, 'addPermission', {
+                      FunctionName: testConfig.configuration.FunctionName,
+                      Principal: '*',
+                      Action: 'lambda:InvokeFunction',
+                      SourceArn: topicArn,
+                      StatementId: 'sns',
+                    }),
+                    awsRequest(SNS, 'subscribe', {
+                      TopicArn: topicArn,
+                      Protocol: 'lambda',
+                      Endpoint:
+                        `arn:aws:lambda:${process.env.AWS_REGION}:${coreConfig.accountId}` +
+                        `:function:${testConfig.configuration.FunctionName}`,
+                    }),
+                  ]);
+                },
+                beforeDelete: async (testConfig) => {
+                  await Promise.all([
+                    awsRequest(SNS, 'deleteTopic', { TopicArn: testConfig.topicArn }),
+                  ]);
+                },
+              },
+              invoke: async (testConfig) => {
+                const startTime = process.hrtime.bigint();
+                await awsRequest(SNS, 'publish', {
+                  TopicArn: testConfig.topicArn,
+                  Message: 'test',
+                });
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                return { duration };
+              },
+              test: ({ invocationsData, testConfig }) => {
+                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags['aws.lambda.sns.topic_name']).to.equal(testConfig.topicName);
+                  expect(tags['aws.lambda.sns.message_ids'].length).to.equal(1);
                 }
               },
             },
