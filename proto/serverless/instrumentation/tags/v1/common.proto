@@ -5,13 +5,20 @@ package serverless.instrumentation.tags.v1;
 option go_package = ".;protoc";
 
 message HttpTags {
-  // The Path of the incoming HTTP Request Event. Depending on the event type, the path may come from
-  // API Gateway or a routing library's, like express, instrumentation.
-  string path = 1;
-  // The method of the incoming HTTP Request Event.
-  string method = 2;
-  // The HTTP protocol of the incoming HTTP Request Event.
-  string protocol = 3;
+  // The method of the HTTP Request
+  string method = 1;
+  // The protocol of the HTTP Request
+  string protocol = 2;
+  // The host of the HTTP Request
+  string host = 3;
+  // The path of the HTTP Request
+  string path = 4;
+  // The query string of the HTTP Request
+  optional string query = 5;
+
   // The Response Status Code.
-  optional fixed64 status_code = 4;
+  optional fixed64 status_code = 6;
+  // Eventual request error code
+  optional string error_code = 7;
 }
+
