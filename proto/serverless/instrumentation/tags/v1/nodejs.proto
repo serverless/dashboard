@@ -10,5 +10,5 @@ message ExpressTags {
   // The HTTP Path defined by the Express Route Handler.
   string path = 2;
   // The status code returned by the Express Route Handler.
-  uint32 status_code = 3;
+  optional uint32 status_code = 3;
 }
