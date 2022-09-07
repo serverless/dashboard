@@ -26,22 +26,11 @@ message AwsApiGatewayTags {
     string id = 1;
     // The request time in milliseconds from epoch.
     fixed64 time_epoch = 2;
-    // The HTTP protocol of the request.
-    string protocol = 3;
-    // The domain name of the request.
-    string domain = 4;
     // JSON string containing Request Headers
-    string headers = 5;
-    // The HTTP method of the request.
-    string method = 6;
-    // The HTTP Path of the request.
-    string path = 7;
-
+    string headers = 3;
 
     // JSON string containing Request Path Parameters
-    optional string path_parameters = 16;
-    // JSON string contain Query String Parameters
-    optional string query_string_parameters = 17;
+    optional string path_parameters = 10;
   }
 
   AwsApiGatewayRequestTags request = 15;
