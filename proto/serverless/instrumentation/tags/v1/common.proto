@@ -13,5 +13,5 @@ message HttpTags {
   // The HTTP protocol of the incoming HTTP Request Event.
   string protocol = 3;
   // The Response Status Code.
-  fixed64 status_code = 4;
+  optional fixed64 status_code = 4;
 }
