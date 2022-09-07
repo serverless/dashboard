@@ -360,7 +360,7 @@ outcomes upon completion.
 | path | [string](#string) |  | The Path of the incoming HTTP Request Event. Depending on the event type, the path may come from API Gateway or a routing library&#39;s, like express, instrumentation. |
 | method | [string](#string) |  | The method of the incoming HTTP Request Event. |
 | protocol | [string](#string) |  | The HTTP protocol of the incoming HTTP Request Event. |
-| status_code | [fixed64](#fixed64) |  | The Response Status Code. |
+| status_code | [fixed64](#fixed64) | optional | The Response Status Code. |
 
 
 
@@ -393,7 +393,7 @@ outcomes upon completion.
 | ----- | ---- | ----- | ----------- |
 | method | [string](#string) |  | The HTTP method defined by the Express Route Handler. |
 | path | [string](#string) |  | The HTTP Path defined by the Express Route Handler. |
-| status_code | [uint32](#uint32) |  | The status code returned by the Express Route Handler. |
+| status_code | [uint32](#uint32) | optional | The status code returned by the Express Route Handler. |
 
 
 
