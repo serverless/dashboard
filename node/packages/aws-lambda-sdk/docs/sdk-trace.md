@@ -73,15 +73,17 @@ Tags collected if event is sourced by either:
 - AWS API Gateway v1 REST API endpoint configured with `AWS_PROXY` integration type.
 - AWS API Gateway v2 HTTP API endpoint configured with either v1 or v2 version of a payload
 
-| Name                                             | Value                                                                    |
-| ------------------------------------------------ | ------------------------------------------------------------------------ |
-| `aws.lambda.api_gateway.account_id`              | Account id of API Gateway                                                |
-| `aws.lambda.api_gateway.api_id`                  | API id                                                                   |
-| `aws.lambda.api_gateway.api_stage`               | API stage                                                                |
-| `aws.lambda.api_gateway.request.id`              | API Gateway request id                                                   |
-| `aws.lambda.api_gateway.request.time_epoch`      | API Gateway request time                                                 |
-| `aws.lambda.api_gateway.request.headers`         | JSON string of request headers. Multi value headers are stored as arrays |
-| `aws.lambda.api_gateway.request.path_parameters` | JSON string of request path parameters                                   |
+| Name                                             | Value                                                                                 |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `aws.lambda.event_source`                        | `"aws.apigateway"`                                                                    |
+| `aws.lambda.event_type`                          | `"aws.apigateway.rest"`, `"aws.apigatewayv2.http.v1"` or `"aws.apigatewayv2.http.v2"` |
+| `aws.lambda.api_gateway.account_id`              | Account id of API Gateway                                                             |
+| `aws.lambda.api_gateway.api_id`                  | API id                                                                                |
+| `aws.lambda.api_gateway.api_stage`               | API stage                                                                             |
+| `aws.lambda.api_gateway.request.id`              | API Gateway request id                                                                |
+| `aws.lambda.api_gateway.request.time_epoch`      | API Gateway request time                                                              |
+| `aws.lambda.api_gateway.request.headers`         | JSON string of request headers. Multi value headers are stored as arrays              |
+| `aws.lambda.api_gateway.request.path_parameters` | JSON string of request path parameters                                                |
 
 ##### SQS queue message
 
@@ -89,6 +91,8 @@ Tags collected if event is sourced by SQS queue
 
 | Name                         | Value                |
 | ---------------------------- | -------------------- |
+| `aws.lambda.event_source`    | `"aws.sqs"`          |
+| `aws.lambda.event_type`      | `"aws.sqs"`          |
 | `aws.lambda.sqs.queue_name`  | Queue name           |
 | `aws.lambda.sqs.message_ids` | Array of message ids |
 
@@ -98,6 +102,8 @@ Tags collected if event is sourced by SNS topic subscription
 
 | Name                         | Value                |
 | ---------------------------- | -------------------- |
+| `aws.lambda.event_source`    | `"aws.sns"`          |
+| `aws.lambda.event_type`      | `"aws.sns"`          |
 | `aws.lambda.sns.topic_name`  | Topic name           |
 | `aws.lambda.sns.message_ids` | Array of message ids |
 

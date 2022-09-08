@@ -181,6 +181,13 @@ module.exports = (event) => {
     const { requestContext } = event;
     awsLambdaSpan.tags.setMany(
       {
+        event_source: 'aws.apigateway',
+        event_type: event.version ? 'aws.apigatewayv2.http.v1' : 'aws.apigateway.rest',
+      },
+      { prefix: 'aws.lambda' }
+    );
+    awsLambdaSpan.tags.setMany(
+      {
         account_id: requestContext.accountId,
         api_id: requestContext.apiId,
         api_stage: requestContext.stage,
@@ -211,6 +218,10 @@ module.exports = (event) => {
   if (doesObjectMatchMap(event, httpApiV2EventMap)) {
     // API Gateway v2 HTTP API (v2 payload) event
     const { requestContext } = event;
+    awsLambdaSpan.tags.setMany(
+      { event_source: 'aws.apigateway', event_type: 'aws.apigatewayv2.http.v2' },
+      { prefix: 'aws.lambda' }
+    );
     awsLambdaSpan.tags.setMany(
       {
         account_id: requestContext.accountId,
@@ -245,6 +256,10 @@ module.exports = (event) => {
     // SQS Queue event
     const queueArn = event.Records[0].eventSourceARN;
     awsLambdaSpan.tags.setMany(
+      { event_source: 'aws.sqs', event_type: 'aws.sqs' },
+      { prefix: 'aws.lambda' }
+    );
+    awsLambdaSpan.tags.setMany(
       {
         queue_name: queueArn.slice(queueArn.lastIndexOf(':') + 1),
         message_ids: event.Records.map(({ messageId }) => messageId),
@@ -256,6 +271,10 @@ module.exports = (event) => {
   if (doesObjectMatchMap(event, snsEventMap)) {
     // SNS message
     const topicArn = event.Records[0].Sns.TopicArn;
+    awsLambdaSpan.tags.setMany(
+      { event_source: 'aws.sns', event_type: 'aws.sns' },
+      { prefix: 'aws.lambda' }
+    );
     awsLambdaSpan.tags.setMany(
       {
         topic_name: topicArn.slice(topicArn.lastIndexOf(':') + 1),
