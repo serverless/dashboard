@@ -58,13 +58,15 @@ Tags collected if event is sourced by either:
 - AWS API Gateway v1 REST API endpoint configured with `AWS_PROXY` integration type.
 - AWS API Gateway v2 HTTP API endpoint configured with either v1 or v2 version of a payload
 
-| Name                       | Value                                                          |
-| -------------------------- | -------------------------------------------------------------- |
-| `aws.lambda.http.method`   | Request method                                                 |
-| `aws.lambda.http.protocol` | Endpoint protocol (e.g. `HTTP/1.1`)                            |
-| `aws.lambda.http.host`     | Endpoint Domain name                                           |
-| `aws.lambda.http.path`     | Request path                                                   |
-| `aws.lambda.http.query`    | Query parameters as query string (e.g. `foo=bar&query=string`) |
+| Name                          | Value                                                           |
+| ----------------------------- | --------------------------------------------------------------- |
+| `aws.lambda.http.method`      | Request method                                                  |
+| `aws.lambda.http.protocol`    | Endpoint protocol (e.g. `HTTP/1.1`)                             |
+| `aws.lambda.http.host`        | Endpoint Domain name                                            |
+| `aws.lambda.http.path`        | Request path                                                    |
+| `aws.lambda.http.query`       | Query parameters as query string (e.g. `foo=bar&query=string`)  |
+| `aws.lambda.http.status_code` | Response status code                                            |
+| `aws.lambda.http.error_code`  | Filled, if no or invalid status code is provided by the handler |
 
 ##### AWS API Gateway
 

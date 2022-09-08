@@ -407,6 +407,8 @@ describe('integration', function () {
                   expect(tags['aws.lambda.api_gateway.request.path_parameters']).to.equal(
                     JSON.stringify({ param: 'some-param' })
                   );
+
+                  expect(tags['aws.lambda.http.status_code']).to.equal(200);
                 }
               },
             },
@@ -456,6 +458,8 @@ describe('integration', function () {
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
                   expect(tags['aws.lambda.http.method']).to.equal('POST');
                   expect(tags['aws.lambda.http.path']).to.equal('/test');
+
+                  expect(tags['aws.lambda.http.status_code']).to.equal(200);
                 }
               },
             },
@@ -505,6 +509,8 @@ describe('integration', function () {
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
                   expect(tags['aws.lambda.http.method']).to.equal('POST');
                   expect(tags['aws.lambda.http.path']).to.equal('/test');
+
+                  expect(tags['aws.lambda.http.status_code']).to.equal(200);
                 }
               },
             },
