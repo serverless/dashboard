@@ -68,7 +68,7 @@
     "ts-proto": "^1.125.0",
     "tslib": "^2.4.0",
     "type": "^2.7.2",
-    "typescript": "^4.8.2",
+    "typescript": "^4.8.3",
     "uuid": "^8.3.2",
     "yargs-parser": "^21.1.1"
   },
