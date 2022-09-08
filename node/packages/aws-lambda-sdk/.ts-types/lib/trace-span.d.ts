@@ -18,6 +18,7 @@ declare class TraceSpan {
       startTime?: bigint;
       immediateDescendants?: string[];
       tags?: Record<string, boolean | number | string | Date | Array | Null>;
+      onCloseByParent?: Function;
     }
   ): TraceSpan;
   close(): TraceSpan;

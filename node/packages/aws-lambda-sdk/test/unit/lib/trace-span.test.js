@@ -90,6 +90,21 @@ describe('lib/trace-span.test.js', () => {
     expect(grandGrandChild.endTime).to.equal(childSpan.endTime);
   });
 
+  it('should support `options.onCloseByParent`', () => {
+    let invokeCount = 0;
+    const childSpan = rootSpan.createSubSpan('child', {});
+    childSpan.createSubSpan('grand', {
+      onCloseByParent: () => ++invokeCount,
+    });
+    const grandChildSpan = childSpan.createSubSpan('grand2', {
+      onCloseByParent: () => ++invokeCount,
+    });
+    grandChildSpan.close();
+    childSpan.close();
+
+    expect(invokeCount).to.equal(1);
+  });
+
   describe('spans', () => {
     it('should resolve just self when no subspans', () => {
       const span = rootSpan.createSubSpan('child');
