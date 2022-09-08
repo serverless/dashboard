@@ -9,6 +9,7 @@ const coerceToString = require('type/string/coerce');
 const ensureString = require('type/string/ensure');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const resolveEventTags = require('./lib/resolve-event-tags');
+const resolveResponseTags = require('./lib/resolve-response-tags');
 const pkgJson = require('./package');
 
 const serverlessSdk = global.serverlessSdk || require('./');
@@ -75,6 +76,8 @@ module.exports = (originalHandler, options = {}) => {
             awsLambdaSpan.tags.set('aws.lambda.error_exception_stacktrace', outcomeResult.stack);
           }
         }
+      } else {
+        resolveResponseTags(outcomeResult);
       }
 
       awsLambdaSpan.close();

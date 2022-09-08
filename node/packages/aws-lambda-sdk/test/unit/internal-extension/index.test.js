@@ -208,6 +208,8 @@ describe('internal-extension/index.test.js', () => {
       JSON.stringify({ param: 'some-param' })
     );
     expect(tags.get('aws.lambda.http.query')).to.equal('foo=bar&next=first&next=second');
+
+    expect(tags.get('aws.lambda.http.status_code')).to.equal(200);
   });
 
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
@@ -303,6 +305,8 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.get('aws.lambda.http.method')).to.equal('POST');
     expect(tags.get('aws.lambda.http.path')).to.equal('/v1');
     expect(tags.get('aws.lambda.http.query')).to.equal('lone=value&multi=one%2Cstillone&multi=two');
+
+    expect(tags.get('aws.lambda.http.status_code')).to.equal(200);
   });
 
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
@@ -372,6 +376,8 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.get('aws.lambda.http.method')).to.equal('POST');
     expect(tags.get('aws.lambda.http.path')).to.equal('/v2');
     expect(tags.get('aws.lambda.http.query')).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
+
+    expect(tags.get('aws.lambda.http.status_code')).to.equal(200);
   });
 
   it('should handle SQS event', async () => {
