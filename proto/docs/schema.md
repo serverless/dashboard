@@ -86,13 +86,8 @@
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  | The unique API GW Request ID. |
 | time_epoch | [fixed64](#fixed64) |  | The request time in milliseconds from epoch. |
-| protocol | [string](#string) |  | The HTTP protocol of the request. |
-| domain | [string](#string) |  | The domain name of the request. |
 | headers | [string](#string) |  | JSON string containing Request Headers |
-| method | [string](#string) |  | The HTTP method of the request. |
-| path | [string](#string) |  | The HTTP Path of the request. |
 | path_parameters | [string](#string) | optional | JSON string containing Request Path Parameters |
-| query_string_parameters | [string](#string) | optional | JSON string contain Query String Parameters |
 
 
 
@@ -357,10 +352,13 @@ outcomes upon completion.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| path | [string](#string) |  | The Path of the incoming HTTP Request Event. Depending on the event type, the path may come from API Gateway or a routing library&#39;s, like express, instrumentation. |
-| method | [string](#string) |  | The method of the incoming HTTP Request Event. |
-| protocol | [string](#string) |  | The HTTP protocol of the incoming HTTP Request Event. |
+| method | [string](#string) |  | The method of the HTTP Request |
+| protocol | [string](#string) |  | The protocol of the HTTP Request |
+| host | [string](#string) |  | The host of the HTTP Request |
+| path | [string](#string) |  | The path of the HTTP Request |
+| query | [string](#string) | optional | The query string of the HTTP Request |
 | status_code | [fixed64](#fixed64) | optional | The Response Status Code. |
+| error_code | [string](#string) | optional | Eventual request error code |
 
 
 
