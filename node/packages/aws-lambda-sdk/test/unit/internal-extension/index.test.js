@@ -190,10 +190,8 @@ describe('internal-extension/index.test.js', () => {
       'da6c4e62-62c8-4693-8a4a-d6c4d943ddb4'
     );
     expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1661872803090);
-    expect(tags.get('aws.lambda.api_gateway.request.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('aws.lambda.api_gateway.request.domain')).to.equal(
-      'xxx.execute-api.us-east-1.amazonaws.com'
-    );
+    expect(tags.get('aws.lambda.http.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('aws.lambda.http.host')).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
     expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
       JSON.stringify({
         'Accept': '*/*',
@@ -201,17 +199,12 @@ describe('internal-extension/index.test.js', () => {
         'Other': ['First', 'Second'],
       })
     );
-    expect(tags.get('aws.lambda.api_gateway.request.method')).to.equal('POST');
-    expect(tags.get('aws.lambda.api_gateway.request.path')).to.equal('/test/some-path/some-param');
+    expect(tags.get('aws.lambda.http.method')).to.equal('POST');
+    expect(tags.get('aws.lambda.http.path')).to.equal('/test/some-path/some-param');
     expect(tags.get('aws.lambda.api_gateway.request.path_parameters')).to.equal(
       JSON.stringify({ param: 'some-param' })
     );
-    expect(tags.get('aws.lambda.api_gateway.request.query_string_parameters')).to.equal(
-      JSON.stringify({
-        foo: 'bar',
-        next: ['first', 'second'],
-      })
-    );
+    expect(tags.get('aws.lambda.http.query')).to.equal('foo=bar&next=first&next=second');
   });
 
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
@@ -291,10 +284,8 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal('XyGqvi5mIAMEJtw=');
     expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1662040030156);
-    expect(tags.get('aws.lambda.api_gateway.request.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('aws.lambda.api_gateway.request.domain')).to.equal(
-      'xxx.execute-api.us-east-1.amazonaws.com'
-    );
+    expect(tags.get('aws.lambda.http.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('aws.lambda.http.host')).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
     expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
       JSON.stringify({
         'Content-Length': '385',
@@ -303,14 +294,9 @@ describe('internal-extension/index.test.js', () => {
         'Multi': ['one,stillone', 'two'],
       })
     );
-    expect(tags.get('aws.lambda.api_gateway.request.method')).to.equal('POST');
-    expect(tags.get('aws.lambda.api_gateway.request.path')).to.equal('/v1');
-    expect(tags.get('aws.lambda.api_gateway.request.query_string_parameters')).to.equal(
-      JSON.stringify({
-        lone: 'value',
-        multi: ['one,stillone', 'two'],
-      })
-    );
+    expect(tags.get('aws.lambda.http.method')).to.equal('POST');
+    expect(tags.get('aws.lambda.http.path')).to.equal('/v1');
+    expect(tags.get('aws.lambda.http.query')).to.equal('lone=value&multi=one%2Cstillone&multi=two');
   });
 
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
@@ -364,10 +350,8 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal('XyGnwhe0oAMEJJw=');
     expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1662040011065);
-    expect(tags.get('aws.lambda.api_gateway.request.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('aws.lambda.api_gateway.request.domain')).to.equal(
-      'xxx.execute-api.us-east-1.amazonaws.com'
-    );
+    expect(tags.get('aws.lambda.http.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('aws.lambda.http.host')).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
     expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
       JSON.stringify({
         'content-length': '385',
@@ -376,14 +360,9 @@ describe('internal-extension/index.test.js', () => {
         'multi': 'one,stillone,two',
       })
     );
-    expect(tags.get('aws.lambda.api_gateway.request.method')).to.equal('POST');
-    expect(tags.get('aws.lambda.api_gateway.request.path')).to.equal('/v2');
-    expect(tags.get('aws.lambda.api_gateway.request.query_string_parameters')).to.equal(
-      JSON.stringify({
-        lone: 'value',
-        multi: 'one,stillone,two',
-      })
-    );
+    expect(tags.get('aws.lambda.http.method')).to.equal('POST');
+    expect(tags.get('aws.lambda.http.path')).to.equal('/v2');
+    expect(tags.get('aws.lambda.http.query')).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
   });
 
   it('should handle SQS event', async () => {

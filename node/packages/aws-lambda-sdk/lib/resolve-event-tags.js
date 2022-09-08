@@ -25,6 +25,19 @@ const resolveParametersJson = (multiValueParameters) => {
   return JSON.stringify(result);
 };
 
+const resolveQueryString = (queryParameters) => {
+  if (!queryParameters) return null;
+  const params = new URLSearchParams();
+  for (const [name, values] of Object.entries(queryParameters)) {
+    if (!Array.isArray(values)) {
+      params.append(name, values);
+      continue;
+    }
+    for (const value of values) params.append(name, value);
+  }
+  return params.toString();
+};
+
 const apiGatewayEventMap = [
   'resource',
   'path',
@@ -178,15 +191,20 @@ module.exports = (event) => {
       {
         id: requestContext.requestId,
         time_epoch: requestContext.requestTimeEpoch,
-        protocol: requestContext.protocol,
-        domain: requestContext.domainName,
         headers: resolveParametersJson(event.multiValueHeaders) || '{}',
-        method: requestContext.httpMethod,
-        path: requestContext.path,
         path_parameters: event.pathParameters ? JSON.stringify(event.pathParameters) : null,
-        query_string_parameters: resolveParametersJson(event.multiValueQueryStringParameters),
       },
       { prefix: 'aws.lambda.api_gateway.request' }
+    );
+    awsLambdaSpan.tags.setMany(
+      {
+        method: requestContext.httpMethod,
+        protocol: requestContext.protocol,
+        host: requestContext.domainName,
+        path: requestContext.path,
+        query: resolveQueryString(event.multiValueQueryStringParameters),
+      },
+      { prefix: 'aws.lambda.http' }
     );
     return;
   }
@@ -205,17 +223,20 @@ module.exports = (event) => {
       {
         id: requestContext.requestId,
         time_epoch: requestContext.timeEpoch,
-        protocol: requestContext.http.protocol,
-        domain: requestContext.domainName,
         headers: JSON.stringify(event.headers || {}),
-        method: requestContext.http.method,
-        path: requestContext.http.path,
         path_parameters: event.pathParameters ? JSON.stringify(event.pathParameters) : null,
-        query_string_parameters: event.queryStringParameters
-          ? JSON.stringify(event.queryStringParameters)
-          : null,
       },
       { prefix: 'aws.lambda.api_gateway.request' }
+    );
+    awsLambdaSpan.tags.setMany(
+      {
+        method: requestContext.http.method,
+        protocol: requestContext.http.protocol,
+        host: requestContext.domainName,
+        path: requestContext.http.path,
+        query: resolveQueryString(event.queryStringParameters),
+      },
+      { prefix: 'aws.lambda.http' }
     );
     return;
   }
