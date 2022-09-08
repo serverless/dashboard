@@ -391,12 +391,10 @@ describe('integration', function () {
                   expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('test');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.domain');
+                  expect(tags).to.have.property('aws.lambda.http.host');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
-                  expect(tags['aws.lambda.api_gateway.request.method']).to.equal('POST');
-                  expect(tags['aws.lambda.api_gateway.request.path']).to.equal(
-                    '/test/some-path/some-param'
-                  );
+                  expect(tags['aws.lambda.http.method']).to.equal('POST');
+                  expect(tags['aws.lambda.http.path']).to.equal('/test/some-path/some-param');
                   expect(tags['aws.lambda.api_gateway.request.path_parameters']).to.equal(
                     JSON.stringify({ param: 'some-param' })
                   );
@@ -442,10 +440,10 @@ describe('integration', function () {
                   expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('$default');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.domain');
+                  expect(tags).to.have.property('aws.lambda.http.host');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
-                  expect(tags['aws.lambda.api_gateway.request.method']).to.equal('POST');
-                  expect(tags['aws.lambda.api_gateway.request.path']).to.equal('/test');
+                  expect(tags['aws.lambda.http.method']).to.equal('POST');
+                  expect(tags['aws.lambda.http.path']).to.equal('/test');
                 }
               },
             },
@@ -488,10 +486,10 @@ describe('integration', function () {
                   expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('$default');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.domain');
+                  expect(tags).to.have.property('aws.lambda.http.host');
                   expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
-                  expect(tags['aws.lambda.api_gateway.request.method']).to.equal('POST');
-                  expect(tags['aws.lambda.api_gateway.request.path']).to.equal('/test');
+                  expect(tags['aws.lambda.http.method']).to.equal('POST');
+                  expect(tags['aws.lambda.http.path']).to.equal('/test');
                 }
               },
             },

@@ -51,6 +51,21 @@ Tags set in case of `'error:handled'` outcome
 | `aws.lambda.error_exception_message`    | Error message     |
 | `aws.lambda.error_exception_stacktrace` | Error stack trace |
 
+##### HTTP Endpoint
+
+Tags collected if event is sourced by either:
+
+- AWS API Gateway v1 REST API endpoint configured with `AWS_PROXY` integration type.
+- AWS API Gateway v2 HTTP API endpoint configured with either v1 or v2 version of a payload
+
+| Name                       | Value                                                          |
+| -------------------------- | -------------------------------------------------------------- |
+| `aws.lambda.http.method`   | Request method                                                 |
+| `aws.lambda.http.protocol` | Endpoint protocol (e.g. `HTTP/1.1`)                            |
+| `aws.lambda.http.host`     | Endpoint Domain name                                           |
+| `aws.lambda.http.path`     | Request path                                                   |
+| `aws.lambda.http.query`    | Query parameters as query string (e.g. `foo=bar&query=string`) |
+
 ##### AWS API Gateway
 
 Tags collected if event is sourced by either:
@@ -58,20 +73,15 @@ Tags collected if event is sourced by either:
 - AWS API Gateway v1 REST API endpoint configured with `AWS_PROXY` integration type.
 - AWS API Gateway v2 HTTP API endpoint configured with either v1 or v2 version of a payload
 
-| Name                                                     | Value                                                                               |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `aws.lambda.api_gateway.account_id`                      | Account id of API Gateway                                                           |
-| `aws.lambda.api_gateway.api_id`                          | API id                                                                              |
-| `aws.lambda.api_gateway.api_stage`                       | API stage                                                                           |
-| `aws.lambda.api_gateway.request.id`                      | API Gateway request id                                                              |
-| `aws.lambda.api_gateway.request.time_epoch`              | API Gateway request time                                                            |
-| `aws.lambda.api_gateway.request.protocol`                | Endpoint protocol (e.g. `HTTP/1.1`)                                                 |
-| `aws.lambda.api_gateway.request.domain`                  | Endpoint Domain name                                                                |
-| `aws.lambda.api_gateway.request.headers`                 | JSON string of request headers. Multi value headers are stored as arrays            |
-| `aws.lambda.api_gateway.request.method`                  | Request method                                                                      |
-| `aws.lambda.api_gateway.request.path`                    | Request path                                                                        |
-| `aws.lambda.api_gateway.request.path_parameters`         | JSON string of request path parameters                                              |
-| `aws.lambda.api_gateway.request.query_string_parameters` | JSON string of query string parameters. Multi value parameters are stored as arrays |
+| Name                                             | Value                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------ |
+| `aws.lambda.api_gateway.account_id`              | Account id of API Gateway                                                |
+| `aws.lambda.api_gateway.api_id`                  | API id                                                                   |
+| `aws.lambda.api_gateway.api_stage`               | API stage                                                                |
+| `aws.lambda.api_gateway.request.id`              | API Gateway request id                                                   |
+| `aws.lambda.api_gateway.request.time_epoch`      | API Gateway request time                                                 |
+| `aws.lambda.api_gateway.request.headers`         | JSON string of request headers. Multi value headers are stored as arrays |
+| `aws.lambda.api_gateway.request.path_parameters` | JSON string of request path parameters                                   |
 
 ##### SQS queue message
 
