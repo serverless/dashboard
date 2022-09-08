@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.4.0...@serverless/sdk-schema@0.5.0) (2022-09-08)
+
+### ⚠ BREAKING CHANGES
+
+- Remove url related `aws.lambda.api_gateway.request` tags. Instead `aws.lambda.http` tags should be filled only
+- Reordered tags in context `HttpTags` and added required `host` tag
+- `ExpressTags.status_code` is converted to be optional
+- `HttpTags.status_code` is converted to be optional
+
+### Features
+
+- Add RequestResponse Schema ([#177](https://github.com/serverless/console/issues/177)) ([9152c8a](https://github.com/serverless/console/commit/9152c8abece69d865e30f8bc70ecc4ec77ba83b0))
+- Improve HTTP request tags ([855070d](https://github.com/serverless/console/commit/855070db2b9e856d6aad2b912cf534671ae5894b))
+- Make `status_code` optional in express tracking ([e46b8d8](https://github.com/serverless/console/commit/e46b8d81deb384f5bf2cb6323475b233d168cfa0))
+- Make `status_code` optional in HTTP tracking ([f862891](https://github.com/serverless/console/commit/f86289111b76a913253bb84d5f38eab99bc82848))
+- Remove url related `aws.lambda.api_gateway.request` tags ([0861571](https://github.com/serverless/console/commit/0861571555a3939d6d8eeaa97f816a90a7410e37))
+
 ## [0.4.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.3.0...@serverless/sdk-schema@0.4.0) (2022-09-06)
 
 ### ⚠ BREAKING CHANGES
