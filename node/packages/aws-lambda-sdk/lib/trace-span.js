@@ -194,11 +194,7 @@ class TraceSpan {
         });
       }
     }
-    if (options.tags) {
-      for (const [tagName, tagValue] of Object.entries(options.tags)) {
-        this.tags.set(tagName, tagValue);
-      }
-    }
+    if (options.tags) this.tags.setMany(options.tags);
     this._onCloseByParent = options.onCloseByParent;
   }
   createSubSpan(name, options = {}) {
