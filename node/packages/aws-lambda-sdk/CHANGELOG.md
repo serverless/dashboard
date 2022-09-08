@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.2.1...@serverless/aws-lambda-sdk@0.3.0) (2022-09-08)
+
+### ⚠ BREAKING CHANGES
+
+- `@serverless/sdk-schema` was upgraded to v0.5.0, which changed structure of API Gateway event related tags
+
+### Features
+
+- Setup`aws.lambda.event_type` and `aws.lambda.event_source` tags ([c21622d](https://github.com/serverless/console/commit/c21622d8c143159346e6fb68cdb176c0f83475c4))
+- Setup `aws.lambda.http.status_code` tag ([f60ec61](https://github.com/serverless/console/commit/f60ec6162f06d57eda8de64c1c8f1b7b0a4c571d))
+- Write generic `aws.lambda.http` tags in case of API Gateway events ([3231a6c](https://github.com/serverless/console/commit/3231a6c48c370862db73b203ee70e3f541ebc101))
+
 ### [0.2.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.2.0...@serverless/aws-lambda-sdk@0.2.1) (2022-09-06)
 
 ### Features
