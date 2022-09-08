@@ -7,6 +7,7 @@ const ensureIterable = require('type/iterable/ensure');
 const isDate = require('type/date/is');
 const isObject = require('type/object/is');
 const ensurePlainObject = require('type/plain-object/ensure');
+const ensurePlainFunction = require('type/plain-function/ensure');
 const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 const d = require('d');
@@ -198,6 +199,7 @@ class TraceSpan {
         this.tags.set(tagName, tagValue);
       }
     }
+    this._onCloseByParent = options.onCloseByParent;
   }
   createSubSpan(name, options = {}) {
     if (this.endTime) {
@@ -235,6 +237,10 @@ class TraceSpan {
         isOptional: true,
         name: 'options.tags',
       }),
+      onCloseByParent: ensurePlainFunction(options.onCloseByParent, {
+        isOptional: true,
+        name: 'options.onCloseByParent',
+      }),
     });
     this.subSpans.add(span);
     return span;
@@ -263,7 +269,10 @@ class TraceSpan {
     }
     this.endTime = targetEndTime || defaultEndTime;
     for (const child of this.subSpans) {
-      if (!child.endTime) child.close({ endTime: this.endTime });
+      if (!child.endTime) {
+        if (child._onCloseByParent) child._onCloseByParent();
+        if (!child.endTime) child.close({ endTime: this.endTime });
+      }
     }
     return this;
   }
