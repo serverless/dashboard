@@ -182,6 +182,9 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
+    expect(tags.get('aws.lambda.event_source')).to.equal('aws.apigateway');
+    expect(tags.get('aws.lambda.event_type')).to.equal('aws.apigateway.rest');
+
     expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
     expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
     expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('test');
@@ -278,6 +281,9 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
+    expect(tags.get('aws.lambda.event_source')).to.equal('aws.apigateway');
+    expect(tags.get('aws.lambda.event_type')).to.equal('aws.apigatewayv2.http.v1');
+
     expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
     expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
     expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('$default');
@@ -343,6 +349,9 @@ describe('internal-extension/index.test.js', () => {
         isBase64Encoded: true,
       },
     });
+
+    expect(tags.get('aws.lambda.event_source')).to.equal('aws.apigateway');
+    expect(tags.get('aws.lambda.event_type')).to.equal('aws.apigatewayv2.http.v2');
 
     expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
     expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
@@ -417,6 +426,9 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
+    expect(tags.get('aws.lambda.event_source')).to.equal('aws.sqs');
+    expect(tags.get('aws.lambda.event_type')).to.equal('aws.sqs');
+
     expect(tags.get('aws.lambda.sqs.queue_name')).to.equal('test.fifo');
     expect(tags.get('aws.lambda.sqs.message_ids')).to.deep.equal([
       '6f606577-4d1f-455c-b504-807abed7ca02',
@@ -479,6 +491,9 @@ describe('internal-extension/index.test.js', () => {
         ],
       },
     });
+
+    expect(tags.get('aws.lambda.event_source')).to.equal('aws.sns');
+    expect(tags.get('aws.lambda.event_type')).to.equal('aws.sns');
 
     expect(tags.get('aws.lambda.sns.topic_name')).to.equal('test');
     expect(tags.get('aws.lambda.sns.message_ids')).to.deep.equal([

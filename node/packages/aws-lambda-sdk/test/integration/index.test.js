@@ -195,6 +195,9 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
+                  expect(tags['aws.lambda.event_source']).to.equal('aws.sqs');
+                  expect(tags['aws.lambda.event_type']).to.equal('aws.sqs');
+
                   expect(tags['aws.lambda.sqs.queue_name']).to.equal(testConfig.queueName);
                   expect(tags['aws.lambda.sqs.message_ids'].length).to.equal(1);
                 }
@@ -247,6 +250,9 @@ describe('integration', function () {
               test: ({ invocationsData, testConfig }) => {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
+
+                  expect(tags['aws.lambda.event_source']).to.equal('aws.sns');
+                  expect(tags['aws.lambda.event_type']).to.equal('aws.sns');
 
                   expect(tags['aws.lambda.sns.topic_name']).to.equal(testConfig.topicName);
                   expect(tags['aws.lambda.sns.message_ids'].length).to.equal(1);
@@ -386,6 +392,9 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
+                  expect(tags['aws.lambda.event_source']).to.equal('aws.apigateway');
+                  expect(tags['aws.lambda.event_type']).to.equal('aws.apigateway.rest');
+
                   expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
                   expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.restApiId);
                   expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('test');
@@ -435,6 +444,9 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
+                  expect(tags['aws.lambda.event_source']).to.equal('aws.apigateway');
+                  expect(tags['aws.lambda.event_type']).to.equal('aws.apigatewayv2.http.v1');
+
                   expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
                   expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.apiId);
                   expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('$default');
@@ -480,6 +492,9 @@ describe('integration', function () {
               test: ({ invocationsData, testConfig }) => {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
+
+                  expect(tags['aws.lambda.event_source']).to.equal('aws.apigateway');
+                  expect(tags['aws.lambda.event_type']).to.equal('aws.apigatewayv2.http.v2');
 
                   expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
                   expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.apiId);
