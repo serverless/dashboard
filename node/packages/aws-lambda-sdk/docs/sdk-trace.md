@@ -136,3 +136,21 @@ _Current invocation span can always be accessed at `serverlessSdk.traceSpans.aws
 #### Tags
 
 _None_
+
+---
+
+### `node.http.request` & `node.https.request`
+
+Covers HTTP and HTTPS request as made in context of function logic
+
+#### Tags
+
+| Name                  | Value                                           |
+| --------------------- | ----------------------------------------------- |
+| `http[s].method`      | Request method (e.g. `GET`)                     |
+| `http[s].protocol`    | Currently `HTTP/1.1` in all cases               |
+| `http[s].host`        | Domain name and port name if custom             |
+| `http[s].path`        | Request pathname (query string is not included) |
+| `http[s].query`       | Query string (if provided)                      |
+| `http[s].status_code` | Response status code                            |
+| `http[s].error_code`  | If request errored, its error code              |

@@ -6,3 +6,6 @@ module.exports.traceSpans = {
   awsLambda: require('./trace-spans/aws-lambda'),
   awsLambdaInitialization: require('./trace-spans/aws-lambda-initialization'),
 };
+
+// Auto generate HTTP(S) request spans
+require('./lib/instrument/http').install();

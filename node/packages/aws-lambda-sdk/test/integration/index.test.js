@@ -15,8 +15,11 @@ const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
 const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
+const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
 const awsRequest = require('../utils/aws-request');
 const pkgJson = require('../../package');
+
+const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 for (const name of ['TEST_INTERNAL_LAYER_FILENAME']) {
   // In tests, current working directory is mocked,
@@ -518,6 +521,159 @@ describe('integration', function () {
         ]),
       },
     ],
+    [
+      'http-requester',
+      {
+        variants: new Map([
+          [
+            'http',
+            {
+              test: ({ invocationsData }) => {
+                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                  const httpRequestSpan = trace.spans[trace.spans.length - 1];
+
+                  expect(httpRequestSpan.name).to.equal('node.http.request');
+
+                  const { tags } = httpRequestSpan;
+                  expect(tags['http.method']).to.equal('GET');
+                  expect(tags['http.protocol']).to.equal('HTTP/1.1');
+                  expect(tags['http.host']).to.equal('localhost:3177');
+                  expect(tags['http.path']).to.equal('/');
+                  expect(tags['http.query']).to.equal('foo=bar');
+                  expect(tags['http.status_code']).to.equal(200);
+                }
+              },
+            },
+          ],
+          [
+            'https',
+            {
+              hooks: {
+                afterCreate: async function self(testConfig) {
+                  const urlEndpointLambdaName =
+                    (testConfig.urlEndpointLambdaName = `${testConfig.configuration.FunctionName}-endpoint`);
+                  try {
+                    await awsRequest(Lambda, 'createFunction', {
+                      FunctionName: urlEndpointLambdaName,
+                      Handler: 'api-endpoint.handler',
+                      Role: coreConfig.roleArn,
+                      Runtime: 'nodejs16.x',
+                      Code: {
+                        ZipFile: resolveFileZipBuffer(
+                          path.resolve(fixturesDirname, 'api-endpoint.js')
+                        ),
+                      },
+                      MemorySize: 1024,
+                    });
+                  } catch (error) {
+                    if (
+                      error.message.includes(
+                        'The role defined for the function cannot be assumed by Lambda'
+                      ) ||
+                      error.message.includes('because the KMS key is invalid for CreateGrant')
+                    ) {
+                      // Occassional race condition issue on AWS side, retry
+                      await self(testConfig);
+                      return;
+                    }
+                    if (error.message.includes('Function already exist')) {
+                      log.notice(
+                        'Function %s already exists, deleting and re-creating',
+                        testConfig.name
+                      );
+                      await awsRequest(Lambda, 'deleteFunction', {
+                        FunctionName: urlEndpointLambdaName,
+                      });
+                      await self(testConfig);
+                      return;
+                    }
+                    throw error;
+                  }
+                  await awsRequest(Lambda, 'createAlias', {
+                    FunctionName: urlEndpointLambdaName,
+                    FunctionVersion: '$LATEST',
+                    Name: 'url',
+                  });
+                  const deferredFunctionUrl = (async () => {
+                    try {
+                      return (
+                        await awsRequest(Lambda, 'createFunctionUrlConfig', {
+                          AuthType: 'NONE',
+                          FunctionName: urlEndpointLambdaName,
+                          Qualifier: 'url',
+                        })
+                      ).FunctionUrl;
+                    } catch (error) {
+                      if (
+                        error.message.includes('FunctionUrlConfig exists for this Lambda function')
+                      ) {
+                        return (
+                          await awsRequest(Lambda, 'getFunctionUrlConfig', {
+                            FunctionName: urlEndpointLambdaName,
+                            Qualifier: 'url',
+                          })
+                        ).FunctionUrl;
+                      }
+                      throw error;
+                    }
+                  })();
+                  await Promise.all([
+                    deferredFunctionUrl,
+                    awsRequest(Lambda, 'addPermission', {
+                      FunctionName: urlEndpointLambdaName,
+                      Qualifier: 'url',
+                      FunctionUrlAuthType: 'NONE',
+                      Principal: '*',
+                      Action: 'lambda:InvokeFunctionUrl',
+                      StatementId: 'public-function-url',
+                    }),
+                  ]);
+                  testConfig.functionUrl = await deferredFunctionUrl;
+                  let state;
+                  do {
+                    await wait(100);
+                    ({
+                      Configuration: { State: state },
+                    } = await awsRequest(Lambda, 'getFunction', {
+                      FunctionName: urlEndpointLambdaName,
+                    }));
+                  } while (state !== 'Active');
+                },
+                beforeDelete: async (testConfig) => {
+                  await Promise.all([
+                    awsRequest(Lambda, 'deleteFunctionUrlConfig', {
+                      FunctionName: testConfig.urlEndpointLambdaName,
+                      Qualifier: 'url',
+                    }),
+                    awsRequest(Lambda, 'deleteFunction', {
+                      FunctionName: testConfig.urlEndpointLambdaName,
+                    }),
+                  ]);
+                },
+              },
+              invokePayload: (testConfig) => {
+                return { url: `${testConfig.functionUrl}?foo=bar` };
+              },
+              test: ({ invocationsData, testConfig: { functionUrl } }) => {
+                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                  const httpRequestSpan = trace.spans[trace.spans.length - 1];
+
+                  expect(httpRequestSpan.name).to.equal('node.https.request');
+
+                  const { tags } = httpRequestSpan;
+                  expect(tags['http.method']).to.equal('GET');
+                  expect(tags['http.protocol']).to.equal('HTTP/1.1');
+                  expect(tags['http.host']).to.equal(functionUrl.slice('https://'.length, -1));
+                  expect(tags['http.path']).to.equal('/');
+                  expect(tags['http.query']).to.equal('foo=bar');
+                  expect(tags['http.status_code']).to.equal(200);
+                }
+              },
+            },
+          ],
+        ]),
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
@@ -550,14 +706,14 @@ describe('integration', function () {
         for (const [index, trace] of invocationsData.map((data) => data.trace).entries()) {
           const awsLambdaSpan = trace.spans[0];
           if (index === 0) {
-            expect(trace.spans.map(({ name }) => name)).to.deep.equal([
+            expect(trace.spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.initialization',
               'aws.lambda.invocation',
             ]);
             expect(awsLambdaSpan.tags['aws.lambda.is_coldstart']).to.be.true;
           } else {
-            expect(trace.spans.map(({ name }) => name)).to.deep.equal([
+            expect(trace.spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.invocation',
             ]);

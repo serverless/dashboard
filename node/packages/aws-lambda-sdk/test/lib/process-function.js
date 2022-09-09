@@ -78,8 +78,9 @@ const ensureIsActive = async (testConfig) => {
 };
 
 const invoke = async (testConfig) => {
-  const { expectedOutcome, invokePayload } = testConfig;
-
+  const { expectedOutcome } = testConfig;
+  let { invokePayload } = testConfig;
+  if (typeof invokePayload === 'function') invokePayload = invokePayload(testConfig);
   log.debug('invoke request payload %O', invokePayload);
   let result;
   const startTime = process.hrtime.bigint();
