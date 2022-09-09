@@ -50,6 +50,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     } catch (invocationError) {
       error = invocationError;
     }
+    require('../../../lib/instrument/http').uninstall();
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
     return {
@@ -506,5 +507,28 @@ describe('internal-extension/index.test.js', () => {
       '135f0427-2c82-5850-930b-5fb608141554',
       '135f0427-2c82-5850-0000-5fb608141554',
     ]);
+  });
+
+  it('should instrument HTTP requests', async () => {
+    const {
+      trace: {
+        spans: [awsLambdaSpan],
+      },
+    } = await handleInvocation('http-requester');
+
+    const httpRequestSpan = Array.from(awsLambdaSpan.subSpans)
+      .pop()
+      .subSpans[Symbol.iterator]()
+      .next().value;
+
+    expect(httpRequestSpan.name).to.equal('node.http.request');
+
+    const { tags } = httpRequestSpan;
+    expect(tags.get('http.method')).to.equal('GET');
+    expect(tags.get('http.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('http.host')).to.equal('localhost:3177');
+    expect(tags.get('http.path')).to.equal('/');
+    expect(tags.get('http.query')).to.equal('foo=bar');
+    expect(tags.get('http.status_code')).to.equal(200);
   });
 });
