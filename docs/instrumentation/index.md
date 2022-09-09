@@ -6,11 +6,38 @@ menuOrder: 3
 -->
 
 # Sending Data to Console
-Serverless Console has a growing list of supported instrumentation options,
-for sending logs, metrics, and traces to Serverless Console. We aim to make this
-process as simple as possible and try to either offer packaged solutions with simple configuration
-options, or on-boarding through a web based user interface. 
+Serverless Console collects data by integrating with your AWS Account.
+Integrating your account will give Serverless Console access to logs
+and metrics from your Console and in some cases add an integration layer
+to your Lambda functions. 
 
-This guide describes how these integrations work, and how they 
-leverage [AWS Lambda Extensions](../glossary.md#extension), [AWS IAM Roles (in review)](../../instrumentation/aws/iam-role-cfn-template.yaml), and Cloudwatch Subscriptions (in definition) to gather data
-about how your app is functioning. 
+This documentation gives you a reference for understanding how our instrumentation 
+works and details about what is collected.
+
+## Adding the AWS Observability Integration
+Once you have [created your organization](../product/create-org.md) you need to 
+add an AWS Observability Integration to your org. The AWS Observability Integration
+is the foundation for all the data we collect about your apps and services. Adding
+the AWS Observability integration will create a new [IAM Role](#serverless-iam-role) in your account. We use this to take inventory of your account, and give you control for what's collected.
+
+If you have multiple AWS accounts, you can add more than one AWS Integration
+to your org. This will give you the ability to explore across all your
+applications. You are limited to adding each AWS Account to one org only.
+
+### Inventory Synching
+Once you have an AWS Observability Integration setup, the collection of logs and
+traces is based around the set of inventory of Lambda Functions in your AWS account.
+
+
+
+### Serverless IAM Role
+The [Serverless IAM Role](../../instrumentation/aws/iam-role-cfn-template.yaml) provides 
+the necessary access for monitoring your apps and services. We designed this template with 
+the following goals.
+
+* **Limited write access to very limited** there are a few limited services where we need
+to set things up in your AWS Account. This includes Cloudwatch, Lambda, S3 and API Gateway. 
+* **Well Documented Read Access** we realize Serverless architectures often rely on stateful
+services. We have (clearly documented and defined our read access permissions](../../instrumentation/aws/iam-role-cfn-template.yaml) for each service.
+
+
