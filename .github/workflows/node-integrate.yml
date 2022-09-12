@@ -20,6 +20,7 @@ jobs:
     outputs:
       pathChangedAwsLambdaOtelExtension: ${{ steps.pathChanges.outputs.awsLambdaOtelExtension }}
       pathChangedAwsLambdaSdk: ${{ steps.pathChanges.outputs.awsLambdaSdk }}
+      pathChangedTestGoDevMode: ${{ steps.pathChanges.outputs.testGoDevMode }}
       pathChangedSdkSchema: ${{ steps.pathChanges.outputs.sdkSchema}}
       pathChangedProto: ${{ steps.pathChanges.outputs.proto }}
     steps:
@@ -34,6 +35,9 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            testGoDevMode:
+              - 'go/packages/dev-mode/**'
+              - 'node/test/go/dev-mode/**'
             sdkSchema:
               - 'node/packages/sdk-schema/**'
             proto:
@@ -196,6 +200,9 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            testGoDevMode:
+              - 'go/packages/dev-mode/**'
+              - 'node/test/go/dev-mode/**'
             sdkSchema:
               - 'node/packages/sdk-schema/**'
             proto:
@@ -493,6 +500,71 @@ jobs:
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
           then
             git tag @serverless/aws-lambda-sdk@$NEW_VERSION
+            git push --tags
+          fi
+
+  integrateTestGoDevMode:
+    name: Integrate Dev Mode Extension
+    runs-on: ubuntu-latest
+    needs: [linuxNode16, linuxNode14]
+    if: needs.linuxNode16.outputs.pathChangedTestGoDevMode == 'true'
+    timeout-minutes: 5 # Default is 360
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SLS_ORG_ID: ${{ secrets.SLS_ORG_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # Ensure to have complete history of commits pushed with given push operation
+          # It's loose and imperfect assumption that no more than 30 commits will be pushed at once
+          fetch-depth: 30
+          # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
+          # Hence we're passing 'serverless-ci' user authentication token
+          token: ${{ secrets.USER_GITHUB_TOKEN }}
+
+      - name: Retrieve ~/.npm from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/**package*.json') }}
+
+      - name: Retrieve node_modules from cache
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/node_modules
+          key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/package.json') }}
+
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+
+      - name: Install main project dependencies
+        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node
+          npm update --save-dev --no-save
+
+      - name: Build Dev Mode Extension Layer
+        run: |
+          cd go/packages/dev-mode
+          make build
+
+      - name: Integration tests
+        run: |
+          cd node
+          npm run test:dev-mode:integration
+
+      - name: Tag if new version
+        run: |
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} go/packages/dev-mode/version.txt | grep -oE "\+[0-9]+\.[0-9]+\.[0-9]+" | cut -c 2-` || :
+          if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
+          then
+            git tag go/sls-external-extension@$NEW_VERSION
             git push --tags
           fi
 

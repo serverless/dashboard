@@ -1,0 +1,23 @@
+name: "Dev Mode Extension: Validate"
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "go/packages/dev-mode/**"
+
+defaults:
+  run:
+    working-directory: ./go/packages/dev-mode
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.18.0'
+      - name: Build layer
+        run: make build
+      - name: Unit Test
+        run: make test
