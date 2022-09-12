@@ -114,6 +114,8 @@ describe('internal-extension/index.test.js', () => {
 
   it('should handle "ESM callback"', async () => handleInvocation('esm-callback/index'));
   it('should handle "ESM thenable"', async () => handleInvocation('esm-thenable/index'));
+  it('should handle "ESM nested module"', async () =>
+    handleInvocation('esm-nested/nested/within/index'));
   it('should handle "callback"', async () => handleInvocation('callback'));
   it('should handle "thenable"', async () => handleInvocation('thenable'));
   it('should handle "esbuild from ESM callback', async () =>

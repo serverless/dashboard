@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const _ = require('lodash');
 const log = require('log').get('test');
 
@@ -33,7 +32,7 @@ module.exports = (functionVariantsConfig, options = {}) => {
 
   for (const [handlerModuleName, testConfigInput] of functionVariantsConfig) {
     const currentName = handlerModuleName.includes('/')
-      ? path.dirname(handlerModuleName)
+      ? handlerModuleName.slice(0, handlerModuleName.indexOf('/'))
       : handlerModuleName;
 
     const currentTestConfig = merge(
