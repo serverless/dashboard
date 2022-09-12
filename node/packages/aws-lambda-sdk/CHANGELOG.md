@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.3.0...@serverless/aws-lambda-sdk@0.3.1) (2022-09-12)
+
+### Features
+
+- Auto tracing of internal HTTP and HTTPS requests ([ab8a428](https://github.com/serverless/console/commit/ab8a428300fecca298fbb966f563da1edf997563))
+- `TraceSpan` option `onCloseByParent` ([f34b5d8](https://github.com/serverless/console/commit/f34b5d802f4f7ce6f391a89b87dedab5ea2d7409))
+
+### Bug Fixes
+
+- Fix wrapping of nested ESM handlers ([03e7c18](https://github.com/serverless/console/commit/03e7c18405af2cc59f30342387961ac0de8a56dc))
+
+### Maintenance Improvements
+
+- Rely on `tags.setMany` to set initial tags set ([dd8522a](https://github.com/serverless/console/commit/dd8522a6b71a12ec7f80009e377dd5d5414fa3fe))
+
 ## [0.3.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.2.1...@serverless/aws-lambda-sdk@0.3.0) (2022-09-08)
 
 ### ⚠ BREAKING CHANGES
