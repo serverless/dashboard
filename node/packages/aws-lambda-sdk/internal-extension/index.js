@@ -60,6 +60,14 @@ const doesModuleExist = (filename) => {
   }
 };
 
+const isEsmContext = (dirname) => {
+  try {
+    return require(path.resolve(dirname, 'package.json')).type === 'module';
+  } catch {
+    return false;
+  }
+};
+
 EvalError.$serverlessAwsLambdaInitializationStartTime = processStartTime;
 global.serverlessSdk = require('../');
 
@@ -74,17 +82,14 @@ const handlerModule = (() => {
         return importEsm(`${handlerModuleName}.mjs`);
       }
       if (doesModuleExist(`${handlerModuleName}.js`)) {
-        if (
-          !handlerModuleDirname.endsWith('/node_modules') &&
-          (() => {
-            try {
-              return require(path.resolve(handlerModuleDirname, 'package.json')).type === 'module';
-            } catch {
-              return false;
-            }
-          })()
-        ) {
-          return importEsm(`${handlerModuleName}.js`);
+        const fs = require('fs');
+        let currentDirname = handlerModuleDirname;
+        while (!currentDirname.endsWith('/node_modules') && currentDirname !== '/') {
+          if (fs.existsSync(path.resolve(currentDirname, 'package.json'))) {
+            if (isEsmContext(currentDirname)) return importEsm(`${handlerModuleName}.js`);
+            break;
+          }
+          currentDirname = path.dirname(currentDirname);
         }
       }
     }

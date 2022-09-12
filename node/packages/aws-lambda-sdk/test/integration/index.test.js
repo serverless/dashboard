@@ -114,6 +114,15 @@ describe('integration', function () {
       },
     ],
     [
+      'esm-nested/nested/within/index',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+        ]),
+      },
+    ],
+    [
       'callback',
       {
         variants: new Map([
