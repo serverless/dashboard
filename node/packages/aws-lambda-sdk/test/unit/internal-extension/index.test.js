@@ -56,18 +56,20 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     return {
       result,
       error,
-      trace: serverlessSdk._lastTrace,
-      protoTraceInput: serverlessSdk._lastProtoTrace,
-      protoTraceOutput:
-        serverlessSdk._lastProtoTraceBuffer &&
-        TracePayload.decode(serverlessSdk._lastProtoTraceBuffer),
+      trace: {
+        data: serverlessSdk._lastTrace,
+        protoInput: serverlessSdk._lastProtoTrace,
+        protoOutput:
+          serverlessSdk._lastProtoTraceBuffer &&
+          TracePayload.decode(serverlessSdk._lastProtoTraceBuffer),
+      },
     };
   });
-  if (outcome.error && (!outcome.protoTraceOutput || options.outcome !== 'error')) {
+  if (outcome.error && (!outcome.trace.protoOutput || options.outcome !== 'error')) {
     throw outcome.error;
   }
-  const [{ tags }] = outcome.trace.spans;
-  expect(outcome.trace.slsTags).to.deep.equal({
+  const [{ tags }] = outcome.trace.data.spans;
+  expect(outcome.trace.data.slsTags).to.deep.equal({
     'orgId': process.env.SLS_ORG_ID,
     'service': functionName,
     'sdk.name': pkgJson.name,
@@ -90,8 +92,8 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     expect(tags.get('aws.lambda.outcome')).to.equal('success');
   }
 
-  const input = normalizeObject(outcome.protoTraceInput);
-  const output = normalizeObject(outcome.protoTraceOutput);
+  const input = normalizeObject(outcome.trace.protoInput);
+  const output = normalizeObject(outcome.trace.protoOutput);
 
   expect(output.spans[0]).to.deep.equal(input.spans[0]);
 
@@ -128,7 +130,9 @@ describe('internal-extension/index.test.js', () => {
   it('should handle API Gateway REST API event', async () => {
     const {
       trace: {
-        spans: [{ tags }],
+        data: {
+          spans: [{ tags }],
+        },
       },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
@@ -218,7 +222,9 @@ describe('internal-extension/index.test.js', () => {
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
     const {
       trace: {
-        spans: [{ tags }],
+        data: {
+          spans: [{ tags }],
+        },
       },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
@@ -315,7 +321,9 @@ describe('internal-extension/index.test.js', () => {
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
     const {
       trace: {
-        spans: [{ tags }],
+        data: {
+          spans: [{ tags }],
+        },
       },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
@@ -386,7 +394,9 @@ describe('internal-extension/index.test.js', () => {
   it('should handle SQS event', async () => {
     const {
       trace: {
-        spans: [{ tags }],
+        data: {
+          spans: [{ tags }],
+        },
       },
     } = await handleInvocation('callback', {
       payload: {
@@ -448,7 +458,9 @@ describe('internal-extension/index.test.js', () => {
   it('should handle SNS event', async () => {
     const {
       trace: {
-        spans: [{ tags }],
+        data: {
+          spans: [{ tags }],
+        },
       },
     } = await handleInvocation('callback', {
       payload: {
@@ -514,7 +526,9 @@ describe('internal-extension/index.test.js', () => {
   it('should instrument HTTP requests', async () => {
     const {
       trace: {
-        spans: [awsLambdaSpan],
+        data: {
+          spans: [awsLambdaSpan],
+        },
       },
     } = await handleInvocation('http-requester');
 
