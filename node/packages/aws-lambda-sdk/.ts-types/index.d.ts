@@ -1,8 +1,13 @@
 import TraceSpan from './lib/trace-span';
 
-export const orgId: string;
-
-export interface traceSpans {
+interface traceSpans {
   awsLambda: TraceSpan;
   awsLambdaInitialization: TraceSpan;
 }
+
+interface Sdk {
+  orgId: string;
+  traceSpans: traceSpans;
+}
+
+export default Sdk;
