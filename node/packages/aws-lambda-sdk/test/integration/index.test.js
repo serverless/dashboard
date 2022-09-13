@@ -220,6 +220,7 @@ describe('integration', function () {
             'sns',
             {
               isAsyncInvocation: true,
+              ignoreMultipleInvocations: true,
               hooks: {
                 afterCreate: async function self(testConfig) {
                   const topicName = (testConfig.topicName = testConfig.configuration.FunctionName);
