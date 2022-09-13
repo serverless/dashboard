@@ -60,7 +60,13 @@ Extension can be configured either via environment variables, or in case of manu
 
 If given setting is set via both environment variable and property in options object, the environment variable takes precedence.
 
-- `SLS_ORG_ID` (or `options.orgId`) - (required) id of your organization in Serverless Console.
+##### `SLS_ORG_ID` (or `options.orgId`)
+
+Required setting. Id of your organization in Serverless Console.
+
+##### `SLS_DISABLE_HTTP_MONITORING` (or `options.disableHttpMonitoring`)
+
+Disable tracing of HTTP and HTTPS requests
 
 ### Outcome
 

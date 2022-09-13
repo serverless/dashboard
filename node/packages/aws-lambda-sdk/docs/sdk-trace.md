@@ -141,7 +141,9 @@ _None_
 
 ### `node.http.request` & `node.https.request`
 
-Covers HTTP and HTTPS request as made in context of function logic
+_If not disabled by [configuration settings](../README.md#configuration-options)_
+
+Covers HTTP and HTTPS requests as made in context of function logic
 
 #### Tags
 

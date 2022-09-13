@@ -2,6 +2,7 @@ import TraceSpan from './lib/trace-span';
 
 export interface SdkOptions {
   orgId?: string;
+  disableHttpMonitoring?: boolean;
 }
 
 interface traceSpans {
