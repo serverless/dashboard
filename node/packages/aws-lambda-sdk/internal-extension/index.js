@@ -69,7 +69,7 @@ const isEsmContext = (dirname) => {
 };
 
 EvalError.$serverlessAwsLambdaInitializationStartTime = processStartTime;
-global.serverlessSdk = require('../');
+global.serverlessSdk = require('../').initialize();
 
 let hasInitializationFailed = false;
 const startTime = process.hrtime.bigint();
