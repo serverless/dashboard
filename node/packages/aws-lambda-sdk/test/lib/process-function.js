@@ -147,7 +147,7 @@ const retrieveReports = async (testConfig) => {
   let invocationsData;
   let processesData;
   do {
-    const events = await retrieveAllEvents();
+    let events = await retrieveAllEvents();
     const eventGroups = new Map();
     for (const event of events) {
       const { logStreamName } = event;
@@ -155,7 +155,11 @@ const retrieveReports = async (testConfig) => {
       eventGroups.get(logStreamName).push(event);
     }
     if (eventGroups.size > 1) {
-      throw new Error(`Unexpected count of lambda instances: ${Array.from(eventGroups.keys())}`);
+      if (testConfig.ignoreMultipleInvocations) {
+        events = eventGroups.values()[Symbol.iterator]().next().value;
+      } else {
+        throw new Error(`Unexpected count of lambda instances: ${Array.from(eventGroups.keys())}`);
+      }
     }
 
     let startEventsCount = 0;
