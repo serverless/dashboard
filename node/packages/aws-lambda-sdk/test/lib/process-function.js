@@ -4,9 +4,11 @@ const path = require('path');
 const log = require('log').get('test');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
+const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
 const wait = require('timers-ext/promise/sleep');
 const basename = require('./basename');
 const awsRequest = require('../utils/aws-request');
+const normalizeProtoObject = require('../utils/normalize-proto-object');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
@@ -207,19 +209,23 @@ const retrieveReports = async (testConfig) => {
         );
         continue;
       }
-      if (message.startsWith('⚡ SDK: Trace: ')) {
-        const traceJsonString = message.slice(message.indexOf('e:') + 3);
-        if (traceJsonString.endsWith('\n')) {
-          getCurrentInvocationData().trace = JSON.parse(traceJsonString.trim());
+      if (message.startsWith('SERVERLESS_TELEMETRY.T.')) {
+        const traceString = message.slice(message.indexOf('.T.') + 3);
+        if (traceString.endsWith('\n')) {
+          getCurrentInvocationData().trace = normalizeProtoObject(
+            TracePayload.decode(Buffer.from(traceString.trim(), 'base64'))
+          );
         } else {
-          startedMessage = traceJsonString;
+          startedMessage = traceString;
         }
         continue;
       }
       if (startedMessage) {
         startedMessage += message;
         if (startedMessage.endsWith('\n')) {
-          getCurrentInvocationData().trace = JSON.parse(startedMessage.trim());
+          getCurrentInvocationData().trace = normalizeProtoObject(
+            TracePayload.decode(Buffer.from(startedMessage.trim(), 'base64'))
+          );
           startedMessage = null;
           continue;
         }

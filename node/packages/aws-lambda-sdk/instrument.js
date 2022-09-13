@@ -22,16 +22,6 @@ const debugLog = (...args) => {
 
 const writeTrace = () => {
   const payload = (serverlessSdk._lastTrace = {
-    id: awsLambdaSpan.traceId,
-    slsTags: {
-      'orgId': serverlessSdk.orgId,
-      'service': process.env.AWS_LAMBDA_FUNCTION_NAME,
-      'sdk.name': pkgJson.name,
-      'sdk.version': pkgJson.version,
-    },
-    spans: awsLambdaSpan.spans,
-  });
-  const protoPayload = (serverlessSdk._lastProtoTrace = {
     slsTags: {
       orgId: serverlessSdk.orgId,
       service: process.env.AWS_LAMBDA_FUNCTION_NAME,
@@ -39,11 +29,9 @@ const writeTrace = () => {
     },
     spans: Array.from(awsLambdaSpan.spans).map((span) => span.toProtobufObject()),
   });
-  const protoPayloadBuffer = (serverlessSdk._lastProtoTraceBuffer =
-    traceProto.TracePayload.encode(protoPayload).finish());
-  process._rawDebug(`SERVERLESS_TELEMETRY.T.${protoPayloadBuffer.toString('base64')}`);
-
-  debugLog('Trace:', JSON.stringify(payload));
+  const payloadBuffer = (serverlessSdk._lastTraceBuffer =
+    traceProto.TracePayload.encode(payload).finish());
+  process._rawDebug(`SERVERLESS_TELEMETRY.T.${payloadBuffer.toString('base64')}`);
 };
 
 module.exports = (originalHandler, options = {}) => {

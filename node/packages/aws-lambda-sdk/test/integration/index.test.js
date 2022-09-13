@@ -207,11 +207,11 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
-                  expect(tags['aws.lambda.event_source']).to.equal('aws.sqs');
-                  expect(tags['aws.lambda.event_type']).to.equal('aws.sqs');
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.sqs');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.sqs');
 
-                  expect(tags['aws.lambda.sqs.queue_name']).to.equal(testConfig.queueName);
-                  expect(tags['aws.lambda.sqs.message_ids'].length).to.equal(1);
+                  expect(tags.aws.lambda.sqs.queueName).to.equal(testConfig.queueName);
+                  expect(tags.aws.lambda.sqs.messageIds.length).to.equal(1);
                 }
               },
             },
@@ -263,11 +263,11 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
-                  expect(tags['aws.lambda.event_source']).to.equal('aws.sns');
-                  expect(tags['aws.lambda.event_type']).to.equal('aws.sns');
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.sns');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.sns');
 
-                  expect(tags['aws.lambda.sns.topic_name']).to.equal(testConfig.topicName);
-                  expect(tags['aws.lambda.sns.message_ids'].length).to.equal(1);
+                  expect(tags.aws.lambda.sns.topicName).to.equal(testConfig.topicName);
+                  expect(tags.aws.lambda.sns.messageIds.length).to.equal(1);
                 }
               },
             },
@@ -404,23 +404,23 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
-                  expect(tags['aws.lambda.event_source']).to.equal('aws.apigateway');
-                  expect(tags['aws.lambda.event_type']).to.equal('aws.apigateway.rest');
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.apigateway.rest');
 
-                  expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
-                  expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.restApiId);
-                  expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('test');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
-                  expect(tags).to.have.property('aws.lambda.http.host');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
-                  expect(tags['aws.lambda.http.method']).to.equal('POST');
-                  expect(tags['aws.lambda.http.path']).to.equal('/test/some-path/some-param');
-                  expect(tags['aws.lambda.api_gateway.request.path_parameters']).to.equal(
+                  expect(tags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(tags.aws.lambda.apiGateway.apiId).to.equal(testConfig.restApiId);
+                  expect(tags.aws.lambda.apiGateway.apiStage).to.equal('test');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('headers');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test/some-path/some-param');
+                  expect(tags.aws.lambda.apiGateway.request.pathParameters).to.equal(
                     JSON.stringify({ param: 'some-param' })
                   );
 
-                  expect(tags['aws.lambda.http.status_code']).to.equal(200);
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
                 }
               },
             },
@@ -458,20 +458,20 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
-                  expect(tags['aws.lambda.event_source']).to.equal('aws.apigateway');
-                  expect(tags['aws.lambda.event_type']).to.equal('aws.apigatewayv2.http.v1');
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v1');
 
-                  expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
-                  expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.apiId);
-                  expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('$default');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
-                  expect(tags).to.have.property('aws.lambda.http.host');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
-                  expect(tags['aws.lambda.http.method']).to.equal('POST');
-                  expect(tags['aws.lambda.http.path']).to.equal('/test');
+                  expect(tags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(tags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(tags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('headers');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test');
 
-                  expect(tags['aws.lambda.http.status_code']).to.equal(200);
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
                 }
               },
             },
@@ -509,20 +509,20 @@ describe('integration', function () {
                 for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
                   const { tags } = trace.spans[0];
 
-                  expect(tags['aws.lambda.event_source']).to.equal('aws.apigateway');
-                  expect(tags['aws.lambda.event_type']).to.equal('aws.apigatewayv2.http.v2');
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
 
-                  expect(tags).to.have.property('aws.lambda.api_gateway.account_id');
-                  expect(tags['aws.lambda.api_gateway.api_id']).to.equal(testConfig.apiId);
-                  expect(tags['aws.lambda.api_gateway.api_stage']).to.equal('$default');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.id');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.time_epoch');
-                  expect(tags).to.have.property('aws.lambda.http.host');
-                  expect(tags).to.have.property('aws.lambda.api_gateway.request.headers');
-                  expect(tags['aws.lambda.http.method']).to.equal('POST');
-                  expect(tags['aws.lambda.http.path']).to.equal('/test');
+                  expect(tags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(tags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(tags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('headers');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test');
 
-                  expect(tags['aws.lambda.http.status_code']).to.equal(200);
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
                 }
               },
             },
@@ -544,12 +544,12 @@ describe('integration', function () {
                   expect(httpRequestSpan.name).to.equal('node.http.request');
 
                   const { tags } = httpRequestSpan;
-                  expect(tags['http.method']).to.equal('GET');
-                  expect(tags['http.protocol']).to.equal('HTTP/1.1');
-                  expect(tags['http.host']).to.equal('localhost:3177');
-                  expect(tags['http.path']).to.equal('/');
-                  expect(tags['http.query']).to.equal('foo=bar');
-                  expect(tags['http.status_code']).to.equal(200);
+                  expect(tags.http.method).to.equal('GET');
+                  expect(tags.http.protocol).to.equal('HTTP/1.1');
+                  expect(tags.http.host).to.equal('localhost:3177');
+                  expect(tags.http.path).to.equal('/');
+                  expect(tags.http.query).to.equal('foo=bar');
+                  expect(tags.http.statusCode.toString()).to.equal('200');
                 }
               },
             },
@@ -670,12 +670,12 @@ describe('integration', function () {
                   expect(httpRequestSpan.name).to.equal('node.https.request');
 
                   const { tags } = httpRequestSpan;
-                  expect(tags['http.method']).to.equal('GET');
-                  expect(tags['http.protocol']).to.equal('HTTP/1.1');
-                  expect(tags['http.host']).to.equal(functionUrl.slice('https://'.length, -1));
-                  expect(tags['http.path']).to.equal('/');
-                  expect(tags['http.query']).to.equal('foo=bar');
-                  expect(tags['http.status_code']).to.equal(200);
+                  expect(tags.http.method).to.equal('GET');
+                  expect(tags.http.protocol).to.equal('HTTP/1.1');
+                  expect(tags.http.host).to.equal(functionUrl.slice('https://'.length, -1));
+                  expect(tags.http.path).to.equal('/');
+                  expect(tags.http.query).to.equal('foo=bar');
+                  expect(tags.http.statusCode.toString()).to.equal('200');
                 }
               },
             },
@@ -720,32 +720,31 @@ describe('integration', function () {
               'aws.lambda.initialization',
               'aws.lambda.invocation',
             ]);
-            expect(awsLambdaSpan.tags['aws.lambda.is_coldstart']).to.be.true;
+            expect(awsLambdaSpan.tags.aws.lambda.isColdstart).to.be.true;
           } else {
             expect(trace.spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.invocation',
             ]);
-            expect(awsLambdaSpan.tags).to.not.have.property('aws.lambda.is_coldstart');
+            expect(awsLambdaSpan.tags.aws.lambda.isColdstart).to.be.false;
           }
           expect(trace.slsTags).to.deep.equal({
-            'orgId': process.env.SLS_ORG_ID,
-            'service': testConfig.configuration.FunctionName,
-            'sdk.name': pkgJson.name,
-            'sdk.version': pkgJson.version,
+            orgId: process.env.SLS_ORG_ID,
+            service: testConfig.configuration.FunctionName,
+            sdk: { name: pkgJson.name, version: pkgJson.version },
           });
-          expect(awsLambdaSpan.tags).to.have.property('aws.lambda.arch');
-          expect(awsLambdaSpan.tags['aws.lambda.name']).to.equal(
+          expect(awsLambdaSpan.tags.aws.lambda).to.have.property('arch');
+          expect(awsLambdaSpan.tags.aws.lambda.name).to.equal(
             testConfig.configuration.FunctionName
           );
-          expect(awsLambdaSpan.tags).to.have.property('aws.lambda.request_id');
-          expect(awsLambdaSpan.tags).to.have.property('aws.lambda.version');
+          expect(awsLambdaSpan.tags.aws.lambda).to.have.property('requestId');
+          expect(awsLambdaSpan.tags.aws.lambda).to.have.property('version');
           if (expectedOutcome === 'success') {
-            expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('success');
+            expect(awsLambdaSpan.tags.aws.lambda.outcome).to.equal(1);
           } else {
-            expect(awsLambdaSpan.tags['aws.lambda.outcome']).to.equal('error:handled');
-            expect(awsLambdaSpan.tags).to.have.property('aws.lambda.error_exception_message');
-            expect(awsLambdaSpan.tags).to.have.property('aws.lambda.error_exception_stacktrace');
+            expect(awsLambdaSpan.tags.aws.lambda.outcome).to.equal(5);
+            expect(awsLambdaSpan.tags.aws.lambda).to.have.property('errorExceptionMessage');
+            expect(awsLambdaSpan.tags.aws.lambda).to.have.property('errorExceptionStacktrace');
           }
         }
       }
