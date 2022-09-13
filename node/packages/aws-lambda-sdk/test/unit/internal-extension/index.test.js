@@ -92,10 +92,9 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     expect(tags.get('aws.lambda.outcome')).to.equal('success');
   }
 
-  const input = normalizeObject(outcome.trace.protoInput);
-  const output = normalizeObject(outcome.trace.protoOutput);
-
-  expect(output.spans[0]).to.deep.equal(input.spans[0]);
+  expect(normalizeObject(outcome.trace.protoOutput)).to.deep.equal(
+    normalizeObject(outcome.trace.protoInput)
+  );
 
   return outcome;
 };
