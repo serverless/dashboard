@@ -68,8 +68,16 @@ Required setting. Id of your organization in Serverless Console.
 
 Disable tracing of HTTP and HTTPS requests
 
+##### `SLS_DISABLE_REQUEST_MONITORING` (or `options.disableRequestMonitoring`)
+
+Disable lambda requests (events) monitoring
+
+##### `SLS_DISABLE_RESPONSE_MONITORING` (or `options.disableResponseMonitoring`)
+
+Disable lambda responses monitoring
+
 ### Outcome
 
-SDK automatically creates the trace that covers internal process of function invocation and initialization.
+SDK automatically creates the trace that covers internal process of function invocation and initialization. For all the details check [docs/sdk-trace.md](docs/sdk-trace.md)
 
-For all the details check [docs/sdk-trace.md](docs/sdk-trace.md)
+If not disabled request and response payloads are written to logs encoded with protobuf format

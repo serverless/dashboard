@@ -4,8 +4,10 @@
 
 const ensurePlainFunction = require('type/plain-function/ensure');
 const isError = require('type/error/is');
+const isPlainObject = require('type/plain-object/is');
 const coerceToString = require('type/string/coerce');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
+const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
 const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
 const pkgJson = require('./package');
@@ -18,6 +20,57 @@ const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializati
 
 const debugLog = (...args) => {
   if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);
+};
+
+const writeRequest = (event, context) => {
+  const payload = (serverlessSdk._lastRequest = {
+    slsTags: {
+      orgId: serverlessSdk.orgId,
+      service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      sdk: { name: pkgJson.name, version: pkgJson.version },
+    },
+    traceId: Buffer.from(awsLambdaSpan.traceId),
+    spanId: Buffer.from(awsLambdaSpan.id),
+    requestId: context.awsRequestId,
+    data: { $case: 'requestData', requestData: JSON.stringify(event) },
+  });
+  const payloadBuffer = (serverlessSdk._lastRequestBuffer =
+    requestResponseProto.RequestResponse.encode(payload).finish());
+  process._rawDebug(`SERVERLESS_TELEMETRY.R.${payloadBuffer.toString('base64')}`);
+};
+
+const resolveResponseString = (response) => {
+  if (!isPlainObject(response)) return null;
+  if (awsLambdaSpan.tags.get('aws.lambda.event_source') === 'aws.apigateway') {
+    if (response.isBase64Encoded) return null;
+    if (typeof response.body !== 'string') return null;
+    try {
+      JSON.parse(response.body);
+      return response.body;
+    } catch {
+      return null;
+    }
+  }
+  return JSON.stringify(response);
+};
+
+const writeResponse = (response, context) => {
+  const responseString = resolveResponseString(response);
+  if (!responseString) return;
+  const payload = (serverlessSdk._lastResponse = {
+    slsTags: {
+      orgId: serverlessSdk.orgId,
+      service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      sdk: { name: pkgJson.name, version: pkgJson.version },
+    },
+    traceId: Buffer.from(awsLambdaSpan.traceId),
+    spanId: Buffer.from(awsLambdaSpan.id),
+    requestId: context.awsRequestId,
+    data: { $case: 'responseData', responseData: responseString },
+  });
+  const payloadBuffer = (serverlessSdk._lastResponseBuffer =
+    requestResponseProto.RequestResponse.encode(payload).finish());
+  process._rawDebug(`SERVERLESS_TELEMETRY.R.${payloadBuffer.toString('base64')}`);
 };
 
 const writeTrace = () => {
@@ -67,6 +120,7 @@ module.exports = (originalHandler, options = {}) => {
       startTime: requestStartTime,
     });
     resolveEventTags(event);
+    if (!serverlessSdk._settings.disableRequestMonitoring) writeRequest(event, context);
 
     const closeInvocation = (outcome, outcomeResult) => {
       if (invocationId !== currentInvocationId) return;
@@ -88,6 +142,9 @@ module.exports = (originalHandler, options = {}) => {
         }
       } else {
         resolveResponseTags(outcomeResult);
+        if (!serverlessSdk._settings.disableResponseMonitoring) {
+          writeResponse(outcomeResult, context);
+        }
       }
 
       awsLambdaSpan.close();
