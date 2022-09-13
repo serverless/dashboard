@@ -16,15 +16,17 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     : handlerModuleName;
   process.env.AWS_LAMBDA_FUNCTION_NAME = functionName;
 
+  const payload = options.payload || { test: true };
   const outcome = await requireUncached(async () => {
     await require('../../../internal-extension');
     const handlerModule = await require('../../../internal-extension/wrapper');
     let result;
     let error;
+
     try {
       result = await new Promise((resolve, reject) => {
         const maybeThenable = handlerModule.handler(
-          options.payload || {},
+          payload,
           {
             awsRequestId: '123',
             functionName,
@@ -44,9 +46,22 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     require('../../../lib/instrument/http').uninstall();
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+    const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
     return {
       result,
       error,
+      request: {
+        input: serverlessSdk._lastRequest,
+        output:
+          serverlessSdk._lastRequestBuffer &&
+          RequestResponse.decode(serverlessSdk._lastRequestBuffer),
+      },
+      response: {
+        input: serverlessSdk._lastResponse,
+        output:
+          serverlessSdk._lastResponseBuffer &&
+          RequestResponse.decode(serverlessSdk._lastResponseBuffer),
+      },
       trace: {
         input: serverlessSdk._lastTrace,
         output:
@@ -80,6 +95,17 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     else expect(outcome.result).to.equal('ok');
 
     expect(tags.aws.lambda.outcome).to.equal(1);
+  }
+
+  expect(normalizeObject(outcome.request.output)).to.deep.equal(
+    normalizeObject(outcome.request.input)
+  );
+  expect(outcome.request.input.data.requestData).to.deep.equal(JSON.stringify(payload));
+
+  if (outcome.response.input) {
+    expect(normalizeObject(outcome.response.output)).to.deep.equal(
+      normalizeObject(outcome.response.input)
+    );
   }
 
   return outcome;
@@ -119,6 +145,7 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
+      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -200,6 +227,8 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.query).to.equal('foo=bar&next=first&next=second');
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+    expect(response.data.responseData).to.deep.equal(JSON.stringify('ok'));
   });
 
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
@@ -209,6 +238,7 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
+      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -299,6 +329,8 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone&multi=two');
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+    expect(response.data.responseData).to.deep.equal(JSON.stringify('ok'));
   });
 
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
@@ -308,6 +340,7 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
+      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -372,6 +405,8 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+    expect(response.data.responseData).to.deep.equal(JSON.stringify('ok'));
   });
 
   it('should handle SQS event', async () => {

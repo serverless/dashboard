@@ -127,7 +127,18 @@ describe('integration', function () {
       {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
-          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          [
+            'v16',
+            {
+              configuration: { Runtime: 'nodejs16.x' },
+              invokePayload: { test: 'foo' },
+              test: ({ invocationsData }) => {
+                for (const { request } of invocationsData) {
+                  expect(request.data.requestData).to.equal(JSON.stringify({ test: 'foo' }));
+                }
+              },
+            },
+          ],
           [
             'sqs',
             {
@@ -204,7 +215,7 @@ describe('integration', function () {
                 return { duration };
               },
               test: ({ invocationsData, testConfig }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                for (const { trace, request } of invocationsData) {
                   const { tags } = trace.spans[0];
 
                   expect(tags.aws.lambda.eventSource).to.equal('aws.sqs');
@@ -212,6 +223,8 @@ describe('integration', function () {
 
                   expect(tags.aws.lambda.sqs.queueName).to.equal(testConfig.queueName);
                   expect(tags.aws.lambda.sqs.messageIds.length).to.equal(1);
+
+                  expect(JSON.parse(request.data.requestData)).to.have.property('Records');
                 }
               },
             },
@@ -261,7 +274,7 @@ describe('integration', function () {
                 return { duration };
               },
               test: ({ invocationsData, testConfig }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                for (const { trace, request } of invocationsData) {
                   const { tags } = trace.spans[0];
 
                   expect(tags.aws.lambda.eventSource).to.equal('aws.sns');
@@ -269,6 +282,8 @@ describe('integration', function () {
 
                   expect(tags.aws.lambda.sns.topicName).to.equal(testConfig.topicName);
                   expect(tags.aws.lambda.sns.messageIds.length).to.equal(1);
+
+                  expect(JSON.parse(request.data.requestData)).to.have.property('Records');
                 }
               },
             },
@@ -402,7 +417,7 @@ describe('integration', function () {
                 return { duration, payload };
               },
               test: ({ invocationsData, testConfig }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                for (const { trace, request, response } of invocationsData) {
                   const { tags } = trace.spans[0];
 
                   expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
@@ -422,6 +437,9 @@ describe('integration', function () {
                   );
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(JSON.parse(request.data.requestData)).to.have.property('httpMethod');
+                  expect(response.data.responseData).to.equal('"ok"');
                 }
               },
             },
@@ -456,7 +474,7 @@ describe('integration', function () {
                 return { duration, payload };
               },
               test: ({ invocationsData, testConfig }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                for (const { trace, request, response } of invocationsData) {
                   const { tags } = trace.spans[0];
 
                   expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
@@ -473,6 +491,9 @@ describe('integration', function () {
                   expect(tags.aws.lambda.http.path).to.equal('/test');
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(JSON.parse(request.data.requestData)).to.have.property('httpMethod');
+                  expect(response.data.responseData).to.equal('"ok"');
                 }
               },
             },
@@ -507,7 +528,7 @@ describe('integration', function () {
                 return { duration, payload };
               },
               test: ({ invocationsData, testConfig }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
+                for (const { trace, request, response } of invocationsData) {
                   const { tags } = trace.spans[0];
 
                   expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
@@ -524,6 +545,9 @@ describe('integration', function () {
                   expect(tags.aws.lambda.http.path).to.equal('/test');
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
+                  expect(response.data.responseData).to.equal('"ok"');
                 }
               },
             },
@@ -713,7 +737,7 @@ describe('integration', function () {
             expect(responsePayload.raw).to.equal('"ok"');
           }
         }
-        for (const [index, trace] of invocationsData.map((data) => data.trace).entries()) {
+        for (const [index, { trace }] of invocationsData.entries()) {
           const awsLambdaSpan = trace.spans[0];
           if (index === 0) {
             expect(trace.spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([

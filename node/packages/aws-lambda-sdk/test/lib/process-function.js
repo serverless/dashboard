@@ -5,6 +5,7 @@ const log = require('log').get('test');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
 const wait = require('timers-ext/promise/sleep');
 const basename = require('./basename');
 const awsRequest = require('../utils/aws-request');
@@ -179,6 +180,7 @@ const retrieveReports = async (testConfig) => {
     let currentInvocationData;
     let currentProcessData;
     let startedMessage;
+    let startedMessageType;
     const getCurrentInvocationData = () => {
       if (!currentInvocationData) {
         log.error(
@@ -214,20 +216,36 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('SERVERLESS_TELEMETRY.T.')) {
-        const traceString = message.slice(message.indexOf('.T.') + 3);
-        if (traceString.endsWith('\n')) {
+        const payloadString = message.slice(message.indexOf('.T.') + 3);
+        if (payloadString.endsWith('\n')) {
           getCurrentInvocationData().trace = normalizeProtoObject(
-            TracePayload.decode(Buffer.from(traceString.trim(), 'base64'))
+            TracePayload.decode(Buffer.from(payloadString.trim(), 'base64'))
           );
         } else {
-          startedMessage = traceString;
+          startedMessage = payloadString;
+          startedMessageType = 'trace';
+        }
+        continue;
+      }
+      if (message.startsWith('SERVERLESS_TELEMETRY.R.')) {
+        const payloadString = message.slice(message.indexOf('.R.') + 3);
+        if (payloadString.endsWith('\n')) {
+          const invocationData = getCurrentInvocationData();
+          const payload = normalizeProtoObject(
+            RequestResponse.decode(Buffer.from(payloadString.trim(), 'base64'))
+          );
+          if (invocationData.request) invocationData.response = payload;
+          else invocationData.request = payload;
+        } else {
+          startedMessage = payloadString;
+          startedMessageType = getCurrentInvocationData().request ? 'response' : 'request';
         }
         continue;
       }
       if (startedMessage) {
         startedMessage += message;
         if (startedMessage.endsWith('\n')) {
-          getCurrentInvocationData().trace = normalizeProtoObject(
+          getCurrentInvocationData()[startedMessageType] = normalizeProtoObject(
             TracePayload.decode(Buffer.from(startedMessage.trim(), 'base64'))
           );
           startedMessage = null;

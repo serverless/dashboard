@@ -20,6 +20,12 @@ const resolveSettings = (options = {}) => {
   serverlessSdk._settings.disableHttpMonitoring = Boolean(
     process.env.SLS_DISABLE_HTTP_MONITORING || options.disableHttpMonitoring
   );
+  serverlessSdk._settings.disableRequestMonitoring = Boolean(
+    process.env.SLS_DISABLE_REQUEST_MONITORING || options.disableRequestMonitoring
+  );
+  serverlessSdk._settings.disableResponseMonitoring = Boolean(
+    process.env.SLS_DISABLE_RESPONSE_MONITORING || options.disableResponseMonitoring
+  );
 };
 
 let isInitialized = false;

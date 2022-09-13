@@ -3,6 +3,8 @@ import TraceSpan from './lib/trace-span';
 export interface SdkOptions {
   orgId?: string;
   disableHttpMonitoring?: boolean;
+  disableRequestMonitoring?: boolean;
+  disableResponseMonitoring?: boolean;
 }
 
 interface traceSpans {
