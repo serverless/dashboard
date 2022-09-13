@@ -34,11 +34,10 @@ _CJS:_
 const instrument = require('@serverless/aws-lambda-sdk/instrument');
 
 module.exports.handler = instrument(
-  (event, context, callback) => { /* Original handler logic */ },
-  // Optional
-  {
-    orgId: <orgId> // By default taken from SLS_ORG_ID env variable
-  }
+  (event, context, callback) => {
+    /* Original handler logic */
+  },
+  options // Optional, see documentation below
 );
 ```
 
@@ -48,13 +47,20 @@ _ESM:_
 import instrument from '@serverless/aws-lambda-sdk/instrument';
 
 export const handler = instrument(
-  (event, context, callback) => { /* Original handler logic  */ },
-  // Optional
-  {
-    orgId: <orgId> // By default taken from SLS_ORG_ID env variable
-  }
+  (event, context, callback) => {
+    /* Original handler logic  */
+  },
+  options // Optional, see documentation below
 );
 ```
+
+#### Configuration options.
+
+Extension can be configured either via environment variables, or in case of manual instrumentation by passing the options object to `instrument` function;
+
+If given setting is set via both environment variable and property in options object, the environment variable takes precedence.
+
+- `SLS_ORG_ID` (or `options.orgId`) - (required) id of your organization in Serverless Console.
 
 ### Outcome
 

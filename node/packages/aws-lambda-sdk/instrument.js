@@ -3,10 +3,8 @@
 'use strict';
 
 const ensurePlainFunction = require('type/plain-function/ensure');
-const isObject = require('type/object/is');
 const isError = require('type/error/is');
 const coerceToString = require('type/string/coerce');
-const ensureString = require('type/string/ensure');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
@@ -24,9 +22,7 @@ const debugLog = (...args) => {
 
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
-  if (!isObject(options)) options = {};
-  const orgId = ensureString(options.orgId, { isOptional: true, name: 'options.orgId' });
-  if (orgId) serverlessSdk.orgId = orgId;
+  serverlessSdk.initialize(options);
   if (!serverlessSdk.orgId) {
     throw new Error(
       'Serverless SDK Error: Cannot instrument function: "orgId" not provided. ' +
