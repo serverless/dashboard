@@ -4,19 +4,10 @@ const { expect } = require('chai');
 const path = require('path');
 const isThenable = require('type/thenable/is');
 const requireUncached = require('ncjsm/require-uncached');
+const normalizeObject = require('../../utils/normalize-proto-object');
 const pkgJson = require('../../../package');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
-
-const normalizeObject = (obj) => {
-  const entries = Array.isArray(obj) ? obj.entries() : Object.entries(obj);
-  for (const [key, value] of entries) {
-    if (value == null) delete obj[key];
-    else if (Array.isArray(value)) normalizeObject(value);
-    else if (typeof value === 'object') normalizeObject(value);
-  }
-  return obj;
-};
 
 const handleInvocation = async (handlerModuleName, options = {}) => {
   process.env._HANDLER = `${handlerModuleName}.handler`;
@@ -57,44 +48,39 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
       result,
       error,
       trace: {
-        data: serverlessSdk._lastTrace,
-        protoInput: serverlessSdk._lastProtoTrace,
-        protoOutput:
-          serverlessSdk._lastProtoTraceBuffer &&
-          TracePayload.decode(serverlessSdk._lastProtoTraceBuffer),
+        input: serverlessSdk._lastTrace,
+        output:
+          serverlessSdk._lastTraceBuffer && TracePayload.decode(serverlessSdk._lastTraceBuffer),
       },
     };
   });
-  if (outcome.error && (!outcome.trace.protoOutput || options.outcome !== 'error')) {
+  if (outcome.error && (!outcome.trace.output || options.outcome !== 'error')) {
     throw outcome.error;
   }
-  const [{ tags }] = outcome.trace.data.spans;
-  expect(outcome.trace.data.slsTags).to.deep.equal({
-    'orgId': process.env.SLS_ORG_ID,
-    'service': functionName,
-    'sdk.name': pkgJson.name,
-    'sdk.version': pkgJson.version,
+
+  expect(normalizeObject(outcome.trace.output)).to.deep.equal(normalizeObject(outcome.trace.input));
+  const [{ tags }] = outcome.trace.input.spans;
+  expect(outcome.trace.input.slsTags).to.deep.equal({
+    orgId: process.env.SLS_ORG_ID,
+    service: functionName,
+    sdk: { name: pkgJson.name, version: pkgJson.version },
   });
-  expect(tags.get('aws.lambda.is_coldstart')).to.be.true;
-  expect(tags.get('aws.lambda.name')).to.equal(functionName);
-  expect(tags.get('aws.lambda.request_id')).to.equal('123');
-  expect(tags.get('aws.lambda.version')).to.equal('$LATEST');
+  expect(tags.aws.lambda.isColdstart).to.be.true;
+  expect(tags.aws.lambda.name).to.equal(functionName);
+  expect(tags.aws.lambda.requestId).to.equal('123');
+  expect(tags.aws.lambda.version).to.equal('$LATEST');
 
   if (options.outcome === 'error') {
-    expect(tags.get('aws.lambda.outcome')).to.equal('error:handled');
-    expect(typeof tags.get('aws.lambda.error_exception_message')).to.equal('string');
-    expect(typeof tags.get('aws.lambda.error_exception_stacktrace')).to.equal('string');
+    expect(tags.aws.lambda.outcome).to.equal(5);
+    expect(typeof tags.aws.lambda.errorExceptionMessage).to.equal('string');
+    expect(typeof tags.aws.lambda.errorExceptionStacktrace).to.equal('string');
   } else {
     if (outcome.error) throw outcome.error;
     if (options.isApiEndpoint) expect(JSON.parse(outcome.result.body)).to.equal('ok');
     else expect(outcome.result).to.equal('ok');
 
-    expect(tags.get('aws.lambda.outcome')).to.equal('success');
+    expect(tags.aws.lambda.outcome).to.equal(1);
   }
-
-  expect(normalizeObject(outcome.trace.protoOutput)).to.deep.equal(
-    normalizeObject(outcome.trace.protoInput)
-  );
 
   return outcome;
 };
@@ -129,7 +115,7 @@ describe('internal-extension/index.test.js', () => {
   it('should handle API Gateway REST API event', async () => {
     const {
       trace: {
-        data: {
+        input: {
           spans: [{ tags }],
         },
       },
@@ -188,40 +174,38 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
-    expect(tags.get('aws.lambda.event_source')).to.equal('aws.apigateway');
-    expect(tags.get('aws.lambda.event_type')).to.equal('aws.apigateway.rest');
+    expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+    expect(tags.aws.lambda.eventType).to.equal('aws.apigateway.rest');
 
-    expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
-    expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
-    expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('test');
+    expect(tags.aws.lambda.apiGateway.accountId).to.equal('205994128558');
+    expect(tags.aws.lambda.apiGateway.apiId).to.equal('xxx');
+    expect(tags.aws.lambda.apiGateway.apiStage).to.equal('test');
 
-    expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal(
-      'da6c4e62-62c8-4693-8a4a-d6c4d943ddb4'
-    );
-    expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1661872803090);
-    expect(tags.get('aws.lambda.http.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('aws.lambda.http.host')).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
+    expect(tags.aws.lambda.apiGateway.request.id).to.equal('da6c4e62-62c8-4693-8a4a-d6c4d943ddb4');
+    expect(tags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1661872803090');
+    expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
+    expect(tags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
+    expect(tags.aws.lambda.apiGateway.request.headers).to.equal(
       JSON.stringify({
         'Accept': '*/*',
         'Accept-Encoding': 'gzip,deflate',
         'Other': ['First', 'Second'],
       })
     );
-    expect(tags.get('aws.lambda.http.method')).to.equal('POST');
-    expect(tags.get('aws.lambda.http.path')).to.equal('/test/some-path/some-param');
-    expect(tags.get('aws.lambda.api_gateway.request.path_parameters')).to.equal(
+    expect(tags.aws.lambda.http.method).to.equal('POST');
+    expect(tags.aws.lambda.http.path).to.equal('/test/some-path/some-param');
+    expect(tags.aws.lambda.apiGateway.request.pathParameters).to.equal(
       JSON.stringify({ param: 'some-param' })
     );
-    expect(tags.get('aws.lambda.http.query')).to.equal('foo=bar&next=first&next=second');
+    expect(tags.aws.lambda.http.query).to.equal('foo=bar&next=first&next=second');
 
-    expect(tags.get('aws.lambda.http.status_code')).to.equal(200);
+    expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
   });
 
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
     const {
       trace: {
-        data: {
+        input: {
           spans: [{ tags }],
         },
       },
@@ -291,18 +275,18 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
-    expect(tags.get('aws.lambda.event_source')).to.equal('aws.apigateway');
-    expect(tags.get('aws.lambda.event_type')).to.equal('aws.apigatewayv2.http.v1');
+    expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+    expect(tags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v1');
 
-    expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
-    expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
-    expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('$default');
+    expect(tags.aws.lambda.apiGateway.accountId).to.equal('205994128558');
+    expect(tags.aws.lambda.apiGateway.apiId).to.equal('xxx');
+    expect(tags.aws.lambda.apiGateway.apiStage).to.equal('$default');
 
-    expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal('XyGqvi5mIAMEJtw=');
-    expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1662040030156);
-    expect(tags.get('aws.lambda.http.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('aws.lambda.http.host')).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
+    expect(tags.aws.lambda.apiGateway.request.id).to.equal('XyGqvi5mIAMEJtw=');
+    expect(tags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1662040030156');
+    expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
+    expect(tags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
+    expect(tags.aws.lambda.apiGateway.request.headers).to.equal(
       JSON.stringify({
         'Content-Length': '385',
         'Content-Type':
@@ -310,17 +294,17 @@ describe('internal-extension/index.test.js', () => {
         'Multi': ['one,stillone', 'two'],
       })
     );
-    expect(tags.get('aws.lambda.http.method')).to.equal('POST');
-    expect(tags.get('aws.lambda.http.path')).to.equal('/v1');
-    expect(tags.get('aws.lambda.http.query')).to.equal('lone=value&multi=one%2Cstillone&multi=two');
+    expect(tags.aws.lambda.http.method).to.equal('POST');
+    expect(tags.aws.lambda.http.path).to.equal('/v1');
+    expect(tags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone&multi=two');
 
-    expect(tags.get('aws.lambda.http.status_code')).to.equal(200);
+    expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
   });
 
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
     const {
       trace: {
-        data: {
+        input: {
           spans: [{ tags }],
         },
       },
@@ -364,18 +348,18 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
-    expect(tags.get('aws.lambda.event_source')).to.equal('aws.apigateway');
-    expect(tags.get('aws.lambda.event_type')).to.equal('aws.apigatewayv2.http.v2');
+    expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+    expect(tags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
 
-    expect(tags.get('aws.lambda.api_gateway.account_id')).to.equal('205994128558');
-    expect(tags.get('aws.lambda.api_gateway.api_id')).to.equal('xxx');
-    expect(tags.get('aws.lambda.api_gateway.api_stage')).to.equal('$default');
+    expect(tags.aws.lambda.apiGateway.accountId).to.equal('205994128558');
+    expect(tags.aws.lambda.apiGateway.apiId).to.equal('xxx');
+    expect(tags.aws.lambda.apiGateway.apiStage).to.equal('$default');
 
-    expect(tags.get('aws.lambda.api_gateway.request.id')).to.equal('XyGnwhe0oAMEJJw=');
-    expect(tags.get('aws.lambda.api_gateway.request.time_epoch')).to.equal(1662040011065);
-    expect(tags.get('aws.lambda.http.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('aws.lambda.http.host')).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(tags.get('aws.lambda.api_gateway.request.headers')).to.equal(
+    expect(tags.aws.lambda.apiGateway.request.id).to.equal('XyGnwhe0oAMEJJw=');
+    expect(tags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1662040011065');
+    expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
+    expect(tags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
+    expect(tags.aws.lambda.apiGateway.request.headers).to.equal(
       JSON.stringify({
         'content-length': '385',
         'content-type':
@@ -383,17 +367,17 @@ describe('internal-extension/index.test.js', () => {
         'multi': 'one,stillone,two',
       })
     );
-    expect(tags.get('aws.lambda.http.method')).to.equal('POST');
-    expect(tags.get('aws.lambda.http.path')).to.equal('/v2');
-    expect(tags.get('aws.lambda.http.query')).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
+    expect(tags.aws.lambda.http.method).to.equal('POST');
+    expect(tags.aws.lambda.http.path).to.equal('/v2');
+    expect(tags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
 
-    expect(tags.get('aws.lambda.http.status_code')).to.equal(200);
+    expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
   });
 
   it('should handle SQS event', async () => {
     const {
       trace: {
-        data: {
+        input: {
           spans: [{ tags }],
         },
       },
@@ -444,11 +428,11 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
-    expect(tags.get('aws.lambda.event_source')).to.equal('aws.sqs');
-    expect(tags.get('aws.lambda.event_type')).to.equal('aws.sqs');
+    expect(tags.aws.lambda.eventSource).to.equal('aws.sqs');
+    expect(tags.aws.lambda.eventType).to.equal('aws.sqs');
 
-    expect(tags.get('aws.lambda.sqs.queue_name')).to.equal('test.fifo');
-    expect(tags.get('aws.lambda.sqs.message_ids')).to.deep.equal([
+    expect(tags.aws.lambda.sqs.queueName).to.equal('test.fifo');
+    expect(tags.aws.lambda.sqs.messageIds).to.deep.equal([
       '6f606577-4d1f-455c-b504-807abed7ca02',
       '6f606577-4d1f-455c-0000-807abed7ca02',
     ]);
@@ -457,7 +441,7 @@ describe('internal-extension/index.test.js', () => {
   it('should handle SNS event', async () => {
     const {
       trace: {
-        data: {
+        input: {
           spans: [{ tags }],
         },
       },
@@ -512,11 +496,11 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
-    expect(tags.get('aws.lambda.event_source')).to.equal('aws.sns');
-    expect(tags.get('aws.lambda.event_type')).to.equal('aws.sns');
+    expect(tags.aws.lambda.eventSource).to.equal('aws.sns');
+    expect(tags.aws.lambda.eventType).to.equal('aws.sns');
 
-    expect(tags.get('aws.lambda.sns.topic_name')).to.equal('test');
-    expect(tags.get('aws.lambda.sns.message_ids')).to.deep.equal([
+    expect(tags.aws.lambda.sns.topicName).to.equal('test');
+    expect(tags.aws.lambda.sns.messageIds).to.deep.equal([
       '135f0427-2c82-5850-930b-5fb608141554',
       '135f0427-2c82-5850-0000-5fb608141554',
     ]);
@@ -525,25 +509,20 @@ describe('internal-extension/index.test.js', () => {
   it('should instrument HTTP requests', async () => {
     const {
       trace: {
-        data: {
-          spans: [awsLambdaSpan],
-        },
+        input: { spans },
       },
     } = await handleInvocation('http-requester');
 
-    const httpRequestSpan = Array.from(awsLambdaSpan.subSpans)
-      .pop()
-      .subSpans[Symbol.iterator]()
-      .next().value;
+    const httpRequestSpan = spans[spans.length - 1];
 
     expect(httpRequestSpan.name).to.equal('node.http.request');
 
     const { tags } = httpRequestSpan;
-    expect(tags.get('http.method')).to.equal('GET');
-    expect(tags.get('http.protocol')).to.equal('HTTP/1.1');
-    expect(tags.get('http.host')).to.equal('localhost:3177');
-    expect(tags.get('http.path')).to.equal('/');
-    expect(tags.get('http.query')).to.equal('foo=bar');
-    expect(tags.get('http.status_code')).to.equal(200);
+    expect(tags.http.method).to.equal('GET');
+    expect(tags.http.protocol).to.equal('HTTP/1.1');
+    expect(tags.http.host).to.equal('localhost:3177');
+    expect(tags.http.path).to.equal('/');
+    expect(tags.http.query).to.equal('foo=bar');
+    expect(tags.http.statusCode.toString()).to.equal('200');
   });
 });
