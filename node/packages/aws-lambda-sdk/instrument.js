@@ -20,6 +20,32 @@ const debugLog = (...args) => {
   if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);
 };
 
+const writeTrace = () => {
+  const payload = (serverlessSdk._lastTrace = {
+    id: awsLambdaSpan.traceId,
+    slsTags: {
+      'orgId': serverlessSdk.orgId,
+      'service': process.env.AWS_LAMBDA_FUNCTION_NAME,
+      'sdk.name': pkgJson.name,
+      'sdk.version': pkgJson.version,
+    },
+    spans: awsLambdaSpan.spans,
+  });
+  const protoPayload = (serverlessSdk._lastProtoTrace = {
+    slsTags: {
+      orgId: serverlessSdk.orgId,
+      service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      sdk: { name: pkgJson.name, version: pkgJson.version },
+    },
+    spans: Array.from(awsLambdaSpan.spans).map((span) => span.toProtobufObject()),
+  });
+  const protoPayloadBuffer = (serverlessSdk._lastProtoTraceBuffer =
+    traceProto.TracePayload.encode(protoPayload).finish());
+  process._rawDebug(`SERVERLESS_TELEMETRY.T.${protoPayloadBuffer.toString('base64')}`);
+
+  debugLog('Trace:', JSON.stringify(payload));
+};
+
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
   serverlessSdk.initialize(options);
@@ -77,29 +103,7 @@ module.exports = (originalHandler, options = {}) => {
       }
 
       awsLambdaSpan.close();
-      const trace = (serverlessSdk._lastTrace = {
-        id: awsLambdaSpan.traceId,
-        slsTags: {
-          'orgId': serverlessSdk.orgId,
-          'service': process.env.AWS_LAMBDA_FUNCTION_NAME,
-          'sdk.name': pkgJson.name,
-          'sdk.version': pkgJson.version,
-        },
-        spans: awsLambdaSpan.spans,
-      });
-      const protoTrace = (serverlessSdk._lastProtoTrace = {
-        slsTags: {
-          orgId: serverlessSdk.orgId,
-          service: process.env.AWS_LAMBDA_FUNCTION_NAME,
-          sdk: { name: pkgJson.name, version: pkgJson.version },
-        },
-        spans: Array.from(awsLambdaSpan.spans).map((span) => span.toProtobufObject()),
-      });
-      const protoTraceBuffer = (serverlessSdk._lastProtoTraceBuffer =
-        traceProto.TracePayload.encode(protoTrace).finish());
-      process._rawDebug(`SERVERLESS_TELEMETRY.T.${protoTraceBuffer.toString('base64')}`);
-
-      debugLog('Trace:', JSON.stringify(trace));
+      writeTrace();
       debugLog(
         'Overhead duration: Internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
