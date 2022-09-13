@@ -146,6 +146,15 @@ const retrieveReports = async (testConfig) => {
   let processesData;
   do {
     const events = await retrieveAllEvents();
+    const eventGroups = new Map();
+    for (const event of events) {
+      const { logStreamName } = event;
+      if (!eventGroups.has(logStreamName)) eventGroups.set(logStreamName, []);
+      eventGroups.get(logStreamName).push(event);
+    }
+    if (eventGroups.size > 1) {
+      throw new Error(`Unexpected count of lambda instances: ${Array.from(eventGroups.keys())}`);
+    }
 
     let startEventsCount = 0;
     let reportEventsCount = 0;
