@@ -9,7 +9,6 @@
     - [AwsLambdaInitializationTags](#serverless-instrumentation-tags-v1-AwsLambdaInitializationTags)
     - [AwsLambdaInvocationTags](#serverless-instrumentation-tags-v1-AwsLambdaInvocationTags)
     - [AwsLambdaTags](#serverless-instrumentation-tags-v1-AwsLambdaTags)
-    - [AwsSdkBaseTags](#serverless-instrumentation-tags-v1-AwsSdkBaseTags)
     - [AwsSdkDynamodbTags](#serverless-instrumentation-tags-v1-AwsSdkDynamodbTags)
     - [AwsSdkSnsTags](#serverless-instrumentation-tags-v1-AwsSdkSnsTags)
     - [AwsSdkSqsTags](#serverless-instrumentation-tags-v1-AwsSdkSqsTags)
@@ -161,27 +160,6 @@ Optional Event Tags are from 100 on |
 
 
 
-<a name="serverless-instrumentation-tags-v1-AwsSdkBaseTags"></a>
-
-### AwsSdkBaseTags
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| account_id | [string](#string) |  | The AWS Account Id this SDK call is being made against. |
-| region | [string](#string) |  | The AWS Region this SDK call is being made against. |
-| signature_version | [string](#string) |  | AWS Authentication signature version of the request. |
-| aws_service | [string](#string) |  | The name of the service to which a request is made. |
-| operation | [string](#string) |  | The name of the operation corresponding to the request. |
-| request_id | [string](#string) |  | The unique ID of the request. |
-| error | [string](#string) | optional | An optional error returned from the AWS APIs. |
-
-
-
-
-
-
 <a name="serverless-instrumentation-tags-v1-AwsSdkDynamodbTags"></a>
 
 ### AwsSdkDynamodbTags
@@ -190,8 +168,6 @@ Optional Event Tags are from 100 on |
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| aws_sdk_tags | [AwsSdkBaseTags](#serverless-instrumentation-tags-v1-AwsSdkBaseTags) |  | The AWS SDK base tags that all instrumented AWS SDK calls have. |
-| operation | [string](#string) |  | The Dynamodb operation that was performed. Ex. GetItem, PutItem, Query, etc. |
 | table_names | [string](#string) | repeated | The DynamoDB table name or names that the operation was performed on. |
 | projection | [string](#string) | optional | The value of the ProjectionExpression request parameter. |
 | scan_forward | [bool](#bool) | optional | The value of the ScanIndexForward request parameter. |
@@ -202,6 +178,7 @@ Optional Event Tags are from 100 on |
 | select | [string](#string) | optional | The value of the Select request parameter. |
 | segment | [uint32](#uint32) | optional | The value of the Segment request parameter. |
 | total_segments | [uint64](#uint64) | optional | The value of the TotalSegments request parameter. |
+| filter_expression | [string](#string) | optional | The value of the FilterExpression request parameter. |
 | count | [uint64](#uint64) | optional | The value of the Count response parameter. |
 | scanned_count | [uint64](#uint64) | optional | The value of the ScannedCount response parameter. |
 
@@ -218,9 +195,7 @@ Optional Event Tags are from 100 on |
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| aws_sdk_tags | [AwsSdkBaseTags](#serverless-instrumentation-tags-v1-AwsSdkBaseTags) |  | The AWS SDK base tags that all instrumented AWS SDK calls have. |
-| topic_name | [string](#string) | optional | The SNS Topic ARN, from the TopicArn request parameter. |
-| operation | [string](#string) | optional | The SNS Operation that was performed. |
+| topic_name | [string](#string) | optional | The SNS Topic name taken from the TopicArn request parameter. |
 | message_ids | [string](#string) | repeated | The message IDs provided in the SDK operation response. |
 
 
@@ -236,10 +211,8 @@ Optional Event Tags are from 100 on |
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| aws_sdk_tags | [AwsSdkBaseTags](#serverless-instrumentation-tags-v1-AwsSdkBaseTags) |  | The AWS SDK base tags that all instrumented AWS SDK calls have. |
-| queue_name | [string](#string) | optional | The SQS queue URL. |
+| queue_name | [string](#string) | optional | The SQS queue name |
 | message_ids | [string](#string) | repeated | The message IDs provided in the SDK operation response. |
-| operation | [string](#string) | optional | The SQS Operation that was performed. |
 
 
 
@@ -254,6 +227,13 @@ Optional Event Tags are from 100 on |
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| account_id | [string](#string) |  | The AWS Account Id this SDK call is being made against. |
+| region | [string](#string) |  | The AWS Region this SDK call is being made against. |
+| signature_version | [string](#string) |  | AWS Authentication signature version of the request. |
+| aws_service | [string](#string) |  | The name of the service to which a request is made. |
+| operation | [string](#string) |  | The name of the operation corresponding to the request. |
+| request_id | [string](#string) |  | The unique ID of the request. |
+| error | [string](#string) | optional | An optional error returned from the AWS APIs. |
 | dynamodb | [AwsSdkDynamodbTags](#serverless-instrumentation-tags-v1-AwsSdkDynamodbTags) | optional |  |
 | sqs | [AwsSdkSqsTags](#serverless-instrumentation-tags-v1-AwsSdkSqsTags) | optional |  |
 | sns | [AwsSdkSnsTags](#serverless-instrumentation-tags-v1-AwsSdkSnsTags) | optional |  |
