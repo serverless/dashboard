@@ -8,7 +8,7 @@ menuOrder: 3
 # Sending Data to Console
 Serverless Console collects data by integrating with your AWS Account.
 Integrating your account will give Serverless Console access to logs
-and metrics from your Console and in some cases add an integration layer
+and metrics from Cloudwatch and in some cases add an integration layer
 to your Lambda functions. 
 
 This documentation gives you a reference for understanding how our instrumentation 
@@ -25,9 +25,9 @@ to your org. This will give you the ability to explore across all your
 applications. You are limited to adding each AWS Account to one org only.
 
 ### Inventory Synching
-Once you have an AWS Observability Integration setup, the collection of logs and
-traces is based around the set of inventory of Lambda Functions in your AWS account.
-
+Once you have an AWS Observability Integration setup, the collection of [logs and
+traces](./enabling-logs-traces.md) is based around the set of inventory of Lambda Functions in your AWS account. Synching is handling automatically on a 24 hour basis, or can be triggered
+manually to add new recently deployed functions. Metrics for all your functions are collected automatically as they are deployed.
 
 
 ### Serverless IAM Role

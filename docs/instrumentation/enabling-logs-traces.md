@@ -10,7 +10,7 @@ Once you have inventory from your [AWS Observability Integration synched](./inde
 logs and traces on each of your functions. 
 
 ## Enabling Logs
-Enabling logs will allow you to take advantage of [real time log streaming in dev mode](../product/logs.md#real-time-logging-in-dev-mode). Enabling logs will create a Cloudwatch Subscription 
+Enabling logs will allow you to take advantage of [real time log streaming in dev mode](../product/logs.md#real-time-logging). Enabling logs will create a Cloudwatch Subscription 
 for this function and send log data to Serverless Console and is recommended for functions
 where you are actively developing or troubleshooting. 
 

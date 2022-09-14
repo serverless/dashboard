@@ -13,6 +13,10 @@ This is a consolidated list of terms and concepts, with precise definitions, whi
 
 A Trace is Serverless Console's parent unit of measurement, covering all that happened when your application handled an HTTP request or an AWS Lambda invocation. A Trace can contain one or many Spans, depending on what it's measuring.
 
+## Namespace
+
+## Environment
+
 ## AWS Lambda
 
 The Trace for an AWS Lambda specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown.
@@ -89,6 +93,9 @@ When an AWS Lambda function instance receives a request after having received pr
 
 A timeout is a configurable limit for the duration of your AWS Lambda.
 
+## Cloudwatch Subscriptions
+
+## IAM Roles
 
 <!--
 # Benchmark
