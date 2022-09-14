@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.3.1...@serverless/aws-lambda-sdk@0.3.2) (2022-09-14)
+
+### Features
+
+- Write request and response payloads ([b04f030](https://github.com/serverless/console/commit/b04f0303444ffd44a3930cc4a098562641a56ff9))
+- An option to disable HTTP instrumentation ([c5da3fd](https://github.com/serverless/console/commit/c5da3fdf2b75862c46da9d56045099d064c25da4))
+
+### Maintenance Improvements
+
+- Cleanup logic ([06869fc](https://github.com/serverless/console/commit/06869fc44cd3b9a06c2527a92942fc70b17352f7))
+- Do not write debug JSON payload ([f94c874](https://github.com/serverless/console/commit/f94c87482ec7729c0ef6d079aa60de100c705cfe))
+- Generalize handling of instrumentation configuration ([84887b3](https://github.com/serverless/console/commit/84887b3e3f2947804a59fd489545ee6353239c94))
+
 ### [0.3.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.3.0...@serverless/aws-lambda-sdk@0.3.1) (2022-09-12)
 
 ### Features
