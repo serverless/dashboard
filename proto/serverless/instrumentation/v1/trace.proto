@@ -33,7 +33,11 @@ message Span {
     // In practical terms, every span except the root span will have a parent span ID.
     optional bytes parent_span_id = 3;
 
-    // The name of the span.
+    // The name of the span describes the type of span that is being produced.
+    // currently have a limited set of span names
+    //
+    // - aws.lambda: Spans the full invocation duration of a lambda function
+    // - aws.lambda.invocation: Spans the cold-start duration of a lambda function
     string name = 4;
 
     // The start time of the span in nanoseconds from EPOCH.
