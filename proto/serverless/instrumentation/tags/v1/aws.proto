@@ -128,8 +128,10 @@ message AwsLambdaInvocationTags {
 }
 
 message AwsSdkTags {
-  // The AWS Account Id this SDK call is being made against.
-  string account_id = 1;
+  // Retrieving AWS Account id is not straightforward therefore we it's not pursued at this point
+  reserved 1;
+  reserved "account_id";
+
   // The AWS Region this SDK call is being made against.
   string region = 2;
   // AWS Authentication signature version of the request.
