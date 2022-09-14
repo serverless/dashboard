@@ -128,12 +128,6 @@ message AwsLambdaInvocationTags {
 }
 
 message AwsSdkTags {
-  optional AwsSdkDynamodbTags dynamodb = 100;
-  optional AwsSdkSqsTags sqs = 101;
-  optional AwsSdkSnsTags sns = 102;
-}
-
-message AwsSdkBaseTags {
   // The AWS Account Id this SDK call is being made against.
   string account_id = 1;
   // The AWS Region this SDK call is being made against.
@@ -148,11 +142,14 @@ message AwsSdkBaseTags {
   string request_id = 6;
   // An optional error returned from the AWS APIs.
   optional string error = 7;
+
+  optional AwsSdkDynamodbTags dynamodb = 100;
+  optional AwsSdkSqsTags sqs = 101;
+  optional AwsSdkSnsTags sns = 102;
+
 }
 
 message AwsSdkDynamodbTags {
-  // The AWS SDK base tags that all instrumented AWS SDK calls have.
-  AwsSdkBaseTags aws_sdk_tags = 1;
   // The Dynamodb operation that was performed. Ex. GetItem, PutItem, Query, etc.
   string operation = 2;
   // The DynamoDB table name or names that the operation was performed on.
@@ -182,8 +179,6 @@ message AwsSdkDynamodbTags {
 }
 
 message AwsSdkSqsTags {
-  // The AWS SDK base tags that all instrumented AWS SDK calls have.
-  AwsSdkBaseTags aws_sdk_tags = 1;
   // The SQS queue name
   optional string queue_name = 2;
   // The message IDs provided in the SDK operation response.
@@ -193,8 +188,6 @@ message AwsSdkSqsTags {
 }
 
 message AwsSdkSnsTags {
-  // The AWS SDK base tags that all instrumented AWS SDK calls have.
-  AwsSdkBaseTags aws_sdk_tags = 1;
   // The SNS Topic name taken from the TopicArn request parameter.
   optional string topic_name = 2;
   // The SNS Operation that was performed.
