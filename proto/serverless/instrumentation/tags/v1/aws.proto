@@ -151,41 +151,43 @@ message AwsSdkTags {
 
 message AwsSdkDynamodbTags {
   // The DynamoDB table name or names that the operation was performed on.
-  repeated string table_names = 3;
+  repeated string table_names = 1;
   // The value of the ProjectionExpression request parameter.
-  optional string projection = 4;
+  optional string projection = 2;
   // The value of the ScanIndexForward request parameter.
-  optional bool scan_forward = 5;
+  optional bool scan_forward = 3;
   // The value of the AttributesToGet request parameter.
-  repeated string attributes_to_get = 6;
+  repeated string attributes_to_get = 4;
   // The value of the ConsistentRead request parameter.
-  optional bool consistent_read = 7;
+  optional bool consistent_read = 5;
   // The value of the IndexName request parameter.
-  optional string index_name = 8;
+  optional string index_name = 6;
   // The value of the Limit request parameter.
-  optional uint32 limit = 9;
+  optional uint32 limit = 7;
   // The value of the Select request parameter.
-  optional string select = 10;
+  optional string select = 8;
   // The value of the Segment request parameter.
-  optional uint32 segment = 11;
+  optional uint32 segment = 9;
   // The value of the TotalSegments request parameter.
-  optional uint64 total_segments = 12;
+  optional uint64 total_segments = 10;
+
   // The value of the Count response parameter.
-  optional uint64 count = 13;
+  optional uint64 count = 100;
   // The value of the ScannedCount response parameter.
-  optional uint64 scanned_count = 14;
+  optional uint64 scanned_count = 101;
+
 }
 
 message AwsSdkSqsTags {
   // The SQS queue name
-  optional string queue_name = 2;
+  optional string queue_name = 1;
   // The message IDs provided in the SDK operation response.
-  repeated string message_ids = 3;
+  repeated string message_ids = 2;
 }
 
 message AwsSdkSnsTags {
   // The SNS Topic name taken from the TopicArn request parameter.
-  optional string topic_name = 2;
+  optional string topic_name = 1;
   // The message IDs provided in the SDK operation response.
-  repeated string message_ids = 4;
+  repeated string message_ids = 2;
 }
