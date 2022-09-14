@@ -184,7 +184,7 @@ message AwsSdkDynamodbTags {
 message AwsSdkSqsTags {
   // The AWS SDK base tags that all instrumented AWS SDK calls have.
   AwsSdkBaseTags aws_sdk_tags = 1;
-  // The SQS queue URL.
+  // The SQS queue name
   optional string queue_name = 2;
   // The message IDs provided in the SDK operation response.
   repeated string message_ids = 3;
@@ -195,7 +195,7 @@ message AwsSdkSqsTags {
 message AwsSdkSnsTags {
   // The AWS SDK base tags that all instrumented AWS SDK calls have.
   AwsSdkBaseTags aws_sdk_tags = 1;
-  // The SNS Topic ARN, from the TopicArn request parameter.
+  // The SNS Topic name taken from the TopicArn request parameter.
   optional string topic_name = 2;
   // The SNS Operation that was performed.
   optional string operation = 3;
