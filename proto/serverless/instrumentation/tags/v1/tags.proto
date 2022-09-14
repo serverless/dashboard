@@ -13,16 +13,16 @@ message Tags {
   // Defined TagSets start at field number 100  //
   // ========================================== //
 
-  // The AWS tags
+  // These tags are used an AWS resource/sdk is the producer of the span
   optional serverless.instrumentation.tags.v1.AwsTags aws = 100;
 
-  // The HTTP Tags.
+  // These tags are used when an http library is making an http request
   optional serverless.instrumentation.tags.v1.HttpTags http = 106;
 
-  // The HTTPS Tags.
+  // These tags are used when an http library is making a https request
   optional serverless.instrumentation.tags.v1.HttpTags https = 107;
 
-  // The Express Tags.
+  // These tags are used when express.js function is used
   optional serverless.instrumentation.tags.v1.ExpressTags express = 108;
 }
 
@@ -45,8 +45,12 @@ message SlsTags {
 
   SdkTags sdk = 5;
 
-  // An optional environment that can be attached.
+  // An optional environment that can be attached. If there is an applicable
+  // environment tag this will be attached in a data enrichment process during
+  // ingestion.
   optional string environment = 16;
-  // An optional namespace that can be attached.
+  // An optional namespace that can be attached. If there is an applicable
+  // namespace tag this will be attached in a data enrichment process during
+  // ingestion.
   optional string namespace = 17;
 }

@@ -9,7 +9,8 @@ option go_package = ".;protoc";
 message AwsTags {
   // The root AWS Lambda Span tags
   optional AwsLambdaTags lambda = 100;
-  // The AWS SDK Tags
+  // The AWS SDK Tags. These are only added when instrumented code
+  // makes a call to one of the AWS SDK functions
   optional AwsSdkTags sdk = 101;
 }
 
