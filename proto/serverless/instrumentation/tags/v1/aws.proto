@@ -133,7 +133,7 @@ message AwsSdkTags {
   reserved "account_id";
 
   // The AWS Region this SDK call is being made against.
-  string region = 2;
+  optional string region = 2;
   // AWS Authentication signature version of the request.
   string signature_version = 3;
   // The name of the service to which a request is made.
@@ -141,7 +141,7 @@ message AwsSdkTags {
   // The name of the operation corresponding to the request.
   string operation = 5;
   // The unique ID of the request.
-  string request_id = 6;
+  optional string request_id = 6;
   // An optional error returned from the AWS APIs.
   optional string error = 7;
 
