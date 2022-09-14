@@ -304,7 +304,7 @@ Optional Event Tags are from 100 on |
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | lambda | [AwsLambdaTags](#serverless-instrumentation-tags-v1-AwsLambdaTags) | optional | The root AWS Lambda Span tags |
-| sdk | [AwsSdkTags](#serverless-instrumentation-tags-v1-AwsSdkTags) | optional | The AWS SDK Tags |
+| sdk | [AwsSdkTags](#serverless-instrumentation-tags-v1-AwsSdkTags) | optional | The AWS SDK Tags. These are only added when instrumented code makes a call to one of the AWS SDK functions |
 
 
 
@@ -427,8 +427,8 @@ outcomes upon completion.
 | service | [string](#string) |  | The service that was instrumented. For Lambda this will be the function name by default. |
 | region | [string](#string) | optional | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
 | sdk | [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags) |  |  |
-| environment | [string](#string) | optional | An optional environment that can be attached. |
-| namespace | [string](#string) | optional | An optional namespace that can be attached. |
+| environment | [string](#string) | optional | An optional environment that can be attached. If there is an applicable environment tag this will be attached in a data enrichment process during ingestion. |
+| namespace | [string](#string) | optional | An optional namespace that can be attached. If there is an applicable namespace tag this will be attached in a data enrichment process during ingestion. |
 
 
 
@@ -461,10 +461,10 @@ Defined TagSets start at field number 100  //
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| aws | [AwsTags](#serverless-instrumentation-tags-v1-AwsTags) | optional | The AWS tags |
-| http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | The HTTP Tags. |
-| https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | The HTTPS Tags. |
-| express | [ExpressTags](#serverless-instrumentation-tags-v1-ExpressTags) | optional | The Express Tags. |
+| aws | [AwsTags](#serverless-instrumentation-tags-v1-AwsTags) | optional | These tags are used an AWS resource/sdk is the producer of the span |
+| http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
+| https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
+| express | [ExpressTags](#serverless-instrumentation-tags-v1-ExpressTags) | optional | These tags are used when express.js function is used |
 
 
 
@@ -666,7 +666,9 @@ the function invocation.
 | id | [bytes](#bytes) |  | The Span ID, this will be a random 8-byte ID encoded as a length 16 lowercase hex string. |
 | trace_id | [bytes](#bytes) |  | The Trace ID, this will be a random 16-byte ID encoded as a length 32 lowercase hex string. The Trace ID is what is used to group all spans for specific trace together. |
 | parent_span_id | [bytes](#bytes) | optional | An optional Parent Span ID to be used to create a trace&#39;s Span Dependency graph. In practical terms, every span except the root span will have a parent span ID. |
-| name | [string](#string) |  | The name of the span. |
+| name | [string](#string) |  | The name of the span describes the type of span that is being produced. currently have a limited set of span names
+
+- aws.lambda: Spans the full invocation duration of a lambda function - aws.lambda.invocation: Spans the cold-start duration of a lambda function |
 | start_time_unix_nano | [fixed64](#fixed64) |  | The start time of the span in nanoseconds from EPOCH. |
 | end_time_unix_nano | [fixed64](#fixed64) |  | The end time of the span in nanoseconds from EPOCH. An important invariant to keep in mind is that the root span will always have the latest end time. |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets |
