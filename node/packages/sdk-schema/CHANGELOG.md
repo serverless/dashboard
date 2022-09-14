@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.5.0...@serverless/sdk-schema@0.6.0) (2022-09-14)
+
+### ⚠ BREAKING CHANGES
+
+- AWS SDK base tags are moved from service specific (`aws.sdk.<service>`) context to generic (`aws.sdk`)
+- Remove`operation` tags from `aws.sdk.<service>` context in favor of existing `aws.sdk.operation` tag
+- Number ids of tag properties in AWS SDK context are changed
+
+### Features
+
+- Move base AWS SDK tags to `aws.sdk` namespace ([4027b75](https://github.com/serverless/console/commit/4027b75db7b0ce0f99ea06097758e04dab805544))
+- Remove duplicate `operation` tags ([47fe2c6](https://github.com/serverless/console/commit/47fe2c6deb9762fa138d0f7fd3f75c01dd97aa22))
+- Add `aws.sdk.dynamodb.filter_expression` tag ([6bb5d3d](https://github.com/serverless/console/commit/6bb5d3df2b5f85b0aab4d2e5c6c456738e9bcb50))
+- Cleanup numbering of tag properties ([8b8b582](https://github.com/serverless/console/commit/8b8b582bd84283f785bb6e1c1843aefb6604de08))
+
 ## [0.5.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.4.0...@serverless/sdk-schema@0.5.0) (2022-09-08)
 
 ### ⚠ BREAKING CHANGES
