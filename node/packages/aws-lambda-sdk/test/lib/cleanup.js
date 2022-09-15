@@ -7,6 +7,7 @@ const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { SQS } = require('@aws-sdk/client-sqs');
 const { SNS } = require('@aws-sdk/client-sns');
 const { STS } = require('@aws-sdk/client-sts');
+const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 const log = require('log').get('test');
 const awsRequest = require('../utils/aws-request');
 const basename = require('./basename');
@@ -143,6 +144,26 @@ const deleteSnsTopics = async () => {
   );
 };
 
+const getAllDynamoDbTables = async (exclusiveStartTableName) => {
+  const result = await awsRequest(DynamoDB, 'listTables', {
+    ExclusiveStartTableName: exclusiveStartTableName,
+  });
+  const tableNames = result.TableNames.filter((tableName) => tableName.startsWith(`${basename}-`));
+
+  if (result.LastEvaluatedTableName) {
+    tableNames.push(...Array.from(await getAllDynamoDbTables(result.LastEvaluatedTableName)));
+  }
+  return new Set(tableNames);
+};
+const deleteDynamoDbTables = async () => {
+  await Promise.all(
+    Array.from(await getAllDynamoDbTables(), async (tableName) => {
+      await awsRequest(DynamoDB, 'deleteTable', { TableName: tableName });
+      log.notice('Deleted DynamoDb table %s', tableName);
+    })
+  );
+};
+
 const listLayerVersions = async (layerName, nextMarker = undefined) => {
   const response = await awsRequest(Lambda, 'listLayerVersions', {
     LayerName: layerName,
@@ -219,6 +240,7 @@ module.exports = async (options = {}) => {
       deleteEventSourceMappings(),
       deleteSqsQueues(),
       deleteSnsTopics(),
+      deleteDynamoDbTables(),
     ]);
   }
   await Promise.all([deleteAllLayers(), deleteRole()]);

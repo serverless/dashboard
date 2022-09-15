@@ -41,6 +41,7 @@ const create = async (testConfig, coreConfig) => {
         SLS_SDK_DEBUG: '1',
       },
     },
+    Timeout: 10,
     ...configuration,
   };
   if (process.env.SERVERLESS_PLATFORM_STAGE === 'dev') {

@@ -79,6 +79,10 @@ Disable lambda requests (events) monitoring
 
 Disable lambda responses monitoring
 
+##### `SLS_DISABLE_AWS_SDK_MONITORING` (or `options.disableAwsSdkMonitoring`)
+
+Disable automated AWS SDK monitoring
+
 ### Outcome
 
 SDK automatically creates the trace that covers internal process of function invocation and initialization.

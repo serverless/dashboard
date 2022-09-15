@@ -88,17 +88,7 @@ const createRole = async (config) => {
         Statement: [
           {
             Effect: 'Allow',
-            Action: ['logs:CreateLogStream', 'logs:CreateLogGroup'],
-            Resource: `arn:*:logs:*:*:log-group:/aws/lambda/${basename}*:*`,
-          },
-          {
-            Effect: 'Allow',
-            Action: ['logs:PutLogEvents'],
-            Resource: `arn:*:logs:*:*:log-group:/aws/lambda/${basename}*:*:*`,
-          },
-          {
-            Effect: 'Allow',
-            Action: ['sqs:*'],
+            Action: '*',
             Resource: '*',
           },
         ],

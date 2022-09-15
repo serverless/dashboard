@@ -94,6 +94,167 @@ describe('integration', function () {
     }
   };
 
+  const testAwsSdk = ({ testConfig, invocationsData }) => {
+    for (const [
+      index,
+      {
+        trace: { spans },
+      },
+    ] of invocationsData.entries()) {
+      spans.shift();
+      if (!index) spans.shift();
+      const [
+        invocationSpan,
+        sqsCreateSpan,
+        sqsSendSpan,
+        sqsDeleteSpan,
+        snsCreateSpan,
+        snsPublishSpan,
+        snsDeleteSpan,
+        dynamodbCreateSpan,
+        dynamodbDescribeSpan,
+        ...dynamodbSpans
+      ] = spans;
+
+      // SNS
+      const queueName = `${testConfig.configuration.FunctionName}-${index + 1}.fifo`;
+      // Create
+      expect(sqsCreateSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(sqsCreateSpan.name).to.equal('aws.sdk.sqs.createqueue');
+      let sdkTags = sqsCreateSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sqs');
+      expect(sdkTags.operation).to.equal('createqueue');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.sqs.queueName).to.equal(queueName);
+      // Send
+      expect(sqsSendSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(sqsSendSpan.name).to.equal('aws.sdk.sqs.sendmessage');
+      sdkTags = sqsSendSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sqs');
+      expect(sdkTags.operation).to.equal('sendmessage');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.sqs.queueName).to.equal(queueName);
+      expect(sdkTags.sqs.messageIds.length).to.equal(1);
+      // Delete
+      expect(sqsDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(sqsDeleteSpan.name).to.equal('aws.sdk.sqs.deletequeue');
+      sdkTags = sqsDeleteSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sqs');
+      expect(sdkTags.operation).to.equal('deletequeue');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.sqs.queueName).to.equal(queueName);
+
+      // SQS
+      const topicName = `${testConfig.configuration.FunctionName}-${index + 1}`;
+      // Create
+      expect(snsCreateSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(snsCreateSpan.name).to.equal('aws.sdk.sns.createtopic');
+      sdkTags = snsCreateSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sns');
+      expect(sdkTags.operation).to.equal('createtopic');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.sns.topicName).to.equal(topicName);
+      // Send
+      expect(snsPublishSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(snsPublishSpan.name).to.equal('aws.sdk.sns.publish');
+      sdkTags = snsPublishSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sns');
+      expect(sdkTags.operation).to.equal('publish');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.sns.topicName).to.equal(topicName);
+      expect(sdkTags.sns.messageIds.length).to.equal(1);
+      // Delete
+      expect(snsDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(snsDeleteSpan.name).to.equal('aws.sdk.sns.deletetopic');
+      sdkTags = snsDeleteSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sns');
+      expect(sdkTags.operation).to.equal('deletetopic');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.sns.topicName).to.equal(topicName);
+
+      // Dynamodb
+      const tableName = `${testConfig.configuration.FunctionName}-${index + 1}`;
+      // Create
+      expect(dynamodbCreateSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbCreateSpan.name).to.equal('aws.sdk.dynamodb.createtable');
+      sdkTags = dynamodbCreateSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('createtable');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      // Describe
+      expect(dynamodbDescribeSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbDescribeSpan.name).to.equal('aws.sdk.dynamodb.describetable');
+      sdkTags = dynamodbDescribeSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('describetable');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      while (dynamodbSpans[0].name === 'aws.sdk.dynamodb.describetable') {
+        dynamodbSpans.shift();
+      }
+      const [dynamodbPutItemSpan, dynamodbQuerySpan, dynamodbDeleteSpan] = dynamodbSpans;
+      // Put item
+      expect(dynamodbPutItemSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbPutItemSpan.name).to.equal('aws.sdk.dynamodb.putitem');
+      sdkTags = dynamodbPutItemSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('putitem');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      // Query
+      expect(dynamodbQuerySpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbQuerySpan.name).to.equal('aws.sdk.dynamodb.query');
+      sdkTags = dynamodbQuerySpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('query');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
+      // Delete
+      expect(dynamodbDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbDeleteSpan.name).to.equal('aws.sdk.dynamodb.deletetable');
+      sdkTags = dynamodbDeleteSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('deletetable');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+    }
+  };
+
   const useCasesConfig = new Map([
     [
       'esm-callback/index',
@@ -708,6 +869,8 @@ describe('integration', function () {
         ]),
       },
     ],
+    ['aws-sdk-v2', { test: testAwsSdk }],
+    ['aws-sdk-v3', { test: testAwsSdk }],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);

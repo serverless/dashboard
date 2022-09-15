@@ -18,6 +18,7 @@
     "@aws-sdk/client-api-gateway": "^3.171.0",
     "@aws-sdk/client-apigatewayv2": "^3.171.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.171.0",
+    "@aws-sdk/client-dynamodb": "^3.171.0",
     "@aws-sdk/client-iam": "^3.171.0",
     "@aws-sdk/client-lambda": "^3.171.0",
     "@aws-sdk/client-s3": "^3.171.0",

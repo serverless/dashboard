@@ -26,6 +26,9 @@ const resolveSettings = (options = {}) => {
   serverlessSdk._settings.disableResponseMonitoring = Boolean(
     process.env.SLS_DISABLE_RESPONSE_MONITORING || options.disableResponseMonitoring
   );
+  serverlessSdk._settings.disableAwsSdkMonitoring = Boolean(
+    process.env.SLS_DISABLE_AWS_SDK_MONITORING || options.disableAwsSdkMonitoring
+  );
 };
 
 let isInitialized = false;
@@ -39,5 +42,15 @@ serverlessSdk._initialize = (options = {}) => {
     require('./lib/instrument/http').install();
   }
 
+  if (!settings.disableAwsSdkMonitoring) {
+    // Auto generate AWS SDK request spans
+    require('./lib/instrument/aws-sdk').install();
+  }
+
   return serverlessSdk;
+};
+
+serverlessSdk.instrument = {
+  awsSdkV2: require('./instrument/aws-sdk-v2'),
+  awsSdkV3Client: require('./instrument/aws-sdk-v3-client'),
 };
