@@ -178,7 +178,8 @@ Optional Event Tags are from 100 on |
 | select | [string](#string) | optional | The value of the Select request parameter. |
 | segment | [uint32](#uint32) | optional | The value of the Segment request parameter. |
 | total_segments | [uint64](#uint64) | optional | The value of the TotalSegments request parameter. |
-| filter_expression | [string](#string) | optional | The value of the FilterExpression request parameter. |
+| filter | [string](#string) | optional | The value of the FilterExpression request parameter. |
+| key | [string](#string) | optional | The value of the KeyExpression request parameter. |
 | count | [uint64](#uint64) | optional | The value of the Count response parameter. |
 | scanned_count | [uint64](#uint64) | optional | The value of the ScannedCount response parameter. |
 
