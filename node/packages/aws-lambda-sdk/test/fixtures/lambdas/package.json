@@ -1,1 +1,8 @@
-{}
+{
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.172.0",
+    "@aws-sdk/client-sns": "^3.171.0",
+    "@aws-sdk/client-sqs": "^3.171.0",
+    "timers-ext": "^0.1.7"
+  }
+}
