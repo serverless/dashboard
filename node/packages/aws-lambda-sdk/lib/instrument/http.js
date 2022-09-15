@@ -3,8 +3,6 @@
 const { searchParamsSymbol } = require('url');
 const { errorMonitor } = require('events');
 
-const { traceSpans } = require('../../');
-
 const urlToHttpOptions = (url) => {
   const options = {
     hostname:
@@ -130,3 +128,5 @@ module.exports.install = () => {
   uninstallHttp = install('http', require('http'));
   uninstallHttps = install('https', require('https'));
 };
+
+const { traceSpans } = require('../../');
