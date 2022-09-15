@@ -160,12 +160,26 @@ class StringifiableSet extends Set {
 class TraceSpanTags extends Map {
   set(inputName, value) {
     const name = ensureTagName(inputName);
+    value = ensureTagValue(value, name);
     if (this.has(name)) {
+      const currentValue = this.get(name);
+      if (Array.isArray(value)) {
+        if (Array.isArray(currentValue)) {
+          if (
+            value.length === currentValue.length &&
+            value.every((item, index) => currentValue[index] === item)
+          ) {
+            return this;
+          }
+        }
+      } else if (value === currentValue) {
+        return this;
+      }
       throw Object.assign(new Error(`Cannot set tag: Tag "${inputName}" is already set`), {
         code: 'DUPLICATE_TRACE_SPAN_TAG_NAME',
       });
     }
-    return super.set(name, ensureTagValue(value, name));
+    return super.set(name, value);
   }
   setMany(tags, options = {}) {
     ensurePlainObject(tags, { name: 'tags' });

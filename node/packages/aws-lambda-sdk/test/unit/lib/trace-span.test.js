@@ -207,12 +207,18 @@ describe('lib/trace-span.test.js', () => {
       ]);
     });
 
-    it('should reject setting tag that alraedy exists', () => {
+    it('should reject setting with different value tag that alraedy exists', () => {
       const childSpan = rootSpan.createSubSpan('child');
       childSpan.tags.set('tag', true);
       expect(() => childSpan.tags.set('tag', 'again'))
         .to.throw(Error)
         .with.property('code', 'DUPLICATE_TRACE_SPAN_TAG_NAME');
+    });
+
+    it('should ignore resetting tag with same value', () => {
+      const childSpan = rootSpan.createSubSpan('child');
+      childSpan.tags.set('tag', true);
+      expect(childSpan.tags.set('tag', true)).to.equal(childSpan.tags);
     });
   });
 });
