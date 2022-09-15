@@ -21,6 +21,7 @@ Resolve Layer ARN with following steps
 2. Configure following environment variables for the function environment:
    - `SLS_ORG_ID`: _(id of your organization in Serverless Console)_
    - `AWS_LAMBDA_EXEC_WRAPPER`: `/opt/sls-sdk-node/exec-wrapper.sh`
+3. If needed Serverless SDK can be accessed at `serverlessSdk` global variable
 
 ##### (B) Instrument function manually
 
@@ -54,6 +55,8 @@ export const handler = instrument(
 );
 ```
 
+3. If needed Serveless SDK can be loaded by requiring (or importing) `@serverless/aws-lambda-sdk`
+
 #### Configuration options.
 
 Extension can be configured either via environment variables, or in case of manual instrumentation by passing the options object to `instrument` function;
@@ -82,5 +85,6 @@ SDK automatically creates the trace that covers internal process of function inv
 
 For details check:
 
-- [docs/sdk-trace.md](docs/sdk-trace.md).
-- [docs/monitoring.nd](docs/monitoring.md)
+- [AWS Lambda SDK main trace spans](docs/sdk-trace.md).
+- [AWS Lambda SDK internal flow traces](docs/monitoring.md)
+- [Serverless SDK interface](docs/sdk.md)
