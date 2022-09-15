@@ -152,8 +152,8 @@ message AwsSdkTags {
 }
 
 message AwsSdkDynamodbTags {
-  // The DynamoDB table name or names that the operation was performed on.
-  repeated string table_names = 1;
+  // The DynamoDB table name
+  optional string table_name = 1;
   // The value of the ProjectionExpression request parameter.
   optional string projection = 2;
   // The value of the ScanIndexForward request parameter.
