@@ -137,7 +137,7 @@ message AwsSdkTags {
   // AWS Authentication signature version of the request.
   string signature_version = 3;
   // The name of the service to which a request is made.
-  string aws_service = 4;
+  string service = 4;
   // The name of the operation corresponding to the request.
   string operation = 5;
   // The unique ID of the request.
