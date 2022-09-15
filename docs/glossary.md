@@ -9,21 +9,58 @@ menuOrder: 4
 
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
-## Traces
+## Organization
+
+## Integration
+
+### AWS Observability Integration
+
+#### CloudFormation Stack
+
+#### IAM Roles
+
+#### Kinesis Firehose
+
+#### Cloudwatch Metric Stream
+
+#### Cloudwatch Log Group
+
+#### Lambda Layer
+
+## Function Invocation
+
+
+## Tracing
 
 A Trace is Serverless Console's parent unit of measurement, covering all that happened when your application handled an HTTP request or an AWS Lambda invocation. A Trace can contain one or many Spans, depending on what it's measuring.
 
-## Namespace
+### Namespace
 
-## Environment
+### Environment
 
-## AWS Lambda
+### Tag
 
-The Trace for an AWS Lambda specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown.
+### Cloud Account
 
-Additionally, the duration of the Trace is what AWS Lambda bills for, based on 1ms increments.  Duration charges apply to initialization code that is declared outside of the handler in the Initiatlization phase, code that runs in the handler of a function during the Invocation phase, as well as the time it takes for code in any last running Extensions to finish executing during Shutdown phase.
+### Function Initialization
 
-It’s important to note that duration of Traces for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
+### Cold Start
+
+### Warm Start
+
+### Timeout
+
+### Error
+
+### Function Duration
+
+
+
+
+
+
+
+
 
 ### Initialization
 
