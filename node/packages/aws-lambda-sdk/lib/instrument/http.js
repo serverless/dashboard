@@ -3,6 +3,8 @@
 const { searchParamsSymbol } = require('url');
 const { errorMonitor } = require('events');
 
+let shouldIgnoreFollowingRequest = false;
+
 const urlToHttpOptions = (url) => {
   const options = {
     hostname:
@@ -28,6 +30,10 @@ const install = (protocol, httpModule) => {
 
   const request = function request(url, options, cb) {
     const startTime = process.hrtime.bigint();
+    if (shouldIgnoreFollowingRequest) {
+      shouldIgnoreFollowingRequest = false;
+      return originalRequest.call(this, url, options, cb);
+    }
     const args = [url, options, cb];
 
     let cbIndex = 2;
@@ -127,6 +133,13 @@ module.exports.install = () => {
 
   uninstallHttp = install('http', require('http'));
   uninstallHttps = install('https', require('https'));
+};
+
+module.exports.ignoreFollowingRequest = () => {
+  shouldIgnoreFollowingRequest = true;
+  process.nextTick(() => {
+    shouldIgnoreFollowingRequest = false;
+  });
 };
 
 const { traceSpans } = require('../../');
