@@ -229,7 +229,7 @@ Optional Event Tags are from 100 on |
 | ----- | ---- | ----- | ----------- |
 | region | [string](#string) | optional | The AWS Region this SDK call is being made against. |
 | signature_version | [string](#string) |  | AWS Authentication signature version of the request. |
-| aws_service | [string](#string) |  | The name of the service to which a request is made. |
+| service | [string](#string) |  | The name of the service to which a request is made. |
 | operation | [string](#string) |  | The name of the operation corresponding to the request. |
 | request_id | [string](#string) | optional | The unique ID of the request. |
 | error | [string](#string) | optional | An optional error returned from the AWS APIs. |
