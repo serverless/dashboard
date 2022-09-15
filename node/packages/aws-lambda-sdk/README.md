@@ -78,6 +78,9 @@ Disable lambda responses monitoring
 
 ### Outcome
 
-SDK automatically creates the trace that covers internal process of function invocation and initialization. For all the details check [docs/sdk-trace.md](docs/sdk-trace.md)
+SDK automatically creates the trace that covers internal process of function invocation and initialization.
 
-If not disabled request and response payloads are written to logs encoded with protobuf format
+For details check:
+
+- [docs/sdk-trace.md](docs/sdk-trace.md).
+- [docs/monitoring.nd](docs/monitoring.md)
