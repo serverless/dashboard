@@ -29,7 +29,7 @@ const resolveSettings = (options = {}) => {
 };
 
 let isInitialized = false;
-serverlessSdk.initialize = (options = {}) => {
+serverlessSdk._initialize = (options = {}) => {
   if (isInitialized) return module.exports;
   isInitialized = true;
   resolveSettings(options);

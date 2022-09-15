@@ -89,7 +89,7 @@ const writeTrace = () => {
 
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
-  serverlessSdk.initialize(options);
+  serverlessSdk._initialize(options);
   if (!serverlessSdk.orgId) {
     throw new Error(
       'Serverless SDK Error: Cannot instrument function: "orgId" not provided. ' +
