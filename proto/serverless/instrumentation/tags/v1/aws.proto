@@ -173,7 +173,8 @@ message AwsSdkDynamodbTags {
   // The value of the TotalSegments request parameter.
   optional uint64 total_segments = 10;
   // The value of the FilterExpression request parameter.
-  optional string filter_expression = 11;
+  optional string filter = 11;
+
 
   // The value of the Count response parameter.
   optional uint64 count = 100;
