@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.6.0...@serverless/sdk-schema@0.7.0) (2022-09-16)
+
+### ⚠ BREAKING CHANGES
+
+- Remove `aws.sdk.account_id` tag
+- Rename `aws.sdk.aws_service` to `aws.sdk.service`
+- Remove `aws.sdk.dynamodb.table_names` in favor of singular `aws.sdk.dynamodb.table_name`
+- Rename `aws.sdk.dynamodb.filter_expression` to `aws.sdk.dynamodb.filter` (to match convention)
+- `aws.sdk.region` and `aws.sdk.request_id` are made optional
+- `express.method` and `express.path` are made optional
+
+### Features
+
+- Remove `aws.sdk.account_id` as it's not directly accessible ([87af073](https://github.com/serverless/console/commit/87af073b9e87a2915c5cadf779355135c05282d6))
+- Make `aws.sdk.region` and `aws.sdk.request_id` optional ([f6af48d](https://github.com/serverless/console/commit/f6af48d31474f2797a1b2f7a4494fbb7c40459b6))
+- Remove obsolete `aws_` prefix ([1acc6cf](https://github.com/serverless/console/commit/1acc6cf3108cd506f7a05a26f8d5d0d9f666ce30))
+- Rename `aws.sdk.dynamodb.filter_expression` to `aws.sdk.dynamodb.filter` (to match convention) ([1cd3f32](https://github.com/serverless/console/commit/1cd3f322f1977a74deda158265b529808323e76b))
+- Configure `aws.sdk.dynamodb.key_condition` to store KeyConditionExpression ([11a98c9](https://github.com/serverless/console/commit/11a98c9eb84c57b55a6a861b8cab690918560d58))
+- Update to singular `aws.sdk.dynamodb.table_name` field ([b87db6e](https://github.com/serverless/console/commit/b87db6e958b43371da335a02d807c437cca2a85d))
+- Make all `express` tags optional ([96eae9f](https://github.com/serverless/console/commit/96eae9f108f1db621ea051a1f8567b6c712c167c))
+
 ## [0.6.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.5.0...@serverless/sdk-schema@0.6.0) (2022-09-14)
 
 ### ⚠ BREAKING CHANGES
