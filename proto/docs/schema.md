@@ -168,7 +168,7 @@ Optional Event Tags are from 100 on |
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| table_names | [string](#string) | repeated | The DynamoDB table name or names that the operation was performed on. |
+| table_name | [string](#string) | optional | The DynamoDB table name |
 | projection | [string](#string) | optional | The value of the ProjectionExpression request parameter. |
 | scan_forward | [bool](#bool) | optional | The value of the ScanIndexForward request parameter. |
 | attributes_to_get | [string](#string) | repeated | The value of the AttributesToGet request parameter. |
@@ -179,7 +179,7 @@ Optional Event Tags are from 100 on |
 | segment | [uint32](#uint32) | optional | The value of the Segment request parameter. |
 | total_segments | [uint64](#uint64) | optional | The value of the TotalSegments request parameter. |
 | filter | [string](#string) | optional | The value of the FilterExpression request parameter. |
-| key | [string](#string) | optional | The value of the KeyExpression request parameter. |
+| key_condition | [string](#string) | optional | The value of the KeyConditionExpression request parameter. |
 | count | [uint64](#uint64) | optional | The value of the Count response parameter. |
 | scanned_count | [uint64](#uint64) | optional | The value of the ScannedCount response parameter. |
 
