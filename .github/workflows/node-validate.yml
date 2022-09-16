@@ -367,7 +367,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: node/packages/aws-lambda-sdk/test/fixtures/lambdas/node_modules
-          key: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-4-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/test/fixtures/lambdas/package.json') }}
+          key: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/test/fixtures/lambdas/package.json') }}
           restore-keys: |
             packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-refs/heads/main-
