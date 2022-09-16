@@ -115,6 +115,16 @@ jobs:
           restore-keys: |
             packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-refs/heads/main-
+      - name: Retrieve packages/aws-lambda-sdk/test/fixtures/lambdas from cache
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        id: cacheAwsLambdaSdkTestFixturesLambdasNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/aws-lambda-sdk/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/test/fixtures/lambdas/package.json') }}
+          restore-keys: |
+            packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+            packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-
 
       - name: Retrieve packages/sdk-schema/node_modules from cache
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
@@ -163,6 +173,11 @@ jobs:
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true' && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/aws-lambda-sdk
+          npm update --no-save
+      - name: Install packages/aws-lambda-sdk/test/fixtures/lambdas dependencies
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true' && steps.cacheAwsLambdaSdkTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/aws-lambda-sdk/test/fixtures/lambdas
           npm update --no-save
 
       - name: Install packages/sdk-schema dependencies
@@ -346,6 +361,16 @@ jobs:
           restore-keys: |
             packages/aws-lambda-sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/node-modules-v14-${{ runner.os }}-refs/heads/main-
+      - name: Retrieve packages/aws-lambda-sdk/test/fixtures/lambdas from cache
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        id: cacheAwsLambdaSdkTestFixturesLambdasNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/aws-lambda-sdk/test/fixtures/lambdas/node_modules
+          key: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-4-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/test/fixtures/lambdas/package.json') }}
+          restore-keys: |
+            packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
+            packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-refs/heads/main-
 
       - name: Retrieve packages/sdk-schema/node_modules from cache
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
@@ -394,6 +419,11 @@ jobs:
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true' && steps.cacheAwsLambdaSdkNodeModules.outputs.cache-hit != 'true'
         run: |
           cd node/packages/aws-lambda-sdk
+          npm update --no-save
+      - name: Install packages/aws-lambda-sdk/test/fixtures/lambdas dependencies
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true' && steps.cacheAwsLambdaSdkTestFixturesLambdasNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/aws-lambda-sdk/test/fixtures/lambdas
           npm update --no-save
 
       - name: Install packages/sdk-schema dependencies
