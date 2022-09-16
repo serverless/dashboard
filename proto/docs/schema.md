@@ -369,8 +369,8 @@ outcomes upon completion.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| method | [string](#string) |  | The HTTP method defined by the Express Route Handler. |
-| path | [string](#string) |  | The HTTP Path defined by the Express Route Handler. |
+| method | [string](#string) | optional | The HTTP method defined by the Express Route Handler. |
+| path | [string](#string) | optional | The HTTP Path defined by the Express Route Handler. |
 | status_code | [uint32](#uint32) | optional | The status code returned by the Express Route Handler. |
 
 
