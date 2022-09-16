@@ -6,98 +6,60 @@ menuOrder: 6
 -->
 
 # Metrics 
+Metrics are automatically collected across your AWS Account
+when you [add an AWS Observability Integration](../instrumentation/index.md#adding-the-aws-observability-integration). These metrics are collected
+using [Cloudwatch Metric Streams](../instrumentation/data-sources.md#metric-streams)
+which allow us to collect metrics from a variety of AWS Services in aggregate.
 
-Metrics about your [Trace](traces.md) are collected and stored in Serverless
-Console. These metrics are stored individually on each trace as well as
-aggregated for storage and alerting purposes. The [tags](tags.md) from your
-trace are also included on these metrics for filtering.
+## Metric Aggregation
+Metrics for services are aggregated over an interval which helps to compress
+the amount of data required for storage, and make it more practical to 
+chart and alert on them. It also means we don't have individual data points for
+for a given Trace, but rather only collect the average, and certain percentiles.
 
-Our curated metric views provide you the ability to view activity across your
-entire organization at a glance.  These include views are intended to be a
-starting point based on patterns we recognize in the [Trace](traces.md)
-data we receive. 
+## Lambda Metric Collection
 
-Our metrics are built around common use cases including:
+https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html
 
-**API's** - Our API view provides convenient tools for troubleshooting errors
-and slowness in REST APIs. The API view allows you to quickly see slow request
-outliers, filter for status codes, and spot usage trends across your endpoints. 
+Lambda metrics are collected for all functions for in your AWS Account(s). This
+allows you to use metrics to discover new services that are active in your account
+and configure any additional troubleshooting that is helpful. 
 
-**Functions** - Functions provide a view to see all your instrumented Lambda
-functions holistically across your organization. 
+**Lambda Invocation**
+Use for monitoring the overal usage of Lambda functions metrics are collected
+about each Lambda execution. These are aggregated per minute.
 
-## Collected Metrics
-Currently the following metrics are supported for ingestion.
+**Lambda Error** 
+To further classify function execution events, a summary of error events is collected
+across all your functions ech minute .
 
-**FAAS Compute Duration** - This metric is used for collecting details about the
-total time it took for a given Trace which is used for calculating costs. 
+**Lambda Compute Duration** - This metric is used for collecting details about the
+total time it took for a given Trace. For more details about duration, see our 
+[guide to understanding Lambda duration](./duration.md).
 
-**FAAS Memory Percent**  - This is the memory percentage used for a function
-invocation.
+## Other Planned Metric Ingestion
+While currently, the metric ingestion is limited to Lambda related metrics, the
+[AWS Observability Integration](../instrumentation/index.md#adding-the-aws-observability-integration) provides access to metrics from
+other services like DynamoDB, SQS, SNS and API Gateway. 
 
 ## Filters
+Applying filters to the metrics view allows you to narrow in on 
+specific functions, or use cases that are of interest to you. Filters can be saved
+as a shared views to collaborate with team mates on specific searches. 
 
-To further refine our included curated views users can save filters to further
-refine the data they are seeing. To add filters click on the configuration icon
-in the top right and select the criteria you'd like to filter. 
+- **Function Names** You can filter metrics for a specific function based on the
+name used in your AWS Lambda function.
 
-Each filter option will have a set of values we have received as
-[tags](tags.md) when we ingested the [Trace](traces.md). Select the
-**+** icon on each filter option you'd like to include, and then Save those
-values to view the results. 
+- **Namespace** Namespaces allow you to group Lambda functions together. This can be useful
+for tracking Lambda functions associated with a common business outcome (e.g. a shopping-cart).
 
-**Note**: Saving filters to the curated views for API and Functions will not be
-saved across your org. These filters will only apply temporarily. 
+- **Environment** Environment is another way to group sets of functions for filtering. These are used to associate apps across an entire environment such as staging, or production. 
 
-### Shared Filters
+More details about configuring your Namespace and Environment tag can be found in our [Enabling Additional Monitoring Features Section](../instrumentation/enabling-logs-traces.md#setting-environment-and-namespace-tags)
 
-The following filters are shared across all Traces.
+- **Region** - Region is the specific region your Lambda function is executing in. 
 
-- **Service** Service is collected from the `service.name` tag on each Trace.
-For Serverless Framework users this will combine your Stage, Service Name, and
-function name. 
-- **Namespace** Service is collected from the `service.namespace` tag on each
-Trace. For Serverless Framework users this will correspond to service specified
-in your Serverless.yaml file.
-- **Environment** Environment is collected from the `deployment.environment` 
-tag. For Serverless Framework users this can be specified as stage.
-- **Region** This is collected from the `cloud.region` tag and represents the
-region your application is running in. 
+- **Cloud Account** - Cloud Account will show the account number or nickname for an [AWS Observability Integrations you have added](../instrumentation/index.md#adding-the-aws-observability-integration).
 
-### API Filters
-The following filters are applicable only to the API Scope. 
 
-- **API Endpoint** Collected using the `http.path` tag this is will contain the
-path for the API requested. This is useful for narrowing in on usage or error
-patterns.
-- **API Method**  Collected using the `http.method` tag this is will contain the
-method for the API requested. This is useful for distinguishing between requests
-across a single endpoint. 
-- **API Duration** This is collected as the duration metric and is useful for
-identifying performance outliers across your organization. 
-- **API Status Codes**  Collected using the `http.status_code` tag this will 
-contain the status code returned by the API. This is useful for identifying
-errors.
 
-### Function Filters
- The following filters are applicable only to the function Scope.
-
-- **Function Names** Collected using the `faas.name` tag this is the name of the 
-function invoked. For Serverless framework users this is specified as the
-function name(s) in the serverless.yaml file. 
-- **Function Errors** This is a boolean value collected using the `faas.error`
-tag and allows you to filter on functions that resulted in an error. 
-- **Function Cold Start** This is a boolean value collected using the 
-`faas.coldstart` tag and allows you to filter on functions that required a cold
-start.
-- **Function Duration** This is collected as the duration metric and is useful
-for identifying performance outliers across your organization. 
-
-## Creating your own views
-
-If you'd like to save filters with your team, you can create shared custom views.
-
-To do this click the "Create View" button on the Scopes Menu and choose a Scope
-to apply. It's helpful to include a precise name, and description so others know
-the context for the view.  Once created any filters applied to that view will be
-shared across the team. 
