@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.3.2...@serverless/aws-lambda-sdk@0.4.0) (2022-09-16)
+
+### ⚠ BREAKING CHANGES
+
+- Upgrade `@serverless/sdk-schema` to v0.7
+
+### Features
+
+- Instrument AWS SDK requests ([8fe8676](https://github.com/serverless/console/commit/8fe867621b6d0421c5fe4bf951353b01eaa1af22))
+- Support ignoring specified HTTP requests from tracing ([63a0450](https://github.com/serverless/console/commit/63a0450f525c2a7e726ad1006968a5bbb744e663))
+
+### Bug Fixes
+
+- Ensure safe requires order ([f853179](https://github.com/serverless/console/commit/f853179d34f73e6233bc49b293d7eddc91d76229))
+
+### Maintenance Improvements
+
+- Do not crash if tag is re-set with same value ([d9c5647](https://github.com/serverless/console/commit/d9c56475fc53f294962dd4ae3b6df5567f253046))
+- Make `serverlessSdk._initialize` private ([887bbc4](https://github.com/serverless/console/commit/887bbc4af82662d37f7fea8c8303f773f5a52506))
+- Upgrade `@serverless/sdk-schema` to v0.7 ([2f481f8](https://github.com/serverless/console/commit/2f481f8b22d7902336460f17a67b01df53e9a1d3))
+
 ### [0.3.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.3.1...@serverless/aws-lambda-sdk@0.3.2) (2022-09-14)
 
 ### Features
