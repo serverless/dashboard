@@ -241,7 +241,7 @@ jobs:
         if: steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-lint-action@v1
         with:
-          input: 'proto'
+          input: "proto"
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
