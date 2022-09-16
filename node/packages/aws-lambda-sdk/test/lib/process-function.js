@@ -235,7 +235,7 @@ const retrieveReports = async (testConfig) => {
           const payload = normalizeProtoObject(
             RequestResponse.decode(Buffer.from(payloadString.trim(), 'base64'))
           );
-          if (invocationData.request) invocationData.response = payload;
+          if (payload.data.$case === 'responseData') invocationData.response = payload;
           else invocationData.request = payload;
         } else {
           startedMessage = payloadString;
