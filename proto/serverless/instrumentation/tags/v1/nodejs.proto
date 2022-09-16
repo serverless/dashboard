@@ -6,9 +6,9 @@ option go_package = ".;protoc";
 
 message ExpressTags {
   // The HTTP method defined by the Express Route Handler.
-  string method = 1;
+  optional string method = 1;
   // The HTTP Path defined by the Express Route Handler.
-  string path = 2;
+  optional string path = 2;
   // The status code returned by the Express Route Handler.
   optional uint32 status_code = 3;
 }
