@@ -17,11 +17,9 @@ the amount of data required for storage, and make it more practical to
 chart and alert on them. It also means we don't have individual data points for
 for a given Trace, but rather only collect the average, and certain percentiles.
 
-## Lambda Metric Collection
+## Function Metrics
 
-https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html
-
-Lambda metrics are collected for all functions for in your AWS Account(s). This
+Lambda metrics are displayed for all functions for in your AWS Account(s). This
 allows you to use metrics to discover new services that are active in your account
 and configure any additional troubleshooting that is helpful. 
 
@@ -33,14 +31,9 @@ about each Lambda execution. These are aggregated per minute.
 To further classify function execution events, a summary of error events is collected
 across all your functions ech minute .
 
-**Lambda Compute Duration** - This metric is used for collecting details about the
+**Lambda Compute Duration** - This metric is used for details about the
 total time it took for a given Trace. For more details about duration, see our 
 [guide to understanding Lambda duration](./duration.md).
-
-## Other Planned Metric Ingestion
-While currently, the metric ingestion is limited to Lambda related metrics, the
-[AWS Observability Integration](../instrumentation/index.md#adding-the-aws-observability-integration) provides access to metrics from
-other services like DynamoDB, SQS, SNS and API Gateway. 
 
 ## Filters
 Applying filters to the metrics view allows you to narrow in on 

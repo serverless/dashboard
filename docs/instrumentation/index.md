@@ -5,7 +5,6 @@ description: Compatible Serverless Console Platform
 menuOrder: 3
 -->
 
-
 # Sending Data to Console
 Serverless Console collects data by integrating with your AWS Account.
 Integrating your account will give Serverless Console access to logs
@@ -32,7 +31,7 @@ manually to add new recently deployed functions. Metrics for all your functions 
 
 
 ### Serverless IAM Role
-The [Serverless IAM Role](../../instrumentation/aws/iam-role-cfn-template.yaml) provides 
+The [ServerlessMonitoringRole](../../instrumentation/aws/iam-role-cfn-template.yaml) provides 
 the necessary access for monitoring your apps and services. We designed this template with 
 the following goals.
 

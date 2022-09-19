@@ -20,7 +20,7 @@ Sign up and create your organization on [Serverless Console](https://console.ser
 Login to an AWS account, and start connecting your functions. (This takes 2 minutes)
 
 ## Enable Tracing and Logs
-Choose a function your working on, and start using [Dev Mode](product/logs.md#real-time-logging-in-dev-mode) to tail your logs and transactions.
+Choose a function your working on, and start using [Dev Mode](product/logs.md#real-time-logging) to tail your logs and transactions.
 
 To learn more about how we're collecting data from your account see our [Instrumentation Section](./instrumentation/)
 
