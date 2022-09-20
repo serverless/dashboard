@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.4.0...@serverless/aws-lambda-sdk@0.5.0) (2022-09-20)
+
+### ⚠ BREAKING CHANGES
+
+- Upgrade `@serverless/sdk-schema` to v0.8
+
+### Features
+
+- Instrument express applications ([be10ac2](https://github.com/serverless/console/commit/be10ac2fb7b45b680a590c2aa1b5b4b48e9b03d9))
+- Trace AWS SDK requests going to any services ([c6dbe17](https://github.com/serverless/console/commit/c6dbe17b9ba15f885b251b44fa50486e99e4c572))
+
+### Maintenance Improvements
+
+- Uprade `@serverless/sdk-schema` to v0.8 ([72bfa6d](https://github.com/serverless/console/commit/72bfa6d89b33906e2b9a247e8410ce057a50a3d4))
+
 ## [0.4.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.3.2...@serverless/aws-lambda-sdk@0.4.0) (2022-09-16)
 
 ### ⚠ BREAKING CHANGES
