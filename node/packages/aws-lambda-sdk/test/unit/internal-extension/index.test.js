@@ -44,6 +44,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
       error = invocationError;
     }
     require('../../../lib/instrument/http').uninstall();
+    require('../../../lib/instrument/aws-sdk').uninstall();
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
     const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
