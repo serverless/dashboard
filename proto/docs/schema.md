@@ -84,7 +84,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  | The unique API GW Request ID. |
-| time_epoch | [fixed64](#fixed64) |  | The request time in milliseconds from epoch. |
+| time_epoch | [uint64](#uint64) |  | The request time in milliseconds from epoch. |
 | headers | [string](#string) |  | JSON string containing Request Headers |
 | path_parameters | [string](#string) | optional | JSON string containing Request Path Parameters |
 
@@ -101,7 +101,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| initialization_duration | [fixed64](#fixed64) |  | The Initialization Duration of the Lambda Function. This is one part of the billed duration. Maps to the Cloudwatch Logs Report &#34;Init Duration&#34; |
+| initialization_duration | [uint32](#uint32) |  | The Initialization Duration of the Lambda Function. This is one part of the billed duration. Maps to the Cloudwatch Logs Report &#34;Init Duration&#34; |
 
 
 
@@ -116,7 +116,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| invocation_duration | [fixed64](#fixed64) |  | The Invocation Duration of the Lambda Function. This is one part of the billed duration. Maps to the Cloudwatch Logs Report &#34;Duration&#34; |
+| invocation_duration | [uint32](#uint32) |  | The Invocation Duration of the Lambda Function. This is one part of the billed duration. Maps to the Cloudwatch Logs Report &#34;Duration&#34; |
 
 
 
@@ -137,7 +137,7 @@
 | event_source | [string](#string) | optional | The event source for the invocation. |
 | log_group | [string](#string) | optional | The Log Group for the Lambda Function. |
 | log_stream_name | [string](#string) | optional | The Log Stream for the invocation. |
-| max_memory | [fixed64](#fixed64) | optional | The Max Memory that is configured for the Lambda Function. |
+| max_memory | [uint32](#uint32) | optional | The Max Memory that is configured for the Lambda Function. |
 | name | [string](#string) |  | The Lambda Function name. |
 | request_id | [string](#string) |  | The Request ID for the invocation. |
 | version | [string](#string) |  | The Lambda Function version. |
@@ -145,7 +145,7 @@
 | outcome | [AwsLambdaTags.Outcome](#serverless-instrumentation-tags-v1-AwsLambdaTags-Outcome) |  | The Outcome of the Lambda invocation |
 | error_exception_message | [string](#string) | optional | Optional error exception message. |
 | error_exception_stacktrace | [string](#string) | optional | Optional error exception stacktrace. |
-| duration | [fixed64](#fixed64) | optional | The billed duration of the invocation in milliseconds. This will not be available when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
+| duration | [uint32](#uint32) | optional | The billed duration of the invocation in milliseconds. This will not be available when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
 
 Optional Event Tags are from 100 on |
 | sqs | [AwsSqsEventTags](#serverless-instrumentation-tags-v1-AwsSqsEventTags) | optional | Will be set if the function is handling a SQS event |
@@ -337,7 +337,7 @@ outcomes upon completion.
 | host | [string](#string) |  | The host of the HTTP Request |
 | path | [string](#string) |  | The path of the HTTP Request |
 | query | [string](#string) | optional | The query string of the HTTP Request |
-| status_code | [fixed64](#fixed64) | optional | The Response Status Code. |
+| status_code | [uint32](#uint32) | optional | The Response Status Code. |
 | error_code | [string](#string) | optional | Eventual request error code |
 
 
