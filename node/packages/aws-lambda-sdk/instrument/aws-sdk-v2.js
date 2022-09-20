@@ -26,34 +26,32 @@ module.exports.install = (Sdk) => {
       this.service.constructor.serviceIdentifier ||
       this.service.constructor.__super__.serviceIdentifier;
     const tagMapper = serviceMapper.get(serviceName);
-    if (tagMapper) {
-      const operationName = this.operation.toLowerCase();
-      const params = this.params;
-      const traceSpan = (
-        traceSpans.awsLambdaInvocation || traceSpans.awsLambdaInitialization
-      ).createSubSpan(`aws.sdk.${serviceName}.${operationName}`, {
-        tags: {
-          'aws.sdk.region': this.service.config.region,
-          'aws.sdk.signature_version': this.service.config.signatureVersion,
-          'aws.sdk.service': serviceName,
-          'aws.sdk.operation': operationName,
-        },
-        onCloseByParent: () => {
-          process.stderr.write(
-            "Serverless SDK Warning: AWS SDK request didn't end before end of " +
-              'lambda invocation (or initialization)\n'
-          );
-        },
-      });
-      tagMapper.params?.(traceSpan, params);
-      this.on('complete', (response) => {
-        if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
-        if (response.error) traceSpan.tags.set('aws.sdk.error', response.error.message);
-        else tagMapper.responseData?.(traceSpan, response.data);
-        if (!traceSpan.endTime) traceSpan.close();
-      });
-      doNotInstrumentFollowingHttpRequest();
-    }
+    const operationName = this.operation.toLowerCase();
+    const params = this.params;
+    const traceSpan = (
+      traceSpans.awsLambdaInvocation || traceSpans.awsLambdaInitialization
+    ).createSubSpan(`aws.sdk.${serviceName}.${operationName}`, {
+      tags: {
+        'aws.sdk.region': this.service.config.region,
+        'aws.sdk.signature_version': this.service.config.signatureVersion,
+        'aws.sdk.service': serviceName,
+        'aws.sdk.operation': operationName,
+      },
+      onCloseByParent: () => {
+        process.stderr.write(
+          "Serverless SDK Warning: AWS SDK request didn't end before end of " +
+            'lambda invocation (or initialization)\n'
+        );
+      },
+    });
+    tagMapper?.params?.(traceSpan, params);
+    this.on('complete', (response) => {
+      if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
+      if (response.error) traceSpan.tags.set('aws.sdk.error', response.error.message);
+      else tagMapper?.responseData?.(traceSpan, response.data);
+      if (!traceSpan.endTime) traceSpan.close();
+    });
+    doNotInstrumentFollowingHttpRequest();
     return originalRunTo.call(this, state, done);
   };
 

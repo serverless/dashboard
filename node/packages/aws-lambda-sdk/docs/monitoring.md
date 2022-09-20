@@ -32,7 +32,7 @@ All HTTP and HTTPS requests are monitored and stored as `node.http.request` & `n
 
 _Disable with `SLS_DISABLE_AWS_SDK_MONITORING` environment variable_
 
-AWS SDK requests that go to SNS, SQS and DynamoDb services are traced.
+All AWS SDK requests are traced.
 
 Tracing is turned on automatically for AWS SDK clients that are normally loaded via Node.js `require`.
 
@@ -68,6 +68,8 @@ Tags that apply to all AWS SDK requests:
 
 #### `aws.sdk.sns` span tags`
 
+Tags that apply to requests that go to SNS service
+
 | Name                      | Value                    |
 | ------------------------- | ------------------------ |
 | `aws.sdk.sns.topic_name`  | Topic name               |
@@ -75,12 +77,16 @@ Tags that apply to all AWS SDK requests:
 
 #### `aws.sdk.sqs` span tags`
 
+Tags that apply to requests that go to SQS service
+
 | Name                      | Value                    |
 | ------------------------- | ------------------------ |
 | `aws.sdk.sqs.queue_name`  | Queue name               |
 | `aws.sdk.sqs.message_ids` | Ids of affected messages |
 
 #### `aws.sdk.dynamodb` span tags`
+
+Tags that apply to requests that go to DynamoDb service
 
 | Name                                 | Value                                                       |
 | ------------------------------------ | ----------------------------------------------------------- |

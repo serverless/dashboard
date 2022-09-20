@@ -2,6 +2,7 @@
 
 const { SQS } = require('@aws-sdk/client-sqs');
 const { SNS } = require('@aws-sdk/client-sns');
+const { STS } = require('@aws-sdk/client-sts');
 const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
 const wait = require('timers-ext/promise/sleep');
@@ -9,12 +10,16 @@ const wait = require('timers-ext/promise/sleep');
 const sqs = new SQS();
 const sns = new SNS();
 const dynamoDb = new DynamoDB();
+const sts = new STS();
 
 let invocationCount = 0;
 
 module.exports.handler = async () => {
   try {
     ++invocationCount;
+
+    // STS (any service tracing
+    await sts.getCallerIdentity();
 
     // SQS
     const queueName = `${process.env.AWS_LAMBDA_FUNCTION_NAME}-${invocationCount}.fifo`;
