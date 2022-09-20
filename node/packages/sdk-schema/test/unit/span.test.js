@@ -42,7 +42,7 @@ const testTracePayload = {
             eventSource: 'aws.apigatewayv2',
             logGroup: 'abc12',
             logStreamName: 'abc123',
-            maxMemory: longValue,
+            maxMemory: 1024,
             name: 'my-test-function',
             requestId: 'bdb40738-ff36-48c0-9842-9befd0141cd6',
             version: '$LATEST',

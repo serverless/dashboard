@@ -17,7 +17,7 @@ message HttpTags {
   optional string query = 5;
 
   // The Response Status Code.
-  optional fixed64 status_code = 6;
+  optional uint32 status_code = 6;
   // Eventual request error code
   optional string error_code = 7;
 }
