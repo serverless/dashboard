@@ -34,7 +34,7 @@ _Disable with `SLS_DISABLE_AWS_SDK_MONITORING` environment variable_
 
 AWS SDK requests that go to SNS, SQS and DynamoDb services are traced.
 
-Tracing is turned on automatically for AWS SDK clients that are normally loaded via CJS require.
+Tracing is turned on automatically for AWS SDK clients that are normally loaded via Node.js `require`.
 
 However if AWS SDK is bundled or imported via ESM import, then instrumentation needs to be turned on manually with following steps:
 
