@@ -17,6 +17,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   process.env.AWS_LAMBDA_FUNCTION_NAME = functionName;
 
   const payload = options.payload || { test: true };
+  const stringifiedPayload = JSON.stringify(payload);
   const outcome = await requireUncached(async () => {
     await require('../../../internal-extension');
     const handlerModule = await require('../../../internal-extension/wrapper');
@@ -101,7 +102,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   expect(normalizeObject(outcome.request.output)).to.deep.equal(
     normalizeObject(outcome.request.input)
   );
-  expect(outcome.request.input.data.requestData).to.deep.equal(JSON.stringify(payload));
+  expect(outcome.request.input.data.requestData).to.deep.equal(stringifiedPayload);
 
   if (outcome.response.input) {
     expect(normalizeObject(outcome.response.output)).to.deep.equal(
