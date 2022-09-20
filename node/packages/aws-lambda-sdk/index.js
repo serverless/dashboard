@@ -29,6 +29,9 @@ const resolveSettings = (options = {}) => {
   serverlessSdk._settings.disableAwsSdkMonitoring = Boolean(
     process.env.SLS_DISABLE_AWS_SDK_MONITORING || options.disableAwsSdkMonitoring
   );
+  serverlessSdk._settings.disableExpressMonitoring = Boolean(
+    process.env.SLS_DISABLE_EXPRESS_MONITORING || options.disableExpressMonitoring
+  );
 };
 
 let isInitialized = false;
@@ -47,10 +50,16 @@ serverlessSdk._initialize = (options = {}) => {
     require('./lib/instrument/aws-sdk').install();
   }
 
+  if (!settings.disableExpressMonitoring) {
+    // Auto generate AWS SDK request spans
+    require('./lib/instrument/express').install();
+  }
+
   return serverlessSdk;
 };
 
 serverlessSdk.instrument = {
   awsSdkV2: require('./instrument/aws-sdk-v2'),
   awsSdkV3Client: require('./instrument/aws-sdk-v3-client'),
+  expressApp: require('./instrument/express-app'),
 };

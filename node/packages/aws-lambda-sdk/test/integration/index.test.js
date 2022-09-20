@@ -871,6 +871,81 @@ describe('integration', function () {
     ],
     ['aws-sdk-v2', { test: testAwsSdk }],
     ['aws-sdk-v3', { test: testAwsSdk }],
+    [
+      'express',
+      {
+        hooks: {
+          afterCreate: getCreateHttpApi('2.0'),
+          beforeDelete: async (testConfig) => {
+            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+          },
+        },
+        invoke: async (testConfig) => {
+          const startTime = process.hrtime.bigint();
+          const response = await fetch(
+            `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
+            {
+              method: 'POST',
+              body: JSON.stringify({ some: 'content' }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          if (response.status !== 200) {
+            throw new Error(`Unexpected response status: ${response.status}`);
+          }
+          const payload = { raw: await response.text() };
+          const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+          log.debug('invoke response payload %s', payload.raw);
+          return { duration, payload };
+        },
+        test: ({ invocationsData, testConfig }) => {
+          for (const [index, { trace, request, response }] of invocationsData.entries()) {
+            const { tags: lambdaTags } = trace.spans[0];
+
+            expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+            expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+            expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
+            expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+            expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
+            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+            expect(lambdaTags.aws.lambda.http).to.have.property('host');
+            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('headers');
+            expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+            expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
+
+            expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+            expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
+            expect(response.data.responseData).to.equal('"ok"');
+
+            const expressSpan = trace.spans[3 - index];
+            const expressTags = expressSpan.tags;
+            expect(expressTags.express.method).to.equal('POST');
+            expect(expressTags.express.path).to.equal('/test');
+            expect(expressTags.express.statusCode).to.equal(200);
+
+            const middlewareSpans = trace.spans.slice(4 - index, -1);
+            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+              'express.middleware.query',
+              'express.middleware.expressinit',
+              'express.middleware.jsonparser',
+              'express.middleware.router',
+            ]);
+            for (const middlewareSpan of middlewareSpans) {
+              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+            }
+            const routerSpan = trace.spans[7 - index];
+            const routeSpan = trace.spans[8 - index];
+            expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+          }
+        },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);

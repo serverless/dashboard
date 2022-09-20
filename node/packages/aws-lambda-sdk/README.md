@@ -83,6 +83,10 @@ Disable lambda responses monitoring
 
 Disable automated AWS SDK monitoring
 
+##### `SLS_DISABLE_EXPRESS_MONITORING` (or `options.disableExpressMonitoring`)
+
+Disable automated express monitoring
+
 ### Outcome
 
 SDK automatically creates the trace that covers internal process of function invocation and initialization.

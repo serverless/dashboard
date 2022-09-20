@@ -98,3 +98,34 @@ Tags that apply to all AWS SDK requests:
 | `aws.sdk.dynamodb.total_segments`    | The value of the `TotalSegments` request parameter          |
 | `aws.sdk.dynamodb.count`             | The value of the `Count` response parameter                 |
 | `aws.sdk.dynamodb.scanned_count`     | The value of the `ScannedCount` response parameter          |
+
+## express middlewares
+
+_Disable with `SLS_DISABLE_EXPRESS_MONITORING` environment variable_
+
+If [`express`](https://expressjs.com/) framework (together with tools like [`serverless-http`](https://github.com/dougmoscrop/serverless-http)) is used to route incoming requests. Trace sans for it's middlewares are created
+
+Tracing is turned on automatically, assuming that `express` is loaded normally via Node.js `require`.
+If it comes bundled or imported via ESM import, then instrumentation needs to be turned on manually with following steps:
+
+```javascript
+import express from 'express';
+
+const app = express();
+
+serverlessSdk.instrument.expressApp(express);
+```
+
+Handling of express route is covered in context of main `express` span. Additionally middleware jobs are recorded as following spans:
+
+- `express.middleware.<name>`, generic middleware (setup via `app.use`)
+- `express.middlewa.route.<method>.<name>` - route specific middleware (setup via `app.get`, `app.post` etc.)
+- `express.middleware.error.<name>` - error handling middleware
+
+#### `express` trace span tags:
+
+| Name                  | Value                                                  |
+| --------------------- | ------------------------------------------------------ |
+| `express.method`      | The HTTP method defined by the Express Route Handler.  |
+| `express.path`        | The HTTP Path defined by the Express Route Handler.    |
+| `express.status_code` | The status code returned by the Express Route Handler. |

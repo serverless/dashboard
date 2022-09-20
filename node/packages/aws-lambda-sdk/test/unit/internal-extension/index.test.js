@@ -46,6 +46,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     }
     require('../../../lib/instrument/http').uninstall();
     require('../../../lib/instrument/aws-sdk').uninstall();
+    require('../../../lib/instrument/express').uninstall();
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
     const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
@@ -561,5 +562,102 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.http.path).to.equal('/');
     expect(tags.http.query).to.equal('foo=bar');
     expect(tags.http.statusCode.toString()).to.equal('200');
+  });
+
+  it('should instrument express', async () => {
+    const {
+      trace: {
+        input: { spans },
+      },
+      response: { input: response },
+    } = await handleInvocation('express', {
+      isApiEndpoint: true,
+      payload: {
+        version: '2.0',
+        routeKey: 'GET /foo',
+        rawPath: '/foo',
+        rawQueryString: 'lone=value&multi=one,stillone&multi=two',
+        headers: {
+          'content-length': '385',
+          'content-type':
+            'multipart/form-data; boundary=--------------------------419073009317249310175915',
+          'multi': 'one,stillone,two',
+        },
+        queryStringParameters: {
+          lone: 'value',
+          multi: 'one,stillone,two',
+        },
+        requestContext: {
+          accountId: '205994128558',
+          apiId: 'xxx',
+          domainName: 'xxx.execute-api.us-east-1.amazonaws.com',
+          domainPrefix: 'xx',
+          http: {
+            method: 'GET',
+            path: '/foo',
+            protocol: 'HTTP/1.1',
+            sourceIp: '80.55.87.22',
+            userAgent: 'PostmanRuntime/7.29.0',
+          },
+          requestId: 'XyGnwhe0oAMEJJw=',
+          routeKey: 'GET /foo',
+          stage: '$default',
+          time: '01/Sep/2022:13:46:51 +0000',
+          timeEpoch: 1662040011065,
+        },
+        body: 'LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTQxOTA3MzAwOTMxNzI0OTMxMDE3NTkxNQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJMb25lIg0KDQpvbmUNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS00MTkwNzMwMDkzMTcyNDkzMTAxNzU5MTUNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibXVsdGkiDQoNCm9uZSxzdGlsbG9uZQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTQxOTA3MzAwOTMxNzI0OTMxMDE3NTkxNQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtdWx0aSINCg0KdHdvDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tNDE5MDczMDA5MzE3MjQ5MzEwMTc1OTE1LS0NCg==',
+        isBase64Encoded: true,
+      },
+    });
+
+    const lambdaTags = spans[0].tags;
+
+    expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+    expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+    expect(lambdaTags.aws.lambda.apiGateway.accountId).to.equal('205994128558');
+    expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal('xxx');
+    expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+
+    expect(lambdaTags.aws.lambda.apiGateway.request.id).to.equal('XyGnwhe0oAMEJJw=');
+    expect(lambdaTags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1662040011065');
+    expect(lambdaTags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
+    expect(lambdaTags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
+    expect(lambdaTags.aws.lambda.apiGateway.request.headers).to.equal(
+      JSON.stringify({
+        'content-length': '385',
+        'content-type':
+          'multipart/form-data; boundary=--------------------------419073009317249310175915',
+        'multi': 'one,stillone,two',
+      })
+    );
+    expect(lambdaTags.aws.lambda.http.method).to.equal('GET');
+    expect(lambdaTags.aws.lambda.http.path).to.equal('/foo');
+    expect(lambdaTags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
+
+    expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+    expect(response.data.responseData).to.deep.equal(JSON.stringify('ok'));
+
+    const expressSpan = spans[3];
+    const expressTags = expressSpan.tags;
+    expect(expressTags.express.method).to.equal('GET');
+    expect(expressTags.express.path).to.equal('/foo');
+    expect(expressTags.express.statusCode).to.equal(200);
+
+    const middlewareSpans = spans.slice(4, -1);
+    expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+      'express.middleware.query',
+      'express.middleware.expressinit',
+      'express.middleware.jsonparser',
+      'express.middleware.router',
+    ]);
+    for (const middlewareSpan of middlewareSpans) {
+      expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+    }
+    const routerSpan = spans[7];
+    const routeSpan = spans[8];
+    expect(routeSpan.name).to.equal('express.middleware.route.get.anonymous');
+    expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
   });
 });
