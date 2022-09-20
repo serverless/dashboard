@@ -1,6 +1,6 @@
-interface awsSdkV2Instrument {
+interface AwsSdkV2Instrument {
   install(AWS: Object): Function;
   uninstall(AWS: Object): undefined;
 }
 
-export default awsSdkV2Instrument;
+export default AwsSdkV2Instrument;

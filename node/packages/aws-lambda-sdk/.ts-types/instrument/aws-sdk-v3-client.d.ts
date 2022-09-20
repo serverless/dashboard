@@ -1,6 +1,6 @@
-interface awsSdkV3ClientInstrument {
+interface AwsSdkV3ClientInstrument {
   install(Client: Object): Function;
   uninstall(Client: Object): undefined;
 }
 
-export default awsSdkV3ClientInstrument;
+export default AwsSdkV3ClientInstrument;
