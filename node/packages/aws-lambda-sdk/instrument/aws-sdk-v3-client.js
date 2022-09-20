@@ -20,11 +20,6 @@ module.exports.install = (client) => {
       ? client.constructor.name.slice(0, -'Client'.length)
       : client.constructor.name
   ).toLowerCase();
-  if (!serviceMapper.has(serviceName)) {
-    const uninstall = () => {};
-    instrumentedClients.set(client, uninstall);
-    return uninstall;
-  }
   let uninstall;
   client.middlewareStack.use({
     applyToStack: (stack) => {
@@ -47,7 +42,7 @@ module.exports.install = (client) => {
             );
           },
         });
-        tagMapper.params?.(traceSpan, args.input);
+        tagMapper?.params?.(traceSpan, args.input);
         const deferredRegion = client.config
           .region()
           .then((region) => traceSpan.tags.set('aws.sdk.region', region));
@@ -65,7 +60,7 @@ module.exports.install = (client) => {
           throw error;
         } else {
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
-          tagMapper.responseData?.(traceSpan, response.output);
+          tagMapper?.responseData?.(traceSpan, response.output);
           if (!traceSpan.endTime) traceSpan.close();
           return response;
         }

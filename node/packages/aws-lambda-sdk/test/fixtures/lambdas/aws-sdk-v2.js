@@ -1,19 +1,23 @@
 'use strict';
 
 // eslint-disable-next-line import/no-unresolved
-const { SQS, SNS, DynamoDB } = require('aws-sdk');
+const { SQS, SNS, DynamoDB, STS } = require('aws-sdk');
 
 const wait = require('timers-ext/promise/sleep');
 
 const sqs = new SQS();
 const sns = new SNS();
 const dynamoDb = new DynamoDB();
+const sts = new STS();
 
 let invocationCount = 0;
 
 module.exports.handler = async () => {
   try {
     ++invocationCount;
+
+    // STS (any service tracing
+    await sts.getCallerIdentity().promise();
 
     // SQS
     const queueName = `${process.env.AWS_LAMBDA_FUNCTION_NAME}-${invocationCount}.fifo`;

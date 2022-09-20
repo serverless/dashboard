@@ -105,6 +105,7 @@ describe('integration', function () {
       if (!index) spans.shift();
       const [
         invocationSpan,
+        stsSpan,
         sqsCreateSpan,
         sqsSendSpan,
         sqsDeleteSpan,
@@ -116,12 +117,23 @@ describe('integration', function () {
         ...dynamodbSpans
       ] = spans;
 
+      // STS
+      expect(stsSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(stsSpan.name).to.equal('aws.sdk.sts.getcalleridentity');
+      let sdkTags = stsSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('sts');
+      expect(sdkTags.operation).to.equal('getcalleridentity');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+
       // SNS
       const queueName = `${testConfig.configuration.FunctionName}-${index + 1}.fifo`;
       // Create
       expect(sqsCreateSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(sqsCreateSpan.name).to.equal('aws.sdk.sqs.createqueue');
-      let sdkTags = sqsCreateSpan.tags.aws.sdk;
+      sdkTags = sqsCreateSpan.tags.aws.sdk;
       expect(sdkTags.region).to.equal(process.env.AWS_REGION);
       expect(sdkTags.signatureVersion).to.equal('v4');
       expect(sdkTags.service).to.equal('sqs');
