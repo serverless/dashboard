@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.8.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.7.0...@serverless/sdk-schema@0.8.0) (2022-09-20)
+
+### ⚠ BREAKING CHANGES
+
+- Types of some numeric tags were updated to more optimal ones
+
+### Maintenance Improvements
+
+- Improve types of numeric properties ([aa8dcc5](https://github.com/serverless/console/commit/aa8dcc52e309e7ec422af62570dd199c175a98bb))
+
 ## [0.7.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.6.0...@serverless/sdk-schema@0.7.0) (2022-09-16)
 
 ### ⚠ BREAKING CHANGES
