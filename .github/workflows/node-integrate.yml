@@ -377,7 +377,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [linuxNode16, linuxNode14]
     if: needs.linuxNode16.outputs.pathChangedAwsLambdaOtelExtension == 'true'
-    timeout-minutes: 30 # Default is 360
+    timeout-minutes: 5 # Default is 360
     env:
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -461,7 +461,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [linuxNode16, linuxNode14]
     if: needs.linuxNode16.outputs.pathChangedAwsLambdaSdk == 'true'
-    timeout-minutes: 30 # Default is 360
+    timeout-minutes: 5 # Default is 360
     env:
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -537,7 +537,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [linuxNode16, linuxNode14]
     if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode16.outputs.pathChangedProto == 'true'
-    timeout-minutes: 30
+    timeout-minutes: 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
