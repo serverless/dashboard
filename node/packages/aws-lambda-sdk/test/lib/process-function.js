@@ -158,7 +158,10 @@ const retrieveReports = async (testConfig) => {
     }
     if (eventGroups.size > 1) {
       if (testConfig.ignoreMultipleInvocations) {
-        events = eventGroups.values()[Symbol.iterator]().next().value;
+        events = Array.from(eventGroups).sort(
+          // Choose log stream with more events
+          (eventsA, eventsB) => eventsB.length - eventsA.length
+        )[0];
       } else {
         throw new Error(`Unexpected count of lambda instances: ${Array.from(eventGroups.keys())}`);
       }
