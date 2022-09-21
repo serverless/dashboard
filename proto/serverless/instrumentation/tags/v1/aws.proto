@@ -182,6 +182,10 @@ message AwsSdkDynamodbTags {
   optional string filter = 11;
   // The value of the KeyConditionExpression request parameter.
   optional string key_condition = 12;
+  // JSON string of the ExclusiveStartKey request parameter.
+  optional string exclusive_start_key = 13;
+  // JSON string of the ExpressionAttributeValues request parameter.
+  optional string attribute_values = 14;
 
   // The value of the Count response parameter.
   optional uint64 count = 100;
