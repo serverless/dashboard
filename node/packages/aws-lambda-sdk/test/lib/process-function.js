@@ -158,7 +158,7 @@ const retrieveReports = async (testConfig) => {
     }
     if (eventGroups.size > 1) {
       if (testConfig.ignoreMultipleInvocations) {
-        events = Array.from(eventGroups).sort(
+        events = Array.from(eventGroups.values()).sort(
           // Choose log stream with more events
           (eventsA, eventsB) => eventsB.length - eventsA.length
         )[0];
