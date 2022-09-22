@@ -232,7 +232,7 @@ class TraceSpan {
           new Error(
             'Cannot intialize span: Start time cannot be older than start time of parent span'
           ),
-          { code: 'PAST_PARENTSPAN_START_TIME' }
+          { code: 'PAST_PARENT_SPAN_START_TIME' }
         );
       }
     }
