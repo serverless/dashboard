@@ -77,28 +77,33 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   }
 
   expect(normalizeObject(outcome.trace.output)).to.deep.equal(normalizeObject(outcome.trace.input));
-  const [{ tags }] = outcome.trace.input.spans;
   expect(outcome.trace.input.slsTags).to.deep.equal({
     orgId: process.env.SLS_ORG_ID,
     service: functionName,
     sdk: { name: pkgJson.name, version: pkgJson.version },
   });
-  expect(tags.aws.lambda.isColdstart).to.be.true;
-  expect(tags.aws.lambda.name).to.equal(functionName);
-  expect(tags.aws.lambda.requestId).to.equal('123');
-  expect(tags.aws.lambda.version).to.equal('$LATEST');
+  const [lambdaSpan, initializationSpan, ...otherSpans] = outcome.trace.input.spans;
+  const lambdaSpanTags = lambdaSpan.tags;
+  expect(lambdaSpanTags.aws.lambda.isColdstart).to.be.true;
+  expect(lambdaSpanTags.aws.lambda.name).to.equal(functionName);
+  expect(lambdaSpanTags.aws.lambda.requestId).to.equal('123');
+  expect(lambdaSpanTags.aws.lambda.version).to.equal('$LATEST');
 
   if (options.outcome === 'error') {
-    expect(tags.aws.lambda.outcome).to.equal(5);
-    expect(typeof tags.aws.lambda.errorExceptionMessage).to.equal('string');
-    expect(typeof tags.aws.lambda.errorExceptionStacktrace).to.equal('string');
+    expect(lambdaSpanTags.aws.lambda.outcome).to.equal(5);
+    expect(typeof lambdaSpanTags.aws.lambda.errorExceptionMessage).to.equal('string');
+    expect(typeof lambdaSpanTags.aws.lambda.errorExceptionStacktrace).to.equal('string');
   } else {
     if (outcome.error) throw outcome.error;
     if (options.isApiEndpoint) expect(JSON.parse(outcome.result.body)).to.equal('ok');
     else expect(outcome.result).to.equal('ok');
 
-    expect(tags.aws.lambda.outcome).to.equal(1);
+    expect(lambdaSpanTags.aws.lambda.outcome).to.equal(1);
   }
+
+  expect(initializationSpan.parentSpanId).to.deep.equal(lambdaSpan.id);
+  const nonRootSpanIds = new Set(outcome.trace.input.spans.slice(1).map(({ id }) => String(id)));
+  for (const otherSpan of otherSpans) expect(nonRootSpanIds.has(String(otherSpan.id))).to.be.true;
 
   expect(normalizeObject(outcome.request.output)).to.deep.equal(
     normalizeObject(outcome.request.input)
@@ -551,9 +556,10 @@ describe('internal-extension/index.test.js', () => {
       },
     } = await handleInvocation('http-requester');
 
-    const httpRequestSpan = spans[spans.length - 1];
+    const [, , invocationSpan, httpRequestSpan] = spans;
 
     expect(httpRequestSpan.name).to.equal('node.http.request');
+    expect(httpRequestSpan.parentSpanId).to.deep.equal(invocationSpan.id);
 
     const { tags } = httpRequestSpan;
     expect(tags.http.method).to.equal('GET');
@@ -610,7 +616,11 @@ describe('internal-extension/index.test.js', () => {
       },
     });
 
-    const lambdaTags = spans[0].tags;
+    const [lambdaSpan, , invocationSpan, expressSpan, ...middlewareSpans] = spans;
+    const routeSpan = middlewareSpans.pop();
+    const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+
+    const lambdaTags = lambdaSpan.tags;
 
     expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
     expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
@@ -639,13 +649,14 @@ describe('internal-extension/index.test.js', () => {
 
     expect(response.data.responseData).to.deep.equal(JSON.stringify('ok'));
 
-    const expressSpan = spans[3];
+    expect(expressSpan.name).to.equal('express');
+    expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
     const expressTags = expressSpan.tags;
     expect(expressTags.express.method).to.equal('GET');
     expect(expressTags.express.path).to.equal('/foo');
     expect(expressTags.express.statusCode).to.equal(200);
 
-    const middlewareSpans = spans.slice(4, -1);
     expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
       'express.middleware.query',
       'express.middleware.expressinit',
@@ -655,8 +666,6 @@ describe('internal-extension/index.test.js', () => {
     for (const middlewareSpan of middlewareSpans) {
       expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
     }
-    const routerSpan = spans[7];
-    const routeSpan = spans[8];
     expect(routeSpan.name).to.equal('express.middleware.route.get.anonymous');
     expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
   });

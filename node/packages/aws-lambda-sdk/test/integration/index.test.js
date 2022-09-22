@@ -736,10 +736,20 @@ describe('integration', function () {
             'http',
             {
               test: ({ invocationsData }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
-                  const httpRequestSpan = trace.spans[trace.spans.length - 1];
+                for (const [
+                  index,
+                  {
+                    trace: { spans },
+                  },
+                ] of invocationsData.entries()) {
+                  spans.shift();
+                  if (!index) spans.shift();
+                  const [invocationSpan, httpRequestSpan] = spans;
 
                   expect(httpRequestSpan.name).to.equal('node.http.request');
+                  expect(httpRequestSpan.parentSpanId.toString()).to.equal(
+                    invocationSpan.id.toString()
+                  );
 
                   const { tags } = httpRequestSpan;
                   expect(tags.http.method).to.equal('GET');
@@ -862,10 +872,20 @@ describe('integration', function () {
                 return { url: `${testConfig.functionUrl}?foo=bar` };
               },
               test: ({ invocationsData, testConfig: { functionUrl } }) => {
-                for (const [, trace] of invocationsData.map((data) => data.trace).entries()) {
-                  const httpRequestSpan = trace.spans[trace.spans.length - 1];
+                for (const [
+                  index,
+                  {
+                    trace: { spans },
+                  },
+                ] of invocationsData.entries()) {
+                  spans.shift();
+                  if (!index) spans.shift();
+                  const [invocationSpan, httpRequestSpan] = spans;
 
                   expect(httpRequestSpan.name).to.equal('node.https.request');
+                  expect(httpRequestSpan.parentSpanId.toString()).to.equal(
+                    invocationSpan.id.toString()
+                  );
 
                   const { tags } = httpRequestSpan;
                   expect(tags.http.method).to.equal('GET');
@@ -913,8 +933,17 @@ describe('integration', function () {
           return { duration, payload };
         },
         test: ({ invocationsData, testConfig }) => {
-          for (const [index, { trace, request, response }] of invocationsData.entries()) {
-            const { tags: lambdaTags } = trace.spans[0];
+          for (const [
+            index,
+            {
+              trace: { spans },
+              request,
+              response,
+            },
+          ] of invocationsData.entries()) {
+            const lambdaSpan = spans.shift();
+            if (!index) spans.shift();
+            const { tags: lambdaTags } = lambdaSpan;
 
             expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
             expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
@@ -934,13 +963,17 @@ describe('integration', function () {
             expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
             expect(response.data.responseData).to.equal('"ok"');
 
-            const expressSpan = trace.spans[3 - index];
+            const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+            const routeSpan = middlewareSpans.pop();
+            const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+
+            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
             const expressTags = expressSpan.tags;
+
             expect(expressTags.express.method).to.equal('POST');
             expect(expressTags.express.path).to.equal('/test');
             expect(expressTags.express.statusCode).to.equal(200);
 
-            const middlewareSpans = trace.spans.slice(4 - index, -1);
             expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
               'express.middleware.query',
               'express.middleware.expressinit',
@@ -950,8 +983,6 @@ describe('integration', function () {
             for (const middlewareSpan of middlewareSpans) {
               expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
             }
-            const routerSpan = trace.spans[7 - index];
-            const routeSpan = trace.spans[8 - index];
             expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
             expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
           }
