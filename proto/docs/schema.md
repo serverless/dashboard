@@ -301,12 +301,12 @@ outcomes upon completion.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| OUTCOME_UNSPECIFIED | 0 |  |
-| OUTCOME_SUCCESS | 1 |  |
-| OUTCOME_ERROR_INITIALIZATION | 2 |  |
-| OUTCOME_ERROR_UNHANDLED | 3 |  |
-| OUTCOME_ERROR_TIMEOUT | 4 |  |
-| OUTCOME_ERROR_HANDLED | 5 |  |
+| OUTCOME_UNSPECIFIED | 0 | No outcome was registered. Either information on the outcome was not disclosed (which should never be the case), or the function invocation has not been finalized yet |
+| OUTCOME_SUCCESS | 1 | Function handler returned successfully |
+| OUTCOME_ERROR_INITIALIZATION | 2 | Function crashed at initialization |
+| OUTCOME_ERROR_UNHANDLED | 3 | Function crashed in an unhandled way at invocation (a result of either uncaught exception or unhandled rejection) |
+| OUTCOME_ERROR_TIMEOUT | 4 | Function timed out |
+| OUTCOME_ERROR_HANDLED | 5 | Function handler resolved with an error (either error was passed to lambda callback, or async handler resolved with error rejection) |
 
 
  
