@@ -1018,39 +1018,47 @@ describe('integration', function () {
             expect(responsePayload.raw).to.equal('"ok"');
           }
         }
-        for (const [index, { trace }] of invocationsData.entries()) {
-          const awsLambdaSpan = trace.spans[0];
+        for (const [
+          index,
+          {
+            trace: { spans, slsTags },
+          },
+        ] of invocationsData.entries()) {
+          const lambdaSpan = spans[0];
           if (index === 0) {
-            expect(trace.spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([
+            expect(spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.initialization',
               'aws.lambda.invocation',
             ]);
-            expect(awsLambdaSpan.tags.aws.lambda.isColdstart).to.be.true;
+            expect(lambdaSpan.tags.aws.lambda.isColdstart).to.be.true;
+            const [, initializationSpan, invocationSpan] = spans;
+            expect(String(initializationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
+            expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
           } else {
-            expect(trace.spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
+            expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.invocation',
             ]);
-            expect(awsLambdaSpan.tags.aws.lambda.isColdstart).to.be.false;
+            expect(lambdaSpan.tags.aws.lambda.isColdstart).to.be.false;
+            const [, invocationSpan] = spans;
+            expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
           }
-          expect(trace.slsTags).to.deep.equal({
+          expect(slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
             service: testConfig.configuration.FunctionName,
             sdk: { name: pkgJson.name, version: pkgJson.version },
           });
-          expect(awsLambdaSpan.tags.aws.lambda).to.have.property('arch');
-          expect(awsLambdaSpan.tags.aws.lambda.name).to.equal(
-            testConfig.configuration.FunctionName
-          );
-          expect(awsLambdaSpan.tags.aws.lambda).to.have.property('requestId');
-          expect(awsLambdaSpan.tags.aws.lambda).to.have.property('version');
+          expect(lambdaSpan.tags.aws.lambda).to.have.property('arch');
+          expect(lambdaSpan.tags.aws.lambda.name).to.equal(testConfig.configuration.FunctionName);
+          expect(lambdaSpan.tags.aws.lambda).to.have.property('requestId');
+          expect(lambdaSpan.tags.aws.lambda).to.have.property('version');
           if (expectedOutcome === 'success') {
-            expect(awsLambdaSpan.tags.aws.lambda.outcome).to.equal(1);
+            expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(1);
           } else {
-            expect(awsLambdaSpan.tags.aws.lambda.outcome).to.equal(5);
-            expect(awsLambdaSpan.tags.aws.lambda).to.have.property('errorExceptionMessage');
-            expect(awsLambdaSpan.tags.aws.lambda).to.have.property('errorExceptionStacktrace');
+            expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(5);
+            expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionMessage');
+            expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionStacktrace');
           }
         }
       }
