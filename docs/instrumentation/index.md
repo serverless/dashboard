@@ -17,21 +17,16 @@ works and details about what is collected.
 ## Adding the AWS Observability Integration
 Once you have [created your organization](../product/create-org.md) you need to 
 add an AWS Observability Integration to your org. The AWS Observability Integration
-is the foundation for all the data we collect about your apps and services. Adding
-the AWS Observability integration will create a new [IAM Role](#serverless-iam-role) in your account. We use this to take inventory of your account, and give you control for what's collected.
+is the foundation for all the data we collect about your apps and services. Adding this integration does the following.
 
-If you have multiple AWS accounts, you can add more than one AWS Integration
-to your org. This will give you the ability to explore across all your
-applications. You are limited to adding each AWS Account to one org only.
+1. Creates an [IAM Role](#serverless-iam-role) using CloudFormation. This first step usually only takes a few seconds.
+1. Sets up a [Cloudwatch Metric Stream](../glossary.md#cloudwatch-metric-stream). This will collect metrics across all your functions.
+1. Sets up [Kinesis Firehose](../glossary.md#kinesis-firehose) for sending logs and metrics to Serverless Consoles
+
+Steps 2 and 3 happen in the background and usually take about 5 minutes to setup. You'll automatically see metrics show up on the metrics page when it is complete. 
 
 ### Synching Inventory
-Once you have an AWS Observability Integration setup, the collection of [logs and
-traces](./enabling-logs-traces.md) is based around the set of inventory of Lambda Functions in your AWS account. Synching is handling automatically on a 24 hour basis, or can be triggered
-manually to add new recently deployed functions. Metrics for all your functions are collected automatically as they are deployed.
-
-### Enabling per Function Monitoring Features
-Once you have added your Integration, you are set to unlock the full potential of Serverless Console for your individual functions. To [enable logs, traces, and dev-mode](./enabling-logs-traces.md) go to Settings -> Integrations and Edit to access per function configuration.
-
+Once you have an AWS Observability Integration setup you can [enable additional monitoring features](./enabling-logs-traces.md) for each function by going to Settings -> Integrations -> Edit and adding the desired features for each function. You will need to synch inventory to see new functions deployed in the last 24 hours. 
 
 ## Removing the AWS Observability Integration
 It is best to use the Console UI to remove any AWS Accounts you have setup. This automates the process of all associated instrastructure in your account. This includes the [CloudFormation Stack](../glossary.md#cloudformation-stack), [IAM Role](../glossary.md#iam-roles), [Metric Streams](../glossary.md#cloudwatch-metric-stream)and any [Lambda Layers](./glossary.md#lambda-layer) and [Cloudwatch Log Subscription Filters](../glossary.md#cloudwatch-subscriptions). 
@@ -43,5 +38,7 @@ It is possible this process the removal process could fail, and you will need to
 1. Remove the Kinesis Firehose - Go to [Kinesis Data Streams Page in AWS Console](https://us-east-1.console.aws.amazon.com/firehose/home?region=us-east-1#/streams) and delete the delivery streams named `serverless_logs-firehose` and `serverless_metrics-firehose`.
 1. Remove the Cloudwatch Metric Streams - Go to [Cloudwatch Metric Streams Page in AWS Console](https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#metric-streams:streamsList) and delete the metric stream name `name-needed`.
 1. Remove the Cloudwatch Log Subscriptions - Go the your [Cloudwatch Logs Group Page in the AWS Console](https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups). For each function you have enabled log collection on open the corresponding Log Group (the function name will appear in the Log Group path). Under the Log Group click on the 'Subscription Filters' tab and remove the delete the filter name `name-needed`.
-1. Remove the Extension and SDK - Go to your [Lamdba page in AWS Console](https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions). For each function you have enabled Tracing or Dev Mode on click on the function. Go to the Layers section of the function and delete the layers with `sls-sdk-node` and `name-needed`. 
+1. Remove the Extension, SDK and Env Vars - Go to your [Lamdba page in AWS Console](https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions). For each function you have enabled Tracing or Dev Mode on click on the function. Go to the Layers section of the function and delete the layers with `sls-sdk-node` and `name-needed`. Under Configuration -> Environment Variables remove the environment variables
 
+### Removing the legacy console extension
+If you have depleyed to a version of Serverless Console prior to October 2022 then you may need to remove a legacy extension manually. To do this remove any layers named `sls-otel-extension-node-v*` and remove the environment variable `SLS_EXTENSION`.
