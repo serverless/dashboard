@@ -34,12 +34,6 @@ module.exports.install = (Sdk) => {
         'aws.sdk.service': serviceName,
         'aws.sdk.operation': operationName,
       },
-      onCloseByParent: () => {
-        process.stderr.write(
-          "Serverless SDK Warning: AWS SDK request didn't end before end of " +
-            'lambda invocation (or initialization)\n'
-        );
-      },
     });
     tagMapper?.params?.(traceSpan, params);
     this.on('complete', (response) => {

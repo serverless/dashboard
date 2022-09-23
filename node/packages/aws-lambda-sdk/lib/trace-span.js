@@ -226,9 +226,9 @@ class TraceSpan {
       isOptional: true,
       ensureItem: ensureSpanName,
     });
-    this._onCloseByParent = ensurePlainFunction(options.onCloseByParent, {
+    this._onCloseByRoot = ensurePlainFunction(options.onCloseByRoot, {
       isOptional: true,
-      name: 'options.onCloseByParent',
+      name: 'options.onCloseByRoot',
     });
     const tags = ensurePlainObject(options.tags, {
       isOptional: true,
@@ -282,17 +282,28 @@ class TraceSpan {
       }
     }
     this.endTime = targetEndTime || defaultEndTime;
-    for (const child of this.subSpans) {
-      if (!child.endTime) {
-        if (child._onCloseByParent) child._onCloseByParent();
-        if (!child.endTime) child.close({ endTime: this.endTime });
+    if (this === rootSpan) {
+      const leftoverSpans = [];
+      for (const subSpan of this.spans) {
+        if (subSpan.endTime) continue;
+        if (subSpan._onCloseByRoot) subSpan._onCloseByRoot();
+        if (subSpan.endTime) continue;
+        leftoverSpans.push(subSpan.close({ endTime: this.endTime }));
       }
+      if (leftoverSpans.length) {
+        process.stderr.write(
+          "Serverless SDK Warning: Following trace spans didn't end before end of " +
+            `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}`
+        );
+      }
+      asyncLocalStorage.enterWith(this);
+    } else {
+      const openParentSpan = ((span) => {
+        if (!span?.endsWith) return span;
+        return span.parentSpan || rootSpan;
+      })(this.parentSpan);
+      asyncLocalStorage.enterWith(openParentSpan);
     }
-    const openParentSpan = ((span) => {
-      if (!span?.endsWith) return span;
-      return span.parentSpan || rootSpan;
-    })(this.parentSpan);
-    asyncLocalStorage.enterWith(openParentSpan);
     return this;
   }
   toJSON() {
