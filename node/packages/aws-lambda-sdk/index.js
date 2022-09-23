@@ -1,6 +1,10 @@
 'use strict';
 
+const TraceSpan = require('./lib/trace-span');
+
 const serverlessSdk = module.exports;
+
+serverlessSdk.createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 
 serverlessSdk.traceSpans = {
   awsLambda: require('./trace-spans/aws-lambda'),

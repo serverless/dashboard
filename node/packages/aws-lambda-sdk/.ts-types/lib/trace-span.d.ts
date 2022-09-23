@@ -12,15 +12,7 @@ declare class TraceSpan {
   parentSpan: TraceSpan | null;
   subSpans: Set<TraceSpan>;
   tags: TraceSpanTags;
-  createSubSpan(
-    name: string,
-    options?: {
-      startTime?: bigint;
-      immediateDescendants?: string[];
-      tags?: Record<string, boolean | number | string | Date | Array | Null>;
-      onCloseByParent?: Function;
-    }
-  ): TraceSpan;
+
   close(): TraceSpan;
   spans(): Set<TraceSpan>;
   toJSON(): Object;

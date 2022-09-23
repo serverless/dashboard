@@ -17,9 +17,7 @@ module.exports.install = (layerPrototype) => {
 
   layerPrototype.handle_request = function handle(req, res, next) {
     if (!expressSpansMap.has(req)) {
-      const expressSpan = (
-        traceSpans.awsLambdaInvocation || traceSpans.awsLambdaInitialization
-      ).createSubSpan('express', {
+      const expressSpan = serverlessSdk.createTraceSpan('express', {
         onCloseByParent: () => {
           process.stderr.write(
             "Serverless SDK Warning: Express route handling didn't end before end of " +
@@ -42,10 +40,10 @@ module.exports.install = (layerPrototype) => {
       });
     }
     const expressRouteData = expressSpansMap.get(req);
-    const { expressSpan, routeSpan } = expressRouteData;
+    const { routeSpan } = expressRouteData;
     const middlewareSpan = (() => {
       if (routeSpan) {
-        return routeSpan.createSubSpan(
+        return serverlessSdk.createTraceSpan(
           `express.middleware.route.${[
             generateMiddlewareName(this.method),
             generateMiddlewareName(this.name) || 'unknown',
@@ -54,7 +52,7 @@ module.exports.install = (layerPrototype) => {
             .join('.')}`
         );
       }
-      return expressSpan.createSubSpan(
+      return serverlessSdk.createTraceSpan(
         `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`
       );
     })();
@@ -77,8 +75,7 @@ module.exports.install = (layerPrototype) => {
   };
   // eslint-disable-next-line camelcase
   layerPrototype.handle_error = function handle_error(error, req, res, next) {
-    const { expressSpan, routeSpan } = expressSpansMap.get(req);
-    const middlewareSpan = (routeSpan || expressSpan).createSubSpan(
+    const middlewareSpan = serverlessSdk.createTraceSpan(
       `express.middleware.error.${generateMiddlewareName(this.name) || 'unknown'}`
     );
     return originalHandleError.call(this, error, req, res, (...args) => {
@@ -102,4 +99,4 @@ module.exports.uninstall = (layerPrototype) => {
   instrumentedLayers.get(layerPrototype)();
 };
 
-const { traceSpans } = require('../../../');
+const serverlessSdk = global.serverlessSdk || require('../../../');

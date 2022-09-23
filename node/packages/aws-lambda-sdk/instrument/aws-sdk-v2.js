@@ -2,7 +2,6 @@
 
 const ensureObject = require('type/object/ensure');
 const ensureConstructor = require('type/constructor/ensure');
-
 const doNotInstrumentFollowingHttpRequest =
   require('../lib/instrument/http').ignoreFollowingRequest;
 const serviceMapper = require('../lib/instrument/aws-sdk/service-mapper');
@@ -28,9 +27,7 @@ module.exports.install = (Sdk) => {
     const tagMapper = serviceMapper.get(serviceName);
     const operationName = this.operation.toLowerCase();
     const params = this.params;
-    const traceSpan = (
-      traceSpans.awsLambdaInvocation || traceSpans.awsLambdaInitialization
-    ).createSubSpan(`aws.sdk.${serviceName}.${operationName}`, {
+    const traceSpan = serverlessSdk.createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
       tags: {
         'aws.sdk.region': this.service.config.region,
         'aws.sdk.signature_version': this.service.config.signatureVersion,
@@ -69,4 +66,4 @@ module.exports.uninstall = (client) => {
   if (uninstall) uninstall();
 };
 
-const { traceSpans } = require('../');
+const serverlessSdk = global.serverlessSdk || require('../');

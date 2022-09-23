@@ -11,6 +11,9 @@ describe('lib/trace-span.test.js', () => {
   before(() => {
     rootSpan = new TraceSpan('test');
   });
+  after(() => {
+    rootSpan.close();
+  });
 
   describe('root span', () => {
     it('should automatically generate `traceId`', () =>
@@ -27,7 +30,7 @@ describe('lib/trace-span.test.js', () => {
   describe('sub span', () => {
     let childSpan;
     before(() => {
-      childSpan = rootSpan.createSubSpan('child');
+      childSpan = new TraceSpan('child').close();
     });
 
     it('should expose `traceId` of a root span', () =>
@@ -48,26 +51,26 @@ describe('lib/trace-span.test.js', () => {
 
   it('should support injection of `startTime`', () => {
     const startTime = process.hrtime.bigint();
-    expect(rootSpan.createSubSpan('child', { startTime }).startTime).to.equal(startTime);
+    expect(new TraceSpan('child', { startTime }).close().startTime).to.equal(startTime);
   });
 
   it('should support initial `tags`', () => {
-    expect(
-      Array.from(rootSpan.createSubSpan('child', { tags: { foo: 'bar' } }).tags)
-    ).to.deep.equal([['foo', 'bar']]);
+    expect(Array.from(new TraceSpan('child', { tags: { foo: 'bar' } }).close().tags)).to.deep.equal(
+      [['foo', 'bar']]
+    );
   });
 
   it('should support injection of `endTime`', () => {
-    const childSpan = rootSpan.createSubSpan('child');
+    const childSpan = new TraceSpan('child');
     const endTime = process.hrtime.bigint();
     childSpan.close({ endTime });
     expect(childSpan.endTime).to.equal(endTime);
   });
 
   it('should support creation of immediate descendant spans', () => {
-    const childSpan = rootSpan.createSubSpan('child', {
+    const childSpan = new TraceSpan('child', {
       immediateDescendants: ['grandchild', 'grandgrandchild'],
-    });
+    }).close();
     const grandChildren = Array.from(childSpan.subSpans);
     expect(grandChildren.map(({ name }) => name)).to.deep.equal(['grandchild']);
     const grandChild = grandChildren[0];
@@ -79,7 +82,7 @@ describe('lib/trace-span.test.js', () => {
   });
 
   it('should close all descendant spans on span closure', () => {
-    const childSpan = rootSpan.createSubSpan('child', {
+    const childSpan = new TraceSpan('child', {
       immediateDescendants: ['grandchild', 'grandgrandchild'],
     });
     const grandChild = Array.from(childSpan.subSpans)[0];
@@ -92,11 +95,12 @@ describe('lib/trace-span.test.js', () => {
 
   it('should support `options.onCloseByParent`', () => {
     let invokeCount = 0;
-    const childSpan = rootSpan.createSubSpan('child', {});
-    childSpan.createSubSpan('grand', {
+    const childSpan = new TraceSpan('child', {});
+    // eslint-disable-next-line no-new
+    new TraceSpan('grand', {
       onCloseByParent: () => ++invokeCount,
     });
-    const grandChildSpan = childSpan.createSubSpan('grand2', {
+    const grandChildSpan = new TraceSpan('grand2', {
       onCloseByParent: () => ++invokeCount,
     });
     grandChildSpan.close();
@@ -107,20 +111,20 @@ describe('lib/trace-span.test.js', () => {
 
   describe('spans', () => {
     it('should resolve just self when no subspans', () => {
-      const span = rootSpan.createSubSpan('child');
+      const span = new TraceSpan('child').close();
       expect(Array.from(span.spans)).to.deep.equal([span]);
     });
 
     it('should resolve self and all descendants', () => {
-      const span = rootSpan.createSubSpan('child');
-      const subSpan = span.createSubSpan('subchild');
-      const subSubSpan = subSpan.createSubSpan('subsubchild');
-      expect(Array.from(span.spans)).to.deep.equal([span, subSpan, subSubSpan]);
+      const span = new TraceSpan('child');
+      const subSpan = new TraceSpan('subchild');
+      const subSubSpan = new TraceSpan('subsubchild');
+      expect(Array.from(span.close().spans)).to.deep.equal([span, subSpan, subSubSpan]);
     });
   });
 
   it('should stringify to JSON', () => {
-    const childSpan = rootSpan.createSubSpan('child');
+    const childSpan = new TraceSpan('child');
     childSpan.tags.set('foo', 12);
     childSpan.close();
     const jsonValue = JSON.parse(JSON.stringify(childSpan));
@@ -139,7 +143,7 @@ describe('lib/trace-span.test.js', () => {
   });
 
   it('should prepare Protobuf ready object', () => {
-    const childSpan = rootSpan.createSubSpan('child');
+    const childSpan = new TraceSpan('child');
     childSpan.tags.set('toptag', '1');
     childSpan.tags.set('top.nested', '2');
     childSpan.tags.set('top.deep.nested', '3');
@@ -175,7 +179,7 @@ describe('lib/trace-span.test.js', () => {
 
   describe('tags', () => {
     it('should allow setting tags', () => {
-      const childSpan = rootSpan.createSubSpan('child');
+      const childSpan = new TraceSpan('child').close();
       childSpan.tags.set('bool', true);
       childSpan.tags.set('string', 'string');
       childSpan.tags.set('num', 23);
@@ -191,7 +195,7 @@ describe('lib/trace-span.test.js', () => {
     });
 
     it('should support setting many tags at once', () => {
-      const childSpan = rootSpan.createSubSpan('child');
+      const childSpan = new TraceSpan('child').close();
       childSpan.tags.setMany({ bool: true, string: 'string', num: 23, novalue: null });
       childSpan.tags.setMany(
         { bool: true, string: 'string', num: 23, novalue: null },
@@ -208,7 +212,7 @@ describe('lib/trace-span.test.js', () => {
     });
 
     it('should reject setting with different value tag that alraedy exists', () => {
-      const childSpan = rootSpan.createSubSpan('child');
+      const childSpan = new TraceSpan('child').close();
       childSpan.tags.set('tag', true);
       expect(() => childSpan.tags.set('tag', 'again'))
         .to.throw(Error)
@@ -216,7 +220,7 @@ describe('lib/trace-span.test.js', () => {
     });
 
     it('should ignore resetting tag with same value', () => {
-      const childSpan = rootSpan.createSubSpan('child');
+      const childSpan = new TraceSpan('child').close();
       childSpan.tags.set('tag', true);
       expect(childSpan.tags.set('tag', true)).to.equal(childSpan.tags);
     });

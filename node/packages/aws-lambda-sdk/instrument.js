@@ -116,7 +116,7 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaSpan.subSpans.clear();
     }
     awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
-    traceSpans.awsLambdaInvocation = awsLambdaSpan.createSubSpan('aws.lambda.invocation', {
+    traceSpans.awsLambdaInvocation = serverlessSdk.createTraceSpan('aws.lambda.invocation', {
       startTime: requestStartTime,
     });
     resolveEventTags(event);

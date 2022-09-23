@@ -12,6 +12,7 @@ const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 const d = require('d');
 const lazy = require('d/lazy');
+const { AsyncLocalStorage } = require('node:async_hooks');
 const Long = require('long');
 const crypto = require('crypto');
 
@@ -194,31 +195,13 @@ class TraceSpanTags extends Map {
   }
 }
 
+const asyncLocalStorage = new AsyncLocalStorage();
+
+let rootSpan;
+
 class TraceSpan {
   constructor(name, options = {}) {
-    this.startTime = options.startTime || process.hrtime.bigint();
-    this.name = name;
-    this.parentSpan = options.parentSpan || null;
-    if (options.immediateDescendants) {
-      const immediateDescendants = Array.from(options.immediateDescendants);
-      if (immediateDescendants.length) {
-        this.createSubSpan(immediateDescendants.shift(), {
-          startTime: this.startTime,
-          immediateDescendants,
-        });
-      }
-    }
-    if (options.tags) this.tags.setMany(options.tags);
-    this._onCloseByParent = options.onCloseByParent;
-  }
-  createSubSpan(name, options = {}) {
-    if (this.endTime) {
-      throw Object.assign(new Error('Cannot initialize span in ended span'), {
-        code: 'INIT_IN_ENDED_SPAN',
-      });
-    }
-    name = ensureSpanName(name);
-    if (!isObject(options)) options = {};
+    const defaultStartTime = process.hrtime.bigint();
     const startTime = ensureBigInt(options.startTime, { isOptional: true });
     if (startTime) {
       if (startTime > process.hrtime.bigint()) {
@@ -227,7 +210,7 @@ class TraceSpan {
           { code: 'FUTURE_SPAN_START_TIME' }
         );
       }
-      if (startTime < this.startTime) {
+      if (startTime < this.parentSpan?.startTime) {
         throw Object.assign(
           new Error(
             'Cannot intialize span: Start time cannot be older than start time of parent span'
@@ -236,33 +219,54 @@ class TraceSpan {
         );
       }
     }
-    const span = new TraceSpan(name, {
-      parentSpan: this,
-      startTime,
-      immediateDescendants: ensureIterable(options.immediateDescendants, {
-        isOptional: true,
-        ensureItem: ensureSpanName,
-      }),
-      tags: ensurePlainObject(options.tags, {
-        isOptional: true,
-        name: 'options.tags',
-      }),
-      onCloseByParent: ensurePlainFunction(options.onCloseByParent, {
-        isOptional: true,
-        name: 'options.onCloseByParent',
-      }),
+    this.startTime = startTime || defaultStartTime;
+    this.name = ensureSpanName(name);
+
+    const immediateDescendants = ensureIterable(options.immediateDescendants, {
+      isOptional: true,
+      ensureItem: ensureSpanName,
     });
-    this.subSpans.add(span);
-    return span;
+    this._onCloseByParent = ensurePlainFunction(options.onCloseByParent, {
+      isOptional: true,
+      name: 'options.onCloseByParent',
+    });
+    const tags = ensurePlainObject(options.tags, {
+      isOptional: true,
+      name: 'options.tags',
+    });
+    if (tags) this.tags.setMany(tags);
+    if (!rootSpan) {
+      rootSpan = this;
+      this.parentSpan = null;
+    } else {
+      if (rootSpan.endTime) {
+        throw Object.assign(new Error('Cannot intialize span: Trace is closed'), {
+          code: 'UNREACHABLE_TRACE',
+        });
+      }
+      this.parentSpan = asyncLocalStorage.getStore() || rootSpan || null;
+      while (this.parentSpan.endTime) this.parentSpan = this.parentSpan.parentSpan || rootSpan;
+    }
+
+    asyncLocalStorage.enterWith(this);
+
+    this.parentSpan?.subSpans.add(this);
+    if (immediateDescendants?.length) {
+      // eslint-disable-next-line no-new
+      new TraceSpan(immediateDescendants.shift(), {
+        startTime: this.startTime,
+        immediateDescendants,
+      });
+    }
   }
   close(options = {}) {
+    const defaultEndTime = process.hrtime.bigint();
     if (this.endTime) {
       throw Object.assign(new Error('Cannot close span: Span already closed'), {
         code: 'CLOSURE_ON_CLOSED_SPAN',
       });
     }
     if (!isObject(options)) options = {};
-    const defaultEndTime = process.hrtime.bigint();
     const targetEndTime = ensureBigInt(options.endTime, { isOptional: true });
     if (targetEndTime) {
       if (targetEndTime < this.startTime) {
@@ -284,6 +288,11 @@ class TraceSpan {
         if (!child.endTime) child.close({ endTime: this.endTime });
       }
     }
+    const openParentSpan = ((span) => {
+      if (!span?.endsWith) return span;
+      return span.parentSpan || rootSpan;
+    })(this.parentSpan);
+    asyncLocalStorage.enterWith(openParentSpan);
     return this;
   }
   toJSON() {

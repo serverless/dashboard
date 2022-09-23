@@ -72,9 +72,7 @@ const install = (protocol, httpModule) => {
 
     const req = originalRequest.apply(this, args);
 
-    const traceSpan = (
-      traceSpans.awsLambdaInvocation || traceSpans.awsLambdaInitialization
-    ).createSubSpan(`node.${protocol}.request`, {
+    const traceSpan = serverlessSdk.createTraceSpan(`node.${protocol}.request`, {
       startTime,
       tags: {
         'http.method': resolveMethod(options),
@@ -142,4 +140,4 @@ module.exports.ignoreFollowingRequest = () => {
   });
 };
 
-const { traceSpans } = require('../../');
+const serverlessSdk = global.serverlessSdk || require('../../');

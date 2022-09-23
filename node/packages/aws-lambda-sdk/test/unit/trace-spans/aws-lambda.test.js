@@ -2,12 +2,14 @@
 
 const { expect } = require('chai');
 
+const requireUncached = require('ncjsm/require-uncached');
+
 describe('trace-spans/aws-lambda.test.js', () => {
   let awsLambdaTraceSpan;
   before(() => {
     process.env.AWS_LAMBDA_FUNCTION_VERSION = '$LATEST';
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'test';
-    awsLambdaTraceSpan = require('../../../trace-spans/aws-lambda');
+    awsLambdaTraceSpan = requireUncached(() => require('../../../trace-spans/aws-lambda'));
   });
   it('should be TraceSpan instance', () =>
     expect(awsLambdaTraceSpan.constructor.name).to.equal('TraceSpan'));
