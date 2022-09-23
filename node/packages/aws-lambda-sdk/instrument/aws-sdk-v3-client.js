@@ -32,12 +32,6 @@ module.exports.install = (client) => {
             'aws.sdk.operation': operationName,
             'aws.sdk.signature_version': 'v4',
           },
-          onCloseByParent: () => {
-            process.stderr.write(
-              "Serverless SDK Warning: AWS SDK request didn't end before end of " +
-                'lambda invocation (or initialization)\n'
-            );
-          },
         });
         tagMapper?.params?.(traceSpan, args.input);
         const deferredRegion = client.config

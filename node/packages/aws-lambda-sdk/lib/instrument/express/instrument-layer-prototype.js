@@ -17,17 +17,12 @@ module.exports.install = (layerPrototype) => {
 
   layerPrototype.handle_request = function handle(req, res, next) {
     if (!expressSpansMap.has(req)) {
-      const expressSpan = serverlessSdk.createTraceSpan('express', {
-        onCloseByParent: () => {
-          process.stderr.write(
-            "Serverless SDK Warning: Express route handling didn't end before end of " +
-              'lambda invocation (or initialization)\n'
-          );
-        },
-      });
-      const expressRouteData = { expressSpan };
+      const expressSpan = serverlessSdk.createTraceSpan('express');
+      const openedSpans = new Set();
+      const expressRouteData = { expressSpan, openedSpans };
       expressSpansMap.set(req, expressRouteData);
       res.on('finish', () => {
+        const endTime = process.hrtime.bigint();
         expressSpan.tags.setMany(
           {
             status_code: res.statusCode,
@@ -36,11 +31,15 @@ module.exports.install = (layerPrototype) => {
           },
           { prefix: 'express' }
         );
-        if (!expressSpan.endTime) expressSpan.close();
+        for (const subSpan of openedSpans) {
+          if (!subSpan.endTime) subSpan.close({ endTime });
+        }
+        openedSpans.clear();
+        if (!expressSpan.endTime) expressSpan.close({ endTime });
       });
     }
     const expressRouteData = expressSpansMap.get(req);
-    const { routeSpan } = expressRouteData;
+    const { routeSpan, openedSpans } = expressRouteData;
     const middlewareSpan = (() => {
       if (routeSpan) {
         return serverlessSdk.createTraceSpan(
@@ -56,6 +55,7 @@ module.exports.install = (layerPrototype) => {
         `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`
       );
     })();
+    openedSpans.add(middlewareSpan);
     if (this.path && (!expressRouteData.path || expressRouteData.path.length < this.path.length)) {
       expressRouteData.path = this.path;
     }
@@ -67,6 +67,7 @@ module.exports.install = (layerPrototype) => {
     }
     return originalHandleRequest.call(this, req, res, (...args) => {
       if (!middlewareSpan.endTime) {
+        openedSpans.delete(middlewareSpan);
         middlewareSpan.close();
         if (this.name === 'bound dispatch') delete expressRouteData.routeSpan;
       }
@@ -75,11 +76,16 @@ module.exports.install = (layerPrototype) => {
   };
   // eslint-disable-next-line camelcase
   layerPrototype.handle_error = function handle_error(error, req, res, next) {
+    const { openedSpans } = expressSpansMap.get(req);
     const middlewareSpan = serverlessSdk.createTraceSpan(
       `express.middleware.error.${generateMiddlewareName(this.name) || 'unknown'}`
     );
+    openedSpans.add(middlewareSpan);
     return originalHandleError.call(this, error, req, res, (...args) => {
-      if (!middlewareSpan.endTime) middlewareSpan.close();
+      if (!middlewareSpan.endTime) {
+        openedSpans.delete(middlewareSpan);
+        middlewareSpan.close();
+      }
       return next(...args);
     });
   };

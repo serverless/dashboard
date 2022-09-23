@@ -116,9 +116,10 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaSpan.subSpans.clear();
     }
     awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
-    traceSpans.awsLambdaInvocation = serverlessSdk.createTraceSpan('aws.lambda.invocation', {
-      startTime: requestStartTime,
-    });
+    const awsLambdaInvocationSpan = (traceSpans.awsLambdaInvocation = serverlessSdk.createTraceSpan(
+      'aws.lambda.invocation',
+      { startTime: requestStartTime }
+    ));
     resolveEventTags(event);
     if (!serverlessSdk._settings.disableRequestMonitoring) writeRequest(event, context);
 
@@ -147,7 +148,9 @@ module.exports = (originalHandler, options = {}) => {
         }
       }
 
-      awsLambdaSpan.close();
+      const endTime = process.hrtime.bigint();
+      awsLambdaInvocationSpan.close({ endTime });
+      awsLambdaSpan.close({ endTime });
       writeTrace();
       debugLog(
         'Overhead duration: Internal response:',

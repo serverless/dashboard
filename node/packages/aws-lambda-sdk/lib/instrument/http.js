@@ -83,17 +83,13 @@ const install = (protocol, httpModule) => {
         'http.path': options.pathname || '/',
         'http.query': options.search ? options.search.slice(1) : null,
       },
-      onCloseByParent: () => {
+      onCloseByRoot: () => {
         if (responseReadableState?.flowing === false) {
           // Response data was not observed
           traceSpan.close({ endTime: requestEndTime });
           return;
         }
         traceSpan.tags.set('http.error_code', 'EXECUTION_CONTEXT_OVERFLOW');
-        process.stderr.write(
-          "Serverless SDK Warning: HTTP(S) request didn't end before end of " +
-            'lambda invocation (or initialization)\n'
-        );
       },
     });
 

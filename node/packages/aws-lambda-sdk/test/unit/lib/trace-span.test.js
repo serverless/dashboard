@@ -81,7 +81,7 @@ describe('lib/trace-span.test.js', () => {
     expect(grandGrandChild.startTime).to.equal(childSpan.startTime);
   });
 
-  it('should close all descendant spans on span closure', () => {
+  it('should not close descendant spans on span closure', () => {
     const childSpan = new TraceSpan('child', {
       immediateDescendants: ['grandchild', 'grandgrandchild'],
     });
@@ -89,24 +89,10 @@ describe('lib/trace-span.test.js', () => {
     const grandGrandChild = Array.from(grandChild.subSpans)[0];
     childSpan.close();
 
-    expect(grandChild.endTime).to.equal(childSpan.endTime);
-    expect(grandGrandChild.endTime).to.equal(childSpan.endTime);
-  });
-
-  it('should support `options.onCloseByParent`', () => {
-    let invokeCount = 0;
-    const childSpan = new TraceSpan('child', {});
-    // eslint-disable-next-line no-new
-    new TraceSpan('grand', {
-      onCloseByParent: () => ++invokeCount,
-    });
-    const grandChildSpan = new TraceSpan('grand2', {
-      onCloseByParent: () => ++invokeCount,
-    });
-    grandChildSpan.close();
-    childSpan.close();
-
-    expect(invokeCount).to.equal(1);
+    expect(grandChild).to.not.have.property('endTime');
+    expect(grandGrandChild).to.not.have.property('endTime');
+    grandChild.close();
+    grandGrandChild.close();
   });
 
   describe('spans', () => {

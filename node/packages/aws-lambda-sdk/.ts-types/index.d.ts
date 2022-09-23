@@ -24,7 +24,7 @@ interface Sdk {
       startTime?: bigint;
       immediateDescendants?: string[];
       tags?: Record<string, boolean | number | string | Date | Array | Null>;
-      onCloseByParent?: Function;
+      onCloseByRoot?: Function;
     }
   ): TraceSpan;
 }
