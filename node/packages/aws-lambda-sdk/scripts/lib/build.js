@@ -39,6 +39,7 @@ module.exports = async (distFilename) => {
             '--bundle',
             '--platform=node',
             '--external:./',
+            '--external:../',
           ])
         ).stdoutBuffer
       );
