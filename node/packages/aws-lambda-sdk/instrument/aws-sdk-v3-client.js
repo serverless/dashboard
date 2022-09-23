@@ -1,7 +1,6 @@
 'use strict';
 
 const ensureObject = require('type/object/ensure');
-
 const doNotInstrumentFollowingHttpRequest =
   require('../lib/instrument/http').ignoreFollowingRequest;
 
@@ -27,9 +26,7 @@ module.exports.install = (client) => {
       const awsRequestMiddleware = (next, context) => async (args) => {
         const operationName = context.commandName.slice(0, -'Command'.length).toLowerCase();
         const tagMapper = serviceMapper.get(serviceName);
-        const traceSpan = (
-          traceSpans.awsLambdaInvocation || traceSpans.awsLambdaInitialization
-        ).createSubSpan(`aws.sdk.${serviceName}.${operationName}`, {
+        const traceSpan = serverlessSdk.createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
           tags: {
             'aws.sdk.service': serviceName,
             'aws.sdk.operation': operationName,
@@ -91,4 +88,4 @@ module.exports.uninstall = (client) => {
   if (uninstall) uninstall();
 };
 
-const { traceSpans } = require('../');
+const serverlessSdk = global.serverlessSdk || require('../');

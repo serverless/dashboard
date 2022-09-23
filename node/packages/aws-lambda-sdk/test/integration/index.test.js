@@ -989,6 +989,74 @@ describe('integration', function () {
         },
       },
     ],
+    [
+      'multi-async',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+        ]),
+        config: {
+          test: ({ invocationsData }) => {
+            for (const [
+              index,
+              {
+                trace: { spans },
+              },
+            ] of invocationsData.entries()) {
+              spans.shift();
+              if (!index) spans.shift();
+
+              const [invocationSpan, expressSpan, ...otherSpans] = spans;
+              const middlewareSpans = otherSpans.slice(0, -2);
+              const routeSpan = middlewareSpans.pop();
+              const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+              const expressRequestSpan = otherSpans[otherSpans.length - 2];
+              const outerRequestSpan = otherSpans[otherSpans.length - 1];
+
+              expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+              const expressTags = expressSpan.tags;
+
+              expect(expressTags.express.method).to.equal('GET');
+              expect(expressTags.express.path).to.equal('/foo');
+              expect(expressTags.express.statusCode).to.equal(200);
+
+              expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+                'express.middleware.query',
+                'express.middleware.expressinit',
+                'express.middleware.jsonparser',
+                'express.middleware.router',
+              ]);
+              for (const middlewareSpan of middlewareSpans) {
+                expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+              }
+              expect(routeSpan.name).to.equal('express.middleware.route.get.anonymous');
+              expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+
+              expect(outerRequestSpan.name).to.equal('node.http.request');
+              expect(outerRequestSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+              const { tags: outerRequestTags } = outerRequestSpan;
+              expect(outerRequestTags.http.method).to.equal('GET');
+              expect(outerRequestTags.http.protocol).to.equal('HTTP/1.1');
+              expect(outerRequestTags.http.host).to.equal('localhost:3177');
+              expect(outerRequestTags.http.path).to.equal('/out');
+              expect(outerRequestTags.http.statusCode.toString()).to.equal('200');
+
+              expect(expressRequestSpan.name).to.equal('node.http.request');
+              expect(expressRequestSpan.parentSpanId).to.deep.equal(routeSpan.id);
+
+              const { tags: expressRequestTags } = expressRequestSpan;
+              expect(expressRequestTags.http.method).to.equal('GET');
+              expect(expressRequestTags.http.protocol).to.equal('HTTP/1.1');
+              expect(expressRequestTags.http.host).to.equal('localhost:3177');
+              expect(expressRequestTags.http.path).to.equal('/in');
+              expect(expressRequestTags.http.statusCode.toString()).to.equal('200');
+            }
+          },
+        },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
