@@ -333,7 +333,7 @@ module.exports = async (testConfig, coreConfig) => {
   log.info('Retrieve list of written reports %s', testConfig.name);
   const reports = await retrieveReports(testConfig);
   try {
-    for (let i = 0; i < reports.invocationsData.length; i++) {
+    for (let i = 0; i < invocationsMeta.length; i++) {
       const invocationMeta = invocationsMeta[i];
       Object.assign(reports.invocationsData[i], {
         localDuration: invocationMeta.duration,
