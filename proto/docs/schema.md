@@ -180,6 +180,8 @@ Optional Event Tags are from 100 on |
 | total_segments | [uint64](#uint64) | optional | The value of the TotalSegments request parameter. |
 | filter | [string](#string) | optional | The value of the FilterExpression request parameter. |
 | key_condition | [string](#string) | optional | The value of the KeyConditionExpression request parameter. |
+| exclusive_start_key | [string](#string) | optional | JSON string of the ExclusiveStartKey request parameter. |
+| attribute_values | [string](#string) | optional | JSON string of the ExpressionAttributeValues request parameter. |
 | count | [uint64](#uint64) | optional | The value of the Count response parameter. |
 | scanned_count | [uint64](#uint64) | optional | The value of the ScannedCount response parameter. |
 
