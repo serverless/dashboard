@@ -89,7 +89,7 @@ const install = (protocol, httpModule) => {
           ? options.hostname + (options.port ? `:${options.port}` : '')
           : options.host || 'localhost',
         'http.path': options.pathname || '/',
-        'http.request_header_names': [],
+        'http.request_header_names': Object.keys(options.headers || {}),
         'http.query_parameter_names': resolveQueryParamNamesFromSearchString(options.search),
       },
       onCloseByRoot: () => {
