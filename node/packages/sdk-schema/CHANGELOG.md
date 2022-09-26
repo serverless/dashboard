@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.8.0...@serverless/sdk-schema@0.9.0) (2022-09-26)
+
+### ⚠ BREAKING CHANGES
+
+- Remove `aws.lambda.api_gateway.request.path_parameters` in favor of `aws.lambda.api_gateway.request.path_parameter_names`
+- Remove `aws.lambda.api_gateway.request.headers` in favor of `http.request_header_names`
+- Remove `http.query` in favor of `http.query_parameter_names`
+- Change numbering of some `http.*` fields
+
+### Features
+
+- Remove `aws.lambda.api_gateway.request.path_parameters` in favor of `aws.lambda.api_gateway.request.path_parameter_names` ([44702ad](https://github.com/serverless/console/commit/44702adaa08c3676b7e418a4f08e3fe34465abeb))
+- Remove `aws.lambda.api_gateway.request.headers` in favor of `http.request_header_names` ([2a38ba4](https://github.com/serverless/console/commit/2a38ba4f3f5db14d82be1f6787bc7444fab33bf9))
+- Remove `http.query` in favor of `http.query_parameter_names` ([ee0c8e5](https://github.com/serverless/console/commit/ee0c8e57e0e681951c018700a15ff154d4601e2e))
+- Define `exclusive_start_key` and `attribute_values` DynamoDB tags ([d15839d](https://github.com/serverless/console/commit/d15839d3fee231f22fbf956cd8997026cb39b4bc))
+
+### Maintenance Improvements
+
+- Pre-reserve slots for fields eventually to be introduced later ([c693280](https://github.com/serverless/console/commit/c69328043796780a62aaf4f724000a704df7e513))
+
 ## [0.8.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.7.0...@serverless/sdk-schema@0.8.0) (2022-09-20)
 
 ### ⚠ BREAKING CHANGES
