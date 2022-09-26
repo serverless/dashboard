@@ -602,12 +602,12 @@ describe('integration', function () {
                   expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
                   expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
                   expect(tags.aws.lambda.http).to.have.property('host');
-                  expect(tags.aws.lambda.apiGateway.request).to.have.property('headers');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
                   expect(tags.aws.lambda.http.method).to.equal('POST');
                   expect(tags.aws.lambda.http.path).to.equal('/test/some-path/some-param');
-                  expect(tags.aws.lambda.apiGateway.request.pathParameters).to.equal(
-                    JSON.stringify({ param: 'some-param' })
-                  );
+                  expect(tags.aws.lambda.apiGateway.request.pathParameterNames).to.deep.equal([
+                    'param',
+                  ]);
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
@@ -659,7 +659,7 @@ describe('integration', function () {
                   expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
                   expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
                   expect(tags.aws.lambda.http).to.have.property('host');
-                  expect(tags.aws.lambda.apiGateway.request).to.have.property('headers');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
                   expect(tags.aws.lambda.http.method).to.equal('POST');
                   expect(tags.aws.lambda.http.path).to.equal('/test');
 
@@ -713,7 +713,7 @@ describe('integration', function () {
                   expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
                   expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
                   expect(tags.aws.lambda.http).to.have.property('host');
-                  expect(tags.aws.lambda.apiGateway.request).to.have.property('headers');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
                   expect(tags.aws.lambda.http.method).to.equal('POST');
                   expect(tags.aws.lambda.http.path).to.equal('/test');
 
@@ -756,7 +756,7 @@ describe('integration', function () {
                   expect(tags.http.protocol).to.equal('HTTP/1.1');
                   expect(tags.http.host).to.equal('localhost:3177');
                   expect(tags.http.path).to.equal('/');
-                  expect(tags.http.query).to.equal('foo=bar');
+                  expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
                   expect(tags.http.statusCode.toString()).to.equal('200');
                 }
               },
@@ -892,7 +892,7 @@ describe('integration', function () {
                   expect(tags.http.protocol).to.equal('HTTP/1.1');
                   expect(tags.http.host).to.equal(functionUrl.slice('https://'.length, -1));
                   expect(tags.http.path).to.equal('/');
-                  expect(tags.http.query).to.equal('foo=bar');
+                  expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
                   expect(tags.http.statusCode.toString()).to.equal('200');
                 }
               },
@@ -954,7 +954,7 @@ describe('integration', function () {
             expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
             expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
             expect(lambdaTags.aws.lambda.http).to.have.property('host');
-            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('headers');
+            expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
             expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
             expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
 

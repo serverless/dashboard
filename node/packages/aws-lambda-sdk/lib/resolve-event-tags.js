@@ -16,28 +16,6 @@ const doesObjectMatchMap = (object, map) =>
     return objHasOwnProperty.call(object, key);
   });
 
-const resolveParametersJson = (multiValueParameters) => {
-  if (!multiValueParameters) return null;
-  const result = {};
-  for (const [name, values] of Object.entries(multiValueParameters)) {
-    result[name] = values.length > 1 ? values : values[0];
-  }
-  return JSON.stringify(result);
-};
-
-const resolveQueryString = (queryParameters) => {
-  if (!queryParameters) return null;
-  const params = new URLSearchParams();
-  for (const [name, values] of Object.entries(queryParameters)) {
-    if (!Array.isArray(values)) {
-      params.append(name, values);
-      continue;
-    }
-    for (const value of values) params.append(name, value);
-  }
-  return params.toString();
-};
-
 const apiGatewayEventMap = [
   'resource',
   'path',
@@ -198,8 +176,7 @@ module.exports = (event) => {
       {
         id: requestContext.requestId,
         time_epoch: requestContext.requestTimeEpoch,
-        headers: resolveParametersJson(event.multiValueHeaders) || '{}',
-        path_parameters: event.pathParameters ? JSON.stringify(event.pathParameters) : null,
+        path_parameter_names: Object.keys(event.pathParameters || {}),
       },
       { prefix: 'aws.lambda.api_gateway.request' }
     );
@@ -209,7 +186,8 @@ module.exports = (event) => {
         protocol: requestContext.protocol,
         host: requestContext.domainName,
         path: requestContext.path,
-        query: resolveQueryString(event.multiValueQueryStringParameters),
+        query_parameter_names: Object.keys(event.queryStringParameters || {}),
+        request_header_names: Object.keys(event.headers || {}),
       },
       { prefix: 'aws.lambda.http' }
     );
@@ -234,8 +212,7 @@ module.exports = (event) => {
       {
         id: requestContext.requestId,
         time_epoch: requestContext.timeEpoch,
-        headers: JSON.stringify(event.headers || {}),
-        path_parameters: event.pathParameters ? JSON.stringify(event.pathParameters) : null,
+        path_parameter_names: Object.keys(event.pathParameters || {}),
       },
       { prefix: 'aws.lambda.api_gateway.request' }
     );
@@ -245,7 +222,8 @@ module.exports = (event) => {
         protocol: requestContext.http.protocol,
         host: requestContext.domainName,
         path: requestContext.http.path,
-        query: resolveQueryString(event.queryStringParameters),
+        query_parameter_names: Object.keys(event.queryStringParameters || {}),
+        request_header_names: Object.keys(event.headers || {}),
       },
       { prefix: 'aws.lambda.http' }
     );

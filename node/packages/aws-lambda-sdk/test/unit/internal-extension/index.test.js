@@ -221,19 +221,15 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1661872803090');
     expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
     expect(tags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(tags.aws.lambda.apiGateway.request.headers).to.equal(
-      JSON.stringify({
-        'Accept': '*/*',
-        'Accept-Encoding': 'gzip,deflate',
-        'Other': ['First', 'Second'],
-      })
-    );
+    expect(tags.aws.lambda.http.requestHeaderNames).to.deep.equal([
+      'Accept',
+      'Accept-Encoding',
+      'Other',
+    ]);
     expect(tags.aws.lambda.http.method).to.equal('POST');
     expect(tags.aws.lambda.http.path).to.equal('/test/some-path/some-param');
-    expect(tags.aws.lambda.apiGateway.request.pathParameters).to.equal(
-      JSON.stringify({ param: 'some-param' })
-    );
-    expect(tags.aws.lambda.http.query).to.equal('foo=bar&next=first&next=second');
+    expect(tags.aws.lambda.apiGateway.request.pathParameterNames).to.deep.equal(['param']);
+    expect(tags.aws.lambda.http.queryParameterNames).to.deep.equal(['foo', 'next']);
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
@@ -325,17 +321,14 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1662040030156');
     expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
     expect(tags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(tags.aws.lambda.apiGateway.request.headers).to.equal(
-      JSON.stringify({
-        'Content-Length': '385',
-        'Content-Type':
-          'multipart/form-data; boundary=--------------------------182902192059219621976732',
-        'Multi': ['one,stillone', 'two'],
-      })
-    );
+    expect(tags.aws.lambda.http.requestHeaderNames).to.deep.equal([
+      'Content-Length',
+      'Content-Type',
+      'Multi',
+    ]);
     expect(tags.aws.lambda.http.method).to.equal('POST');
     expect(tags.aws.lambda.http.path).to.equal('/v1');
-    expect(tags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone&multi=two');
+    expect(tags.aws.lambda.http.queryParameterNames).to.deep.equal(['lone', 'multi']);
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
@@ -401,17 +394,15 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1662040011065');
     expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
     expect(tags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(tags.aws.lambda.apiGateway.request.headers).to.equal(
-      JSON.stringify({
-        'content-length': '385',
-        'content-type':
-          'multipart/form-data; boundary=--------------------------419073009317249310175915',
-        'multi': 'one,stillone,two',
-      })
-    );
+    expect(tags.aws.lambda.http.requestHeaderNames).to.deep.equal([
+      'content-length',
+      'content-type',
+      'multi',
+    ]);
+
     expect(tags.aws.lambda.http.method).to.equal('POST');
     expect(tags.aws.lambda.http.path).to.equal('/v2');
-    expect(tags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
+    expect(tags.aws.lambda.http.queryParameterNames).to.deep.equal(['lone', 'multi']);
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
@@ -567,7 +558,7 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.http.protocol).to.equal('HTTP/1.1');
     expect(tags.http.host).to.equal('localhost:3177');
     expect(tags.http.path).to.equal('/');
-    expect(tags.http.query).to.equal('foo=bar');
+    expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
     expect(tags.http.statusCode.toString()).to.equal('200');
   });
 
@@ -634,17 +625,16 @@ describe('internal-extension/index.test.js', () => {
     expect(lambdaTags.aws.lambda.apiGateway.request.timeEpoch.toString()).to.equal('1662040011065');
     expect(lambdaTags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
     expect(lambdaTags.aws.lambda.http.host).to.equal('xxx.execute-api.us-east-1.amazonaws.com');
-    expect(lambdaTags.aws.lambda.apiGateway.request.headers).to.equal(
-      JSON.stringify({
-        'content-length': '385',
-        'content-type':
-          'multipart/form-data; boundary=--------------------------419073009317249310175915',
-        'multi': 'one,stillone,two',
-      })
-    );
+
+    expect(lambdaTags.aws.lambda.http.requestHeaderNames).to.deep.equal([
+      'content-length',
+      'content-type',
+      'multi',
+    ]);
+
     expect(lambdaTags.aws.lambda.http.method).to.equal('GET');
     expect(lambdaTags.aws.lambda.http.path).to.equal('/foo');
-    expect(lambdaTags.aws.lambda.http.query).to.equal('lone=value&multi=one%2Cstillone%2Ctwo');
+    expect(lambdaTags.aws.lambda.http.queryParameterNames).to.deep.equal(['lone', 'multi']);
 
     expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
 

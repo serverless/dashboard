@@ -24,6 +24,14 @@ const resolveMethod = (options) => {
   return null;
 };
 
+const resolveQueryParamNamesFromSearchString = (searchString) => {
+  const result = [];
+  if (searchString) {
+    for (const [paramName] of new URLSearchParams(searchString)) result.push(paramName);
+  }
+  return result;
+};
+
 const install = (protocol, httpModule) => {
   const originalRequest = httpModule.request;
   const originalGet = httpModule.get;
@@ -81,7 +89,8 @@ const install = (protocol, httpModule) => {
           ? options.hostname + (options.port ? `:${options.port}` : '')
           : options.host || 'localhost',
         'http.path': options.pathname || '/',
-        'http.query': options.search ? options.search.slice(1) : null,
+        'http.request_header_names': [],
+        'http.query_parameter_names': resolveQueryParamNamesFromSearchString(options.search),
       },
       onCloseByRoot: () => {
         if (responseReadableState?.flowing === false) {
