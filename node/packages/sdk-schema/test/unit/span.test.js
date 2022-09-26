@@ -54,6 +54,7 @@ const testTracePayload = {
               request: {
                 id: '2e4d98fe-1603-477f-b976-1013e84ea4a6',
                 timeEpoch: longValue,
+                pathParameterNames: [],
               },
             },
             http: {

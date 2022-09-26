@@ -23,13 +23,14 @@ message AwsApiGatewayTags {
   string api_stage = 3;
 
   message AwsApiGatewayRequestTags {
+    reserved 3;
+    reserved "path_parameters";
     // The unique API GW Request ID.
     string id = 1;
     // The request time in milliseconds from epoch.
     uint64 time_epoch = 2;
-
     // JSON string containing Request Path Parameters
-    optional string path_parameters = 10;
+    repeated string path_parameter_names = 4;
   }
 
   AwsApiGatewayRequestTags request = 15;
