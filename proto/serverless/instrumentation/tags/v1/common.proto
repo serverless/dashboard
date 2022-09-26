@@ -5,6 +5,9 @@ package serverless.instrumentation.tags.v1;
 option go_package = ".;protoc";
 
 message HttpTags {
+  reserved 5;
+  reserved "query";
+
   // The method of the HTTP Request
   string method = 1;
   // The protocol of the HTTP Request
@@ -13,12 +16,12 @@ message HttpTags {
   string host = 3;
   // The path of the HTTP Request
   string path = 4;
-  // The query string of the HTTP Request
-  optional string query = 5;
+  // Names of the query parameters
+  repeated string query_parameter_names = 6;
 
   // The Response Status Code.
-  optional uint32 status_code = 6;
+  optional uint32 status_code = 9;
   // Eventual request error code
-  optional string error_code = 7;
+  optional string error_code = 12;
 }
 
