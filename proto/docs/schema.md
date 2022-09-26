@@ -85,8 +85,7 @@
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  | The unique API GW Request ID. |
 | time_epoch | [uint64](#uint64) |  | The request time in milliseconds from epoch. |
-| headers | [string](#string) |  | JSON string containing Request Headers |
-| path_parameters | [string](#string) | optional | JSON string containing Request Path Parameters |
+| path_parameter_names | [string](#string) | repeated | JSON string containing Request Path Parameters |
 
 
 
@@ -338,7 +337,8 @@ outcomes upon completion.
 | protocol | [string](#string) |  | The protocol of the HTTP Request |
 | host | [string](#string) |  | The host of the HTTP Request |
 | path | [string](#string) |  | The path of the HTTP Request |
-| query | [string](#string) | optional | The query string of the HTTP Request |
+| query_parameter_names | [string](#string) | repeated | Names of the query parameters |
+| request_header_names | [string](#string) | repeated | Request header names |
 | status_code | [uint32](#uint32) | optional | The Response Status Code. |
 | error_code | [string](#string) | optional | Eventual request error code |
 
