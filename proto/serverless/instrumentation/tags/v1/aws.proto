@@ -27,8 +27,6 @@ message AwsApiGatewayTags {
     string id = 1;
     // The request time in milliseconds from epoch.
     uint64 time_epoch = 2;
-    // JSON string containing Request Headers
-    string headers = 3;
 
     // JSON string containing Request Path Parameters
     optional string path_parameters = 10;

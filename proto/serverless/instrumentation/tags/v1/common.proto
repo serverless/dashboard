@@ -5,8 +5,8 @@ package serverless.instrumentation.tags.v1;
 option go_package = ".;protoc";
 
 message HttpTags {
-  reserved 5, 10, 11;
-  reserved "query", "response_headers", "response_header_names";
+  reserved 5, 7, 10, 11;
+  reserved "query", "request_headers", "response_headers", "response_header_names";
 
   // The method of the HTTP Request
   string method = 1;
@@ -18,6 +18,8 @@ message HttpTags {
   string path = 4;
   // Names of the query parameters
   repeated string query_parameter_names = 6;
+  // Request header names
+  repeated string request_header_names = 8;
 
   // The Response Status Code.
   optional uint32 status_code = 9;
