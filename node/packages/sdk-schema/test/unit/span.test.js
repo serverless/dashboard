@@ -62,6 +62,7 @@ const testTracePayload = {
               host: 'abc.example.com',
               method: 'GET',
               path: '/test',
+              queryParameterNames: [],
             },
           },
         },
