@@ -3,9 +3,6 @@ on:
   push:
     tags:
       - "go/sls-external-extension@[0-9]+.[0-9]+.[0-9]+"
-defaults:
-  run:
-    working-directory: go/packages/dev-mode
 
 jobs:
   deploy:
@@ -41,7 +38,9 @@ jobs:
         with:
           go-version: '>=1.18.0'
       - name: Build layer
-        run: make build
+        run: |
+          cd go/packages/dev-mode
+          make build
       - name: Publish layers (dev)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
@@ -49,11 +48,12 @@ jobs:
         run: |
           TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
           VERSION=${TEMP_ARRAY[@]: -1}
-          ./../../../node/scripts/publish-extension-layers.js \
+          cd node
+          ./scripts/publish-extension-layers.js \
             --bucket-name sls-dev-layers-registry \
             --layer-basename sls-external-extension \
             --version $VERSION \
-            --layer-filename dist/extension.zip
+            --layer-filename go/packages/dev-mode/dist/extension.zip
 
       - name: Publish layers (prod)
         env:
@@ -63,9 +63,10 @@ jobs:
           TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
           VERSION=${TEMP_ARRAY[@]: -1}
           TAG=${GITHUB_REF:10}
-          ./../../../node/scripts/publish-extension-layers.js \
+          cd node
+          ./scripts/publish-extension-layers.js \
             --bucket-name sls-layers-registry \
             --layer-basename sls-external-extension \
             --version $VERSION \
-            --layer-filename dist/extension.zip \
+            --layer-filename go/packages/dev-mode/dist/extension.zip \
             --github-tag $TAG
