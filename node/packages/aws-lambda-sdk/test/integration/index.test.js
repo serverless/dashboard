@@ -612,7 +612,9 @@ describe('integration', function () {
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
                   expect(JSON.parse(request.data.requestData)).to.have.property('httpMethod');
-                  expect(response.data.responseData).to.equal('"ok"');
+                  expect(response.data.responseData).to.equal(
+                    JSON.stringify({ statusCode: 200, body: '"ok"' })
+                  );
                 }
               },
             },
@@ -666,7 +668,9 @@ describe('integration', function () {
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
                   expect(JSON.parse(request.data.requestData)).to.have.property('httpMethod');
-                  expect(response.data.responseData).to.equal('"ok"');
+                  expect(response.data.responseData).to.equal(
+                    JSON.stringify({ statusCode: 200, body: '"ok"' })
+                  );
                 }
               },
             },
@@ -720,7 +724,9 @@ describe('integration', function () {
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
                   expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
-                  expect(response.data.responseData).to.equal('"ok"');
+                  expect(response.data.responseData).to.equal(
+                    JSON.stringify({ statusCode: 200, body: '"ok"' })
+                  );
                 }
               },
             },
@@ -962,7 +968,7 @@ describe('integration', function () {
             expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
             expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
-            expect(response.data.responseData).to.equal('"ok"');
+            expect(JSON.parse(response.data.responseData).body).to.deep.equal(JSON.stringify('ok'));
 
             const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
             const routeSpan = middlewareSpans.pop();
