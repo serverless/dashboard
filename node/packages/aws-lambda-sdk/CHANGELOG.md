@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.5.0...@serverless/aws-lambda-sdk@0.6.0) (2022-09-26)
+
+### ⚠ BREAKING CHANGES
+
+- Upgrade `@serverless/sdk-schema` to v0.9.0
+- HTTP related have changed according to changes brought with new version of `@serverless/sdk-schema`
+- Sub spans must be closed manually (they're no longer auto closed with closure of a parent)
+- All opened spans are auto closed with a warning on root span closure (when trace is wrapped up)
+- `onCloseByParent` option is replaced by `onCloseByRoot`, as it's only root that may auto close sub spans now
+- `traceSpan.createSubSpan` method was removed in favor of `serverlessSdk.createTraceSpan`. Since now relations between spans are resolved automaticaly internally (no need to manually decide which span is parent span)
+
+### Features
+
+- Allow opened children in closed spans ([d2f87d7](https://github.com/serverless/console/commit/d2f87d796f99ee35f38769a26fe8e0f5d19dc456))
+- Resolve relation between spans automatically ([a7e2b5e](https://github.com/serverless/console/commit/a7e2b5e9e9cb88137d45159cfec31516c33dbb27))
+- Store `http.request_header_names` tag ([223371c](https://github.com/serverless/console/commit/223371ca3a52cd17af3e8397bcf84fd37702621d))
+- Support new AWS SDK DynamoDB tags ([1963d4b](https://github.com/serverless/console/commit/1963d4b31184412987c3baab3c6da8867c287b1a))
+- Upgrade HTTP related tags to contain only param names information ([0fed793](https://github.com/serverless/console/commit/0fed793f9dbec40bd4b6598fe77db071a5d6a8c4))
+
+### Bug Fixes
+
+- Fix propagation of response data ([135c524](https://github.com/serverless/console/commit/135c524005143315caa65a9662b78b4a22b57acf))
+
+### Performance Improvements
+
+- Ensure to not add unused dependencies to build ([ce2f6e4](https://github.com/serverless/console/commit/ce2f6e4132f082e967771e33d7decd743079ce94))
+
+### Maintenance Improvements
+
+- Improve test error code ([a396de3](https://github.com/serverless/console/commit/a396de38b7501ace2065626318f0284d3afbce0a))
+
 ## [0.5.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.4.0...@serverless/aws-lambda-sdk@0.5.0) (2022-09-20)
 
 ### ⚠ BREAKING CHANGES
