@@ -1,0 +1,71 @@
+name: "Dev Mode Extension: Publish"
+on:
+  push:
+    tags:
+      - "go/sls-external-extension@[0-9]+.[0-9]+.[0-9]+"
+defaults:
+  run:
+    working-directory: go/packages/dev-mode
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Retrieve ~/.npm from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/**package*.json') }}
+          restore-keys: npm-v16-${{ runner.os }}-refs/heads/main-
+      - name: Retrieve node_modules from cache
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/node_modules
+          key: node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/package.json') }}
+          restore-keys: node-modules-v16-${{ runner.os }}-refs/heads/main-
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org
+      - name: Install main project dependencies
+        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node
+          npm update --save-dev --no-save
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.18.0'
+      - name: Build layer
+        run: make build
+      - name: Publish layers (dev)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          ./../../../node/scripts/publish-extension-layers.js \
+            --bucket-name sls-dev-layers-registry \
+            --layer-basename sls-external-extension \
+            --version $VERSION \
+            --layer-filename dist/extension.zip
+
+      - name: Publish layers (prod)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          TAG=${GITHUB_REF:10}
+          ./../../../node/scripts/publish-extension-layers.js \
+            --bucket-name sls-layers-registry \
+            --layer-basename sls-external-extension \
+            --version $VERSION \
+            --layer-filename dist/extension.zip \
+            --github-tag $TAG
