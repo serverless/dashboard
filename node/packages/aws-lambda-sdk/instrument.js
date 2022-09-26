@@ -42,13 +42,19 @@ const writeRequest = (event, context) => {
 const resolveResponseString = (response) => {
   if (!isPlainObject(response)) return null;
   if (awsLambdaSpan.tags.get('aws.lambda.event_source') === 'aws.apigateway') {
-    if (response.isBase64Encoded) return null;
-    if (typeof response.body !== 'string') return null;
-    try {
-      JSON.parse(response.body);
-      return response.body;
-    } catch {
-      return null;
+    if (typeof response.body === 'string') {
+      response = { ...response };
+      if (response.isBase64Encoded) {
+        delete response.body;
+        response.isBodyExcluded = true;
+      } else {
+        try {
+          JSON.parse(response.body);
+        } catch {
+          delete response.body;
+          response.isBodyExcluded = true;
+        }
+      }
     }
   }
   return JSON.stringify(response);
