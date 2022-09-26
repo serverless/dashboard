@@ -24,7 +24,7 @@ module.exports.handler = (event, context, callback) => {
     url = `http://localhost:${TEST_SERVER_PORT}/?foo=bar`;
   }
   const request = url.startsWith('https') ? https.request : http.request;
-  request(url, (response) => {
+  request(url, { headers: { someHeader: 'bar' } }, (response) => {
     let body = '';
     response.on('data', (data) => {
       body += data;

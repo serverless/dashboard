@@ -757,6 +757,7 @@ describe('integration', function () {
                   expect(tags.http.host).to.equal('localhost:3177');
                   expect(tags.http.path).to.equal('/');
                   expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
+                  expect(tags.http.requestHeaderNames).to.deep.equal(['someHeader']);
                   expect(tags.http.statusCode.toString()).to.equal('200');
                 }
               },
