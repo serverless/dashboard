@@ -5,8 +5,8 @@ package serverless.instrumentation.tags.v1;
 option go_package = ".;protoc";
 
 message HttpTags {
-  reserved 5;
-  reserved "query";
+  reserved 5, 10, 11;
+  reserved "query", "response_headers", "response_header_names";
 
   // The method of the HTTP Request
   string method = 1;
