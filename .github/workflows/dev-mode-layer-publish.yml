@@ -53,7 +53,7 @@ jobs:
             --bucket-name sls-dev-layers-registry \
             --layer-basename sls-external-extension \
             --version $VERSION \
-            --layer-filename go/packages/dev-mode/dist/extension.zip
+            --layer-filename ../go/packages/dev-mode/dist/extension.zip
 
       - name: Publish layers (prod)
         env:
@@ -68,4 +68,4 @@ jobs:
             --bucket-name sls-layers-registry \
             --layer-basename sls-external-extension \
             --version $VERSION \
-            --layer-filename go/packages/dev-mode/dist/extension.zip
+            --layer-filename ../go/packages/dev-mode/dist/extension.zip
