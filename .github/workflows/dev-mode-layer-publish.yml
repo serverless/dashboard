@@ -5,11 +5,15 @@ on:
       - "go/sls-external-extension@[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  deploy:
+  publishNewVersion:
+    name: Publish new version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.18.0'
       - name: Retrieve ~/.npm from cache
         uses: actions/cache@v2
         with:
@@ -33,10 +37,6 @@ jobs:
         run: |
           cd node
           npm update --save-dev --no-save
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '>=1.18.0'
       - name: Build layer
         run: |
           cd go/packages/dev-mode
@@ -68,5 +68,4 @@ jobs:
             --bucket-name sls-layers-registry \
             --layer-basename sls-external-extension \
             --version $VERSION \
-            --layer-filename go/packages/dev-mode/dist/extension.zip \
-            --github-tag $TAG
+            --layer-filename go/packages/dev-mode/dist/extension.zip
