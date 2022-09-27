@@ -4,6 +4,7 @@ const { expect } = require('chai');
 
 const path = require('path');
 const log = require('log').get('test');
+const logProto = require('@serverless/sdk-schema/dist/log');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
@@ -31,11 +32,12 @@ describe('integration', function () {
         config: {
           test: ({ invocationsData, testConfig }) => {
             for (const [, logs] of invocationsData.map((data) => data.logs).entries()) {
-              const logPayload = logs[0];
               expect(logs.length).to.equal(8);
-              expect(logPayload.name).to.equal(testConfig.configuration.FunctionName);
-              logs.forEach((logItem, index) => {
-                const message = (logItem.messages || [{ message: '' }])[0].message;
+              const logData = Buffer.from(logs[0].payload, 'base64');
+              const logPayload = logProto.LogPayload.decode(logData);
+              expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
+              logPayload.logEvents.forEach((logItem, index) => {
+                const message = logItem.message || '';
                 expect(
                   `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
                 ).to.have.string(message.slice(message.lastIndexOf('\t') + 1).replace('\n', ''));
@@ -74,6 +76,10 @@ describe('integration', function () {
             expect(responsePayload.raw).to.equal('"ok"');
           }
         }
+      }
+
+      if (testConfig.test) {
+        testConfig.test({ invocationsData, testConfig });
       }
     });
   }

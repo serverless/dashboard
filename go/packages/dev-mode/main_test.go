@@ -11,9 +11,14 @@ import (
 	"testing"
 	"time"
 
+	"serverless/dev-mode-extension/agent"
 	u "serverless/dev-mode-extension/utils"
 
+	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/google/uuid"
+	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 type RegisterPayload struct {
@@ -24,24 +29,28 @@ type ValidationLogMessage struct {
 	Message string `json:"message"`
 }
 
-type ValidationLogPayload struct {
-	RequestId string                 `json:"requestId"`
-	TraceId   string                 `json:"traceId"`
-	OrgUid    string                 `json:"orgUid"`
-	Name      string                 `json:"name"`
-	Messages  []ValidationLogMessage `json:"message"`
-}
-
 type ValidationResult struct {
-	Register  RegisterPayload        `json:"register"`
-	RequestId string                 `json:"requestId"`
-	Logs      []ValidationLogPayload `json:"logs"`
-	NextCount int64                  `json:"nextCount"`
+	Register  RegisterPayload    `json:"register"`
+	RequestId string             `json:"requestId"`
+	Logs      []agent.APIPayload `json:"logs"`
+	NextCount int64              `json:"nextCount"`
 }
 
 var port = 9001
 var region = "us-east-1"
 var functionName = "test-function"
+
+type mockSTSClient struct {
+	stsiface.STSAPI
+}
+
+func (m *mockSTSClient) GetCallerIdentity(*sts.GetCallerIdentityInput) (*sts.GetCallerIdentityOutput, error) {
+	// mock response/functionality
+	accountId := "account-id"
+	return &sts.GetCallerIdentityOutput{
+		Account: &accountId,
+	}, nil
+}
 
 func TestMain(m *testing.M) {
 	svr := u.StartServer("test-function", "us-east-1", 9001)
@@ -52,6 +61,8 @@ func TestMain(m *testing.M) {
 	os.Setenv("SLS_DEBUG_EXTENSION", "1")
 	os.Setenv("SLS_TEST_EXTENSION_INTERNAL_LOG", "1")
 	os.Setenv("SLS_TEST_EXTENSION", "1")
+	os.Setenv("AWS_LAMBDA_LOG_GROUP_NAME", "logGroup1")
+	os.Setenv("AWS_LAMBDA_LOG_STREAM_NAME", "logStream1")
 
 	code := m.Run()
 
@@ -96,13 +107,13 @@ func resetValidations() {
 	u.SendPost(fmt.Sprintf("http://127.0.0.1:%d/reset", port), []byte("{}"))
 }
 
-func getValidations() ValidationResult {
+func getValidations(waitLogs bool) ValidationResult {
 	validationData := ValidationResult{}
 	for {
 		response, _ := http.Get(fmt.Sprintf("http://127.0.0.1:%d/validations", port))
 		jsonData, _ := ioutil.ReadAll(response.Body)
 		json.Unmarshal([]byte(jsonData), &validationData)
-		if validationData.RequestId == "" {
+		if validationData.RequestId == "" || (waitLogs && len(validationData.Logs) == 0) {
 			time.Sleep(2 * time.Second)
 		} else {
 			break
@@ -112,24 +123,24 @@ func getValidations() ValidationResult {
 }
 
 func extensionPlatformStart(requestId string) {
-	payload := fmt.Sprintf(`{
+	payload := fmt.Sprintf(`[{
     "type": "platform.start",
 		"record": {
 			"requestId": "%s",
 			"version": "$LATEST"
 		}
-	}`, requestId)
+	}]`, requestId)
 	u.SubmitLogs([]byte(payload))
 }
 
 func extensionPlatformRuntimeDone(requestId string) {
-	payload := fmt.Sprintf(`{
+	payload := fmt.Sprintf(`[{
     "type": "platform.runtimeDone",
 		"record": {
 			"requestId": "%s",
 			"status": "success"
 		}
-	}`, requestId)
+	}]`, requestId)
 	u.SubmitLogs([]byte(payload))
 }
 
@@ -141,7 +152,10 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 	go func() {
-		ExternalExtension()
+		ext := Extension{
+			Client: &mockSTSClient{},
+		}
+		ext.ExternalExtension()
 		wg.Done()
 	}()
 
@@ -151,7 +165,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	extensionInvoke(requestId)
 	extensionPlatformStart(requestId)
 
-	messages := []string{"1 invocation\n", "2 invocation \n"}
+	messages := []string{"1 invocation", "2 invocation"}
 	postLogs(fmt.Sprintf(`[
 		{
 			"type": "function",
@@ -163,7 +177,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		}
 	]`, messages[0], messages[1]))
 
-	validationData := getValidations()
+	validationData := getValidations(false)
 
 	// Validate we received the request id we thought we would
 	if validationData.RequestId != requestId {
@@ -172,20 +186,26 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 
 	// Validate we received the logs we thought we would
 	for _, payload := range validationData.Logs {
-		if payload.Name != functionName {
-			t.Errorf("Expected function name %s Received %s", functionName, payload.Name)
-			for index, message := range payload.Messages {
-				if message.Message != messages[index] {
-					t.Errorf("Expected log message %s Received %s", message.Message, messages[index])
-				}
+		var protoPayload schema.LogPayload
+		err := proto.Unmarshal(payload.Payload, &protoPayload)
+		if err != nil {
+			t.Errorf("Unable to unmarshal log payload")
+		}
+		if protoPayload.SlsTags.Service != functionName {
+			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
+		}
+		for index, event := range protoPayload.LogEvents {
+			if event.Message != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Message, messages[index])
 			}
 		}
 	}
 
 	extensionPlatformRuntimeDone(requestId)
 
+	time.Sleep(1 * time.Second)
 	// Ensure we receive the final next event after runtime done
-	validationData = getValidations()
+	validationData = getValidations(false)
 	if validationData.NextCount < 2 {
 		t.Errorf("Expected NextCount %d Received %d", 2, validationData.NextCount)
 	}
@@ -197,7 +217,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	extensionInvoke(requestId2)
 	extensionPlatformStart(requestId2)
 
-	messages2 := []string{"3 invocation\n", "4 invocation \n"}
+	messages2 := []string{"3 invocation", "4 invocation"}
 	postLogs(fmt.Sprintf(`[
 		{
 			"type": "function",
@@ -209,7 +229,8 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		}
 	]`, messages2[0], messages2[1]))
 
-	validationData2 := getValidations()
+	time.Sleep(3 * time.Second)
+	validationData2 := getValidations(false)
 
 	// Validate we received the request id we thought we would
 	if validationData2.RequestId != requestId2 {
@@ -218,18 +239,25 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 
 	// Validate we received the logs we thought we would
 	for _, payload := range validationData2.Logs {
-		if payload.Name != functionName {
-			t.Errorf("Expected function name %s Received %s", functionName, payload.Name)
-			for index, message := range payload.Messages {
-				if message.Message != messages[index] {
-					t.Errorf("Expected log message %s Received %s", message.Message, messages2[index])
-				}
+		var protoPayload schema.LogPayload
+		err := proto.Unmarshal(payload.Payload, &protoPayload)
+		if err != nil {
+			t.Errorf("Unable to unmarshal log payload")
+		}
+		if protoPayload.SlsTags.Service != functionName {
+			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
+		}
+		for index, event := range protoPayload.LogEvents {
+			if event.Message != messages2[index] {
+				t.Errorf("Expected log message %s Received %s", event.Message, messages2[index])
 			}
 		}
 	}
 
 	// End execution
 	extensionPlatformRuntimeDone(requestId2)
+	// Reset  validations
+	resetValidations()
 	extensionShutdown(requestId2)
 	wg.Wait()
 }
@@ -238,7 +266,10 @@ func TestStartInvokeDone(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 	go func() {
-		ExternalExtension()
+		ext := Extension{
+			Client: &mockSTSClient{},
+		}
+		ext.ExternalExtension()
 		wg.Done()
 	}()
 
@@ -248,7 +279,7 @@ func TestStartInvokeDone(t *testing.T) {
 	extensionPlatformStart(requestId)
 	extensionInvoke(requestId)
 
-	messages := []string{"1 invocation\n", "2 invocation \n"}
+	messages := []string{"1 invocation", "2 invocation"}
 	postLogs(fmt.Sprintf(`[
 		{
 			"type": "function",
@@ -260,7 +291,7 @@ func TestStartInvokeDone(t *testing.T) {
 		}
 	]`, messages[0], messages[1]))
 
-	validationData := getValidations()
+	validationData := getValidations(false)
 
 	// Validate we received the request id we thought we would
 	if validationData.RequestId != requestId {
@@ -269,19 +300,25 @@ func TestStartInvokeDone(t *testing.T) {
 
 	// Validate we received the logs we thought we would
 	for _, payload := range validationData.Logs {
-		if payload.Name != functionName {
-			t.Errorf("Expected function name %s Received %s", functionName, payload.Name)
-			for index, message := range payload.Messages {
-				if message.Message != messages[index] {
-					t.Errorf("Expected log message %s Received %s", message.Message, messages[index])
-				}
+		var protoPayload schema.LogPayload
+		err := proto.Unmarshal(payload.Payload, &protoPayload)
+		if err != nil {
+			t.Errorf("Unable to unmarshal log payload")
+		}
+		if protoPayload.SlsTags.Service != functionName {
+			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
+		}
+		for index, event := range protoPayload.LogEvents {
+			if event.Message != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Message, messages[index])
 			}
 		}
 	}
 
 	extensionPlatformRuntimeDone(requestId)
 	// Ensure we receive the final next event after runtime done
-	validationData = getValidations()
+	time.Sleep(1 * time.Second)
+	validationData = getValidations(false)
 	if validationData.NextCount < 2 {
 		t.Errorf("Expected NextCount %d Received %d", 2, validationData.NextCount)
 	}
@@ -295,7 +332,10 @@ func TestStartDoneInvoke(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 	go func() {
-		ExternalExtension()
+		ext := Extension{
+			Client: &mockSTSClient{},
+		}
+		ext.ExternalExtension()
 		wg.Done()
 	}()
 
@@ -317,7 +357,7 @@ func TestStartDoneInvoke(t *testing.T) {
 		}
 	]`, messages[0], messages[1]))
 
-	validationData := getValidations()
+	validationData := getValidations(false)
 
 	// Validate we received the request id we thought we would
 	if validationData.RequestId != requestId {
@@ -326,22 +366,29 @@ func TestStartDoneInvoke(t *testing.T) {
 
 	// Validate we received the logs we thought we would
 	for _, payload := range validationData.Logs {
-		if payload.Name != functionName {
-			t.Errorf("Expected function name %s Received %s", functionName, payload.Name)
-			for index, message := range payload.Messages {
-				if message.Message != messages[index] {
-					t.Errorf("Expected log message %s Received %s", message.Message, messages[index])
-				}
+		var protoPayload schema.LogPayload
+		err := proto.Unmarshal(payload.Payload, &protoPayload)
+		if err != nil {
+			t.Errorf("Unable to unmarshal log payload")
+		}
+		if protoPayload.SlsTags.Service != functionName {
+			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
+		}
+		for index, event := range protoPayload.LogEvents {
+			if event.Message != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Message, messages[index])
 			}
 		}
 	}
 
 	// Ensure we receive the final next event after runtime done
-	validationData = getValidations()
+	validationData = getValidations(false)
 	if validationData.NextCount < 2 {
 		t.Errorf("Expected NextCount %d Received %d", 2, validationData.NextCount)
 	}
 
+	// Reset  validations
+	resetValidations()
 	// End execution
 	extensionShutdown(requestId)
 	wg.Wait()

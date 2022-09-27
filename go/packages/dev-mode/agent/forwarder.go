@@ -9,11 +9,14 @@ import (
 	"serverless/dev-mode-extension/lib"
 	"strings"
 	"time"
+
+	tags "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
+	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
+	"google.golang.org/protobuf/proto"
 )
 
-type PlatformStartRecord struct {
-	RequestId string `json:"requestId"`
-	Version   string `json:"version"`
+type APIPayload struct {
+	Payload []byte `json:"payload"`
 }
 
 type LogMessage struct {
@@ -22,14 +25,6 @@ type LogMessage struct {
 	SequenceId string `json:"sequenceId"`
 	AccountId  string `json:"accountId"`
 	RequestId  string `json:"requestId"`
-}
-
-type LogPayload struct {
-	RequestId string       `json:"requestId"`
-	TraceId   string       `json:"traceId"`
-	OrgUid    string       `json:"orgUid"`
-	Name      string       `json:"name"`
-	Messages  []LogMessage `json:"messages"`
 }
 
 type LogItem struct {
@@ -50,43 +45,68 @@ func FindRequestId(logs []LogItem) string {
 	return requestId
 }
 
-func FormatLogs(logs []LogItem, requestId string) LogPayload {
-	messages := make([]LogMessage, 0)
-	payload := LogPayload{
-		RequestId: requestId,
-		TraceId:   "",
-		OrgUid:    os.Getenv("SLS_DEV_MODE_ORG_ID"),
-		Name:      os.Getenv("AWS_LAMBDA_FUNCTION_NAME"),
-		Messages:  messages,
+func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPayload {
+	messages := make([]*schema.LogEvent, 0)
+	platform := "aws"
+	region := os.Getenv("AWS_REGION")
+	slsTags := tags.SlsTags{
+		OrgId:    os.Getenv("SLS_DEV_MODE_ORG_ID"),
+		Platform: &platform,
+		Region:   &region,
+		Service:  os.Getenv("AWS_LAMBDA_FUNCTION_NAME"),
+	}
+	payload := schema.LogPayload{
+		SlsTags:   &slsTags,
+		LogEvents: messages,
 	}
 	for _, log := range logs {
 		if log.LogType == "function" {
 			t, _ := time.Parse(time.RFC3339, log.Time)
 			if !strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.") {
-				messages = append(messages, LogMessage{
+				logGroup := os.Getenv("AWS_LAMBDA_LOG_GROUP_NAME")
+				logStream := os.Getenv("AWS_LAMBDA_LOG_STREAM_NAME")
+				traceId := ""
+				messages = append(messages, &schema.LogEvent{
 					Message:    log.Record.(string),
-					Timestamp:  t.UnixMilli(),
+					Timestamp:  uint64(t.UnixMilli()),
 					SequenceId: "",
-					AccountId:  "",
-					RequestId:  requestId,
+					LogGroup:   &logGroup,
+					LogStream:  &logStream,
+					AccountId:  &accountId,
+					RequestId:  &requestId,
+					TraceId:    &traceId,
 				})
 			}
 		}
 	}
-	payload.Messages = messages
+	payload.LogEvents = messages
 	return payload
 }
 
-func ForwardLogs(logs []LogItem, requestId string) (int, error) {
-	logPayload := FormatLogs(logs, requestId)
-	if len(logPayload.Messages) == 0 {
+func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error) {
+	logPayload := FormatLogs(logs, requestId, accountId)
+	if len(logPayload.LogEvents) == 0 {
 		return 0, nil
 	}
-	body, err := json.Marshal(logPayload)
+
+	// Convert proto to bytes
+	protoBytes, protoErr := proto.Marshal(&logPayload)
+	if protoErr != nil {
+		fmt.Println("Failed to marshal proto", protoErr)
+	}
+
+	// Add proto to json payload
+	jsonData := APIPayload{
+		Payload: protoBytes,
+	}
+
+	// Stringify json
+	body, err := json.Marshal(jsonData)
 	if err != nil {
 		return 0, err
 	}
 
+	// Send data to backends
 	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
 	var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	// If we are running integration tests we just want to write the JSON payloads to CW
@@ -94,7 +114,7 @@ func ForwardLogs(logs []LogItem, requestId string) (int, error) {
 		lib.ReportLog(string(body))
 		return 200, nil
 	} else {
-		url := "https://core.serverless.com/dev-mode/log-socket/publish"
+		url := "https://core.serverless.com/api/ingest/forwarder"
 		// If we are running unit tests we want to publish logs to the local testing server
 		if internalLogsOnly {
 			extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
@@ -105,7 +125,7 @@ func ForwardLogs(logs []LogItem, requestId string) (int, error) {
 		}
 		var _, isDev = os.LookupEnv("SERVERLESS_PLATFORM_STAGE")
 		if isDev {
-			url = "https://core.serverless-dev.com/dev-mode/log-socket/publish"
+			url = "https://core.serverless-dev.com/api/ingest/forwarder"
 		}
 		res, resErr := http.Post(url, "application/json", bytes.NewBuffer(body))
 		return res.StatusCode, resErr
