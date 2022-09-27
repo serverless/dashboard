@@ -15,6 +15,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/golang-collections/go-datastructures/queue"
 	"go.uber.org/zap"
 )
@@ -22,13 +25,32 @@ import (
 // INITIAL_QUEUE_SIZE is the initial size set for the synchronous logQueue
 const INITIAL_QUEUE_SIZE = 5
 
-func ExternalExtension() {
+var AWS_ACCOUNT_ID = ""
+var logger = lib.NewLogger()
+
+func getAccountId(svc stsiface.STSAPI) {
+	input := &sts.GetCallerIdentityInput{}
+	callerIdentity, stsErr := svc.GetCallerIdentity(input)
+	if stsErr != nil {
+		logger.Error("Failed to get account id", zap.Error(stsErr))
+	} else {
+		AWS_ACCOUNT_ID = *callerIdentity.Account
+	}
+}
+
+type Extension struct {
+	Client stsiface.STSAPI
+}
+
+func (e *Extension) ExternalExtension() {
 	lib.ReportInitialization()
 	startTime := time.Now()
-	logger := lib.NewLogger()
 	extensionName := path.Base(os.Args[0])
 	printPrefix := fmt.Sprintf("[%s]", extensionName)
 	extensionClient := extension.NewClient(os.Getenv("AWS_LAMBDA_RUNTIME_API"))
+
+	// Get account id from sts
+	getAccountId(e.Client)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -69,7 +91,7 @@ func ExternalExtension() {
 				requestId = agent.FindRequestId(arr)
 			}
 			// Send to dev mode
-			agent.ForwardLogs(arr, requestId)
+			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID)
 		}
 		// Reset request id just incase
 		requestId = ""
@@ -123,5 +145,10 @@ func ExternalExtension() {
 }
 
 func main() {
-	ExternalExtension()
+	stsSession := session.Must(session.NewSession())
+	svc := sts.New(stsSession)
+	ext := Extension{
+		Client: svc,
+	}
+	ext.ExternalExtension()
 }

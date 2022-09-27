@@ -18,7 +18,7 @@ type Validations struct {
 	LogTypes  []string           `json:"logTypes"`
 	LogURI    string             `json:"logURI"`
 	RequestId string             `json:"requestId"`
-	Logs      []agent.LogPayload `json:"logs"`
+	Logs      []agent.APIPayload `json:"logs"`
 	NextCount int64              `json:"nextCount"`
 }
 
@@ -58,7 +58,7 @@ var validations = Validations{
 	Register:  "",
 	LogURI:    "",
 	RequestId: "",
-	Logs:      make([]agent.LogPayload, 0),
+	Logs:      make([]agent.APIPayload, 0),
 	NextCount: 0,
 }
 
@@ -110,6 +110,8 @@ func registerEndpoint(c *gin.Context) {
 }
 
 func savedData(c *gin.Context) {
+	data, _ := json.Marshal(validations)
+	println(string(data))
 	c.IndentedJSON(http.StatusOK, validations)
 }
 
@@ -169,15 +171,15 @@ func registerLogs(c *gin.Context) {
 	c.Status(200)
 
 	reqChan := make(chan *http.Response)
-	subscriptionMessage := fmt.Sprintf(`{
-		"time": %d
+	subscriptionMessage := fmt.Sprintf(`[{
+		"time": "%d",
 		"type": "platform.logsSubscription",
 		"record": {
 			"name": "dev-mode-extension",
 			"state": "Subscribed",
-			"types": %v,
-		},
-	}`, time.Now().UnixMilli(), input.LogTypes)
+			"types": %v
+		}
+	}]`, time.Now().UnixMilli(), input.LogTypes)
 	thing := json.RawMessage(subscriptionMessage)
 	go SendPostAsync(validations.LogURI, thing, reqChan)
 
@@ -186,7 +188,7 @@ func registerLogs(c *gin.Context) {
 }
 
 func saveLogs(c *gin.Context) {
-	var input agent.LogPayload
+	var input agent.APIPayload
 	if err := c.BindJSON(&input); err != nil {
 		return
 	}
@@ -251,7 +253,7 @@ func resetValidation(c *gin.Context) {
 		// Don't clear logs URI or else the app wont work between invocations :)
 		LogURI:    validations.LogURI,
 		RequestId: "",
-		Logs:      make([]agent.LogPayload, 0),
+		Logs:      make([]agent.APIPayload, 0),
 		NextCount: 0,
 	}
 	c.Data(http.StatusOK, "text/html", []byte("ok"))
