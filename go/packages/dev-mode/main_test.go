@@ -203,6 +203,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 
 	extensionPlatformRuntimeDone(requestId)
 
+	time.Sleep(1 * time.Second)
 	// Ensure we receive the final next event after runtime done
 	validationData = getValidations(false)
 	if validationData.NextCount < 2 {

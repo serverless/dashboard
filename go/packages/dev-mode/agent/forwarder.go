@@ -114,7 +114,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		lib.ReportLog(string(body))
 		return 200, nil
 	} else {
-		url := "https://core.serverless.com/dev-mode/log-socket/publish"
+		url := "https://core.serverless.com/api/ingest/forwarder"
 		// If we are running unit tests we want to publish logs to the local testing server
 		if internalLogsOnly {
 			extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
@@ -125,7 +125,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		}
 		var _, isDev = os.LookupEnv("SERVERLESS_PLATFORM_STAGE")
 		if isDev {
-			url = "https://core.serverless-dev.com/dev-mode/log-socket/publish"
+			url = "https://core.serverless-dev.com/api/ingest/forwarder"
 		}
 		res, resErr := http.Post(url, "application/json", bytes.NewBuffer(body))
 		return res.StatusCode, resErr
