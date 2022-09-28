@@ -233,6 +233,8 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+    expect(tags.aws.lambda.httpRouter.path).to.equal('/some-path/{param}');
+
     expect(response.data.responseData).to.deep.equal(
       JSON.stringify({ statusCode: 200, body: '"ok"' })
     );
@@ -334,6 +336,8 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+    expect(tags.aws.lambda.httpRouter.path).to.equal('/v1');
+
     expect(response.data.responseData).to.deep.equal(
       JSON.stringify({ statusCode: 200, body: '"ok"' })
     );
@@ -409,6 +413,8 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.queryParameterNames).to.deep.equal(['lone', 'multi']);
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+    expect(tags.aws.lambda.httpRouter.path).to.equal('/v2');
 
     expect(response.data.responseData).to.deep.equal(
       JSON.stringify({ statusCode: 200, body: '"ok"' })
@@ -645,15 +651,12 @@ describe('internal-extension/index.test.js', () => {
 
     expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+    expect(lambdaTags.aws.lambda.httpRouter.path).to.equal('/foo');
+
     expect(JSON.parse(response.data.responseData).body).to.deep.equal(JSON.stringify('ok'));
 
     expect(expressSpan.name).to.equal('express');
     expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-
-    const expressTags = expressSpan.tags;
-    expect(expressTags.express.method).to.equal('GET');
-    expect(expressTags.express.path).to.equal('/foo');
-    expect(expressTags.express.statusCode).to.equal(200);
 
     expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
       'express.middleware.query',
@@ -675,20 +678,17 @@ describe('internal-extension/index.test.js', () => {
       },
     } = await handleInvocation('multi-async');
 
-    const [, , invocationSpan, expressSpan, ...otherSpans] = spans;
+    const [lambdaSpan, , invocationSpan, expressSpan, ...otherSpans] = spans;
     const middlewareSpans = otherSpans.slice(0, -2);
     const routeSpan = middlewareSpans.pop();
     const routerSpan = middlewareSpans[middlewareSpans.length - 1];
     const expressRequestSpan = otherSpans[otherSpans.length - 2];
     const outerRequestSpan = otherSpans[otherSpans.length - 1];
 
+    expect(lambdaSpan.tags.aws.lambda.httpRouter.path).to.equal('/foo');
+
     expect(expressSpan.name).to.equal('express');
     expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-
-    const expressTags = expressSpan.tags;
-    expect(expressTags.express.method).to.equal('GET');
-    expect(expressTags.express.path).to.equal('/foo');
-    expect(expressTags.express.statusCode).to.equal(200);
 
     expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
       'express.middleware.query',

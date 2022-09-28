@@ -128,10 +128,8 @@ Handling of express route is covered in context of main `express` span. Addition
 - `express.middlewa.route.<method>.<name>` - route specific middleware (setup via `app.get`, `app.post` etc.)
 - `express.middleware.error.<name>` - error handling middleware
 
-#### `express` trace span tags:
+#### Tags introduced on `aws.lambda` span
 
-| Name                  | Value                                                  |
-| --------------------- | ------------------------------------------------------ |
-| `express.method`      | The HTTP method defined by the Express Route Handler.  |
-| `express.path`        | The HTTP Path defined by the Express Route Handler.    |
-| `express.status_code` | The status code returned by the Express Route Handler. |
+| Name                          | Value                 |
+| ----------------------------- | --------------------- |
+| `aws.lambda.http_router.path` | Middleware route path |

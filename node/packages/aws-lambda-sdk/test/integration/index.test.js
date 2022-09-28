@@ -612,6 +612,8 @@ describe('integration', function () {
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+                  expect(tags.aws.lambda.httpRouter.path).to.equal('/some-path/{param}');
+
                   expect(JSON.parse(request.data.requestData)).to.have.property('httpMethod');
                   expect(response.data.responseData).to.equal(
                     JSON.stringify({ statusCode: 200, body: '"ok"' })
@@ -668,6 +670,8 @@ describe('integration', function () {
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+                  expect(tags.aws.lambda.httpRouter.path).to.equal('/test');
+
                   expect(JSON.parse(request.data.requestData)).to.have.property('httpMethod');
                   expect(response.data.responseData).to.equal(
                     JSON.stringify({ statusCode: 200, body: '"ok"' })
@@ -723,6 +727,8 @@ describe('integration', function () {
                   expect(tags.aws.lambda.http.path).to.equal('/test');
 
                   expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(tags.aws.lambda.httpRouter.path).to.equal('/test');
 
                   expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
                   expect(response.data.responseData).to.equal(
@@ -968,6 +974,8 @@ describe('integration', function () {
 
             expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
+
             expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
             expect(JSON.parse(response.data.responseData).body).to.deep.equal(JSON.stringify('ok'));
 
@@ -976,11 +984,6 @@ describe('integration', function () {
             const routerSpan = middlewareSpans[middlewareSpans.length - 1];
 
             expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-            const expressTags = expressSpan.tags;
-
-            expect(expressTags.express.method).to.equal('POST');
-            expect(expressTags.express.path).to.equal('/test');
-            expect(expressTags.express.statusCode).to.equal(200);
 
             expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
               'express.middleware.query',
@@ -1012,7 +1015,7 @@ describe('integration', function () {
                 trace: { spans },
               },
             ] of invocationsData.entries()) {
-              spans.shift();
+              const lambdaSpan = spans.shift();
               if (!index) spans.shift();
 
               const [invocationSpan, expressSpan, ...otherSpans] = spans;
@@ -1023,11 +1026,8 @@ describe('integration', function () {
               const outerRequestSpan = otherSpans[otherSpans.length - 1];
 
               expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-              const expressTags = expressSpan.tags;
 
-              expect(expressTags.express.method).to.equal('GET');
-              expect(expressTags.express.path).to.equal('/foo');
-              expect(expressTags.express.statusCode).to.equal(200);
+              expect(lambdaSpan.tags.aws.lambda.httpRouter.path).to.equal('/foo');
 
               expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
                 'express.middleware.query',
