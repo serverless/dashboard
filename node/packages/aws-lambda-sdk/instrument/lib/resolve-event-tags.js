@@ -191,6 +191,7 @@ module.exports = (event) => {
       },
       { prefix: 'aws.lambda.http' }
     );
+    awsLambdaSpan.tags.set('aws.lambda.http_router.path', requestContext.resourcePath);
     return;
   }
   if (doesObjectMatchMap(event, httpApiV2EventMap)) {
@@ -226,6 +227,12 @@ module.exports = (event) => {
         request_header_names: Object.keys(event.headers || {}),
       },
       { prefix: 'aws.lambda.http' }
+    );
+    awsLambdaSpan.tags.set(
+      'aws.lambda.http_router.path',
+      event.routeKey === '$default'
+        ? '$default'
+        : event.routeKey.slice(event.routeKey.indexOf(' ') + 1)
     );
     return;
   }

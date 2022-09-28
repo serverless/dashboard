@@ -23,14 +23,11 @@ module.exports.install = (layerPrototype) => {
       expressSpansMap.set(req, expressRouteData);
       res.on('finish', () => {
         const endTime = process.hrtime.bigint();
-        expressSpan.tags.setMany(
-          {
-            status_code: res.statusCode,
-            method: expressRouteData.method?.toUpperCase(),
-            path: expressRouteData.route?.path,
-          },
-          { prefix: 'express' }
-        );
+        if (expressRouteData.route?.path) {
+          // Override eventual API Gateway's `resourcePath`
+          awsLambdaSpan.tags.delete('aws.lambda.http_router.path');
+          awsLambdaSpan.tags.set('aws.lambda.http_router.path', expressRouteData.route.path);
+        }
         for (const subSpan of openedSpans) {
           if (!subSpan.endTime) subSpan.close({ endTime });
         }
@@ -106,3 +103,5 @@ module.exports.uninstall = (layerPrototype) => {
 };
 
 const serverlessSdk = global.serverlessSdk || require('../../../');
+
+const awsLambdaSpan = serverlessSdk.traceSpans.awsLambda;
