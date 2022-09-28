@@ -34,13 +34,29 @@ func NewLogger() (logger *zap.Logger) {
 	return logger
 }
 
-var ErrLogger = log.New(os.Stdout, "", 0)
+var BaseLogger = log.New(os.Stdout, "", 0)
+
+func Info(inputs ...any) {
+	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
+	if ok {
+		messages := append([]any{"⚡ DEV-MODE INFO: "}, inputs...)
+		BaseLogger.Println(messages...)
+	}
+}
+
+func Error(inputs ...any) {
+	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
+	if ok {
+		messages := append([]any{"⚡ DEV-MODE ERROR: "}, inputs...)
+		BaseLogger.Println(messages...)
+	}
+}
 
 func ReportInitialization() {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		ErrLogger.Printf("⚡ DEV-MODE: initialization")
+		BaseLogger.Printf("⚡ DEV-MODE: initialization")
 	}
 }
 
@@ -48,7 +64,7 @@ func ReportInitDuration(t time.Time) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		ErrLogger.Printf("⚡ DEV-MODE: Overhead duration: External initialization:%d\n", time.Since(t).Milliseconds())
+		BaseLogger.Printf("⚡ DEV-MODE: Overhead duration: External initialization:%d\n", time.Since(t).Milliseconds())
 	}
 }
 
@@ -56,7 +72,7 @@ func ReportOverheadDuration(t time.Time) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		ErrLogger.Printf("⚡ DEV-MODE: Overhead duration: External request:%d\n", time.Since(t).Milliseconds())
+		BaseLogger.Printf("⚡ DEV-MODE: Overhead duration: External request:%d\n", time.Since(t).Milliseconds())
 	}
 }
 
@@ -64,7 +80,7 @@ func ReportLog(logPayload string) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		ErrLogger.Printf("⚡ DEV-MODE: Log###%s", logPayload)
+		BaseLogger.Printf("⚡ DEV-MODE: Log###%s", logPayload)
 	}
 }
 
@@ -72,6 +88,6 @@ func ReportShutdownDuration(t time.Time) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		ErrLogger.Printf("Extension overhead duration: external shutdown:%d\n", time.Since(t).Milliseconds())
+		BaseLogger.Printf("Extension overhead duration: external shutdown:%d\n", time.Since(t).Milliseconds())
 	}
 }

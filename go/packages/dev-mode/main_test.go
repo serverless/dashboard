@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"serverless/dev-mode-extension/agent"
+	"serverless/dev-mode-extension/lib"
 	u "serverless/dev-mode-extension/utils"
 
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -70,9 +71,9 @@ func TestMain(m *testing.M) {
 	defer cancel()
 	err := svr.Shutdown(ctx)
 	if err != nil {
-		fmt.Println(err)
+		lib.Error(err)
 	}
-	fmt.Println("Server exiting")
+	lib.Info("Server existing")
 	os.Exit(code)
 }
 

@@ -83,6 +83,42 @@ func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPa
 	return payload
 }
 
+func makeAPICall(body []byte) (int, error) {
+	// Send data to backends
+	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
+	var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
+	// If we are running integration tests we just want to write the JSON payloads to CW
+	if toLogs {
+		lib.ReportLog(string(body))
+		return 200, nil
+	} else {
+		url := "https://core.serverless.com/api/ingest/forwarder"
+		// If we are running unit tests we want to publish logs to the local testing server
+		if internalLogsOnly {
+			extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
+			if !ok {
+				lib.Error("AWS_LAMBDA_RUNTIME_API is not set")
+			}
+			url = fmt.Sprintf("http://%s/logs/save", extensions_api_address)
+		}
+		var _, isDev = os.LookupEnv("SERVERLESS_PLATFORM_STAGE")
+		if isDev {
+			url = "https://core.serverless-dev.com/api/ingest/forwarder"
+		}
+
+		token, _ := os.LookupEnv("SLS_DEV_TOKEN")
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Authorization", "Bearer "+token)
+		res, resErr := client.Do(req)
+		if resErr != nil {
+			lib.Error("API Call failed", res.StatusCode, res.Body, resErr)
+		}
+		return res.StatusCode, resErr
+	}
+}
+
 func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error) {
 	logPayload := FormatLogs(logs, requestId, accountId)
 	if len(logPayload.LogEvents) == 0 {
@@ -92,7 +128,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 	// Convert proto to bytes
 	protoBytes, protoErr := proto.Marshal(&logPayload)
 	if protoErr != nil {
-		fmt.Println("Failed to marshal proto", protoErr)
+		lib.Error("Failed to marshal proto", protoErr)
 	}
 
 	// Add proto to json payload
@@ -107,27 +143,5 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 	}
 
 	// Send data to backends
-	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
-	var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
-	// If we are running integration tests we just want to write the JSON payloads to CW
-	if toLogs {
-		lib.ReportLog(string(body))
-		return 200, nil
-	} else {
-		url := "https://core.serverless.com/api/ingest/forwarder"
-		// If we are running unit tests we want to publish logs to the local testing server
-		if internalLogsOnly {
-			extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
-			if !ok {
-				fmt.Println("AWS_LAMBDA_RUNTIME_API is not set")
-			}
-			url = fmt.Sprintf("http://%s/logs/save", extensions_api_address)
-		}
-		var _, isDev = os.LookupEnv("SERVERLESS_PLATFORM_STAGE")
-		if isDev {
-			url = "https://core.serverless-dev.com/api/ingest/forwarder"
-		}
-		res, resErr := http.Post(url, "application/json", bytes.NewBuffer(body))
-		return res.StatusCode, resErr
-	}
+	return makeAPICall(body)
 }
