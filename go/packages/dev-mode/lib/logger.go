@@ -36,18 +36,18 @@ func NewLogger() (logger *zap.Logger) {
 
 var BaseLogger = log.New(os.Stdout, "", 0)
 
-func Info(inputs ...any) {
+func Info(inputs ...interface{}) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	if ok {
-		messages := append([]any{"⚡ DEV-MODE INFO: "}, inputs...)
+		messages := append([]interface{}{"⚡ DEV-MODE INFO: "}, inputs...)
 		BaseLogger.Println(messages...)
 	}
 }
 
-func Error(inputs ...any) {
+func Error(inputs ...interface{}) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	if ok {
-		messages := append([]any{"⚡ DEV-MODE ERROR: "}, inputs...)
+		messages := append([]interface{}{"⚡ DEV-MODE ERROR: "}, inputs...)
 		BaseLogger.Println(messages...)
 	}
 }
