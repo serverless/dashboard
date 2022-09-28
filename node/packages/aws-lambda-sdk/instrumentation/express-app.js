@@ -2,7 +2,7 @@
 
 const ensureObject = require('type/object/ensure');
 const ensurePlainFunction = require('type/plain-function/ensure');
-const instrumentLayerPrototype = require('../lib/instrument/express/instrument-layer-prototype');
+const instrumentLayerPrototype = require('../lib/instrumentation/express/instrument-layer-prototype');
 
 const instrumentedApps = new WeakMap();
 

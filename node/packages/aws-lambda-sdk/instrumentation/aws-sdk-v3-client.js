@@ -2,11 +2,11 @@
 
 const ensureObject = require('type/object/ensure');
 const doNotInstrumentFollowingHttpRequest =
-  require('../lib/instrument/http').ignoreFollowingRequest;
+  require('../lib/instrumentation/http').ignoreFollowingRequest;
 
 const instrumentedClients = new WeakMap();
 
-const serviceMapper = require('../lib/instrument/aws-sdk/service-mapper');
+const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
 
 module.exports.install = (client) => {
   ensureObject(client, { errorMessage: '%v is not an instance of AWS SDK v3 client' });
