@@ -4,7 +4,6 @@ package serverless.instrumentation.tags.v1;
 
 import "serverless/instrumentation/tags/v1/aws.proto";
 import "serverless/instrumentation/tags/v1/common.proto";
-import "serverless/instrumentation/tags/v1/nodejs.proto";
 
 option go_package = ".;protoc";
 
@@ -21,9 +20,6 @@ message Tags {
 
   // These tags are used when an http library is making a https request
   optional serverless.instrumentation.tags.v1.HttpTags https = 107;
-
-  // These tags are used when express.js function is used
-  optional serverless.instrumentation.tags.v1.ExpressTags express = 108;
 }
 
 message SlsTags {
