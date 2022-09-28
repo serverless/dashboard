@@ -111,6 +111,7 @@ func makeAPICall(body []byte) (int, error) {
 		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Authorization", "Bearer "+token)
+		req.Header.Add("sls-token-type", "orgToken")
 		res, resErr := client.Do(req)
 		if resErr != nil {
 			lib.Error("API Call failed", res.StatusCode, res.Body, resErr)
