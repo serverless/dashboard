@@ -1,14 +1,14 @@
 import TraceSpan from './lib/trace-span';
-import AwsSdkV2Instrument from './instrument/aws-sdk-v2';
-import AwsSdkV3ClientInstrument from './instrument/aws-sdk-v3-client';
-import ExpressAppInstrument from './instrument/express-app';
+import AwsSdkV2Instrument from './instrumentation/aws-sdk-v2';
+import AwsSdkV3ClientInstrument from './instrumentation/aws-sdk-v3-client';
+import ExpressAppInstrument from './instrumentation/express-app';
 
 interface TraceSpans {
   awsLambda: TraceSpan;
   awsLambdaInitialization: TraceSpan;
 }
 
-interface Instrument {
+interface Instrumentation {
   awsSdkV2: AwsSdkV2Instrument;
   awsSdkV3Client: AwsSdkV3ClientInstrument;
   expressApp: ExpressAppInstrument;
@@ -17,7 +17,7 @@ interface Instrument {
 interface Sdk {
   orgId: string;
   traceSpans: TraceSpans;
-  instrument: Instrument;
+  instrumentation: Instrumentation;
   createTraceSpan(
     name: string,
     options?: {

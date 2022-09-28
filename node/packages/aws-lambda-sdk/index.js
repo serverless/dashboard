@@ -46,24 +46,24 @@ serverlessSdk._initialize = (options = {}) => {
 
   if (!settings.disableHttpMonitoring) {
     // Auto generate HTTP(S) request spans
-    require('./lib/instrument/http').install();
+    require('./lib/instrumentation/http').install();
   }
 
   if (!settings.disableAwsSdkMonitoring) {
     // Auto generate AWS SDK request spans
-    require('./lib/instrument/aws-sdk').install();
+    require('./lib/instrumentation/aws-sdk').install();
   }
 
   if (!settings.disableExpressMonitoring) {
     // Auto generate AWS SDK request spans
-    require('./lib/instrument/express').install();
+    require('./lib/instrumentation/express').install();
   }
 
   return serverlessSdk;
 };
 
-serverlessSdk.instrument = {
-  awsSdkV2: require('./instrument/aws-sdk-v2'),
-  awsSdkV3Client: require('./instrument/aws-sdk-v3-client'),
-  expressApp: require('./instrument/express-app'),
+serverlessSdk.instrumentation = {
+  awsSdkV2: require('./instrumentation/aws-sdk-v2'),
+  awsSdkV3Client: require('./instrumentation/aws-sdk-v3-client'),
+  expressApp: require('./instrumentation/express-app'),
 };

@@ -1,8 +1,8 @@
 'use strict';
 
 const cjsHook = require('../utils/cjs-hook');
-const instrumentV2Sdk = require('../../../instrument/aws-sdk-v2').install;
-const instrumentV3Client = require('../../../instrument/aws-sdk-v3-client').install;
+const instrumentV2Sdk = require('../../../instrumentation/aws-sdk-v2').install;
+const instrumentV3Client = require('../../../instrumentation/aws-sdk-v3-client').install;
 
 const instrumentedv3SmithyClients = new WeakMap();
 

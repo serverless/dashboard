@@ -3,8 +3,8 @@
 const ensureObject = require('type/object/ensure');
 const ensureConstructor = require('type/constructor/ensure');
 const doNotInstrumentFollowingHttpRequest =
-  require('../lib/instrument/http').ignoreFollowingRequest;
-const serviceMapper = require('../lib/instrument/aws-sdk/service-mapper');
+  require('../lib/instrumentation/http').ignoreFollowingRequest;
+const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
 
 const instrumentedSdks = new WeakMap();
 
