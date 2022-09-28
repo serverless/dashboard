@@ -83,6 +83,7 @@ func (e *Extension) ExternalExtension() {
 			}
 			logsStr := fmt.Sprintf("%v", logs[0])
 			receivedRuntimeDone = strings.Contains(logsStr, string(logsapi.RuntimeDone)) || receivedRuntimeDone
+			lib.Info(logsStr)
 			var arr []agent.LogItem
 			if err := json.Unmarshal([]byte(logs[0].(string)), &arr); err != nil {
 				continue
