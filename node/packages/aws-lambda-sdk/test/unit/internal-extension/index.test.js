@@ -421,6 +421,75 @@ describe('internal-extension/index.test.js', () => {
     );
   });
 
+  it('should handle function url payload event', async () => {
+    const {
+      trace: {
+        input: {
+          spans: [{ tags }],
+        },
+      },
+      response: { input: response },
+    } = await handleInvocation('api-endpoint', {
+      isApiEndpoint: true,
+      payload: {
+        version: '2.0',
+        routeKey: '$default',
+        rawPath: '/function-url-test',
+        rawQueryString: 'lone=value&multi=one,stillone&multi=two',
+        headers: {
+          'accept-encoding': 'gzip, deflate, br',
+          'sec-fetch-dest': 'document',
+          'user-agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:105.0) Gecko/20100101 Firefox/105.0',
+        },
+        queryStringParameters: {
+          lone: 'value',
+          multi: 'one,stillone,two',
+        },
+        requestContext: {
+          accountId: 'anonymous',
+          apiId: 'xxx',
+          domainName: 'xxx.lambda-url.us-east-1.on.aws',
+          domainPrefix: 'xxx',
+          http: {
+            method: 'GET',
+            path: '/function-url-test',
+            protocol: 'HTTP/1.1',
+            sourceIp: '80.55.87.22',
+            userAgent:
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:105.0) Gecko/20100101 Firefox/105.0',
+          },
+          requestId: '71ab96bc-8418-4429-863d-2ad7fcbb70d0',
+          routeKey: '$default',
+          stage: '$default',
+          time: '28/Sep/2022:16:10:24 +0000',
+          timeEpoch: 1664381424747,
+        },
+        isBase64Encoded: false,
+      },
+    });
+
+    expect(tags.aws.lambda.eventSource).to.equal('aws.lambda');
+    expect(tags.aws.lambda.eventType).to.equal('aws.lambda.url');
+    expect(tags.aws.lambda.http.protocol).to.equal('HTTP/1.1');
+    expect(tags.aws.lambda.http.host).to.equal('xxx.lambda-url.us-east-1.on.aws');
+    expect(tags.aws.lambda.http.requestHeaderNames).to.deep.equal([
+      'accept-encoding',
+      'sec-fetch-dest',
+      'user-agent',
+    ]);
+
+    expect(tags.aws.lambda.http.method).to.equal('GET');
+    expect(tags.aws.lambda.http.path).to.equal('/function-url-test');
+    expect(tags.aws.lambda.http.queryParameterNames).to.deep.equal(['lone', 'multi']);
+
+    expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+    expect(response.data.responseData).to.deep.equal(
+      JSON.stringify({ statusCode: 200, body: '"ok"' })
+    );
+  });
+
   it('should handle SQS event', async () => {
     const {
       trace: {

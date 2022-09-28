@@ -57,6 +57,7 @@ Tags collected if event is sourced by either:
 
 - AWS API Gateway v1 REST API endpoint configured with `AWS_PROXY` integration type.
 - AWS API Gateway v2 HTTP API endpoint configured with either v1 or v2 version of a payload
+- AWS Function URL
 
 | Name                          | Value                                                           |
 | ----------------------------- | --------------------------------------------------------------- |
@@ -87,6 +88,15 @@ Tags collected if event is sourced by either:
 | `aws.lambda.api_gateway.request.headers`         | JSON string of request headers. Multi value headers are stored as arrays                         |
 | `aws.lambda.api_gateway.request.path_parameters` | JSON string of request path parameters                                                           |
 | `aws.lambda.http_router.path`                    | Route path with unresolved param (potentally overriden by router framework as `express` if used) |
+
+##### Function URL
+
+Tags collected if event is sourced by Function URL
+
+| Name                      | Value              |
+| ------------------------- | ------------------ |
+| `aws.lambda.event_source` | `"aws.lambda"`     |
+| `aws.lambda.event_type`   | `"aws.lambda.url"` |
 
 ##### SQS queue message
 

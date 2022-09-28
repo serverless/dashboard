@@ -5,8 +5,11 @@ const coerceNaturalNumber = require('type/natural-number/coerce');
 const awsLambdaSpan = (global.serverlessSdk || require('../../')).traceSpans.awsLambda;
 
 module.exports = (response) => {
-  switch (awsLambdaSpan.tags.get('aws.lambda.event_source')) {
-    case 'aws.apigateway':
+  switch (awsLambdaSpan.tags.get('aws.lambda.event_type')) {
+    case 'aws.apigateway.rest':
+    case 'aws.apigatewayv2.http.v1':
+    case 'aws.apigatewayv2.http.v2':
+    case 'aws.lambda.url':
       {
         let statusCode = response?.statusCode;
         if (statusCode == null) {
