@@ -738,6 +738,98 @@ describe('integration', function () {
               },
             },
           ],
+          [
+            'function-url',
+            {
+              hooks: {
+                afterCreate: async function self(testConfig) {
+                  await awsRequest(Lambda, 'createAlias', {
+                    FunctionName: testConfig.configuration.FunctionName,
+                    FunctionVersion: '$LATEST',
+                    Name: 'url',
+                  });
+                  const deferredFunctionUrl = (async () => {
+                    try {
+                      return (
+                        await awsRequest(Lambda, 'createFunctionUrlConfig', {
+                          AuthType: 'NONE',
+                          FunctionName: testConfig.configuration.FunctionName,
+                          Qualifier: 'url',
+                        })
+                      ).FunctionUrl;
+                    } catch (error) {
+                      if (
+                        error.message.includes('FunctionUrlConfig exists for this Lambda function')
+                      ) {
+                        return (
+                          await awsRequest(Lambda, 'getFunctionUrlConfig', {
+                            FunctionName: testConfig.configuration.FunctionName,
+                            Qualifier: 'url',
+                          })
+                        ).FunctionUrl;
+                      }
+                      throw error;
+                    }
+                  })();
+                  await Promise.all([
+                    deferredFunctionUrl,
+                    awsRequest(Lambda, 'addPermission', {
+                      FunctionName: testConfig.configuration.FunctionName,
+                      Qualifier: 'url',
+                      FunctionUrlAuthType: 'NONE',
+                      Principal: '*',
+                      Action: 'lambda:InvokeFunctionUrl',
+                      StatementId: 'public-function-url',
+                    }),
+                  ]);
+                  testConfig.functionUrl = await deferredFunctionUrl;
+                },
+                beforeDelete: async (testConfig) => {
+                  await awsRequest(Lambda, 'deleteFunctionUrlConfig', {
+                    FunctionName: testConfig.configuration.FunctionName,
+                    Qualifier: 'url',
+                  });
+                },
+              },
+              invoke: async (testConfig) => {
+                const startTime = process.hrtime.bigint();
+                const response = await fetch(`${testConfig.functionUrl}/test?foo=bar`, {
+                  method: 'POST',
+                  body: JSON.stringify({ some: 'content' }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+                if (response.status !== 200) {
+                  throw new Error(`Unexpected response status: ${response.status}`);
+                }
+                const payload = { raw: await response.text() };
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                log.debug('invoke response payload %s', payload.raw);
+                return { duration, payload };
+              },
+              test: ({ invocationsData }) => {
+                for (const { trace, request, response } of invocationsData) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.lambda');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.lambda.url');
+
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test');
+
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(JSON.parse(request.data.requestData)).to.have.property('rawPath');
+                  expect(response.data.responseData).to.equal(
+                    JSON.stringify({ statusCode: 200, body: '"ok"' })
+                  );
+                }
+              },
+            },
+          ],
         ]),
       },
     ],

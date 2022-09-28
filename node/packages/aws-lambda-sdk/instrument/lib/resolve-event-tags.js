@@ -195,28 +195,44 @@ module.exports = (event) => {
     return;
   }
   if (doesObjectMatchMap(event, httpApiV2EventMap)) {
-    // API Gateway v2 HTTP API (v2 payload) event
+    // API Gateway v2 HTTP API (v2 payload) or Lambda URL event
     const { requestContext } = event;
-    awsLambdaSpan.tags.setMany(
-      { event_source: 'aws.apigateway', event_type: 'aws.apigatewayv2.http.v2' },
-      { prefix: 'aws.lambda' }
-    );
-    awsLambdaSpan.tags.setMany(
-      {
-        account_id: requestContext.accountId,
-        api_id: requestContext.apiId,
-        api_stage: requestContext.stage,
-      },
-      { prefix: 'aws.lambda.api_gateway' }
-    );
-    awsLambdaSpan.tags.setMany(
-      {
-        id: requestContext.requestId,
-        time_epoch: requestContext.timeEpoch,
-        path_parameter_names: Object.keys(event.pathParameters || {}),
-      },
-      { prefix: 'aws.lambda.api_gateway.request' }
-    );
+    const eventSource = requestContext.domainName.includes('.lambda-url.')
+      ? 'lambdaUrl'
+      : 'httpApi';
+    if (eventSource === 'lambdaUrl') {
+      awsLambdaSpan.tags.setMany(
+        { event_source: 'aws.lambda', event_type: 'aws.lambda.url' },
+        { prefix: 'aws.lambda' }
+      );
+    } else {
+      awsLambdaSpan.tags.setMany(
+        { event_source: 'aws.apigateway', event_type: 'aws.apigatewayv2.http.v2' },
+        { prefix: 'aws.lambda' }
+      );
+      awsLambdaSpan.tags.setMany(
+        {
+          account_id: requestContext.accountId,
+          api_id: requestContext.apiId,
+          api_stage: requestContext.stage,
+        },
+        { prefix: 'aws.lambda.api_gateway' }
+      );
+      awsLambdaSpan.tags.setMany(
+        {
+          id: requestContext.requestId,
+          time_epoch: requestContext.timeEpoch,
+          path_parameter_names: Object.keys(event.pathParameters || {}),
+        },
+        { prefix: 'aws.lambda.api_gateway.request' }
+      );
+      awsLambdaSpan.tags.set(
+        'aws.lambda.http_router.path',
+        event.routeKey === '$default'
+          ? '$default'
+          : event.routeKey.slice(event.routeKey.indexOf(' ') + 1)
+      );
+    }
     awsLambdaSpan.tags.setMany(
       {
         method: requestContext.http.method,
@@ -227,12 +243,6 @@ module.exports = (event) => {
         request_header_names: Object.keys(event.headers || {}),
       },
       { prefix: 'aws.lambda.http' }
-    );
-    awsLambdaSpan.tags.set(
-      'aws.lambda.http_router.path',
-      event.routeKey === '$default'
-        ? '$default'
-        : event.routeKey.slice(event.routeKey.indexOf(' ') + 1)
     );
     return;
   }
