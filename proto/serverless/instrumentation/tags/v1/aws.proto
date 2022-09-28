@@ -99,11 +99,18 @@ message AwsLambdaTags {
   optional serverless.instrumentation.tags.v1.HttpTags http = 102;
   // Will be set if the function is handling HTTP requests via AWS API GW
   optional AwsApiGatewayTags api_gateway = 103;
+  // Will be set if function is handling HTTP requests and there's routing functionality setup
+  optional HttpRouterTags http_router = 106;
 
   // The root AWS Lambda Span tags.
   optional AwsLambdaInitializationTags initialization = 104;
   // The AWS Lambda Invocation tags.
   optional AwsLambdaInvocationTags invocation = 105;
+}
+
+message HttpRouterTags {
+  // The HTTP Path defined by the route handler (either express or API Gateway)
+  string path = 1;
 }
 
 message AwsSqsEventTags {
