@@ -10,9 +10,9 @@ const traceProto = require('@serverless/sdk-schema/dist/trace');
 const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
 const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
-const pkgJson = require('./package');
+const pkgJson = require('../package');
 
-const serverlessSdk = global.serverlessSdk || require('./');
+const serverlessSdk = global.serverlessSdk || require('../');
 
 const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
