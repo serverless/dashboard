@@ -16,14 +16,12 @@
     - [AwsSnsEventTags](#serverless-instrumentation-tags-v1-AwsSnsEventTags)
     - [AwsSqsEventTags](#serverless-instrumentation-tags-v1-AwsSqsEventTags)
     - [AwsTags](#serverless-instrumentation-tags-v1-AwsTags)
+    - [HttpRouterTags](#serverless-instrumentation-tags-v1-HttpRouterTags)
   
     - [AwsLambdaTags.Outcome](#serverless-instrumentation-tags-v1-AwsLambdaTags-Outcome)
   
 - [serverless/instrumentation/tags/v1/common.proto](#serverless_instrumentation_tags_v1_common-proto)
     - [HttpTags](#serverless-instrumentation-tags-v1-HttpTags)
-  
-- [serverless/instrumentation/tags/v1/nodejs.proto](#serverless_instrumentation_tags_v1_nodejs-proto)
-    - [ExpressTags](#serverless-instrumentation-tags-v1-ExpressTags)
   
 - [serverless/instrumentation/tags/v1/tags.proto](#serverless_instrumentation_tags_v1_tags-proto)
     - [SlsTags](#serverless-instrumentation-tags-v1-SlsTags)
@@ -151,6 +149,7 @@ Optional Event Tags are from 100 on |
 | sns | [AwsSnsEventTags](#serverless-instrumentation-tags-v1-AwsSnsEventTags) | optional | Will be set if the function is handling a SNS event |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | Will be set if the function is handling HTTP requests via any method, API GW, Function URLs, etc. |
 | api_gateway | [AwsApiGatewayTags](#serverless-instrumentation-tags-v1-AwsApiGatewayTags) | optional | Will be set if the function is handling HTTP requests via AWS API GW |
+| http_router | [HttpRouterTags](#serverless-instrumentation-tags-v1-HttpRouterTags) | optional | Will be set if function is handling HTTP requests and there&#39;s routing functionality setup |
 | initialization | [AwsLambdaInitializationTags](#serverless-instrumentation-tags-v1-AwsLambdaInitializationTags) | optional | The root AWS Lambda Span tags. |
 | invocation | [AwsLambdaInvocationTags](#serverless-instrumentation-tags-v1-AwsLambdaInvocationTags) | optional | The AWS Lambda Invocation tags. |
 
@@ -291,6 +290,21 @@ Optional Event Tags are from 100 on |
 
 
 
+
+<a name="serverless-instrumentation-tags-v1-HttpRouterTags"></a>
+
+### HttpRouterTags
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| path | [string](#string) |  | The HTTP Path defined by the route handler (either express or API Gateway) |
+
+
+
+
+
  
 
 
@@ -341,39 +355,6 @@ outcomes upon completion.
 | request_header_names | [string](#string) | repeated | Request header names |
 | status_code | [uint32](#uint32) | optional | The Response Status Code. |
 | error_code | [string](#string) | optional | Eventual request error code |
-
-
-
-
-
- 
-
- 
-
- 
-
- 
-
-
-
-<a name="serverless_instrumentation_tags_v1_nodejs-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## serverless/instrumentation/tags/v1/nodejs.proto
-
-
-
-<a name="serverless-instrumentation-tags-v1-ExpressTags"></a>
-
-### ExpressTags
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| method | [string](#string) | optional | The HTTP method defined by the Express Route Handler. |
-| path | [string](#string) | optional | The HTTP Path defined by the Express Route Handler. |
-| status_code | [uint32](#uint32) | optional | The status code returned by the Express Route Handler. |
 
 
 
@@ -446,7 +427,6 @@ Defined TagSets start at field number 100  //
 | aws | [AwsTags](#serverless-instrumentation-tags-v1-AwsTags) | optional | These tags are used an AWS resource/sdk is the producer of the span |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
 | https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
-| express | [ExpressTags](#serverless-instrumentation-tags-v1-ExpressTags) | optional | These tags are used when express.js function is used |
 
 
 
