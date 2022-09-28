@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.10.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.9.0...@serverless/sdk-schema@0.10.0) (2022-09-28)
+
+### ⚠ BREAKING CHANGES
+
+- `express` tags namespace is removed in favor of introduced `aws.lambda.http_router`
+
+### Features
+
+- Remove `express` tags in favor of `aws.lambda.http_router` ([ff17ea9](https://github.com/serverless/console/commit/ff17ea95513261115cec7c904457201b0c3032a5))
+
 ## [0.9.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.8.0...@serverless/sdk-schema@0.9.0) (2022-09-26)
 
 ### ⚠ BREAKING CHANGES
