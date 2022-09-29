@@ -298,9 +298,9 @@ class TraceSpan {
       }
       asyncLocalStorage.enterWith(this);
     } else {
-      const openParentSpan = ((span) => {
-        if (!span?.endsWith) return span;
-        return span.parentSpan || rootSpan;
+      const openParentSpan = (function self(span) {
+        if (!span.endTime) return span;
+        return span.parentSpan ? self(span.parentSpan) : rootSpan;
       })(this.parentSpan);
       asyncLocalStorage.enterWith(openParentSpan);
     }
