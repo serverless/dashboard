@@ -17,13 +17,15 @@ const initializeServer = () => {
     .listen(TEST_SERVER_PORT);
 };
 
-const sendRequest = (path, callback) => {
-  http
-    .request(`http://localhost:${TEST_SERVER_PORT}/${path}`, (response) => {
-      response.on('data', () => {});
-      response.on('end', callback);
-    })
-    .end();
+const sendRequest = (path) => {
+  return new Promise((resolve) =>
+    http
+      .request(`http://localhost:${TEST_SERVER_PORT}/${path}`, (response) => {
+        response.on('data', () => {});
+        response.on('end', resolve);
+      })
+      .end()
+  );
 };
 
 const serverless = require('serverless-http');
@@ -34,9 +36,7 @@ app.use(express.json());
 
 app.get('/foo', (req, res) => {
   setTimeout(() => {
-    sendRequest('in', () => {
-      res.send('"ok"');
-    });
+    sendRequest('in').then(() => res.send('"ok"'));
   }, 200);
 });
 
@@ -46,7 +46,7 @@ const expressHandler = serverless(app);
 
 module.exports.handler = async (event, context, callback) => {
   initializeServer();
-  setTimeout(() => sendRequest('out', () => {}), 100);
+  setTimeout(() => sendRequest('out'), 100);
   try {
     await expressHandler(
       {
