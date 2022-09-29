@@ -42,6 +42,23 @@ const createLayers = async (config, layerTypes) => {
             ),
           });
           return;
+        case 'nodeInternal':
+          if (process.env.TEST_INTERNAL_LAYER_FILENAME) {
+            config.layerInternalArn = await createLayer({
+              layerName: `${basename}-internal`,
+              filename: path.resolve(process.env.TEST_INTERNAL_LAYER_FILENAME),
+              skipBuild: true,
+            });
+            return;
+          }
+          config.layerInternalArn = await createLayer({
+            layerName: `${basename}-internal`,
+            filename: path.resolve(
+              __dirname,
+              '../../../../../packages/aws-lambda-sdk/dist/extension.internal.zip'
+            ),
+          });
+          return;
         default:
           throw new Error(`Unrecognized layer type: ${layerType}`);
       }
@@ -114,5 +131,5 @@ module.exports = async (config) => {
   log.notice('Creating core resources %s', basename);
   config.accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
 
-  await Promise.all([createLayers(config, ['nodeExternal']), createRole(config)]);
+  await Promise.all([createLayers(config, ['nodeExternal', 'nodeInternal']), createRole(config)]);
 };

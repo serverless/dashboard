@@ -84,6 +84,14 @@ func ReportLog(logPayload string) {
 	}
 }
 
+func ReportReqRes(logPayload string) {
+	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
+	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
+	if ok || toLogs {
+		BaseLogger.Printf("⚡ DEV-MODE: ReqRes###%s", logPayload)
+	}
+}
+
 func ReportShutdownDuration(t time.Time) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")

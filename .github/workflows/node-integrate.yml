@@ -575,6 +575,13 @@ jobs:
           path: node/node_modules
           key: node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/package.json') }}
 
+      - name: Retrieve packages/aws-lambda-sdk/node_modules from cache
+        id: cacheAwsLambdaSdkNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/aws-lambda-sdk/node_modules
+          key: packages/aws-lambda-sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/package.json') }}
+
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
         with:
@@ -585,6 +592,16 @@ jobs:
         run: |
           cd node
           npm update --save-dev --no-save
+
+      - name: Install packages/aws-lambda-sdk dependencies
+        run: |
+          cd node/packages/aws-lambda-sdk
+          npm install
+
+      - name: Build Internal Extension Layer
+        run: |
+          cd node/packages/aws-lambda-sdk
+          npm run build
 
       - name: Build Dev Mode Extension Layer
         run: |

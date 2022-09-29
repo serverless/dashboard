@@ -14,12 +14,13 @@ import (
 )
 
 type Validations struct {
-	Register  string             `json:"register"`
-	LogTypes  []string           `json:"logTypes"`
-	LogURI    string             `json:"logURI"`
-	RequestId string             `json:"requestId"`
-	Logs      []agent.APIPayload `json:"logs"`
-	NextCount int64              `json:"nextCount"`
+	Register  string                   `json:"register"`
+	LogTypes  []string                 `json:"logTypes"`
+	LogURI    string                   `json:"logURI"`
+	RequestId string                   `json:"requestId"`
+	Logs      []agent.APIPayload       `json:"logs"`
+	ReqRes    []agent.ReqResAPIPayload `json:"reqRes"`
+	NextCount int64                    `json:"nextCount"`
 }
 
 type LogRegisterDestinationInput struct {
@@ -59,6 +60,7 @@ var validations = Validations{
 	LogURI:    "",
 	RequestId: "",
 	Logs:      make([]agent.APIPayload, 0),
+	ReqRes:    make([]agent.ReqResAPIPayload, 0),
 	NextCount: 0,
 }
 
@@ -86,7 +88,8 @@ func createLambdaServer(port int64) *http.Server {
 	router.GET("/2020-01-01/extension/event/next", nextEndpoint)
 	router.PUT("/2020-08-15/logs", registerLogs)
 	router.POST("/logs", sendLogs)
-	router.POST("/logs/save", saveLogs)
+	router.POST("/save/forwarder", saveLogs)
+	router.POST("/save/forwarder/reqres", saveReqRes)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -193,6 +196,15 @@ func saveLogs(c *gin.Context) {
 		return
 	}
 	validations.Logs = append(validations.Logs, input)
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+}
+
+func saveReqRes(c *gin.Context) {
+	var input agent.ReqResAPIPayload
+	if err := c.BindJSON(&input); err != nil {
+		return
+	}
+	validations.ReqRes = append(validations.ReqRes, input)
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 

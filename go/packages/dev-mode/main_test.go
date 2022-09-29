@@ -30,10 +30,11 @@ type ValidationLogMessage struct {
 }
 
 type ValidationResult struct {
-	Register  RegisterPayload    `json:"register"`
-	RequestId string             `json:"requestId"`
-	Logs      []agent.APIPayload `json:"logs"`
-	NextCount int64              `json:"nextCount"`
+	Register  RegisterPayload          `json:"register"`
+	RequestId string                   `json:"requestId"`
+	Logs      []agent.APIPayload       `json:"logs"`
+	ReqRes    []agent.ReqResAPIPayload `json:"reqRes"`
+	NextCount int64                    `json:"nextCount"`
 }
 
 var port = 9001
@@ -184,6 +185,11 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		t.Errorf("Expected requestId %s Received %s", requestId, validationData.RequestId)
 	}
 
+	// Validate we have not received any reqres data
+	if len(validationData.ReqRes) != 0 {
+		t.Errorf("Expected reqRes len to be 0 Received %d", len(validationData.ReqRes))
+	}
+
 	// Validate we received the logs we thought we would
 	for _, payload := range validationData.Logs {
 		var protoPayload schema.LogPayload
@@ -217,7 +223,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	extensionInvoke(requestId2)
 	extensionPlatformStart(requestId2)
 
-	messages2 := []string{"3 invocation", "4 invocation"}
+	messages2 := []string{"3 invocation", "4 invocation", "reqResData"}
 	postLogs(fmt.Sprintf(`[
 		{
 			"type": "function",
@@ -226,10 +232,14 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		{
 			"type": "function",
 			"record": "%s"
+		},
+		{
+			"type": "function",
+			"record": "%s"
 		}
-	]`, messages2[0], messages2[1]))
+	]`, messages2[0], messages2[1], "SERVERLESS_TELEMETRY.R."+messages2[2]))
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 	validationData2 := getValidations(false)
 
 	// Validate we received the request id we thought we would
@@ -249,8 +259,14 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		}
 		for index, event := range protoPayload.LogEvents {
 			if event.Message != messages2[index] {
-				t.Errorf("Expected log message %s Received %s", event.Message, messages2[index])
+				t.Errorf("Expected log message %s Received %s", messages2[index], event.Message)
 			}
+		}
+	}
+
+	for _, reqResPayload := range validationData2.ReqRes {
+		if reqResPayload.Payloads[0] != messages2[2] {
+			t.Errorf("Expected reqRes message %s Received %s", messages2[2], reqResPayload.Payloads[0])
 		}
 	}
 
