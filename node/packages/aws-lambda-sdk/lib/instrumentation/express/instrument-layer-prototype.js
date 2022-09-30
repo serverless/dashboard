@@ -37,28 +37,27 @@ module.exports.install = (layerPrototype) => {
     }
     const expressRouteData = expressSpansMap.get(req);
     const { routeSpan, openedSpans } = expressRouteData;
-    const middlewareSpan = (() => {
+    const isRouterMiddleware = !routeSpan && this.name === 'bound dispatch';
+    const middlewareSpanName = (() => {
       if (routeSpan) {
-        return serverlessSdk.createTraceSpan(
-          `express.middleware.route.${[
-            generateMiddlewareName(this.method),
-            generateMiddlewareName(this.name) || 'unknown',
-          ]
-            .filter(Boolean)
-            .join('.')}`
-        );
+        return `express.middleware.route.${[
+          generateMiddlewareName(this.method),
+          generateMiddlewareName(this.name) || 'unknown',
+        ]
+          .filter(Boolean)
+          .join('.')}`;
       }
-      return serverlessSdk.createTraceSpan(
-        `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`
-      );
+      return isRouterMiddleware
+        ? 'express.middleware.router'
+        : `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`;
     })();
+    const middlewareSpan = serverlessSdk.createTraceSpan(middlewareSpanName);
     openedSpans.add(middlewareSpan);
     if (this.path && (!expressRouteData.path || expressRouteData.path.length < this.path.length)) {
       expressRouteData.path = this.path;
     }
     if (this.method) expressRouteData.method = this.method;
-    if (!routeSpan && this.name === 'bound dispatch') {
-      middlewareSpan.name = 'express.middleware.router';
+    if (isRouterMiddleware) {
       expressRouteData.routeSpan = middlewareSpan;
       expressRouteData.route = this.route;
     }
