@@ -38,6 +38,7 @@ const install = (protocol, httpModule) => {
 
   const request = function request(url, options, cb) {
     const startTime = process.hrtime.bigint();
+    serverlessSdk._debugLog('HTTP request', shouldIgnoreFollowingRequest, new Error().stack);
     if (shouldIgnoreFollowingRequest) {
       shouldIgnoreFollowingRequest = false;
       return originalRequest.call(this, url, options, cb);
@@ -149,8 +150,10 @@ module.exports.install = () => {
 };
 
 module.exports.ignoreFollowingRequest = () => {
+  serverlessSdk._debugLog('ignore HTTP request', shouldIgnoreFollowingRequest, new Error().stack);
   shouldIgnoreFollowingRequest = true;
   process.nextTick(() => {
+    serverlessSdk._debugLog('reset ignore HTTP request', shouldIgnoreFollowingRequest);
     shouldIgnoreFollowingRequest = false;
   });
 };
