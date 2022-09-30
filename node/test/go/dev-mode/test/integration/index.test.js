@@ -59,7 +59,10 @@ describe('Integration', function () {
             for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
               expect(reqRes.length).to.equal(1);
               for (const payload of reqRes) {
-                expect(payload.functionName).to.contain('with-internal');
+                expect(payload).to.haveOwnProperty('region');
+                expect(payload).to.haveOwnProperty('accountId');
+                expect(payload).to.haveOwnProperty('timestamps');
+                expect(payload).to.haveOwnProperty('payloads');
               }
             }
           },

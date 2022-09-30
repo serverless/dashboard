@@ -20,11 +20,10 @@ type APIPayload struct {
 }
 
 type ReqResAPIPayload struct {
-	Payloads     []string `json:"payloads"`
-	Timestamps   []int64  `json:"timestamps"`
-	AccountId    string   `json:"accountId"`
-	FunctionName string   `json:"functionName"`
-	RequestId    string   `json:"requestId"`
+	Payloads   []string `json:"payloads"`
+	Timestamps []int64  `json:"timestamps"`
+	AccountId  string   `json:"accountId"`
+	Region     string   `json:"region"`
 }
 
 type LogMessage struct {
@@ -148,11 +147,10 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 	payloads, timestamps := CollectRequestResponseData(logs)
 	if len(payloads) != 0 {
 		reqResPayload := ReqResAPIPayload{
-			Payloads:     payloads,
-			Timestamps:   timestamps,
-			AccountId:    accountId,
-			FunctionName: os.Getenv("AWS_LAMBDA_FUNCTION_NAME"),
-			RequestId:    requestId,
+			Payloads:   payloads,
+			Timestamps: timestamps,
+			AccountId:  accountId,
+			Region:     os.Getenv("AWS_REGION"),
 		}
 		reqResBody, err := json.Marshal(reqResPayload)
 		if err == nil {
