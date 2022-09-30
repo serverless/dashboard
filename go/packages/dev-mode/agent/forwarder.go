@@ -27,7 +27,10 @@ type ReqResAPIPayload struct {
 }
 
 type SpanAPIPayload struct {
-	Payloads []string `json:"payloads"`
+	Payloads  []string `json:"payloads"`
+	AccountId string   `json:"accountId"`
+	Region    string   `json:"region"`
+	RequestId string   `json:"requestId"`
 }
 
 type LogMessage struct {
@@ -178,7 +181,10 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 	tracePayloads := CollectTraceData(logs)
 	if len(tracePayloads) != 0 {
 		spansPayload := SpanAPIPayload{
-			Payloads: tracePayloads,
+			Payloads:  tracePayloads,
+			AccountId: accountId,
+			Region:    os.Getenv("AWS_REGION"),
+			RequestId: requestId,
 		}
 		spanBody, err := json.Marshal(spansPayload)
 		if err == nil {
