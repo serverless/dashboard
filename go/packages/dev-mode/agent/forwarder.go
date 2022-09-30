@@ -26,6 +26,10 @@ type ReqResAPIPayload struct {
 	Region     string   `json:"region"`
 }
 
+type SpanAPIPayload struct {
+	Payloads []string `json:"payloads"`
+}
+
 type LogMessage struct {
 	Message    string `json:"message"`
 	Timestamp  int64  `json:"timestamp"`
@@ -106,6 +110,19 @@ func CollectRequestResponseData(logs []LogItem) ([]string, []int64) {
 	return messages, timestamps
 }
 
+func CollectTraceData(logs []LogItem) []string {
+	messages := make([]string, 0)
+	for _, log := range logs {
+		if log.LogType == "function" {
+			if strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.T.") {
+				splitString := strings.Split(log.Record.(string), ".T.")
+				messages = append(messages, strings.TrimSuffix(splitString[len(splitString)-1], "\n"))
+			}
+		}
+	}
+	return messages
+}
+
 func makeAPICall(body []byte, testReporter func(string), path string) (int, error) {
 	// Send data to backends
 	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
@@ -155,6 +172,17 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		reqResBody, err := json.Marshal(reqResPayload)
 		if err == nil {
 			makeAPICall(reqResBody, lib.ReportReqRes, "/forwarder/reqres")
+		}
+	}
+
+	tracePayloads := CollectTraceData(logs)
+	if len(tracePayloads) != 0 {
+		spansPayload := SpanAPIPayload{
+			Payloads: tracePayloads,
+		}
+		spanBody, err := json.Marshal(spansPayload)
+		if err == nil {
+			makeAPICall(spanBody, lib.ReportSpans, "/forwarder/spans")
 		}
 	}
 
