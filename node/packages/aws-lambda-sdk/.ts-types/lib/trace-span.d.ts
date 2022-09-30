@@ -14,6 +14,8 @@ declare class TraceSpan {
   tags: TraceSpanTags;
 
   close(): TraceSpan;
+  closeContext(): undefined;
+  destroy(): undefined;
   spans(): Set<TraceSpan>;
   toJSON(): Object;
 }

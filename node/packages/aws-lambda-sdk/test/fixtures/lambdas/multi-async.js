@@ -36,7 +36,7 @@ app.use(express.json());
 
 app.get('/foo', (req, res) => {
   setTimeout(() => {
-    sendRequest('in').then(() => res.send('"ok"'));
+    Promise.all([sendRequest('in-1'), sendRequest('in-2')]).then(() => res.send('"ok"'));
   }, 200);
 });
 
@@ -46,7 +46,10 @@ const expressHandler = serverless(app);
 
 module.exports.handler = async (event, context, callback) => {
   initializeServer();
-  setTimeout(() => sendRequest('out'), 100);
+  setTimeout(() => {
+    sendRequest('out-1');
+    sendRequest('out-2');
+  }, 100);
   try {
     await expressHandler(
       {

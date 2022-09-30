@@ -1111,11 +1111,13 @@ describe('integration', function () {
               if (!index) spans.shift();
 
               const [invocationSpan, expressSpan, ...otherSpans] = spans;
-              const middlewareSpans = otherSpans.slice(0, -2);
+              const middlewareSpans = otherSpans.slice(0, -4);
               const routeSpan = middlewareSpans.pop();
               const routerSpan = middlewareSpans[middlewareSpans.length - 1];
-              const expressRequestSpan = otherSpans[otherSpans.length - 2];
-              const outerRequestSpan = otherSpans[otherSpans.length - 1];
+              const expressRequest1Span = otherSpans[otherSpans.length - 4];
+              const expressRequest2Span = otherSpans[otherSpans.length - 3];
+              const outerRequest1Span = otherSpans[otherSpans.length - 2];
+              const outerRequest2Span = otherSpans[otherSpans.length - 1];
 
               expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
 
@@ -1133,25 +1135,29 @@ describe('integration', function () {
               expect(routeSpan.name).to.equal('express.middleware.route.get.anonymous');
               expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
 
-              expect(outerRequestSpan.name).to.equal('node.http.request');
-              expect(outerRequestSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+              expect(outerRequest1Span.name).to.equal('node.http.request');
+              expect(outerRequest1Span.parentSpanId).to.deep.equal(invocationSpan.id);
+              expect(outerRequest2Span.name).to.equal('node.http.request');
+              expect(outerRequest2Span.parentSpanId).to.deep.equal(invocationSpan.id);
 
-              const { tags: outerRequestTags } = outerRequestSpan;
-              expect(outerRequestTags.http.method).to.equal('GET');
-              expect(outerRequestTags.http.protocol).to.equal('HTTP/1.1');
-              expect(outerRequestTags.http.host).to.equal('localhost:3177');
-              expect(outerRequestTags.http.path).to.equal('/out');
-              expect(outerRequestTags.http.statusCode.toString()).to.equal('200');
+              const { tags: outerRequest1Tags } = outerRequest1Span;
+              expect(outerRequest1Tags.http.method).to.equal('GET');
+              expect(outerRequest1Tags.http.protocol).to.equal('HTTP/1.1');
+              expect(outerRequest1Tags.http.host).to.equal('localhost:3177');
+              expect(outerRequest1Tags.http.path).to.equal('/out-1');
+              expect(outerRequest1Tags.http.statusCode.toString()).to.equal('200');
 
-              expect(expressRequestSpan.name).to.equal('node.http.request');
-              expect(expressRequestSpan.parentSpanId).to.deep.equal(routeSpan.id);
+              expect(expressRequest1Span.name).to.equal('node.http.request');
+              expect(expressRequest1Span.parentSpanId).to.deep.equal(routeSpan.id);
+              expect(expressRequest2Span.name).to.equal('node.http.request');
+              expect(expressRequest2Span.parentSpanId).to.deep.equal(routeSpan.id);
 
-              const { tags: expressRequestTags } = expressRequestSpan;
-              expect(expressRequestTags.http.method).to.equal('GET');
-              expect(expressRequestTags.http.protocol).to.equal('HTTP/1.1');
-              expect(expressRequestTags.http.host).to.equal('localhost:3177');
-              expect(expressRequestTags.http.path).to.equal('/in');
-              expect(expressRequestTags.http.statusCode.toString()).to.equal('200');
+              const { tags: expressRequest1Tags } = expressRequest1Span;
+              expect(expressRequest1Tags.http.method).to.equal('GET');
+              expect(expressRequest1Tags.http.protocol).to.equal('HTTP/1.1');
+              expect(expressRequest1Tags.http.host).to.equal('localhost:3177');
+              expect(expressRequest1Tags.http.path).to.equal('/in-1');
+              expect(expressRequest1Tags.http.statusCode.toString()).to.equal('200');
             }
           },
         },

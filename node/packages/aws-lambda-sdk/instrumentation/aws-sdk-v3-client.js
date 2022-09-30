@@ -37,9 +37,18 @@ module.exports.install = (client) => {
         const deferredRegion = client.config
           .region()
           .then((region) => traceSpan.tags.set('aws.sdk.region', region));
+
+        const nextDeferred = (() => {
+          try {
+            return next(args);
+          } catch (error) {
+            return Promise.reject(error);
+          }
+        })();
+        traceSpan.closeContext();
         const { response, error } = await (async () => {
           try {
-            return { response: await next(args) };
+            return { response: await nextDeferred };
           } catch (requestError) {
             return { error: requestError };
           }

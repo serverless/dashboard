@@ -259,6 +259,18 @@ class TraceSpan {
       });
     }
   }
+  closeContext() {
+    if (asyncLocalStorage.getStore() !== this) return;
+    if (this === rootSpan) {
+      asyncLocalStorage.enterWith(this);
+      return;
+    }
+    const openParentSpan = (function self(span) {
+      if (!span.endTime) return span;
+      return span.parentSpan ? self(span.parentSpan) : rootSpan;
+    })(this.parentSpan);
+    asyncLocalStorage.enterWith(openParentSpan);
+  }
   close(options = {}) {
     const defaultEndTime = process.hrtime.bigint();
     if (this.endTime) {
@@ -298,13 +310,14 @@ class TraceSpan {
       }
       asyncLocalStorage.enterWith(this);
     } else {
-      const openParentSpan = (function self(span) {
-        if (!span.endTime) return span;
-        return span.parentSpan ? self(span.parentSpan) : rootSpan;
-      })(this.parentSpan);
-      asyncLocalStorage.enterWith(openParentSpan);
+      this.closeContext();
     }
     return this;
+  }
+  destroy() {
+    this.closeContext();
+    this.parentSpan?.subSpans.delete(this);
+    this.parentSpan = null;
   }
   toJSON() {
     return {
