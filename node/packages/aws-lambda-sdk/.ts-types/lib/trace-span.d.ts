@@ -11,12 +11,12 @@ declare class TraceSpan {
   id: string;
   parentSpan: TraceSpan | null;
   subSpans: Set<TraceSpan>;
+  spans: Set<TraceSpan>;
   tags: TraceSpanTags;
 
   close(): TraceSpan;
   closeContext(): undefined;
   destroy(): undefined;
-  spans(): Set<TraceSpan>;
   toJSON(): Object;
 }
 
