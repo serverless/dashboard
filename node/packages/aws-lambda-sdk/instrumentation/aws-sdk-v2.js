@@ -43,7 +43,11 @@ module.exports.install = (Sdk) => {
       if (!traceSpan.endTime) traceSpan.close();
     });
     doNotInstrumentFollowingHttpRequest();
-    return originalRunTo.call(this, state, done);
+    try {
+      return originalRunTo.call(this, state, done);
+    } finally {
+      traceSpan.closeContext();
+    }
   };
 
   const uninstall = () => {

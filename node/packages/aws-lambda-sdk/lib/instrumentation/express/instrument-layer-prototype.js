@@ -61,14 +61,18 @@ module.exports.install = (layerPrototype) => {
       expressRouteData.routeSpan = middlewareSpan;
       expressRouteData.route = this.route;
     }
-    return originalHandleRequest.call(this, req, res, (...args) => {
-      if (!middlewareSpan.endTime) {
-        openedSpans.delete(middlewareSpan);
-        middlewareSpan.close();
-        if (this.name === 'bound dispatch') delete expressRouteData.routeSpan;
-      }
-      return next(...args);
-    });
+    try {
+      return originalHandleRequest.call(this, req, res, (...args) => {
+        if (!middlewareSpan.endTime) {
+          openedSpans.delete(middlewareSpan);
+          middlewareSpan.close();
+          if (this.name === 'bound dispatch') delete expressRouteData.routeSpan;
+        }
+        return next(...args);
+      });
+    } finally {
+      middlewareSpan.closeContext();
+    }
   };
   // eslint-disable-next-line camelcase
   layerPrototype.handle_error = function handle_error(error, req, res, next) {

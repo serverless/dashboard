@@ -78,20 +78,8 @@ const install = (protocol, httpModule) => {
       if (originalCb) originalCb(response);
     });
 
-    const req = originalRequest.apply(this, args);
-
     const traceSpan = serverlessSdk.createTraceSpan(`node.${protocol}.request`, {
       startTime,
-      tags: {
-        'http.method': resolveMethod(options),
-        'http.protocol': 'HTTP/1.1',
-        'http.host': options.hostname
-          ? options.hostname + (options.port ? `:${options.port}` : '')
-          : options.host || 'localhost',
-        'http.path': options.pathname || '/',
-        'http.request_header_names': Object.keys(options.headers || {}),
-        'http.query_parameter_names': resolveQueryParamNamesFromSearchString(options.search),
-      },
       onCloseByRoot: () => {
         if (responseReadableState?.flowing === false) {
           // Response data was not observed
@@ -101,6 +89,28 @@ const install = (protocol, httpModule) => {
         traceSpan.tags.set('http.error_code', 'EXECUTION_CONTEXT_OVERFLOW');
       },
     });
+
+    let req;
+    try {
+      req = originalRequest.apply(this, args);
+    } catch (error) {
+      traceSpan.destroy();
+      throw error;
+    }
+    traceSpan.closeContext();
+    traceSpan.tags.setMany(
+      {
+        method: resolveMethod(options),
+        protocol: 'HTTP/1.1',
+        host: options.hostname
+          ? options.hostname + (options.port ? `:${options.port}` : '')
+          : options.host || 'localhost',
+        path: options.pathname || '/',
+        request_header_names: Object.keys(options.headers || {}),
+        query_parameter_names: resolveQueryParamNamesFromSearchString(options.search),
+      },
+      { prefix: 'http' }
+    );
 
     return req.on(errorMonitor, (error) => {
       if (traceSpan.endTime) return;
