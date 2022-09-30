@@ -6,7 +6,7 @@ build: clean
 	cd dist; zip extension.zip -r extensions/
 
 test:
-	go test ./... -v -count=1
+	go test ./... -v -count=1 -timeout 30s
 
 deploy: build
 	aws lambda publish-layer-version --layer-name sls-dev-mode --description "This layer will collect logs and forward them to serverless console. This should only be used in development" --zip-file fileb://dist/extension.zip

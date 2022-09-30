@@ -22,7 +22,7 @@ const reportPattern = new RegExp(
 const handledOutcomes = new Set(['success', 'error:handled']);
 
 const create = async (testConfig, coreConfig) => {
-  const { configuration } = testConfig;
+  const { configuration, includeInternal } = testConfig;
   const resultConfiguration = {
     Role: coreConfig.roleArn,
     Runtime: 'nodejs16.x',
@@ -30,9 +30,19 @@ const create = async (testConfig, coreConfig) => {
     Code: {
       ZipFile: await resolveDirZipBuffer(fixturesDirname),
     },
-    Layers: [coreConfig.layerExternalArn],
+    Layers: includeInternal
+      ? [coreConfig.layerExternalArn, coreConfig.layerInternalArn]
+      : [coreConfig.layerExternalArn],
     Environment: {
       Variables: {
+        ...(includeInternal
+          ? {
+              AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+              SLS_ORG_ID: process.env.SLS_ORG_ID,
+              SLS_SDK_DEBUG: '1',
+            }
+          : {}),
+        SERVERLESS_PLATFORM_STAGE: 'dev',
         SLS_ORG_ID: process.env.SLS_ORG_ID,
         SLS_TEST_EXTENSION_LOG: '1',
       },
@@ -172,7 +182,9 @@ const retrieveReports = async (testConfig) => {
     };
     for (const { message } of events) {
       if (message.startsWith('⚡ DEV-MODE: initialization')) {
-        processesData.push((currentProcessData = { extensionOverheadDurations: {}, logs: [] }));
+        processesData.push(
+          (currentProcessData = { extensionOverheadDurations: {}, logs: [], reqRes: [] })
+        );
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Overhead duration: External initialization')) {
@@ -183,7 +195,7 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('START RequestId: ')) {
-        currentInvocationData = { extensionOverheadDurations: {}, logs: [] };
+        currentInvocationData = { extensionOverheadDurations: {}, logs: [], reqRes: [] };
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Overhead duration: External request')) {
@@ -195,6 +207,12 @@ const retrieveReports = async (testConfig) => {
       }
       if (message.startsWith('⚡ DEV-MODE: Log###')) {
         getCurrentInvocationData().logs.push(
+          JSON.parse(message.slice(message.lastIndexOf('###') + 3))
+        );
+        continue;
+      }
+      if (message.startsWith('⚡ DEV-MODE: ReqRes###')) {
+        getCurrentInvocationData().reqRes.push(
           JSON.parse(message.slice(message.lastIndexOf('###') + 3))
         );
         continue;

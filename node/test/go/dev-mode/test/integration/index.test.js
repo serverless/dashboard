@@ -17,7 +17,7 @@ for (const name of ['TEST_EXTERNAL_LAYER_FILENAME']) {
   if (process.env[name]) process.env[name] = path.resolve(process.env[name]);
 }
 
-describe('integration', function () {
+describe('Integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
@@ -42,6 +42,25 @@ describe('integration', function () {
                   `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
                 ).to.have.string(message.slice(message.lastIndexOf('\t') + 1).replace('\n', ''));
               });
+            }
+          },
+        },
+      },
+    ],
+    [
+      'with-internal',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 10 }, includeInternal: true }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 10 }, includeInternal: true }],
+        ]),
+        config: {
+          test: ({ invocationsData }) => {
+            for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
+              expect(reqRes.length).to.equal(1);
+              for (const payload of reqRes) {
+                expect(payload.functionName).to.contain('with-internal');
+              }
             }
           },
         },

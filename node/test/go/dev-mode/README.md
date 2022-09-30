@@ -23,6 +23,7 @@ How extensions behave, for various testing purposes, can be tweaked with followi
 ### Variables handled in extension logic
 
 - `SLS_TEST_EXTENSION_LOG` - Log forwarded logs to Cloudwatch
+- `SLS_ORG_ID` - Fake org ID we want to include with our test payloads
 
 ### Variables handled by test suite
 
