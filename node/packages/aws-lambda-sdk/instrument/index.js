@@ -18,10 +18,6 @@ const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
   traceSpans;
 
-const debugLog = (...args) => {
-  if (process.env.SLS_SDK_DEBUG) process._rawDebug('⚡ SDK:', ...args);
-};
-
 const writeRequest = (event, context) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
@@ -108,7 +104,7 @@ module.exports = (originalHandler, options = {}) => {
   awsLambdaInitializationSpan.close();
   return (event, context, awsCallback) => {
     const requestStartTime = process.hrtime.bigint();
-    debugLog('Invocation: start');
+    serverlessSdk._debugLog('Invocation: start');
     let isResolved = false;
     let responseStartTime;
     const invocationId = ++currentInvocationId;
@@ -158,7 +154,7 @@ module.exports = (originalHandler, options = {}) => {
       awsLambdaInvocationSpan.close({ endTime });
       awsLambdaSpan.close({ endTime });
       writeTrace();
-      debugLog(
+      serverlessSdk._debugLog(
         'Overhead duration: Internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
       );
@@ -179,7 +175,7 @@ module.exports = (originalHandler, options = {}) => {
     context.fail = (err) => contextDone(err == null ? 'handled' : err);
 
     // TODO: Insert eventual request handling
-    debugLog(
+    serverlessSdk._debugLog(
       'Overhead duration: Internal request:',
       `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
     );
