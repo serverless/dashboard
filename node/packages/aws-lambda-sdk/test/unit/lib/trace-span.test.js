@@ -70,7 +70,7 @@ describe('lib/trace-span.test.js', () => {
   it('should support creation of immediate descendant spans', () => {
     const childSpan = new TraceSpan('child', {
       immediateDescendants: ['grandchild', 'grandgrandchild'],
-    }).close();
+    });
     const grandChildren = Array.from(childSpan.subSpans);
     expect(grandChildren.map(({ name }) => name)).to.deep.equal(['grandchild']);
     const grandChild = grandChildren[0];
@@ -79,6 +79,9 @@ describe('lib/trace-span.test.js', () => {
     const grandGrandChild = grandGrandChildren[0];
     expect(grandChild.startTime).to.equal(childSpan.startTime);
     expect(grandGrandChild.startTime).to.equal(childSpan.startTime);
+    grandGrandChild.close();
+    grandChild.close();
+    childSpan.close();
   });
 
   it('should not close descendant spans on span closure', () => {
@@ -104,7 +107,8 @@ describe('lib/trace-span.test.js', () => {
     it('should resolve self and all descendants', () => {
       const span = new TraceSpan('child');
       const subSpan = new TraceSpan('subchild');
-      const subSubSpan = new TraceSpan('subsubchild');
+      const subSubSpan = new TraceSpan('subsubchild').close();
+      subSpan.close();
       expect(Array.from(span.close().spans)).to.deep.equal([span, subSpan, subSubSpan]);
     });
   });
