@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.6.0...@serverless/aws-lambda-sdk@0.7.0) (2022-09-30)
+
+### ⚠ BREAKING CHANGES
+
+- Upgrade `@serverless/sdk-schema` to v0.10 (Switch from `express` tags to `aws.lambda.http_router`)
+- Rename `instrument/*`utilities into `instrumenation/*`
+- Rename `serveressSdk.instrument` into `serverlessSdk.instrumentation`
+
+### Features
+
+- Support for Function URL events ([d9f619c](https://github.com/serverless/console/commit/d9f619c507035378b9b4200d660ad8d578615334))
+- Switch from `express` tags to `aws.lambda.http_router` ([64f7543](https://github.com/serverless/console/commit/64f7543ad971acb6c3d8b85bc832cda1a2975b22))
+
+### Bug Fixes
+
+- Fix span connections for consequently initialized async operations ([cd2798e](https://github.com/serverless/console/commit/cd2798e8f9d1b2978406a2d52ff830b53f34ebdf))
+- Fix open parent span resolution ([84f63e9](https://github.com/serverless/console/commit/84f63e9e99ab03b7c45046e503efc03aa5767c4d))
+
+### Maintenance Improvements
+
+- Add temporary debug logs ([8588da0](https://github.com/serverless/console/commit/8588da0b01b298f26229b70bbebd5a3bacce1267))
+- Expose `debugLog` util on `serverlessSdk` ([bb25145](https://github.com/serverless/console/commit/bb2514564af8cb0011cb4f8a430c4685166c3148))
+- Improve middleware span resolution ([641a690](https://github.com/serverless/console/commit/641a690e3f8b672fdc46e3dc511f90dc2f8335ab))
+- Rename `instrument` namespace into `instrumentation` ([88054dc](https://github.com/serverless/console/commit/88054dc789a1d151d61ade5ab909bd612d8ceab3))
+- Separate `instrument` utility context ([e159740](https://github.com/serverless/console/commit/e159740e4d9aeee7b574d4d6e99a8e24ce52bd5f))
+
 ## [0.6.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.5.0...@serverless/aws-lambda-sdk@0.6.0) (2022-09-26)
 
 ### ⚠ BREAKING CHANGES
