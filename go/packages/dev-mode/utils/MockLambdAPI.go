@@ -210,7 +210,6 @@ func saveReqRes(c *gin.Context) {
 	if err := c.BindJSON(&input); err != nil {
 		return
 	}
-	fmt.Println("Expected reqres", input.Payloads)
 	validations.ReqRes = append(validations.ReqRes, input)
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
@@ -220,7 +219,6 @@ func saveSpans(c *gin.Context) {
 	if err := c.BindJSON(&input); err != nil {
 		return
 	}
-	fmt.Println("Expected span", input.Payloads)
 	validations.Spans = append(validations.Spans, input)
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
@@ -259,7 +257,6 @@ func SubmitReqRes(data []byte) {
 			break
 		}
 	}
-	fmt.Println("Making reqres...", validations.SdkURI+"/reqres")
 	for {
 		_, err := SendPost(validations.SdkURI+"/reqres", data)
 		if err == nil {
@@ -269,7 +266,6 @@ func SubmitReqRes(data []byte) {
 			time.Sleep(1 * time.Second)
 		}
 	}
-	fmt.Println("Done reqres...")
 }
 
 func SubmitTrace(data []byte) {
@@ -278,7 +274,6 @@ func SubmitTrace(data []byte) {
 			break
 		}
 	}
-	fmt.Println("Making trace...")
 	for {
 		_, err := SendPost(validations.SdkURI+"/spans", data)
 		if err == nil {
@@ -287,7 +282,6 @@ func SubmitTrace(data []byte) {
 			time.Sleep(1 * time.Second)
 		}
 	}
-	fmt.Println("Done trace...")
 }
 
 func SubmitLogsAsync(logs []byte) {

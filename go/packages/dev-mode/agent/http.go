@@ -123,7 +123,6 @@ func (h *LogsApiHttpListener) span_http_handler(w http.ResponseWriter, r *http.R
 	spanString, _ := json.Marshal(spanPayload)
 	// Puts the log message into the queue
 	logSet := string(spanString)
-	fmt.Println("Span str", logSet)
 	err = h.logQueue.Put(logSet)
 	if err != nil {
 		h.logger.Error("Can't push spans to destination", zap.Error(err))
@@ -147,7 +146,6 @@ func (h *LogsApiHttpListener) req_res_http_handler(w http.ResponseWriter, r *htt
 	reqResString, _ := json.Marshal(reqResPayload)
 	// Puts the log message into the queue
 	logSet := string(reqResString)
-	fmt.Println("ReqRes str", logSet)
 	err = h.logQueue.Put(logSet)
 	if err != nil {
 		h.logger.Error("Can't push reqRes to destination", zap.Error(err))
