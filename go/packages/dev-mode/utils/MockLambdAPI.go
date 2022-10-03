@@ -17,9 +17,11 @@ type Validations struct {
 	Register  string                   `json:"register"`
 	LogTypes  []string                 `json:"logTypes"`
 	LogURI    string                   `json:"logURI"`
+	SdkURI    string                   `json:"sdkURI"`
 	RequestId string                   `json:"requestId"`
 	Logs      []agent.APIPayload       `json:"logs"`
 	ReqRes    []agent.ReqResAPIPayload `json:"reqRes"`
+	Spans     []agent.SpanAPIPayload   `json:"spans"`
 	NextCount int64                    `json:"nextCount"`
 }
 
@@ -58,9 +60,11 @@ var lambdaExtensionIdentifier = uuid.New().String()
 var validations = Validations{
 	Register:  "",
 	LogURI:    "",
+	SdkURI:    "http://127.0.0.1:2772",
 	RequestId: "",
 	Logs:      make([]agent.APIPayload, 0),
 	ReqRes:    make([]agent.ReqResAPIPayload, 0),
+	Spans:     make([]agent.SpanAPIPayload, 0),
 	NextCount: 0,
 }
 
@@ -69,6 +73,7 @@ func StartServer(functionName string, region string, port int64) *http.Server {
 	reg = region
 	// Reset LogURI between test runs only
 	validations.LogURI = ""
+	validations.SdkURI = "http://127.0.0.1:2772"
 	validations.NextCount = 0
 	srv := createLambdaServer(port)
 	go func() {
@@ -90,6 +95,7 @@ func createLambdaServer(port int64) *http.Server {
 	router.POST("/logs", sendLogs)
 	router.POST("/save/forwarder", saveLogs)
 	router.POST("/save/forwarder/reqres", saveReqRes)
+	router.POST("/save/forwarder/spans", saveSpans)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -204,7 +210,18 @@ func saveReqRes(c *gin.Context) {
 	if err := c.BindJSON(&input); err != nil {
 		return
 	}
+	fmt.Println("Expected reqres", input.Payloads)
 	validations.ReqRes = append(validations.ReqRes, input)
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+}
+
+func saveSpans(c *gin.Context) {
+	var input agent.SpanAPIPayload
+	if err := c.BindJSON(&input); err != nil {
+		return
+	}
+	fmt.Println("Expected span", input.Payloads)
+	validations.Spans = append(validations.Spans, input)
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
@@ -236,6 +253,43 @@ func SubmitLogs(logs []byte) {
 	}
 }
 
+func SubmitReqRes(data []byte) {
+	for {
+		if validations.LogURI != "" {
+			break
+		}
+	}
+	fmt.Println("Making reqres...", validations.SdkURI+"/reqres")
+	for {
+		_, err := SendPost(validations.SdkURI+"/reqres", data)
+		if err == nil {
+			break
+		} else {
+			fmt.Println(err)
+			time.Sleep(1 * time.Second)
+		}
+	}
+	fmt.Println("Done reqres...")
+}
+
+func SubmitTrace(data []byte) {
+	for {
+		if validations.LogURI != "" {
+			break
+		}
+	}
+	fmt.Println("Making trace...")
+	for {
+		_, err := SendPost(validations.SdkURI+"/spans", data)
+		if err == nil {
+			break
+		} else {
+			time.Sleep(1 * time.Second)
+		}
+	}
+	fmt.Println("Done trace...")
+}
+
 func SubmitLogsAsync(logs []byte) {
 	for {
 		if validations.LogURI != "" {
@@ -264,8 +318,11 @@ func resetValidation(c *gin.Context) {
 		Register: "",
 		// Don't clear logs URI or else the app wont work between invocations :)
 		LogURI:    validations.LogURI,
+		SdkURI:    "http://127.0.0.1:2772",
 		RequestId: "",
 		Logs:      make([]agent.APIPayload, 0),
+		ReqRes:    make([]agent.ReqResAPIPayload, 0),
+		Spans:     make([]agent.SpanAPIPayload, 0),
 		NextCount: 0,
 	}
 	c.Data(http.StatusOK, "text/html", []byte("ok"))

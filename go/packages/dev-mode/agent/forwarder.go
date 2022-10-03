@@ -101,13 +101,10 @@ func CollectRequestResponseData(logs []LogItem) ([]string, []int64) {
 	messages := make([]string, 0)
 	timestamps := make([]int64, 0)
 	for _, log := range logs {
-		if log.LogType == "function" {
+		if log.LogType == "reqRes" {
 			t, _ := time.Parse(time.RFC3339, log.Time)
-			if strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.R.") {
-				splitString := strings.Split(log.Record.(string), ".R.")
-				messages = append(messages, strings.TrimSuffix(splitString[len(splitString)-1], "\n"))
-				timestamps = append(timestamps, t.UnixMilli())
-			}
+			messages = append(messages, log.Record.(string))
+			timestamps = append(timestamps, t.UnixMilli())
 		}
 	}
 	return messages, timestamps
@@ -116,11 +113,8 @@ func CollectRequestResponseData(logs []LogItem) ([]string, []int64) {
 func CollectTraceData(logs []LogItem) []string {
 	messages := make([]string, 0)
 	for _, log := range logs {
-		if log.LogType == "function" {
-			if strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.T.") {
-				splitString := strings.Split(log.Record.(string), ".T.")
-				messages = append(messages, strings.TrimSuffix(splitString[len(splitString)-1], "\n"))
-			}
+		if log.LogType == "spans" {
+			messages = append(messages, log.Record.(string))
 		}
 	}
 	return messages
