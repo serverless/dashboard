@@ -26,6 +26,13 @@ type ReqResAPIPayload struct {
 	Region     string   `json:"region"`
 }
 
+type SpanAPIPayload struct {
+	Payloads  []string `json:"payloads"`
+	AccountId string   `json:"accountId"`
+	Region    string   `json:"region"`
+	RequestId string   `json:"requestId"`
+}
+
 type LogMessage struct {
 	Message    string `json:"message"`
 	Timestamp  int64  `json:"timestamp"`
@@ -94,16 +101,23 @@ func CollectRequestResponseData(logs []LogItem) ([]string, []int64) {
 	messages := make([]string, 0)
 	timestamps := make([]int64, 0)
 	for _, log := range logs {
-		if log.LogType == "function" {
+		if log.LogType == "reqRes" {
 			t, _ := time.Parse(time.RFC3339, log.Time)
-			if strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.R.") {
-				splitString := strings.Split(log.Record.(string), ".R.")
-				messages = append(messages, strings.TrimSuffix(splitString[len(splitString)-1], "\n"))
-				timestamps = append(timestamps, t.UnixMilli())
-			}
+			messages = append(messages, log.Record.(string))
+			timestamps = append(timestamps, t.UnixMilli())
 		}
 	}
 	return messages, timestamps
+}
+
+func CollectTraceData(logs []LogItem) []string {
+	messages := make([]string, 0)
+	for _, log := range logs {
+		if log.LogType == "spans" {
+			messages = append(messages, log.Record.(string))
+		}
+	}
+	return messages
 }
 
 func makeAPICall(body []byte, testReporter func(string), path string) (int, error) {
@@ -155,6 +169,20 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		reqResBody, err := json.Marshal(reqResPayload)
 		if err == nil {
 			makeAPICall(reqResBody, lib.ReportReqRes, "/forwarder/reqres")
+		}
+	}
+
+	tracePayloads := CollectTraceData(logs)
+	if len(tracePayloads) != 0 {
+		spansPayload := SpanAPIPayload{
+			Payloads:  tracePayloads,
+			AccountId: accountId,
+			Region:    os.Getenv("AWS_REGION"),
+			RequestId: requestId,
+		}
+		spanBody, err := json.Marshal(spansPayload)
+		if err == nil {
+			makeAPICall(spanBody, lib.ReportSpans, "/forwarder/spans")
 		}
 	}
 

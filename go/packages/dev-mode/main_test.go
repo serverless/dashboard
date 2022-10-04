@@ -34,6 +34,7 @@ type ValidationResult struct {
 	RequestId string                   `json:"requestId"`
 	Logs      []agent.APIPayload       `json:"logs"`
 	ReqRes    []agent.ReqResAPIPayload `json:"reqRes"`
+	Spans     []agent.SpanAPIPayload   `json:"spans"`
 	NextCount int64                    `json:"nextCount"`
 }
 
@@ -149,6 +150,14 @@ func postLogs(logs string) {
 	u.SubmitLogs([]byte(logs))
 }
 
+func postReqRes(data string) {
+	u.SubmitReqRes([]byte(data))
+}
+
+func postTrace(data string) {
+	u.SubmitTrace([]byte(data))
+}
+
 func TestInvokeStartDoneTwice(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -223,7 +232,13 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	extensionInvoke(requestId2)
 	extensionPlatformStart(requestId2)
 
-	messages2 := []string{"3 invocation", "4 invocation", "reqResData"}
+	reqResData := "reqResData"
+	postReqRes(reqResData)
+
+	spanData := "spanData"
+	postTrace(spanData)
+
+	messages2 := []string{"3 invocation", "4 invocation", "reqResDataIgnored"}
 	postLogs(fmt.Sprintf(`[
 		{
 			"type": "function",
@@ -265,8 +280,14 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	}
 
 	for _, reqResPayload := range validationData2.ReqRes {
-		if reqResPayload.Payloads[0] != messages2[2] {
-			t.Errorf("Expected reqRes message %s Received %s", messages2[2], reqResPayload.Payloads[0])
+		if reqResPayload.Payloads[0] != reqResData {
+			t.Errorf("Expected reqRes message %s Received %s", reqResData, reqResPayload.Payloads[0])
+		}
+	}
+
+	for _, spansPayload := range validationData2.Spans {
+		if spansPayload.Payloads[0] != spanData {
+			t.Errorf("Expected reqRes message %s Received %s", reqResData, spansPayload.Payloads[0])
 		}
 	}
 

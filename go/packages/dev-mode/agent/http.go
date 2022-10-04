@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -17,10 +18,13 @@ import (
 
 // DefaultHttpListenerPort is used to set the URL where the logs will be sent by Logs API
 const DefaultHttpListenerPort = "1234"
+const DefaultSDKHttpListenerPort = "2772"
 
 // LogsApiHttpListener is used to listen to the Logs API using HTTP
 type LogsApiHttpListener struct {
 	httpServer *http.Server
+	// http server for sdk communication
+	sdkHttpServer *http.Server
 	// logQueue is a synchronous queue and is used to put the received logs to be consumed later (see main)
 	logQueue *queue.Queue
 	// logger
@@ -31,9 +35,10 @@ type LogsApiHttpListener struct {
 func NewLogsApiHttpListener(lq *queue.Queue, l *zap.Logger) (*LogsApiHttpListener, error) {
 
 	return &LogsApiHttpListener{
-		httpServer: nil,
-		logQueue:   lq,
-		logger:     l,
+		httpServer:    nil,
+		sdkHttpServer: nil,
+		logQueue:      lq,
+		logger:        l,
 	}, nil
 }
 
@@ -45,18 +50,41 @@ func ListenOnAddress() string {
 	return "sandbox:" + DefaultHttpListenerPort
 }
 
+func SdkListenOnAddress() string {
+	env_aws_local, ok := os.LookupEnv("SLS_TEST_EXTENSION")
+	if ok && env_aws_local == "1" {
+		return "127.0.0.1:" + DefaultSDKHttpListenerPort
+	}
+	return "localhost:" + DefaultSDKHttpListenerPort
+}
+
 // Start initiates the server in a goroutine where the logs will be sent
 func (s *LogsApiHttpListener) Start() (bool, error) {
 	address := ListenOnAddress()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.http_handler)
 	s.httpServer = &http.Server{Addr: address, Handler: mux}
+
+	sdkAddress := SdkListenOnAddress()
+	sdkMux := http.NewServeMux()
+	sdkMux.HandleFunc("/trace", s.span_http_handler)
+	sdkMux.HandleFunc("/request-response", s.req_res_http_handler)
+	s.sdkHttpServer = &http.Server{Addr: sdkAddress, Handler: sdkMux}
+
 	go func() {
 		err := s.httpServer.ListenAndServe()
 		if err != http.ErrServerClosed {
 			s.Shutdown()
 		}
 	}()
+
+	go func() {
+		err := s.sdkHttpServer.ListenAndServe()
+		if err != http.ErrServerClosed {
+			s.Shutdown()
+		}
+	}()
+
 	return true, nil
 }
 
@@ -80,6 +108,50 @@ func (h *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (h *LogsApiHttpListener) span_http_handler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error("Error reading body", zap.Error(err))
+		return
+	}
+
+	spanPayload := []LogItem{{
+		LogType: "spans",
+		Record:  string(body),
+	}}
+
+	spanString, _ := json.Marshal(spanPayload)
+	// Puts the log message into the queue
+	logSet := string(spanString)
+	err = h.logQueue.Put(logSet)
+	if err != nil {
+		h.logger.Error("Can't push spans to destination", zap.Error(err))
+	}
+}
+
+func (h *LogsApiHttpListener) req_res_http_handler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error("Error reading body", zap.Error(err))
+		return
+	}
+
+	t, _ := time.Now().MarshalText()
+	reqResPayload := []LogItem{{
+		Time:    string(t),
+		LogType: "reqRes",
+		Record:  string(body),
+	}}
+
+	reqResString, _ := json.Marshal(reqResPayload)
+	// Puts the log message into the queue
+	logSet := string(reqResString)
+	err = h.logQueue.Put(logSet)
+	if err != nil {
+		h.logger.Error("Can't push reqRes to destination", zap.Error(err))
+	}
+}
+
 // Shutdown terminates the HTTP server listening for logs
 func (s *LogsApiHttpListener) Shutdown() {
 	if s.httpServer != nil {
@@ -89,6 +161,16 @@ func (s *LogsApiHttpListener) Shutdown() {
 			s.logger.Error("Failed to shutdown http server gracefully", zap.Error(err))
 		} else {
 			s.httpServer = nil
+		}
+	}
+
+	if s.sdkHttpServer != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 4*time.Second)
+		err := s.sdkHttpServer.Shutdown(ctx)
+		if err != nil {
+			s.logger.Error("Failed to shutdown sdk http server gracefully", zap.Error(err))
+		} else {
+			s.sdkHttpServer = nil
 		}
 	}
 }
