@@ -1,12 +1,13 @@
 'use strict';
 
-if (!process.env.SLS_DEV_MODE_ORG_ID) {
+const serverlessSdk = global.serverlessSdk || require('../');
+
+if (!serverlessSdk._isDevMode) {
   // No dev mode, export noop function
   module.exports = async () => {};
   return;
 }
 
-const serverlessSdk = global.serverlessSdk || require('../');
 const http = require('http');
 
 const keepAliveAgent = new http.Agent({ keepAlive: true });

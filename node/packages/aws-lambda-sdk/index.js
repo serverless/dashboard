@@ -72,3 +72,5 @@ serverlessSdk._isDebugMode = Boolean(process.env.SLS_SDK_DEBUG);
 serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);
 };
+
+serverlessSdk._isDevMode = Boolean(process.env.SLS_DEV_MODE_ORG_ID);
