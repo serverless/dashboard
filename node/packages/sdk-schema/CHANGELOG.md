@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.10.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.10.0...@serverless/sdk-schema@0.10.1) (2022-10-04)
+
+### Features
+
+- Configure optional `request_body` and `response_body` tags ([ed44a1c](https://github.com/serverless/console/commit/ed44a1c749fdb990a7e121455a94eef55bfcf41b))
+
 ## [0.10.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.9.0...@serverless/sdk-schema@0.10.0) (2022-09-28)
 
 ### ⚠ BREAKING CHANGES
