@@ -20,10 +20,15 @@ message HttpTags {
   repeated string query_parameter_names = 6;
   // Request header names
   repeated string request_header_names = 8;
+  // Request body
+  optional string request_body = 13;
 
   // The Response Status Code.
   optional uint32 status_code = 9;
   // Eventual request error code
   optional string error_code = 12;
+  // Response body
+  optional string response_body = 14;
+
 }
 

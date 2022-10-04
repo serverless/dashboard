@@ -89,7 +89,10 @@ message AwsLambdaTags {
   // The billed duration of the invocation in milliseconds. This will not be available
   // when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
   optional uint32 duration = 17;
-  // Optional Event Tags are from 100 on
+  // Request body
+  optional string request_body = 18;
+  // Response body
+  optional string response_body = 19;
 
   // Will be set if the function is handling a SQS event
   optional AwsSqsEventTags sqs = 100;
@@ -156,6 +159,10 @@ message AwsSdkTags {
   optional string request_id = 6;
   // An optional error returned from the AWS APIs.
   optional string error = 7;
+  // Request body
+  optional string request_body = 8;
+  // Response body
+  optional string response_body = 9;
 
   optional AwsSdkDynamodbTags dynamodb = 100;
   optional AwsSdkSqsTags sqs = 101;
