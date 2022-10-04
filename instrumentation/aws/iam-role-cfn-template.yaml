@@ -24,20 +24,58 @@ Resources:
     Type: AWS::CloudFormation::CustomResource
     Version: "1.0"
     Properties:
-      ServiceToken: arn:aws:lambda:us-east-1:486128539022:function:platform-core-integration-aws-prod-stackReporter
+      ServiceToken:
+        Ref: ReportServiceToken
       ExternalId:
         Ref: ExternalId
       Version:
         Ref: Version
-  ServerlessRole:
+  APIDestinationsEventBridgeServiceLinkedRole:
+    Type: 'AWS::IAM::ServiceLinkedRole'
+    DeletionPolicy: Retain
+    Properties:
+      AWSServiceName: apidestinations.events.amazonaws.com
+      Description: Enables access to the Secrets Manager Secrets created by AWS EventBridge
+  ServerlessEventSubscriptionExecutionRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: ServerlessEventSubscriptionExecutionRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::486128539022:root
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: EventBridgeInvokeAPI
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: events:InvokeApiDestination
+                Resource:
+                  - !Sub "arn:aws:events:*:${AWS::AccountId}:api-destination/serverless_event_*/*"
+  ServerlessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ServerlessRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ":"
+                  - - "arn"
+                    - "aws"
+                    - "iam"
+                    - ""
+                    - Ref: AccountId
+                    - "root"
             Action:
               - sts:AssumeRole
             Condition:
@@ -45,587 +83,1834 @@ Resources:
                 sts:ExternalId:
                   Ref: ExternalId
       Path: "/"
-      RoleName: ServerlessRole
-      Policies:
-        - PolicyName: "serverless-read-policy-1"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  #
-                  ##
-                  ###
-                  #### READ PERMISSIONS
-                  ###
-                  ##
-                  #
-
-                  #
-                  ## API Gateway V1
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_Operations.html
-
-                  - "apigateway:GetAccount"
-                  - "apigateway:GetAuthorizer"
-                  - "apigateway:GetAuthorizers"
-                  - "apigateway:GetBasePathMapping"
-                  - "apigateway:GetBasePathMappings"
-                  - "apigateway:GetDeployment"
-                  - "apigateway:GetDeployments"
-                  - "apigateway:GetDomainName"
-                  - "apigateway:GetDomainNames"
-                  - "apigateway:GetExport"
-                  - "apigateway:GetGatewayResponse"
-                  - "apigateway:GetGatewayResponses"
-                  - "apigateway:GetIntegration"
-                  - "apigateway:GetIntegrationResponse"
-                  - "apigateway:GetMethod"
-                  - "apigateway:GetMethodResponse"
-                  - "apigateway:GetModel"
-                  - "apigateway:GetModels"
-                  - "apigateway:GetModelTemplate"
-                  - "apigateway:GetRequestValidator"
-                  - "apigateway:GetRequestValidators"
-                  - "apigateway:GetResource"
-                  - "apigateway:GetResources"
-                  - "apigateway:GetRestApi"
-                  - "apigateway:GetRestApis"
-                  - "apigateway:GetStage"
-                  - "apigateway:GetStages"
-                  - "apigateway:GetTags"
-                  - "apigateway:GetUsage"
-                  - "apigateway:GetUsagePlan"
-                  - "apigateway:GetUsagePlans"
-                  - "apigateway:GetVpcLink"
-
-                  #
-                  ## API Gateway V2
-                  # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/operations.html
-                  # Serverless Inc. Comments: API Gateway V1 & V2 have overlapping IAM Actions.  However, V2 (AKA HTTP API) has additional IAM Actions, and we cover those here.
-
-                  - "apigateway:GetApi"
-                  - "apigateway:GetApis"
-                  - "apigateway:GetApiMapping"
-                  - "apigateway:GetIntegrationResponses"
-                  - "apigateway:GetIntegrations"
-                  - "apigateway:GetIntegrations"
-                  - "apigateway:GetRoute"
-                  - "apigateway:GetRoutes"
-                  - "apigateway:GetRouteResponse"
-                  - "apigateway:GetRouteResponses"
-
-                  #
-                  ## App Runner
-                  # https://docs.aws.amazon.com/apprunner/latest/api/API_Operations.html
-
-                  - "apprunner:DescribeAutoScalingConfiguration"
-                  - "apprunner:DescribeCustomDomains"
-                  - "apprunner:DescribeObservabilityConfiguration"
-                  - "apprunner:DescribeOperation"
-                  - "apprunner:DescribeService"
-                  - "apprunner:DescribeVpcConnector"
-                  - "apprunner:ListAutoScalingConfigurations"
-                  - "apprunner:ListConnections"
-                  - "apprunner:ListObservabilityConfigurations"
-                  - "apprunner:ListOperations"
-                  - "apprunner:ListServices"
-                  - "apprunner:ListTagsForResource"
-                  - "apprunner:ListVpcConnectors"
-
-                  #
-                  ## AppSync
-                  # https://docs.aws.amazon.com/appsync/latest/APIReference/API_Operations.html
-
-                  - "appsync:GetApiAssociation"
-                  - "appsync:GetDataSource"
-                  - "appsync:GetDomainName"
-                  - "appsync:GetFunction"
-                  - "appsync:GetGraphqlApi"
-                  - "appsync:GetIntrospectionSchema"
-                  - "appsync:GetResolver"
-                  - "appsync:GetSchemaCreationStatus"
-                  - "appsync:ListDataSources"
-                  - "appsync:ListDomainNames"
-                  - "appsync:ListFunctions"
-                  - "appsync:ListGraphqlApis"
-                  - "appsync:ListResolvers"
-                  - "appsync:ListResolversByFunction"
-                  - "appsync:ListTagsForResource"
-
-                  #
-                  ## Autoscaling
-                  # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_Operations.html
-
-                  - "autoscaling:DescribeScalingPlanResources"
-                  - "autoscaling:DescribeScalingPlans"
-
-                  #
-                  ## CloudFormation
-                  # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_Operations.html
-
-                  - "DescribePublisher"
-                  - "DescribeStackInstance"
-                  - "DescribeStackResource"
-                  - "DescribeStackResources"
-                  - "DescribeStackSet"
-                  - "DescribeStacks"
-                  - "ListStackInstances"
-                  - "ListStackResources"
-                  - "ListStackSets"
-                  - "ListStacks"
-
-                  #
-                  ## CloudFront
-                  # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_Operations.html
-
-                  - "cloudfront:DescribeFunction"
-                  - "cloudfront:GetCachePolicy"
-                  - "cloudfront:GetCachePolicyConfig"
-                  - "cloudfront:GetDistribution"
-                  - "cloudfront:GetDistributionConfig"
-                  - "cloudfront:ListDistributions"
-                  - "cloudfront:ListDistributionsByCachePolicyId"
-                  - "cloudfront:ListFunctions"
-                  - "cloudfront:ListTagsForResource"
-
-                  #
-                  ## CloudTrail
-                  # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_Operations.html
-
-                  - "cloudtrail:DescribeTrails"
-                  - "cloudtrail:GetTrailStatus"
-                  - "cloudtrail:ListTags"
-                  - "cloudtrail:ListTrails"
-                  - "cloudtrail:LookupEvents"
-
-                  #
-                  ## Cloudwatch
-                  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Operations.html
-
-                  - "cloudwatch:DescribeAlarmHistory"
-                  - "cloudwatch:DescribeAlarms"
-                  - "cloudwatch:DescribeAlarmsForMetric"
-                  - "cloudwatch:DescribeAnomalyDetectors"
-                  - "cloudwatch:DescribeInsightRules"
-                  - "cloudwatch:GetDashboard"
-                  - "cloudwatch:GetInsightRuleReport"
-                  - "cloudwatch:GetMetricData"
-                  - "cloudwatch:GetMetricStatistics"
-                  - "cloudwatch:GetMetricStream"
-                  - "cloudwatch:GetMetricWidgetImage"
-                  - "cloudwatch:ListDashboards"
-                  - "cloudwatch:ListMetricStreams"
-                  - "cloudwatch:ListMetrics"
-                  - "cloudwatch:ListTagsForResource"
-
-                  #
-                  ## Cloudwatch Logs
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
-
-                  - "logs:DescribeLogGroups"
-                  - "logs:DescribeLogStreams"
-                  - "logs:DescribeSubscriptionFilters"
-                  - "logs:FilterLogEvents"
-                  - "logs:ListTagsLogGroup"
-                  - "logs:TestMetricFilter"
-
-                  #
-                  ## Cost Explorer
-                  # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Operations_AWS_Cost_Explorer_Service.html
-
-                  - "ce:DescribeCostCategoryDefinition"
-                  - "ce:GetCostAndUsage"
-                  - "ce:GetCostAndUsageWithResources"
-                  - "ce:GetCostCategories"
-                  - "ce:GetTags"
-                  - "ce:ListCostAllocationTags"
-                  - "ce:ListCostCategoryDefinitions"
-                  - "ce:ListTagsForResource"
-
-                  #
-                  ## DynamoDB
-                  # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations_Amazon_DynamoDB.html
-
-                  - "dynamodb:DescribeBackup"
-                  - "dynamodb:DescribeContinuousBackups"
-                  - "dynamodb:DescribeContributorInsights"
-                  - "dynamodb:DescribeExport"
-                  - "dynamodb:DescribeGlobalTable"
-                  - "dynamodb:DescribeGlobalTableSettings"
-                  - "dynamodb:DescribeKinesisStreamingDestination"
-                  - "dynamodb:DescribeLimits"
-                  - "dynamodb:DescribeReservedCapacity"
-                  - "dynamodb:DescribeReservedCapacityOfferings"
-                  - "dynamodb:DescribeStream"
-                  - "dynamodb:DescribeTable"
-                  - "dynamodb:DescribeTableReplicaAutoScaling"
-                  - "dynamodb:DescribeTimeToLive"
-                  - "dynamodb:ListBackups"
-                  - "dynamodb:ListContributorInsights"
-                  - "dynamodb:ListExports"
-                  - "dynamodb:ListGlobalTables"
-                  - "dynamodb:ListStreams"
-                  - "dynamodb:ListTables"
-                  - "dynamodb:ListTagsOfResource"
-
-                  #
-                  ## ECS
-                  # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
-
-                  - "ecs:DescribeCapacityProviders"
-                  - "ecs:DescribeClusters"
-                  - "ecs:DescribeContainerInstances"
-                  - "ecs:DescribeServices"
-                  - "ecs:DescribeTaskDefinition"
-                  - "ecs:DescribeTaskSets"
-                  - "ecs:DescribeTasks"
-                  - "ecs:ListAccountSettings"
-                  - "ecs:ListAttributes"
-                  - "ecs:ListClusters"
-                  - "ecs:ListContainerInstances"
-                  - "ecs:ListServices"
-                  - "ecs:ListTagsForResource"
-                  - "ecs:ListTaskDefinitionFamilies"
-                  - "ecs:ListTaskDefinitions"
-                  - "ecs:ListTasks"
-
-                  #
-                  ## ElastiCache
-                  # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_Operations.html
-
-                  - "elasticache:DescribeCacheClusters"
-                  - "elasticache:DescribeCacheEngineVersions"
-                  - "elasticache:DescribeCacheParameterGroups"
-                  - "elasticache:DescribeCacheParameters"
-                  - "elasticache:DescribeCacheSubnetGroups"
-                  - "elasticache:DescribeEngineDefaultParameters"
-                  - "elasticache:DescribeEvents"
-                  - "elasticache:DescribeGlobalReplicationGroups"
-                  - "elasticache:DescribeReplicationGroups"
-                  - "elasticache:DescribeReservedCacheNodes"
-                  - "elasticache:DescribeUpdateActions"
-                  - "elasticache:DescribeUserGroups"
-                  - "elasticache:DescribeUsers"
-                  - "elasticache:ListAllowedNodeTypeModifications"
-                  - "elasticache:ListTagsForResource"
-
-                  #
-                  ## ELB (Elastic Load Balancing) V1
-                  # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_Operations.html
-
-                  - "elasticloadbalancing:DescribeInstanceHealth"
-                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
-                  - "elasticloadbalancing:DescribeLoadBalancerPolicies"
-                  - "elasticloadbalancing:DescribeLoadBalancerPolicyTypes"
-                  - "elasticloadbalancing:DescribeLoadBalancers"
-                  - "elasticloadbalancing:DescribeTags"
-
-                  #
-                  ## ELB (Elastic Load Balancing) V2
-                  # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Operations.html
-
-                  - "elasticloadbalancing:DescribeAccountLimits"
-                  - "elasticloadbalancing:DescribeListeners"
-                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
-                  - "elasticloadbalancing:DescribeLoadBalancers"
-                  - "elasticloadbalancing:DescribeRules"
-                  - "elasticloadbalancing:DescribeTags"
-                  - "elasticloadbalancing:DescribeTargetGroupAttributes"
-                  - "elasticloadbalancing:DescribeTargetGroups"
-                  - "elasticloadbalancing:DescribeTargetHealth"
-
-                  #
-                  ## EMR (Elastic Map Reduce)
-                  # https://docs.aws.amazon.com/emr/latest/APIReference/API_Operations.html
-
-                  - "elasticmapreduce:DescribeCluster"
-                  - "elasticmapreduce:DescribeStep"
-                  - "elasticmapreduce:DescribeStudio"
-                  - "elasticmapreduce:ListBootstrapActions"
-                  - "elasticmapreduce:ListClusters"
-                  - "elasticmapreduce:ListInstanceFleets"
-                  - "elasticmapreduce:ListInstanceGroups"
-                  - "elasticmapreduce:ListInstances"
-                  - "elasticmapreduce:ListSteps"
-                  - "elasticmapreduce:ListStudioSessionMappings"
-                  - "elasticmapreduce:ListStudios"
-
-                  #
-                  ## ES (ElasticSearch)
-                  # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
-
-                  - "es:DescribeDomain"
-                  - "es:DescribeDomainAutoTunes"
-                  - "es:DescribeDomainConfig"
-                  - "es:DescribeDomains"
-                  - "es:DescribeElasticsearchDomain"
-                  - "es:DescribeElasticsearchDomainConfig"
-                  - "es:DescribeElasticsearchDomains"
-                  - "es:DescribePackages"
-                  - "es:ListDomainNames"
-                  - "es:ListDomainsForPackage"
-                  - "es:ListElasticsearchInstanceTypeDetails"
-                  - "es:ListElasticsearchInstanceTypes"
-                  - "es:ListInstanceTypeDetails"
-                  - "es:ListPackagesForDomain"
-                  - "es:ListTags"
-
-                  #
-                  ## Health
-                  # https://docs.aws.amazon.com/health/latest/APIReference/API_Operations.html
-
-                  - "health:DescribeAffectedAccountsForOrganization"
-                  - "health:DescribeAffectedEntities"
-                  - "health:DescribeAffectedEntitiesForOrganization"
-                  - "health:DescribeEntityAggregates"
-                  - "health:DescribeEventAggregates"
-                  - "health:DescribeEventDetails"
-                  - "health:DescribeEventDetailsForOrganization"
-                  - "health:DescribeEventTypes"
-                  - "health:DescribeEvents"
-                  - "health:DescribeEventsForOrganization"
-                  - "health:DescribeHealthServiceStatusForOrganization"
-
-                  #
-                  ## Kinesis
-                  # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_Operations.html
-
-                  - "kinesis:DescribeStream"
-                  - "kinesis:DescribeStreamConsumer"
-                  - "kinesis:DescribeStreamSummary"
-                  - "kinesis:ListShards"
-                  - "kinesis:ListStreamConsumers"
-                  - "kinesis:ListStreams"
-                  - "kinesis:ListTagsForStream"
-
-                  #
-                  ## Lambda
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Operations.html
-
-                  - "lambda:GetAccountSettings"
-                  - "lambda:GetAlias"
-                  - "lambda:GetEventSourceMapping"
-                  - "lambda:GetFunctionConfiguration"
-                  - "lambda:GetFunctionConcurrency"
-                  - "lambda:GetFunctionEventInvokeConfig"
-                  - "lambda:GetFunctionUrlConfig"
-                  - "lambda:GetLayerVersion"
-                  - "lambda:GetLayerVersionPolicy"
-                  - "lambda:GetPolicy"
-                  - "lambda:GetProvisionedConcurrencyConfig"
-                  - "lambda:ListAliases"
-                  - "lambda:ListCodeSigningConfigs"
-                  - "lambda:ListEventSourceMappings"
-                  - "lambda:ListFunctionEventInvokeConfigs"
-                  - "lambda:ListFunctionUrlConfigs"
-                  - "lambda:ListFunctions"
-                  - "lambda:ListFunctionsByCodeSigningConfig"
-                  - "lambda:ListLayerVersions"
-                  - "lambda:ListLayers"
-                  - "lambda:ListProvisionedConcurrencyConfigs"
-                  - "lambda:ListTags"
-                  - "lambda:ListVersionsByFunction"
-
-                  #
-                  ## Resource Group Tagging
-                  # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_Operations.html
-
-                  - "tag:GetResources"
-                  - "tag:GetTagKeys"
-                  - "tag:GetTagValues"
-
-                  #
-                  ## RDS (Relational Database Service)
-                  # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html
-
-                  - "rds:DescribeDBClusterParameterGroups"
-                  - "rds:DescribeDBClusterParameters"
-                  - "rds:DescribeDBClusters"
-                  - "rds:DescribeDBEngineVersions"
-                  - "rds:DescribeDBInstances"
-                  - "rds:DescribeDBParameterGroups"
-                  - "rds:DescribeDBParameters"
-                  - "rds:DescribeDBProxies"
-                  - "rds:DescribeDBProxyEndpoints"
-                  - "rds:DescribeDBProxyTargetGroups"
-                  - "rds:DescribeDBProxyTargets"
-                  - "rds:DescribeDBSecurityGroups"
-                  - "rds:DescribeDBSubnetGroups"
-                  - "rds:DescribeEventCategories"
-                  - "rds:DescribeEventSubscriptions"
-                  - "rds:DescribeEvents"
-                  - "rds:DescribeSourceRegions"
-                  - "rds:ListTagsForResource"
-
-                  #
-                  ## Route 53
-                  # https://docs.aws.amazon.com/Route53/latest/APIReference/API_Operations_Amazon_Route_53.html
-
-                  - "route53:ListCidrBlocks"
-                  - "route53:ListCidrCollections"
-                  - "route53:ListCidrLocations"
-                  - "route53:ListGeoLocations"
-                  - "route53:ListHealthChecks"
-                  - "route53:ListHostedZones"
-                  - "route53:ListHostedZonesByName"
-                  - "route53:ListHostedZonesByVPC"
-                  - "route53:ListQueryLoggingConfigs"
-                  - "route53:ListResourceRecordSets"
-                  - "route53:ListReusableDelegationSets"
-                  - "route53:ListTagsForResource"
-
-                  #
-                  ## S3
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations_Amazon_Simple_Storage_Service.html
-
-                  - "s3:DescribeMultiRegionAccessPointOperation"
-                  - "s3:GetAccessPoint"
-                  - "s3:GetAccessPointConfigurationForObjectLambda"
-                  - "s3:GetAccessPointForObjectLambda"
-                  - "s3:GetAccessPointPolicyStatus"
-                  - "s3:GetAccessPointPolicyStatusForObjectLambda"
-                  - "s3:GetAccountPublicAccessBlock"
-                  - "s3:GetBucketAcl"
-                  - "s3:GetBucketCORS"
-                  - "s3:GetBucketLocation"
-                  - "s3:GetBucketLogging"
-                  - "s3:GetBucketNotification"
-                  - "s3:GetBucketOwnershipControls"
-                  - "s3:GetBucketPolicy"
-                  - "s3:GetBucketTagging"
-                  - "s3:GetBucketVersioning"
-                  - "s3:GetBucketWebsite"
-                  - "s3:GetMetricsConfiguration"
-                  - "s3:GetMultiRegionAccessPoint"
-                  - "s3:GetMultiRegionAccessPointPolicy"
-                  - "s3:ListAccessPoints"
-                  - "s3:ListAccessPointsForObjectLambda"
-                  - "s3:ListAllMyBuckets"
-                  - "s3:ListBucketVersions"
-
-                  #
-                  ## SES (Simple Email Service) V1
-                  # https://docs.aws.amazon.com/ses/latest/APIReference/API_Operations.html
-
-                  - "ses:GetAccountSendingEnabled"
-                  - "ses:GetSendStatistics"
-                  - "ses:GetTemplate"
-                  - "ses:ListTemplates"
-                  - "ses:ListVerifiedEmailAddresses"
-
-                  #
-                  ## SES (Simple Email Service) V2
-                  # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_Operations.html
-
-                  - "ses:GetAccount"
-                  - "ses:GetDeliverabilityTestReport"
-                  - "ses:GetDomainDeliverabilityCampaign"
-                  - "ses:GetDomainStatisticsReport"
-                  - "ses:ListDeliverabilityTestReports"
-                  - "ses:ListDomainDeliverabilityCampaigns"
-                  - "ses:ListEmailIdentities"
-                  - "ses:ListEmailTemplates"
-                  - "ses:ListTagsForResource"
-
-                  #
-                  ## SNS (Simple Notification System)
-                  # https://docs.aws.amazon.com/sns/latest/api/API_Operations.html
-
-                  - "sns:ListSubscriptions"
-                  - "sns:ListSubscriptionsByTopic"
-                  - "sns:ListTagsForResource"
-                  - "sns:ListTopics"
-
-                  #
-                  ## SQS (Simple Queue Service)
-                  # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_Operations.html
-
-                  - "sqs:GetQueueAttributes"
-                  - "sqs:GetQueueUrl"
-                  - "sqs:ListDeadLetterSourceQueues"
-                  - "sqs:ListQueueTags"
-                  - "sqs:ListQueues"
-
-                  #
-                  ## Step Functions
-                  # https://docs.aws.amazon.com/step-functions/latest/apireference/API_Operations.html
-
-                  - "states:DescribeActivity"
-                  - "states:DescribeExecution"
-                  - "states:DescribeStateMachine"
-                  - "states:DescribeStateMachineForExecution"
-                  - "states:GetActivityTask"
-                  - "states:GetExecutionHistory"
-                  - "states:ListActivities"
-                  - "states:ListExecutions"
-                  - "states:ListStateMachines"
-                  - "states:ListTagsForResource"
-
-                  #
-                  ## X-Ray
-                  # https://docs.aws.amazon.com/xray/latest/api/API_Operations.html
-
-                  - "xray:BatchGetTraces"
-                  - "xray:GetGroup"
-                  - "xray:GetGroups"
-                  - "xray:GetInsight"
-                  - "xray:GetInsightEvents"
-                  - "xray:GetInsightImpactGraph"
-                  - "xray:GetInsightSummaries"
-                  - "xray:GetSamplingRules"
-                  - "xray:GetSamplingStatisticSummaries"
-                  - "xray:GetSamplingTargets"
-                  - "xray:GetServiceGraph"
-                  - "xray:GetTimeSeriesServiceStatistics"
-                  - "xray:GetTraceGraph"
-                  - "xray:GetTraceSummaries"
-                  - "xray:ListTagsForResource"
-
-                  #
-                  ##
-                  ###
-                  #### WRITE PERMISSIONS
-                  ###
-                  ##
-                  #
-
-                  #
-                  ## API Gateway
-                  # https://docs.aws.amazon.com/apigateway/latest/api/API_Operations.html
-
-                  # Serverless Inc. Comments: This enables us to automatically configure and continuously verify configuration exists for enabling logging from API Gateway and ingesting those logs.
-                  # Changes information about a Stage resource.
-                  - "apigateway:UpdateStage"
-
-                  ##
-                  ## Cloudwatch Logs
-                  # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html
-                  # Serverless Inc. Comments: These enables us to automatically configure and continuously verify configuration exists Subscription filters for Cloudwatch.
-                  # Creates or updates a destination. This operation is used only to create destinations for cross-account subscriptions.
-                  # A destination encapsulates a physical resource (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time stream of log events for a different account, ingested using PutLogEvents.
-                  # Through an access policy, a destination controls what is written to it. By default, PutDestination does not set any access policy with the destination, which means a cross-account user cannot call PutSubscriptionFilter against this destination. To enable this, the destination owner must call PutDestinationPolicy after PutDestination.
-
-                  - "logs:PutDestination"
-                  - "logs:PutDestinationPolicy"
-                  - "logs:PutSubscriptionFilter"
-                  - "logs:DeleteSubscriptionFilter"
-
-                  #
-                  ## Lambda
-                  # https://docs.aws.amazon.com/lambda/latest/dg/API_Operations.html
-
-                  - "lambda:UpdateFunctionConfiguration"
-                  - "lambda:InvokeAsync"
-                  - "lambda:InvokeFunction"
-        
-                  #
-                  ## S3
-                  # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations_Amazon_Simple_Storage_Service.html
-
-                  - "s3:PutBucketNotification"
-
-                Resource: "*"
+  ServerlessMonitoringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ServerlessMonitoringRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+              Service:
+                - streams.metrics.cloudwatch.amazonaws.com
+                - firehose.amazonaws.com
+                - logs.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId:
+                  Ref: AWS::AccountId
+      Path: "/"
+  #
+  ##
+  ###
+  #### SERVERLESS ROLE READ PERMISSIONS
+  ###
+  ##
+  #
+  ServerlessReadOnlyPolicyAtoD:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ## API Gateway V1
+              #
+
+              # Gets information about the current Account resource.
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAccount.html
+              - "apigateway:GetAccount"
+              # Describe an existing Authorizer resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetAuthorizer.html
+              - "apigateway:GetAuthorizer"
+              # Describe an existing Authorizers resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetAuthorizers.html
+              - "apigateway:GetAuthorizers"
+              # Describe a BasePathMapping resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetBasePathMapping.html
+              - "apigateway:GetBasePathMapping"
+              # Represents a collection of BasePathMapping resources.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetBasePathMappings.html
+              - "apigateway:GetBasePathMappings"
+              # Gets information about a Deployment resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDeployment.html
+              - "apigateway:GetDeployment"
+              # Gets information about a Deployments collection.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDeployments.html
+              - "apigateway:GetDeployments"
+              # Represents a domain name that is contained in a simpler, more intuitive URL that can be called.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDomainName.html
+              - "apigateway:GetDomainName"
+              # Represents a collection of DomainName resources.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDomainNames.html
+              - "apigateway:GetDomainNames"
+              # Exports a deployed version of a RestApi in a specified format.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetExport.html
+              - "apigateway:GetExport"
+              # Gets a GatewayResponse of a specified response type on the given RestApi.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetGatewayResponse.html
+              - "apigateway:GetGatewayResponse"
+              # Gets the GatewayResponses collection on the given RestApi.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetGatewayResponses.html
+              - "apigateway:GetGatewayResponses"
+              # Get the integration settings.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetIntegration.html
+              - "apigateway:GetIntegration"
+              # Represents a get integration response.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetIntegrationResponse.html
+              - "apigateway:GetIntegrationResponse"
+              # Describe an existing Method resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetMethod.html
+              - "apigateway:GetMethod"
+              # Describes a MethodResponse resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetMethodResponse.html
+              - "apigateway:GetMethodResponse"
+              # Describes an existing model defined for a RestApi resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetModel.html
+              - "apigateway:GetModel"
+              # Describes existing Models defined for a RestApi resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetModels.html
+              - "apigateway:GetModels"
+              # Generates a sample mapping template that can be used to transform a payload into the structure of a model.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetModelTemplate.html
+              - "apigateway:GetModelTemplate"
+              # Gets a RequestValidator of a given RestApi.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRequestValidator.html
+              - "apigateway:GetRequestValidator"
+              # Gets the RequestValidators collection of a given RestApi.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRequestValidators.html
+              - "apigateway:GetRequestValidators"
+              # Lists information about a resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetResource.html
+              - "apigateway:GetResource"
+              # Lists information about a collection of Resource resources.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetResources.html
+              - "apigateway:GetResources"
+              # Lists the RestApi resource in the collection.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRestApi.html
+              - "apigateway:GetRestApi"
+              # Lists the RestApis resources for your collection.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRestApis.html
+              - "apigateway:GetRestApis"
+              # Gets information about a Stage resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetStage.html
+              - "apigateway:GetStage"
+              # Gets information about one or more Stage resources.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetStages.html
+              - "apigateway:GetStages"
+              # Gets the Tags collection for a given resource.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetTags.html
+              - "apigateway:GetTags"
+              # Gets the usage data of a usage plan in a specified time interval.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetUsage.html
+              - "apigateway:GetUsage"
+              # Gets a usage plan of a given plan identifier.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetUsagePlan.html
+              - "apigateway:GetUsagePlan"
+              # Gets all the usage plans of the caller's account.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetUsagePlans.html
+              - "apigateway:GetUsagePlans"
+              # Gets a specified VPC link under the caller's account in a region.
+              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetVpcLink.html
+              - "apigateway:GetVpcLink"
+
+              #
+              ## API Gateway V2
+              #
+              # Serverless Inc. Comments: API Gateway V1 & V2 have overlapping IAM Actions.  However, V2 (AKA HTTP API) has additional IAM Actions, and we cover those here.
+
+              # Represents an API.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid.html#GetApi
+              - "apigateway:GetApi"
+              # Represents your APIs as a collection.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis.html#GetApis
+              - "apigateway:GetApis"
+              # Represent an API mapping.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/domainnames-domainname-apimappings-apimappingid.html#GetApiMapping
+              - "apigateway:GetApiMapping"
+              # Represents the collection of responses for an integration.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations-integrationid-integrationresponses.html#GetIntegrationResponses
+              - "apigateway:GetIntegrationResponses"
+              # Represents an API integration.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations-integrationid.html#GetIntegration
+              - "apigateway:GetIntegration"
+              # Represents the collection of integrations for an API.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations.html#GetIntegrations
+              - "apigateway:GetIntegrations"
+              # Represents a route for an API.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid.html#GetRoute
+              - "apigateway:GetRoute"
+              # Represents the collection of routes for an API.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes.html#GetRoutes
+              - "apigateway:GetRoutes"
+              # Represents a route response.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid-routeresponses-routeresponseid.html#GetRouteResponse
+              - "apigateway:GetRouteResponse"
+              # Represents the collection of responses for a route.
+              # https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid-routeresponses.html#GetRouteResponses
+              - "apigateway:GetRouteResponses"
+
+              #
+              ## App Runner
+              #
+
+              # Grants permission to retrieve the description of an AWS App Runner automatic scaling configuration resource.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeAutoScalingConfiguration.html
+              - "apprunner:DescribeAutoScalingConfiguration"
+              # Grants permission to retrieve descriptions of custom domain names associated with an AWS App Runner service.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeCustomDomains.html
+              - "apprunner:DescribeCustomDomains"
+              # Grants permission to retrieve the description of an AWS App Runner observability configuration resource.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeObservabilityConfiguration.html
+              - "apprunner:DescribeObservabilityConfiguration"
+              # Grants permission to retrieve the description of an operation that occurred on an AWS App Runner service.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeOperation.html
+              - "apprunner:DescribeOperation"
+              # Grants permission to retrieve the description of an AWS App Runner service resource.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeService.html
+              - "apprunner:DescribeService"
+              # Grants permission to retrieve the description of an AWS App Runner VPC connector resource.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_DescribeVpcConnector.html
+              - "apprunner:DescribeVpcConnector"
+              # Grants permission to retrieve a list of AWS App Runner automatic scaling configurations in your AWS account.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListAutoScalingConfigurations.html
+              - "apprunner:ListAutoScalingConfigurations"
+              # Grants permission to retrieve a list of AWS App Runner connections in your AWS account.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListConnections.html
+              - "apprunner:ListConnections"
+              # Grants permission to retrieve a list of AWS App Runner observability configurations in your AWS account.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListObservabilityConfigurations.html
+              - "apprunner:ListObservabilityConfigurations"
+              # Grants permission to retrieve a list of operations that occurred on an AWS App Runner service resource.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListOperations.html
+              - "apprunner:ListOperations"
+              # Grants permission to retrieve a list of running AWS App Runner services in your AWS account.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListServices.html
+              - "apprunner:ListServices"
+              # Grants permission to list tags associated with an AWS App Runner resource.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListTagsForResource.html
+              - "apprunner:ListTagsForResource"
+              # Grants permission to retrieve a list of AWS App Runner VPC connectors in your AWS account.
+              # https://docs.aws.amazon.com/apprunner/latest/api/API_ListVpcConnectors.html
+              - "apprunner:ListVpcConnectors"
+
+              #
+              ## AppSync
+              #
+
+              # Grants permission to read custom domain name - GraphQL API association details in AppSync.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetApiAssociation.html
+              - "appsync:GetApiAssociation"
+              # Grants permission to retrieve a data source.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetDataSource.html
+              - "appsync:GetDataSource"
+              # Grants permission to read information about a custom domain name in AppSync.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetDomainName.html
+              - "appsync:GetDomainName"
+              # Grants permission to retrieve a function.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetFunction.html
+              - "appsync:GetFunction"
+              # Grants permission to retrieve a GraphQL API.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetGraphqlApi.html
+              - "appsync:GetGraphqlApi"
+              # Grants permission to retrieve the introspection schema for a GraphQL API.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetIntrospectionSchema.html
+              - "appsync:GetIntrospectionSchema"
+              # Grants permission to retrieve a resolver.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetResolver.html
+              - "appsync:GetResolver"
+              # Grants permission to retrieve the current status of a schema creation operation.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
+              - "appsync:GetSchemaCreationStatus"
+              # Grants permission to list the data sources for a given API.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListDataSources.html
+              - "appsync:ListDataSources"
+              # Grants permission to enumerate custom domain names in AppSync.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListDomainNames.html
+              - "appsync:ListDomainNames"
+              # Grants permission to list the functions for a given API.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListFunctions.html
+              - "appsync:ListFunctions"
+              # Grants permission to list GraphQL APIs.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListGraphqlApis.html
+              - "appsync:ListGraphqlApis"
+              # Grants permission to list the resolvers for a given API and type.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListResolvers.html
+              - "appsync:ListResolvers"
+              # Grants permission to list the resolvers that are associated with a specific function.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListResolversByFunction.html
+              - "appsync:ListResolversByFunction"
+              # Grants permission to list the tags for a resource.
+              # https://docs.aws.amazon.com/appsync/latest/APIReference/API_ListTagsForResource.html
+              - "appsync:ListTagsForResource"
+
+              #
+              ## Autoscaling
+              #
+
+              # Describes the scalable resources in the specified scaling plan.
+              # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_DescribeScalingPlanResources.html
+              - "autoscaling-plans:DescribeScalingPlanResources"
+              # Describes the specified scaling plans or all of your scaling plans.
+              # https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_DescribeScalingPlans.html
+              - "autoscaling-plans:DescribeScalingPlans"
+
+              #
+              ## CloudFormation
+              #
+
+              # Grants permission to return information about a CloudFormation extension publisher.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribePublisher.html
+              - "cloudformation:DescribePublisher"
+              # Grants permission to return the stack instance that's associated with the specified stack set, AWS account, and region.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStackInstance.html
+              - "cloudformation:DescribeStackInstance"
+              # Grants permission to return a description of the specified resource in the specified stack.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStackResource.html
+              - "cloudformation:DescribeStackResource"
+              # Grants permission to return AWS resource descriptions for running and deleted stacks.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStackResources.html
+              - "cloudformation:DescribeStackResources"
+              # Grants permission to return the description of the specified stack set.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStackSet.html
+              - "cloudformation:DescribeStackSet"
+              # Grants permission to return the description for the specified stack.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStacks.html
+              - "cloudformation:DescribeStacks"
+              # Grants permission to return summary information about stack instances that are associated with the specified stack set.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListStackSets.html
+              - "cloudformation:ListStackInstances"
+              # Grants permission to return descriptions of all resources of the specified stack.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListStackResources.html
+              - "cloudformation:ListStackResources"
+              # Grants permission to return summary information about stack sets that are associated with the user.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListStackSets.html
+              - "cloudformation:ListStackSets"
+              # Grants permission to return the summary information for stacks whose status matches the specified StackStatusFilter.
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListStacks.html
+              - "cloudformation:ListStacks"
+
+              #
+              ## CloudFront
+              #
+
+              # Grants permission to get a CloudFront function summary.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_DescribeFunction.html
+              - "cloudfront:DescribeFunction"
+              # Grants permission to get the cache policy.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetCachePolicy.html
+              - "cloudfront:GetCachePolicy"
+              # Grants permission to get the cache policy configuration.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetCachePolicyConfig.html
+              - "cloudfront:GetCachePolicyConfig"
+              # Grants permission to get the information about a web distribution.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetDistribution.html
+              - "cloudfront:GetDistribution"
+              # Grants permission to get the configuration information about a distribution.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetDistributionConfig.html
+              - "cloudfront:GetDistributionConfig"
+              # Grants permission to list the distributions associated with your AWS account.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListDistributions.html
+              - "cloudfront:ListDistributions"
+              # Grants permission to list distribution IDs for distributions that have a cache behavior that's associated with the specified cache policy.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListDistributionsByCachePolicyId.html
+              - "cloudfront:ListDistributionsByCachePolicyId"
+              # Grants permission to get a list of CloudFront functions.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListFunctions.html
+              - "cloudfront:ListFunctions"
+              # Grants permission to list tags for a CloudFront resource.
+              # https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ListTagsForResource.html
+              - "cloudfront:ListTagsForResource"
+
+              #
+              ## CloudTrail
+              #
+
+              # Grants permission to list settings for the trails associated with the current region for your account.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html
+              - "cloudtrail:DescribeTrails"
+              # Grants permission to retrieve a JSON-formatted list of information about the specified trail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_GetTrailStatus.html
+              - "cloudtrail:GetTrailStatus"
+              # Grants permission to list the tags for trails or event data stores in the current region.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_ListTags.html
+              - "cloudtrail:ListTags"
+              # Grants permission to list trails associated with the current region for your account.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_ListTrails.html
+              - "cloudtrail:ListTrails"
+              # Grants permission to look up API activity events captured by CloudTrail that create, update, or delete resources in your account.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html
+              - "cloudtrail:LookupEvents"
+
+              #
+              ## Cloudwatch
+              #
+
+              # Grants permission to retrieve the history for the specified alarm.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarmHistory.html
+              - "cloudwatch:DescribeAlarmHistory"
+              # Grants permission to describe all alarms, currently owned by the user's account.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html
+              - "cloudwatch:DescribeAlarms"
+              # Grants permission to describe all alarms configured on the specified metric, currently owned by the user's account.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarmsForMetric.html
+              - "cloudwatch:DescribeAlarmsForMetric"
+              # Grants permission to list the anomaly detection models that you have created in your account.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAnomalyDetectors.html
+              - "cloudwatch:DescribeAnomalyDetectors"
+              # Grants permission to disable a collection of insight rules.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DisableInsightRules.html
+              - "cloudwatch:DescribeInsightRules"
+              # Grants permission to display the details of the CloudWatch dashboard you specify.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetDashboard.html
+              - "cloudwatch:GetDashboard"
+              # Grants permission to return the top-N report of unique contributors over a time range for a given insight rule.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetInsightRuleReport.html
+              - "cloudwatch:GetInsightRuleReport"
+              # Grants permission to retrieve batch amounts of CloudWatch metric data and perform metric math on retrieved data.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricData.html
+              - "cloudwatch:GetMetricData"
+              # Grants permission to retrieve statistics for the specified metric.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStatistics.html
+              - "cloudwatch:GetMetricStatistics"
+              # Grants permission to return the details of a CloudWatch metric stream.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStream.html
+              - "cloudwatch:GetMetricStream"
+              # Grants permission to retrieve snapshots of metric widgets.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricWidgetImage.html
+              - "cloudwatch:GetMetricWidgetImage"
+              # Grants permission to return a list of all CloudWatch dashboards in your account.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListDashboards.html
+              - "cloudwatch:ListDashboards"
+              # Grants permission to return a list of all CloudWatch metric streams in your account.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListMetricStreams.html
+              - "cloudwatch:ListMetricStreams"
+              # Grants permission to retrieve a list of valid metrics stored for the AWS account owner.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListMetrics.html
+              - "cloudwatch:ListMetrics"
+              # Grants permission to list tags for an Amazon CloudWatch resource.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListTagsForResource.html
+              - "cloudwatch:ListTagsForResource"
+
+              #
+              ## Cloudwatch Logs
+              #
+
+              # Grants permissions to return all the log groups that are associated with the AWS account making the request.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeLogGroups.html
+              - "logs:DescribeLogGroups"
+              # Grants permissions to return all the log streams that are associated with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeLogStreams.html
+              - "logs:DescribeLogStreams"
+              # Grants permissions to return all the subscription filters associated with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeSubscriptionFilters.html
+              - "logs:DescribeSubscriptionFilters"
+              # Grants permissions to retrieve log events, optionally filtered by a filter pattern from the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_FilterLogEvents.html
+              - "logs:FilterLogEvents"
+              # Grants permissions to list the tags for the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_ListTagsLogGroup.html
+              - "logs:ListTagsLogGroup"
+              # Grants permissions to test the filter pattern of a metric filter against a sample of log event messages.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_TestMetricFilter.html
+              - "logs:TestMetricFilter"
+
+              #
+              ## Cost Explorer
+              #
+
+              # Grants permission to retrieve descriptions such as the name, ARN, rules, definition, and effective dates of a Cost Category.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_DescribeCostCategoryDefinition.html
+              - "ce:DescribeCostCategoryDefinition"
+              # Grants permission to retrieve the cost and usage metrics for your account.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetCostAndUsage.html
+              - "ce:GetCostAndUsage"
+              # Grants permission to retrieve the cost and usage metrics with resources for your account.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetCostAndUsageWithResources.html
+              - "ce:GetCostAndUsageWithResources"
+              # Grants permission to query Cost Catagory names and values for a specified time period.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetCostCategories.html
+              - "ce:GetCostCategories"
+              # Grants permission to query tags for a specified time period.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_GetTags.html
+              - "ce:GetTags"
+              # Grants permission to list Cost Allocation Tags.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_ListCostAllocationTags.html
+              - "ce:ListCostAllocationTags"
+              # Grants permission to retrieve names, ARN, and effective dates for all Cost Categories.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_ListCostCategoryDefinitions.html
+              - "ce:ListCostCategoryDefinitions"
+              # Grants permission to list tags for a Cost Explorer resource.
+              # https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_ListTagsForResource.html
+              - "ce:ListTagsForResource"
+
+              #
+              ## DynamoDB
+              #
+
+              # Grants permission to describe an existing backup of a table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeBackup.html
+              - "dynamodb:DescribeBackup"
+              # Grants permission to check the status of the backup restore settings on the specified table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeContinuousBackups.html
+              - "dynamodb:DescribeContinuousBackups"
+              # Grants permission to describe the contributor insights status and related details for a given table or global secondary index.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeContributorInsights.html
+              - "dynamodb:DescribeContributorInsights"
+              # Grants permission to describe an existing Export of a table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeExport.html
+              - "dynamodb:DescribeExport"
+              # Grants permission to return information about the specified global table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeGlobalTable.html
+              - "dynamodb:DescribeGlobalTable"
+              # Grants permission to return settings information about the specified global table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeGlobalTableSettings.html
+              - "dynamodb:DescribeGlobalTableSettings"
+              # Grants permission to grant permission to describe the status of Kinesis streaming and related details for a given table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeKinesisStreamingDestination.html
+              - "dynamodb:DescribeKinesisStreamingDestination"
+              # Grants permission to return the current provisioned-capacity limits for your AWS account in a region, both for the region as a whole and for any one DynamoDB table that you create there.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeLimits.html
+              - "dynamodb:DescribeLimits"
+              # Grants permission to describe one or more of the Reserved Capacity purchased.
+              - "dynamodb:DescribeReservedCapacity"
+              # Grants permission to describe Reserved Capacity offerings that are available for purchase.
+              - "dynamodb:DescribeReservedCapacityOfferings"
+              # Grants permission to return information about a stream, including the current status of the stream, its Amazon Resource Name (ARN), the composition of its shards, and its corresponding DynamoDB table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeStream.html
+              - "dynamodb:DescribeStream"
+              # Grants permission to return information about the table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html
+              - "dynamodb:DescribeTable"
+              # Grants permission to describe the auto scaling settings across all replicas of the global table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTableReplicaAutoScaling.html
+              - "dynamodb:DescribeTableReplicaAutoScaling"
+              # Grants permission to give a description of the Time to Live (TTL) status on the specified table.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTimeToLive.html
+              - "dynamodb:DescribeTimeToLive"
+              # Grants permission to list backups associated with the account and endpoint.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListBackups.html
+              - "dynamodb:ListBackups"
+              # Grants permission to list the ContributorInsightsSummary for all tables and global secondary indexes associated with the current account and endpoint.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListContributorInsights.html
+              - "dynamodb:ListContributorInsights"
+              # Grants permission to list exports associated with the account and endpoint.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListExports.html
+              - "dynamodb:ListExports"
+              # Grants permission to list all global tables that have a replica in the specified region.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListGlobalTables.html
+              - "dynamodb:ListGlobalTables"
+              # Grants permission to return an array of stream ARNs associated with the current account and endpoint.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListStreams.html
+              - "dynamodb:ListStreams"
+              # Grants permission to return an array of table names associated with the current account and endpoint.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html
+              - "dynamodb:ListTables"
+              # Grants permission to list all tags on an Amazon DynamoDB resource.
+              # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTagsOfResource.html
+              - "dynamodb:ListTagsOfResource"
+            Resource: "*"
+  ServerlessReadOnlyPolicyEtoK:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ## Elastic Container Service
+              #
+
+              # Grants permission to describe one or more Amazon ECS capacity providers.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeCapacityProviders.html
+              - "ecs:DescribeCapacityProviders"
+              # Grants permission to describes one or more of your clusters.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeClusters.html
+              - "ecs:DescribeClusters"
+              # Grants permission to describes Amazon ECS container instances.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeContainerInstances.html
+              - "ecs:DescribeContainerInstances"
+              # Grants permission to describe the specified services running in your cluster.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeServices.html
+              - "ecs:DescribeServices"
+              # Grants permission to describe a task definition. You can specify a family and revision to find information about a specific task definition, or you can simply specify the family to find the latest ACTIVE revision in that family.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTaskDefinition.html
+              - "ecs:DescribeTaskDefinition"
+              # Grants permission to describe Amazon ECS task sets.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTaskSets.html
+              - "ecs:DescribeTaskSets"
+              # Grants permission to describe a specified task or tasks.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTasks.html
+              - "ecs:DescribeTasks"
+              # Grants permission to list the account settings for an Amazon ECS resource for a specified principal.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListAccountSettings.html
+              - "ecs:ListAccountSettings"
+              # Grants permission to lists the attributes for Amazon ECS resources within a specified target type and cluster.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListAttributes.html
+              - "ecs:ListAttributes"
+              # Grants permission to get a list of existing clusters.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListClusters.html
+              - "ecs:ListClusters"
+              # Grants permission to get a list of container instances in a specified cluster.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListContainerInstances.html
+              - "ecs:ListContainerInstances"
+              # Grants permission to get a list of services that are running in a specified cluster.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListServices.html
+              - "ecs:ListServices"
+              # Grants permission to get a list of tags for the specified resource.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTagsForResource.html
+              - "ecs:ListTagsForResource"
+              # Grants permission to get a list of task definition families that are registered to your account (which may include task definition families that no longer have any ACTIVE task definitions).
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListServices.html
+              - "ecs:ListTaskDefinitionFamilies"
+              # Grants permission to get a list of task definitions that are registered to your account.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTaskDefinitions.html
+              - "ecs:ListTaskDefinitions"
+              # Grants permission to get a list of tasks for a specified cluster.
+              # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTasks.html
+              - "ecs:ListTasks"
+
+              #
+              ## ElastiCache
+              #
+
+              # Grants permission to list information about provisioned cache clusters.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheClusters.html
+              - "elasticache:DescribeCacheClusters"
+              # Grants permission to list available cache engines and their versions.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheEngineVersions.html
+              - "elasticache:DescribeCacheEngineVersions"
+              # Grants permission to list cache parameter group descriptions.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheParameterGroups.html
+              - "elasticache:DescribeCacheParameterGroups"
+              # Grants permission to retrieve the detailed parameter list for a particular cache parameter group.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheParameters.html
+              - "elasticache:DescribeCacheParameters"
+              # Grants permission to list cache subnet group descriptions.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeCacheSubnetGroups.html
+              - "elasticache:DescribeCacheSubnetGroups"
+              # Grants permission to retrieve the default engine and system parameter information for the specified cache engine.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEngineDefaultParameters.html
+              - "elasticache:DescribeEngineDefaultParameters"
+              # Grants permission to list events related to clusters, cache security groups, and cache parameter groups.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEvents.html
+              - "elasticache:DescribeEvents"
+              # Grants permission to list information about global replication groups.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeGlobalReplicationGroups.html
+              - "elasticache:DescribeGlobalReplicationGroups"
+              # Grants permission to list information about provisioned replication groups.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeReplicationGroups.html
+              - "elasticache:DescribeReplicationGroups"
+              # Grants permission to list information about purchased reserved cache nodes.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeReservedCacheNodes.html
+              - "elasticache:DescribeReservedCacheNodes"
+              # Grants permission to list details of the update actions for a set of clusters or replication groups.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeUpdateActions.html
+              - "elasticache:DescribeUpdateActions"
+              # Grants permission to list information about Redis user groups.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeUserGroups.html
+              - "elasticache:DescribeUserGroups"
+              # Grants permission to list information about Redis users.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeUsers.html
+              - "elasticache:DescribeUsers"
+              # Grants permission to list available node type that can be used to scale a particular Redis cluster or replication group.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_ListAllowedNodeTypeModifications.html
+              - "elasticache:ListAllowedNodeTypeModifications"
+              # Grants permission to list tags for an ElastiCache resource.
+              # https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_ListTagsForResource.html
+              - "elasticache:ListTagsForResource"
+
+              #
+              ## Elastic Load Balancing V1
+              #
+
+              # Grants permission to describe the state of the specified instances with respect to the specified load balancer.
+              # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeInstanceHealth.html
+              - "elasticloadbalancing:DescribeInstanceHealth"
+              # Grants permission to describe the attributes for the specified load balancer.
+              # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancerAttributes.html
+              - "elasticloadbalancing:DescribeLoadBalancerAttributes"
+              # Grants permission to describe the specified policies.
+              # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancerPolicies.html
+              - "elasticloadbalancing:DescribeLoadBalancerPolicies"
+              # Grants permission to describe the specified load balancer policy types
+              # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancerPolicyTypes.html
+              - "elasticloadbalancing:DescribeLoadBalancerPolicyTypes"
+              # Grants permission to describe the specified the load balancers. If no load balancers are specified, the call describes all of your load balancers.
+              # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancers.html
+              - "elasticloadbalancing:DescribeLoadBalancers"
+              # Grants permission to describe the tags associated with the specified load balancers.
+              # https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeTags.html
+              - "elasticloadbalancing:DescribeTags"
+
+              #
+              ## Elastic Load Balancing V2
+              #
+
+              # Grants permission to describe the Elastic Load Balancing resource limits for the AWS account.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeAccountLimits.html
+              - "elasticloadbalancing:DescribeAccountLimits"
+              # Grants permission to describe the specified listeners or the listeners for the specified Application Load Balancer.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeListeners.html
+              - "elasticloadbalancing:DescribeListeners"
+              # Grants permission to describe the attributes for the specified load balancer.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancerAttributes.html
+              - "elasticloadbalancing:DescribeLoadBalancerAttributes"
+              # Grants permission to describe the specified the load balancers. If no load balancers are specified, the call describes all of your load balancers.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html
+              - "elasticloadbalancing:DescribeLoadBalancers"
+              # Grants permission to describe the specified rules or the rules for the specified listener.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeRules.html
+              - "elasticloadbalancing:DescribeRules"
+              # Grants permission to describe the tags associated with the specified resource.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTags.html
+              - "elasticloadbalancing:DescribeTags"
+              # Grants permission to describe the attributes for the specified target group.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetGroupAttributes.html
+              - "elasticloadbalancing:DescribeTargetGroupAttributes"
+              # Grants permission to describe the specified target groups or all of your target groups.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetGroups.html
+              - "elasticloadbalancing:DescribeTargetGroups"
+              # Grants permission to describe the health of the specified targets or all of your targets.
+              # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetHealth.html
+              - "elasticloadbalancing:DescribeTargetHealth"
+
+              #
+              ## Elastic Map Reduce
+              #
+
+              # Grants permission to get details about a cluster, including status, hardware and software configuration, VPC settings, and so on.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_DescribeCluster.html
+              - "elasticmapreduce:DescribeCluster"
+              # Grants permission to get details about a cluster step.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_DescribeStep.html
+              - "elasticmapreduce:DescribeStep"
+              # Grants permission to view information about an EMR Studio.
+              # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-studio.html
+              - "elasticmapreduce:DescribeStudio"
+              # Grants permission to get details about the bootstrap actions associated with a cluster.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListBootstrapActions.html
+              - "elasticmapreduce:ListBootstrapActions"
+              # Grants permission to get the status of accessible clusters.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListClusters.html
+              - "elasticmapreduce:ListClusters"
+              # Grants permission to get details of instance fleets in a cluster.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListInstanceFleets.html
+              - "elasticmapreduce:ListInstanceFleets"
+              # Grants permission to get details of instance groups in a cluster.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListInstanceGroups.html
+              - "elasticmapreduce:ListInstanceGroups"
+              # Grants permission to get details about the Amazon EC2 instances in a cluster.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListInstances.html
+              - "elasticmapreduce:ListInstances"
+              # Grants permission to list steps associated with a cluster.
+              # https://docs.aws.amazon.com/emr/latest/APIReference/API_ListSteps.html
+              - "elasticmapreduce:ListSteps"
+              # Grants permission to list summary information about EMR Studio session mappings.
+              # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-studio.html
+              - "elasticmapreduce:ListStudioSessionMappings"
+              # Grants permission to list summary information about EMR Studios.
+              # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-studio.html
+              - "elasticmapreduce:ListStudios"
+
+              #
+              ## OpenSearch Service
+              #
+
+              # Grants permission to view a description of the domain configuration for the specified OpenSearch Service domain, including the domain ID, service endpoint, and ARN.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomain
+              - "es:DescribeDomain"
+              # Grants permission to view the Auto-Tune configuration of the domain for the specified OpenSearch Service domain, including the Auto-Tune state and maintenance schedules.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describeautotune
+              - "es:DescribeDomainAutoTunes"
+              # Grants permission to view a description of the configuration options and status of an OpenSearch Service domain.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomainconfig
+              - "es:DescribeDomainConfig"
+              # Grants permission to view a description of the domain configuration for up to five specified OpenSearch Service domains.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomains
+              - "es:DescribeDomains"
+              # Grants permission to view a description of the domain configuration for the specified OpenSearch Service domain, including the domain ID, service endpoint, and ARN. This permission is deprecated. Use DescribeDomain instead.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomain
+              - "es:DescribeElasticsearchDomain"
+              # Grants permission to view a description of the configuration and status of an OpenSearch Service domain. This permission is deprecated. Use DescribeDomainConfig instead.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomainconfig
+              - "es:DescribeElasticsearchDomainConfig"
+              # Grants permission to view a description of the domain configuration for up to five specified Amazon OpenSearch domains. This permission is deprecated. Use DescribeDomains instead.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describedomains
+              - "es:DescribeElasticsearchDomains"
+              # Grants permission to describe all packages available to OpenSearch Service domains.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-describepackages
+              - "es:DescribePackages"
+              # Grants permission to display the names of all OpenSearch Service domains that the current user owns.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listdomainnames
+              - "es:ListDomainNames"
+              # Grants permission to list all OpenSearch Service domains that a package is associated with.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listdomainsforpackage
+              - "es:ListDomainsForPackage"
+              # Grants permission to list all instance types and available features for a given OpenSearch version. This permission is deprecated. Use ListInstanceTypeDetails instead.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listinstancetypedetails
+              - "es:ListElasticsearchInstanceTypeDetails"
+              # Grants permission to list all EC2 instance types that are supported for a given OpenSearch version.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html
+              - "es:ListElasticsearchInstanceTypes"
+              # Grants permission to list all instance types and available features for a given OpenSearch or Elasticsearch version.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listinstancetypedetails
+              - "es:ListInstanceTypeDetails"
+              # Grants permission to list all packages associated with the OpenSearch Service domain.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listpackagesfordomain
+              - "es:ListPackagesForDomain"
+              # Grants permission to display all resource tags for an OpenSearch Service domain.
+              # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/configuration-api.html#configuration-api-actions-listtags
+              - "es:ListTags"
+
+              #
+              ## Health
+              #
+
+              # Grants permission to retrieve a list of accounts that have been affected by the specified events in organization.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedAccountsForOrganization.html
+              - "health:DescribeAffectedAccountsForOrganization"
+              # Grants permission to retrieve a list of entities that have been affected by the specified events.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntities.html
+              - "health:DescribeAffectedEntities"
+              # Grants permission to retrieve a list of entities that have been affected by the specified events and accounts in organization.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntitiesForOrganization.html
+              - "health:DescribeAffectedEntitiesForOrganization"
+              # Grants permission to retrieve the number of entities that are affected by each of the specified events.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEntityAggregates.html
+              - "health:DescribeEntityAggregates"
+              # Grants permission to retrieve the number of events of each event type (issue, scheduled change, and account notification).
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventAggregates.html
+              - "health:DescribeEventAggregates"
+              # Grants permission to retrieve detailed information about one or more specified events.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventDetails.html
+              - "health:DescribeEventDetails"
+              # Grants permission to retrieve detailed information about one or more specified events for provided accounts in organization.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventDetailsForOrganization.html
+              - "health:DescribeEventDetailsForOrganization"
+              # Grants permission to retrieve the event types that meet the specified filter criteria.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventTypes.html
+              - "health:DescribeEventTypes"
+              # Grants permission to retrieve information about events that meet the specified filter criteria.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEvents.html
+              - "health:DescribeEvents"
+              # Grants permission to retrieve information about events that meet the specified filter criteria in organization.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventsForOrganization.html
+              - "health:DescribeEventsForOrganization"
+              # Grants permission to retrieve the status of enabling or disabling the Organizational View feature.
+              # https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeHealthServiceStatusForOrganization.html
+              - "health:DescribeHealthServiceStatusForOrganization"
+
+              #
+              ## Kinesis
+              #
+
+              # Grants permission to describe the specified stream.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStream.html
+              - "kinesis:DescribeStream"
+              # Grants permission to get the description of a registered stream consumer.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStreamConsumer.html
+              - "kinesis:DescribeStreamConsumer"
+              # Grants permission to provide a summarized description of the specified Kinesis data stream without the shard list.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStreamSummary.html
+              - "kinesis:DescribeStreamSummary"
+              # Grants permission to list the shards in a stream and provides information about each shard.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListShards.html
+              - "kinesis:ListShards"
+              # Grants permission to list the stream consumers registered to receive data from a Kinesis stream using enhanced fan-out, and provides information about each consumer.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListStreamConsumers.html
+              - "kinesis:ListStreamConsumers"
+              # Grants permission to list your streams.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListStreams.html
+              - "kinesis:ListStreams"
+              # Grants permission to list the tags for the specified Amazon Kinesis stream.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListTagsForStream.html
+              - "kinesis:ListTagsForStream"
+            Resource: "*"
+  ServerlessReadOnlyPolicyLtoX:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ## Lambda
+              #
+
+              # Grants permission to view details about an account's limits and usage in an AWS Region.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetAccountSettings.html
+              - "lambda:GetAccountSettings"
+              # Grants permission to view details about an AWS Lambda function alias.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetAlias.html
+              - "lambda:GetAlias"
+              # Grants permission to view details about an AWS Lambda event source mapping.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetEventSourceMapping.html
+              - "lambda:GetEventSourceMapping"
+              # Grants permission to view details about the reserved concurrency configuration for a function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionConcurrency.html
+              - "lambda:GetFunctionConcurrency"
+              # Grants permission to view details about the version-specific settings of an AWS Lambda function or version.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionConfiguration.html
+              - "lambda:GetFunctionConfiguration"
+              # Grants permission to view the configuration for asynchronous invocation for a function, version, or alias.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionEventInvokeConfig.html
+              - "lambda:GetFunctionEventInvokeConfig"
+              # Grants permission to read function url configuration for a Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionUrlConfig.html
+              - "lambda:GetFunctionUrlConfig"
+              # Grants permission to view details about a version of an AWS Lambda layer. Note this action also supports GetLayerVersionByArn API.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html
+              - "lambda:GetLayerVersion"
+              # Grants permission to view the resource-based policy for a version of an AWS Lambda layer.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersionPolicy.html
+              - "lambda:GetLayerVersionPolicy"
+              # Grants permission to view the resource-based policy for an AWS Lambda function, version, or alias.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetPolicy.html
+              - "lambda:GetPolicy"
+              # Grants permission to view the provisioned concurrency configuration for an AWS Lambda function's alias or version.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetProvisionedConcurrencyConfig.html
+              - "lambda:GetProvisionedConcurrencyConfig"
+              # Grants permission to retrieve a list of aliases for an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListAliases.html
+              - "lambda:ListAliases"
+              # Grants permission to retrieve a list of AWS Lambda code signing configs.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListCodeSigningConfigs.html
+              - "lambda:ListCodeSigningConfigs"
+              # Grants permission to retrieve a list of AWS Lambda event source mappings.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListEventSourceMappings.html
+              - "lambda:ListEventSourceMappings"
+              # Grants permission to retrieve a list of configurations for asynchronous invocation for a function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctionEventInvokeConfigs.html
+              - "lambda:ListFunctionEventInvokeConfigs"
+              # Grants permission to read function url configurations for a function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctionUrlConfigs.html
+              - "lambda:ListFunctionUrlConfigs"
+              # Grants permission to retrieve a list of AWS Lambda functions, with the version-specific configuration of each function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctions.html
+              - "lambda:ListFunctions"
+              # Grants permission to retrieve a list of AWS Lambda functions by the code signing config assigned.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListFunctionsByCodeSigningConfig.html
+              - "lambda:ListFunctionsByCodeSigningConfig"
+              # Grants permission to retrieve a list of versions of an AWS Lambda layer.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListLayerVersions.html
+              - "lambda:ListLayerVersions"
+              # Grants permission to retrieve a list of AWS Lambda layers, with details about the latest version of each layer.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListLayers.html
+              - "lambda:ListLayers"
+              # Grants permission to retrieve a list of provisioned concurrency configurations for an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListProvisionedConcurrencyConfigs.html
+              - "lambda:ListProvisionedConcurrencyConfigs"
+              # Grants permission to retrieve a list of tags for an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListTags.html
+              - "lambda:ListTags"
+              # Grants permission to retrieve a list of versions for an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_ListVersionsByFunction.html
+              - "lambda:ListVersionsByFunction"
+
+              #
+              ## Resource Group Tagging
+              #
+
+              # Grants permission to return tagged or previously tagged resources in the specified AWS Region for the calling account.
+              # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetResources.html
+              - "tag:GetResources"
+              # Grants permission to returns tag keys currently in use in the specified AWS Region for the calling account.
+              # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetTagKeys.html
+              - "tag:GetTagKeys"
+              # Grants permission to return tag values for the specified key that are used in the specified AWS Region for the calling account.
+              # https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetTagValues.html
+              - "tag:GetTagValues"
+
+              #
+              ## RDS
+              #
+
+              # Grants permission to return a list of DBClusterParameterGroup descriptions.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusterParameterGroups.html
+              - "rds:DescribeDBClusterParameterGroups"
+              # Grants permission to return the detailed parameter list for a particular DB cluster parameter group.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusterParameters.html
+              - "rds:DescribeDBClusterParameters"
+              # Grants permission to return information about provisioned Aurora DB clusters.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusters.html
+              - "rds:DescribeDBClusters"
+              # Grants permission to return a list of the available DB engines.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBEngineVersions.html
+              - "rds:DescribeDBEngineVersions"
+              # Grants permission to return information about provisioned RDS instances.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html
+              - "rds:DescribeDBInstances"
+              # Grants permission to return a list of DBParameterGroup descriptions.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBParameterGroups.html
+              - "rds:DescribeDBParameterGroups"
+              # Grants permission to return the detailed parameter list for a particular DB parameter group.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBParameters.html
+              - "rds:DescribeDBParameters"
+              # Grants permission to view proxies.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxies.html
+              - "rds:DescribeDBProxies"
+              # Grants permission to view proxy endpoints.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxyEndpoints.html
+              - "rds:DescribeDBProxyEndpoints"
+              # Grants permission to view database proxy target group details.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxyTargetGroups.html
+              - "rds:DescribeDBProxyTargetGroups"
+              # Grants permission to view database proxy target details.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBProxyTargets.html
+              - "rds:DescribeDBProxyTargets"
+              # Grants permission to return a list of DBSecurityGroup descriptions.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSecurityGroups.html
+              - "rds:DescribeDBSecurityGroups"
+              # Grants permission to return a list of DBSubnetGroup descriptions.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSubnetGroups.html
+              - "rds:DescribeDBSubnetGroups"
+              # Grants permission to display a list of categories for all event source types, or, if specified, for a specified source type.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEventCategories.html
+              - "rds:DescribeEventCategories"
+              # Grants permission to list all the subscription descriptions for a customer account.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEventSubscriptions.html
+              - "rds:DescribeEventSubscriptions"
+              # Grants permission to return events related to DB instances, DB security groups, DB snapshots, and DB parameter groups for the past 14 days.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html
+              - "rds:DescribeEvents"
+              # Grants permission to return a list of the source AWS Regions where the current AWS Region can create a Read Replica or copy a DB snapshot from.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeSourceRegions.html
+              - "rds:DescribeSourceRegions"
+              # Grants permission to list all tags on an Amazon RDS resource.
+              # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_ListTagsForResource.html
+              - "rds:ListTagsForResource"
+
+              #
+              ## Route 53
+              #
+
+              # Grants permission to get a list of the CIDR blocks within a specified CIDR collection.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListCidrBlocks.html
+              - "route53:ListCidrBlocks"
+              # Grants permission to get a list of the CIDR collections that are associated with the current AWS account.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListCidrCollections.html
+              - "route53:ListCidrCollections"
+              # Grants permission to get a list of the CIDR locations that belong to a specified CIDR collection.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListCidrLocations.html
+              - "route53:ListCidrLocations"
+              # Grants permission to get a list of geographic locations that Route 53 supports for geolocation.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListGeoLocations.html
+              - "route53:ListGeoLocations"
+              # Grants permission to get a list of the health checks that are associated with the current AWS account.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHealthChecks.html
+              - "route53:ListHealthChecks"
+              # Grants permission to get a list of the public and private hosted zones that are associated with the current AWS account.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHostedZones.html
+              - "route53:ListHostedZones"
+              # Grants permission to get a list of your hosted zones in lexicographic order. Hosted zones are sorted by name with the labels reversed.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHostedZonesByName.html
+              - "route53:ListHostedZonesByName"
+              # Grants permission to get a list of all the private hosted zones that a specified VPC is associated with.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListHostedZonesByVPC.html
+              - "route53:ListHostedZonesByVPC"
+              # Grants permission to list the configurations for DNS query logging that are associated with the current AWS account or the configuration that is associated with a specified hosted zone.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListQueryLoggingConfigs.html
+              - "route53:ListQueryLoggingConfigs"
+              # Grants permission to list the records in a specified hosted zone.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListResourceRecordSets.html
+              - "route53:ListResourceRecordSets"
+              # Grants permission to list the reusable delegation sets that are associated with the current AWS account.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListReusableDelegationSets.html
+              - "route53:ListReusableDelegationSets"
+              # Grants permission to list tags for one health check or hosted zone.
+              # https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListTagsForResource.html
+              - "route53:ListTagsForResource"
+
+              #
+              ## S3
+              #
+
+              # Grants permission to retrieve the configurations for a multi region access point.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_DescribeMultiRegionAccessPointOperation.html
+              - "s3:DescribeMultiRegionAccessPointOperation"
+              # Grants permission to return configuration information about the specified access point.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPoint.html
+              - "s3:GetAccessPoint"
+              # Grants permission to retrieve the configuration of the object lambda enabled access point.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointConfigurationForObjectLambda.html
+              - "s3:GetAccessPointConfigurationForObjectLambda"
+              # Grants permission to create an object lambda enabled accesspoint.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointForObjectLambda.html
+              - "s3:GetAccessPointForObjectLambda"
+              # Grants permission to return the policy status for a specific access point policy.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointPolicyStatus.html
+              - "s3:GetAccessPointPolicyStatus"
+              # Grants permission to return the policy status for a specific object lambda access point policy.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetAccessPointPolicyStatusForObjectLambda.html
+              - "s3:GetAccessPointPolicyStatusForObjectLambda"
+              # Grants permission to retrieve the PublicAccessBlock configuration for an AWS account.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetPublicAccessBlock.html
+              - "s3:GetAccountPublicAccessBlock"
+              # Grants permission to use the acl subresource to return the access control list (ACL) of an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketAcl.html
+              - "s3:GetBucketAcl"
+              # Grants permission to return the CORS configuration information set for an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketCors.html
+              - "s3:GetBucketCORS"
+              # Grants permission to return the Region that an Amazon S3 bucket resides in.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html
+              - "s3:GetBucketLocation"
+              # Grants permission to return the logging status of an Amazon S3 bucket and the permissions users have to view or modify that status.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLogging.html
+              - "s3:GetBucketLogging"
+              # Grants permission to get the notification configuration of an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotification.html
+              - "s3:GetBucketNotification"
+              # Grants permission to retrieve ownership controls on a bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketOwnershipControls.html
+              - "s3:GetBucketOwnershipControls"
+              # Grants permission to return the policy of the specified bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketPolicy.html
+              - "s3:GetBucketPolicy"
+              # Grants permission to return the tag set associated with an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html
+              - "s3:GetBucketTagging"
+              # Grants permission to return the versioning state of an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketVersioning.html
+              - "s3:GetBucketVersioning"
+              # Grants permission to return the website configuration for an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketWebsite.html
+              - "s3:GetBucketWebsite"
+              # Grants permission to get a metrics configuration from an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketMetricsConfiguration.html
+              - "s3:GetMetricsConfiguration"
+              # Grants permission to return configuration information about the specified multi region access point.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetMultiRegionAccessPoint.html
+              - "s3:GetMultiRegionAccessPoint"
+              # Grants permission to returns the access point policy associated with the specified multi region access point.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_GetMultiRegionAccessPointPolicy.html
+              - "s3:GetMultiRegionAccessPointPolicy"
+              # Grants permission to list access points.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_ListAccessPoints.html
+              - "s3:ListAccessPoints"
+              # Grants permission to list object lambda enabled accesspoints.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_ListAccessPointsForObjectLambda.html
+              - "s3:ListAccessPointsForObjectLambda"
+              # Grants permission to list all buckets owned by the authenticated sender of the request.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html
+              - "s3:ListAllMyBuckets"
+              # Grants permission to list metadata about all the versions of objects in an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectVersions.html
+              - "s3:ListBucketVersions"
+
+              #
+              ## SES V1 (Simple Email Service )
+              # https://docs.aws.amazon.com/ses/latest/APIReference/API_Operations.html
+
+              # Grants permission to return the email sending status of your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetAccountSendingEnabled.html
+              - "ses:GetAccountSendingEnabled"
+              # Grants permission to returns the user's sending statistics.
+              # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetSendStatistics.html
+              - "ses:GetSendStatistics"
+              # Grants permission to return the template object, which includes the subject line, HTML par, and text part for the template you specify.
+              # https://docs.aws.amazon.com/ses/latest/APIReference/API_GetTemplate.html
+              - "ses:GetTemplate"
+              # Grants permission to list the email templates present in your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference/API_ListTemplates.html
+              - "ses:ListTemplates"
+              # Grants permission to list all of the email addresses that have been verified in your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference/API_ListVerifiedEmailAddresses.html
+              - "ses:ListVerifiedEmailAddresses"
+
+              #
+              ## SES V2 (Simple Email Service )
+              #
+
+              # Grants permission to get information about the email-sending status and capabilities for your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html
+              - "ses:GetAccount"
+              # Grants permission to retrieve the results of a predictive inbox placement test.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDeliverabilityTestReport.html
+              - "ses:GetDeliverabilityTestReport"
+              # Grants permission to retrieve all the deliverability data for a specific campaign.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDomainDeliverabilityCampaign.html
+              - "ses:GetDomainDeliverabilityCampaign"
+              # Grants permission to retrieve inbox placement and engagement rates for the domains that you use to send email.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetDomainStatisticsReport.html
+              - "ses:GetDomainStatisticsReport"
+              # Grants permission to retrieve the list of the predictive inbox placement tests that you've performed, regardless of their statuses, for your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDeliverabilityTestReports.html
+              - "ses:ListDeliverabilityTestReports"
+              # Grants permission to list deliverability data for campaigns that used a specific domain to send email during a specified time range.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListDomainDeliverabilityCampaigns.html
+              - "ses:ListDomainDeliverabilityCampaigns"
+              # Grants permission to list the email identities for your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListEmailIdentities.html
+              - "ses:ListEmailIdentities"
+              # Grants permission to list all of the email templates for your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListEmailTemplates.html
+              - "ses:ListEmailTemplates"
+              # Grants permission to retrieve a list of the tags (keys and values) that are associated with a specific resource for your account.
+              # https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_ListTagsForResource.html
+              - "ses:ListTagsForResource"
+
+              #
+              ## SNS (Simple Notification System)
+              #
+
+              # Grants permission to return a list of the requester's subscriptions.
+              # https://docs.aws.amazon.com/sns/latest/api/API_ListSubscriptions.html
+              - "sns:ListSubscriptions"
+              # Grants permission to return a list of the subscriptions to a specific topic.
+              # https://docs.aws.amazon.com/sns/latest/api/API_ListSubscriptionsByTopic.html
+              - "sns:ListSubscriptionsByTopic"
+              # Grants permission to list all tags added to the specified Amazon SNS topic.
+              # https://docs.aws.amazon.com/sns/latest/api/API_ListTagsForResource.html
+              - "sns:ListTagsForResource"
+              # Grants permission to return a list of the requester's topics.
+              # https://docs.aws.amazon.com/sns/latest/api/API_ListTopics.html
+              - "sns:ListTopics"
+
+              #
+              ## SQS (Simple Queue Service)
+              #
+
+              # Grants permission to get attributes for the specified queue.
+              # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_GetQueueAttributes.html
+              - "sqs:GetQueueAttributes"
+              # Grants permission to return the URL of an existing queue.
+              # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_GetQueueUrl.html
+              - "sqs:GetQueueUrl"
+              # Grants permission to return a list of your queues that have the RedrivePolicy queue attribute configured with a dead letter queue.
+              # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ListDeadLetterSourceQueues.html
+              - "sqs:ListDeadLetterSourceQueues"
+              # Grants permission to list tags added to an SQS queue.
+              # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ListQueueTags.html
+              - "sqs:ListQueueTags"
+              # Grants permission to return a list of your queues.
+              # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ListQueues.html
+              - "sqs:ListQueues"
+
+              #
+              ## Step Functions
+              #
+
+              # Grants permission to describe an activity.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeActivity.html
+              - "states:DescribeActivity"
+              # Grants permission to describe an execution.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeExecution.html
+              - "states:DescribeExecution"
+              # Grants permission to describe a state machine.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeStateMachine.html
+              - "states:DescribeStateMachine"
+              # Grants permission to describe the state machine for an execution.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_DescribeStateMachineForExecution.html
+              - "states:DescribeStateMachineForExecution"
+              # Grants permission to be used by workers to retrieve a task (with the specified activity ARN) which has been scheduled for execution by a running state machine.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_GetActivityTask.html
+              - "states:GetActivityTask"
+              # Grants permission to return the history of the specified execution as a list of events.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_GetExecutionHistory.html
+              - "states:GetExecutionHistory"
+              # Grants permission to list the existing activities.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListActivities.html
+              - "states:ListActivities"
+              # Grants permission to list the executions of a state machine.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListExecutions.html
+              - "states:ListExecutions"
+              # Grants permission to lists the existing state machines.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachines.html
+              - "states:ListStateMachines"
+              # Grants permission to list tags for an AWS Step Functions resource.
+              # https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListTagsForResource.html
+              - "states:ListTagsForResource"
+
+              #
+              ## X-Ray
+              #
+
+              # Grants permission to retrieve a list of traces specified by ID. Each trace is a collection of segment documents that originates from a single request. Use GetTraceSummaries to get a list of trace IDs.
+              # https://docs.aws.amazon.com/xray/latest/api/API_BatchGetTraces.html
+              - "xray:BatchGetTraces"
+              # Grants permission to retrieve group resource details.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetGroup.html
+              - "xray:GetGroup"
+              # Grants permission to retrieve all active group details.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetGroups.html
+              - "xray:GetGroups"
+              # Grants permission to retrieve the details of a specific insight.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetInsight.html
+              - "xray:GetInsight"
+              # Grants permission to retrieve the events of a specific insight.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetInsightEvents.html
+              - "xray:GetInsightEvents"
+              # Grants permission to retrieve the part of the service graph which is impacted for a specific insight.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetInsightImpactGraph.html
+              - "xray:GetInsightImpactGraph"
+              # Grants permission to retrieve the summary of all insights for a group and time range with optional filters.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetInsightSummaries.html
+              - "xray:GetInsightSummaries"
+              # Grants permission to retrieve all sampling rules.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingRules.html
+              - "xray:GetSamplingRules"
+              # Grants permission to retrieve information about recent sampling results for all sampling rules.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingStatisticSummaries.html
+              - "xray:GetSamplingStatisticSummaries"
+              # Grants permission to request a sampling quota for rules that the service is using to sample requests.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingTargets.html
+              - "xray:GetSamplingTargets"
+              # Grants permission to retrieve a document that describes services that process incoming requests, and downstream services that they call as a result.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetServiceGraph.html
+              - "xray:GetServiceGraph"
+              # Grants permission to retrieve an aggregation of service statistics defined by a specific time range bucketed into time intervals.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetTimeSeriesServiceStatistics.html
+              - "xray:GetTimeSeriesServiceStatistics"
+              # Grants permission to retrieve a service graph for one or more specific trace IDs.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetTraceGraph.html
+              - "xray:GetTraceGraph"
+              # Grants permission to retrieve IDs and metadata for traces available for a specified time frame using an optional filter. To get the full traces, pass the trace IDs to BatchGetTraces.
+              # https://docs.aws.amazon.com/xray/latest/api/API_GetTraceSummaries.html
+              - "xray:GetTraceSummaries"
+              # Grants permission to list tags for an X-Ray resource.
+              # https://docs.aws.amazon.com/xray/latest/api/API_ListTagsForResource.html
+              - "xray:ListTagsForResource"
+            Resource: "*"
+  #
+  ##
+  ###
+  #### SERVERLESS ROLE WRITE PERMISSIONS
+  ###
+  ##
+  #
+  ServerlessWritePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ## API Gateway
+              #
+              # Serverless Inc. Comments: This enables us to automatically configure and continuously verify configuration exists for enabling logging from API Gateway and ingesting those logs.
+              # Changes information about a Stage resource.
+
+              # Grants permission to update stage
+              # https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonapigatewaymanagementv2.html#amazonapigatewaymanagementv2-Stage
+              - "apigateway:UpdateStage"
+
+              ##
+              ## Cloudwatch Logs
+              #
+              # Serverless Inc. Comments: These enables us to automatically configure and continuously verify configuration exists Subscription filters for Cloudwatch.
+              # Creates or updates a destination. This operation is used only to create destinations for cross-account subscriptions.
+              # A destination encapsulates a physical resource (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time stream of log events for a different account, ingested using PutLogEvents.
+              # Through an access policy, a destination controls what is written to it. By default, PutDestination does not set any access policy with the destination, which means a cross-account user cannot call PutSubscriptionFilter against this destination. To enable this, the destination owner must call PutDestinationPolicy after PutDestination.
+
+              # Creates a log group with the specified name.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
+              - "logs:CreateLogGroup"
+              # Grants permissions to create or update a Destination.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestination.html
+              - "logs:PutDestination"
+              # Grants permissions to create or update an access policy associated with an existing Destination.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestinationPolicy.html
+              - "logs:PutDestinationPolicy"
+              # Grants permissions to create or update a subscription filter and associates it with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html
+              - "logs:PutSubscriptionFilter"
+              # Grants permissions to delete a subscription filter associated with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteSubscriptionFilter.html
+              - "logs:DeleteSubscriptionFilter"
+
+              #
+              ## Lambda
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_Operations.html
+
+              # Grants permission to modify the version-specific settings of an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_UpdateFunctionConfiguration.html
+              - "lambda:UpdateFunctionConfiguration"
+              # Grants permission to invoke a function asynchronously.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_InvokeAsync.html
+              - "lambda:InvokeAsync"
+              # Grants permission to invoke an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
+              - "lambda:InvokeFunction"
+
+              #
+              ## S3
+              #
+
+              # Grants permission to receive notifications when certain events happen in an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotification.html
+              - "s3:PutBucketNotification"
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              # Grants permission to delete a specified stack.s
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeleteStack.html
+              - "cloudformation:DeleteStack"
+              # Grants permission to delete the specified managed policy and remove it from any IAM entities (users, groups, or roles) to which it is attached.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeletePolicy.html
+              - "iam:DeletePolicy"
+              # Grants permission to delete the specified role.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeleteRole.html
+              - "iam:DeleteRole"
+              # Grants permission to detach a managed policy from the specified role.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DetachRolePolicy.html
+              - "iam:DetachRolePolicy"
+              # Grants permission to delete a version from the specified managed policy
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeletePolicyVersion.html
+              - "iam:DeletePolicyVersion"
+              # Grants permission to retrieve information about the specified managed policy, including the policy's default version and the total number of identities to which the policy is attached.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_GetPolicy.html
+              - "iam:GetPolicy"
+              # Grants permission to list information about the versions of the specified managed policy, including the version that is currently set as the policy's default version.
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_ListPolicyVersions.html
+              - "iam:ListPolicyVersions"
+              - "iam:DeleteRolePolicy"
+            Resource:
+              - !Sub "${AWS::StackId}"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessRole"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMonitoringRole"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/Serverless-Inc-Role-Stack-Serverless*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessEventSubscriptionExecutionRole"
+  #
+  ##
+  ###
+  #### SERVERLESS ROLE MONITORING PERMISSIONS
+  ###
+  ##
+  #
+  ServerlessMonitoringPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics - Cloudwatch Stream policies
+              ###
+              ##
+              #
+
+              # Grants permission to return the details of a CloudWatch metric stream.
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStream.html
+              - "cloudwatch:GetMetricStream"
+              # Grants permission to create a CloudWatch metric stream, or update an existing metric stream if it already exists
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricStream.html
+              - "cloudwatch:PutMetricStream"
+              # Grants permission to delete the CloudWatch metric stream that you specify
+              # https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DeleteMetricStream.html
+              - "cloudwatch:DeleteMetricStream"
+            Resource:
+              - !Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:metric-stream/serverless_metrics-stream"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Logs - Cloud Watch Logs Filter
+              ###
+              ##
+              #
+
+              ##
+              ## Cloudwatch Logs
+              #
+              # Serverless Inc. Comments: These enables us to automatically configure and continuously verify configuration exists Subscription filters for Cloudwatch.
+              # Creates or updates a destination. This operation is used only to create destinations for cross-account subscriptions.
+              # A destination encapsulates a physical resource (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time stream of log events for a different account, ingested using PutLogEvents.
+              # Through an access policy, a destination controls what is written to it. By default, PutDestination does not set any access policy with the destination, which means a cross-account user cannot call PutSubscriptionFilter against this destination. To enable this, the destination owner must call PutDestinationPolicy after PutDestination.
+
+              # Grants permissions to create or update a Destination.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestination.html
+              - "logs:PutDestination"
+              # Grants permissions to create or update an access policy associated with an existing Destination.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestinationPolicy.html
+              - "logs:PutDestinationPolicy"
+              # Grants permissions to create or update a subscription filter and associates it with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html
+              - "logs:PutSubscriptionFilter"
+              # Grants permissions to delete a subscription filter associated with the specified log group.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteSubscriptionFilter.html
+              - "logs:DeleteSubscriptionFilter"
+            Resource:
+              - !Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:metric-stream/serverless_metrics-stream"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Monitoring - Kinesis Firehose Delivery policies
+              ###
+              ##
+              #
+
+              # Grants permission to describe the specified delivery stream and gets the status.
+              # https://docs.aws.amazon.com/firehose/latest/APIReference/API_DescribeDeliveryStream.html
+              - "firehose:DescribeDeliveryStream"
+              # Grants permission to create a delivery stream.
+              # https://docs.aws.amazon.com/firehose/latest/APIReference/API_CreateDeliveryStream.html
+              - "firehose:CreateDeliveryStream"
+              # Grants permission to delete a delivery stream and its data.
+              # https://docs.aws.amazon.com/firehose/latest/APIReference/API_DeleteDeliveryStream.html
+              - "firehose:DeleteDeliveryStream"
+            Resource:
+              - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
+              - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_logs-firehose"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics - Kinesis Firehose required S3 Bucket policies
+              ###
+              ##
+              #
+
+              # Grants permission to return the Region that an Amazon S3 bucket resides in.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html
+              - "s3:GetBucketLocation"
+              # Grants permission to create a new bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html
+              - "s3:CreateBucket"
+              # Grants permission to delete the bucket named in the URI.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucket.html
+              - "s3:DeleteBucket"
+              # Grants permission to list some or all of the objects in an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+              - "s3:ListBucket"
+              # Grants permission to remove the null version of an object and insert a delete marker, which becomes the current version of the object.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
+              - "s3:DeleteObject"
+              # Grants permission to attach a bucket policy to an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketPolicy.html
+              - "s3:PutBucketPolicy"
+              # Grants permission to remove a bucket policy on an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucketPolicy.html
+              - "s3:DeleteBucketPolicy"
+            Resource:
+              # The bucket name will include unique id to avoid bucket duplication
+              - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
+              - "arn:aws:s3:::serverless.logs-firehose-backup-*"
+          - Effect: Allow
+            Sid: "ServerlessIncEventBridgeAccess"
+            Action:
+                # Grants permission to retrive details about a Connection in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeConnection.html
+                - "events:DescribeConnection"
+                # Grants permission to retrive details about a Rule in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeRule.html
+                - "events:DescribeRule"
+                # Grants permission to retrieve details about an API Destination in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeApiDestination.html
+                - "events:DescribeApiDestination"
+                # Grants permission to create a new Connection in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateConnection.html
+                - "events:CreateConnection"
+                # Grants permission to create a new API Destination in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateApiDestination.html
+                - "events:CreateApiDestination"
+                # Grants permission to create or update an Event Rule in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html
+                - "events:PutRule"
+                # Grants permission to create or update an Event Rule Target in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutTargets.html
+                - "events:PutTargets"
+                # Grants permission to update a Connection in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UpdateConnection.html
+                - "events:UpdateConnection"
+                # Grant permission to update an API Destination in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UpdateApiDestination.html
+                - "events:UpdateApiDestination"
+                # Grant permission to delete an Event Rule in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteRule.html
+                - "events:DeleteRule"
+                # Grant permission to delete a Connection in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteConnection.html
+                - "events:DeleteConnection"
+                # Grant permission to delete an API Destination in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteApiDestination.html
+                - "events:DeleteApiDestination"
+                # Grant permission to remove an Event Rule Target in Amazon Eventbridge.
+                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_RemoveTargets.html
+                - "events:RemoveTargets"
+            Resource:
+              - !Sub "arn:aws:events:*:${AWS::AccountId}:rule/serverless_*"
+              - !Sub "arn:aws:events:*:${AWS::AccountId}:rule/default/serverless_*"
+              - !Sub "arn:aws:events:*:${AWS::AccountId}:api-destination/serverless_*"
+              - !Sub "arn:aws:events:*:${AWS::AccountId}:connection/serverless_*"
+          - Effect: Allow
+            Sid: "ServerlessIncCloudtrailAccess"
+            Action:
+              # Grants permission to retrieve settings information for a trail in AWS CloudTrail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_GetTrail.html
+              - "cloudtrail:GetTrail"
+              # Grants permission to create a trail in AWS CloudTrail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_CreateTrail.html
+              - "cloudtrail:CreateTrail"
+              # Grants permission to delete a trail in AWS CloudTrail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DeleteTrail.html
+              - "cloudtrail:DeleteTrail"
+              # Grants permission to update a trail in AWS CloudTrail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_UpdateTrail.html
+              - "cloudtrail:UpdateTrail"
+              # Grants permission to start logging AWS CloudTrail events for a trail in AWS CloudTrail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StartLogging.html
+              - "cloudtrail:StartLogging"
+              # Grants permission to stop logging AWS CloudTrail events for a trail in AWS CloudTrail.
+              # https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StopLogging.html
+              - "cloudtrail:StopLogging"
+            Resource:
+              - !Sub "arn:aws:cloudtrail:*:${AWS::AccountId}:trail/serverless_trail"
+          - Effect: Allow
+            Sid: "ServerlessIncEventBridgeSecretsAccess"
+            Action:
+              # Grants permission to create a secret in AWS Secrets Manager.
+              # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_CreateSecret.html
+              - "secretsmanager:CreateSecret"
+              # Grants permission to update a secret in AWS Secrets Manager.
+              # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_UpdateSecret.html
+              - "secretsmanager:UpdateSecret"
+              # Grants permission to retrieve the details of a secret in AWS Secrets Manager.
+              # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_DescribeSecret.html
+              - "secretsmanager:DescribeSecret"
+              # Grants permission to delete a secret in AWS Secrets Manager.
+              # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_DeleteSecret.html
+              - "secretsmanager:DeleteSecret"
+              # Grants permission to retrieve a secret value in AWS Secrets Manager.
+              # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+              - "secretsmanager:GetSecretValue"
+              # Grants permission to create or update a secret value in AWS Secrets Manager.
+              # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_PutSecretValue.html
+              - "secretsmanager:PutSecretValue"
+            Resource: !Sub "arn:aws:secretsmanager:*:${AWS::AccountId}:secret:events!connection/serverless_event_connection/*"
+  #
+  ##
+  ###
+  #### SERVERLESS ROLE ASSUME PERMISSIONS
+  ###
+  ##
+  #
+  ServerlessAssumePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              # Grants permission to pass a role to a service.
+              # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html
+              - "iam:PassRole"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMonitoringRole"
+              - !GetAtt ServerlessEventSubscriptionExecutionRole.Arn
+  #
+  ##
+  ###
+  #### SERVERLESS Metrics ROLE PERMISSIONS
+  ###
+  ##
+  #
+  ServerlessMonitoringStreamPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessMonitoringRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Monitoring Stream - Kinesis Firehose policies
+              ###
+              ##
+              #
+
+              # Grants permission to write a single data record into an Amazon Kinesis Firehose delivery stream.
+              # https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecord.html
+              - "firehose:PutRecord"
+              # Grants permission to write multiple data records into a delivery stream in a single call, which can achieve higher throughput per producer than when writing single records.
+              # https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html
+              - "firehose:PutRecordBatch"
+            Resource:
+              - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
+              - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_logs-firehose"
+  ServerlessMonitoringFirehosePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref ServerlessMonitoringRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics Stream - Glue policies
+              ###
+              ##
+              #
+
+              # Grants permission to retrieve a table.
+              # https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-GetTable
+              - "glue:GetTable"
+              # Grants permission to retrieve a version of a table.
+              # https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-GetTableVersion
+              - "glue:GetTableVersion"
+              # Grants permission to retrieve a list of versions of a table.
+              # https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-GetTableVersions
+              - "glue:GetTableVersions"
+            Resource:
+              - !Sub "arn:aws:glue:*:${AWS::AccountId}:catalog"
+              - !Sub "arn:aws:glue:*:${AWS::AccountId}:database/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+              - !Sub "arn:aws:glue:*:${AWS::AccountId}:table/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics Stream - S3 policies
+              ###
+              ##
+              #
+
+              # Grants permission to abort a multipart upload.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_AbortMultipartUpload.html
+              - "s3:AbortMultipartUpload"
+              # Grants permission to return the Region that an Amazon S3 bucket resides in.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html
+              - "s3:GetBucketLocation"
+              # Grants permission to retrieve objects from Amazon S3.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html
+              - "s3:GetObject"
+              # Grants permission to list some or all of the objects in an Amazon S3 bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+              - "s3:ListBucket"
+              # Grants permission to list in-progress multipart uploads.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html
+              - "s3:ListBucketMultipartUploads"
+              # Grants permission to add an object to a bucket.
+              # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+              - "s3:PutObject"
+            Resource:
+              - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
+              - "arn:aws:s3:::serverless.metrics-firehose-backup-*/*"
+              - "arn:aws:s3:::serverless.logs-firehose-backup-*"
+              - "arn:aws:s3:::serverless.logs-firehose-backup-*/*"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics Stream - Lambda policies
+              ###
+              ##
+              #
+
+              # Grants permission to invoke an AWS Lambda function.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
+              - "lambda:InvokeFunction"
+              # Grants permission to view details about the version-specific settings of an AWS Lambda function or version.
+              # https://docs.aws.amazon.com/lambda/latest/dg/API_GetFunctionConfiguration.html
+              - "lambda:GetFunctionConfiguration"
+            Resource:
+              - !Sub "arn:aws:lambda:*:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics Stream - KMS (Key Management Service) policies
+              ###
+              ##
+              #
+
+              # Controls permission to use the AWS KMS key to generate data keys. You can use the data keys to encrypt data outside of AWS KMS.
+              # https://docs.aws.amazon.com/kms/latest/APIReference/API_GenerateDataKey.html
+              - "kms:GenerateDataKey"
+              # Controls permission to decrypt ciphertext that was encrypted under an AWS KMS key.
+              # https://docs.aws.amazon.com/kms/latest/APIReference/API_Decrypt.html
+              - "kms:Decrypt"
+            Resource:
+              - !Sub "arn:aws:kms:*:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics Stream - CloudWatch Logs policies
+              ###
+              ##
+              #
+
+              # Grants permissions to upload a batch of log events to the specified log stream.
+              # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html
+              - "logs:PutLogEvents"
+            Resource:
+              - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/kinesisfirehose/serverless_metrics-firehose:log-stream:*"
+              - !Sub "arn:aws:logs:*:${AWS::AccountId}:log-group:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%:log-stream:*"
+          - Effect: Allow
+            Action:
+              #
+              ##
+              ###
+              #### Serverless Metrics Stream - Kinesis policies
+              ###
+              ##
+              #
+
+              # Grants permission to describe the specified stream.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStream.html
+              - "kinesis:DescribeStream"
+              # Grants permission to get a shard iterator. A shard iterator expires five minutes after it is returned to the requester.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html
+              - "kinesis:GetShardIterator"
+              # Grants permission to get data records from a shard.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html
+              - "kinesis:GetRecords"
+              # Grants permission to list the shards in a stream and provides information about each shard.
+              # https://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListShards.html
+              - "kinesis:ListShards"
+            Resource:
+              - !Sub "arn:aws:kinesis:*:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
 Parameters:
+  AccountId:
+    Description: "[!Do not change!] The Serverless AWS accountId"
+    Type: String
+  ReportServiceToken:
+    Description: "[!Do not change!] The Stack status report Service ARN"
+    Type: String
   ExternalId:
     Description: "[!Do not change!] External ID for securing the role"
     Type: String
