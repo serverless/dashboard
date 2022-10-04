@@ -39,10 +39,6 @@ const install = (protocol, httpModule) => {
   const request = function request(url, options, cb) {
     const startTime = process.hrtime.bigint();
     serverlessSdk._debugLog('HTTP request', shouldIgnoreFollowingRequest, new Error().stack);
-    if (shouldIgnoreFollowingRequest) {
-      shouldIgnoreFollowingRequest = false;
-      return originalRequest.call(this, url, options, cb);
-    }
     const args = [url, options, cb];
 
     let cbIndex = 2;
@@ -61,6 +57,10 @@ const install = (protocol, httpModule) => {
       options = url || {};
     } else {
       options = Object.assign(url || {}, options);
+    }
+    if (shouldIgnoreFollowingRequest || options._slsIgnore) {
+      shouldIgnoreFollowingRequest = false;
+      return originalRequest.apply(this, args);
     }
 
     const originalCb = args[cbIndex];
