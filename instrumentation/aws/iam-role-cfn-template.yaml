@@ -1613,7 +1613,9 @@ Resources:
               - "s3:DeleteBucketPolicy"
               # Grants permission to create or update a Lifecycle Configuration on an Amazon S3 bucket.
               # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html
-              - "s3:PutBucketLifecycleConfiguration"
+              - "s3:PutLifecycleConfiguration"
+              - "s3:GetLifecycleConfiguraiton"
+
             Resource:
               # The bucket name will include unique id to avoid bucket duplication
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
