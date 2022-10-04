@@ -61,16 +61,6 @@ describe('Integration', function () {
             const allReqResData = invocationsData.map((data) => data.reqRes);
             expect(allReqResData[0].length).to.equal(0);
             expect(allReqResData[1].length).to.equal(0);
-
-            // for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
-            //   expect(reqRes.length).to.equal(1);
-            //   for (const payload of reqRes) {
-            //     expect(payload).to.haveOwnProperty('region');
-            //     expect(payload).to.haveOwnProperty('accountId');
-            //     expect(payload).to.haveOwnProperty('timestamps');
-            //     expect(payload).to.haveOwnProperty('payloads');
-            //   }
-            // }
           },
         },
       },
