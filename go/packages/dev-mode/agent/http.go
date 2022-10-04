@@ -67,8 +67,8 @@ func (s *LogsApiHttpListener) Start() (bool, error) {
 
 	sdkAddress := SdkListenOnAddress()
 	sdkMux := http.NewServeMux()
-	sdkMux.HandleFunc("/spans", s.span_http_handler)
-	sdkMux.HandleFunc("/reqres", s.req_res_http_handler)
+	sdkMux.HandleFunc("/trace", s.span_http_handler)
+	sdkMux.HandleFunc("/request-response", s.req_res_http_handler)
 	s.sdkHttpServer = &http.Server{Addr: sdkAddress, Handler: sdkMux}
 
 	go func() {

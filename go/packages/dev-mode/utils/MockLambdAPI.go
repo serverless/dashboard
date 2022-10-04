@@ -258,7 +258,7 @@ func SubmitReqRes(data []byte) {
 		}
 	}
 	for {
-		_, err := SendPost(validations.SdkURI+"/reqres", data)
+		_, err := SendPost(validations.SdkURI+"/request-response", data)
 		if err == nil {
 			break
 		} else {
@@ -275,7 +275,7 @@ func SubmitTrace(data []byte) {
 		}
 	}
 	for {
-		_, err := SendPost(validations.SdkURI+"/spans", data)
+		_, err := SendPost(validations.SdkURI+"/trace", data)
 		if err == nil {
 			break
 		} else {
