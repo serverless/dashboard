@@ -10,6 +10,7 @@ const traceProto = require('@serverless/sdk-schema/dist/trace');
 const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
 const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
+const sendTelemetry = require('./lib/send-telemetry');
 const pkgJson = require('../package');
 
 const serverlessSdk = global.serverlessSdk || require('../');
@@ -18,7 +19,7 @@ const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
   traceSpans;
 
-const writeRequest = (event, context) => {
+const writeRequest = async (event, context) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -33,6 +34,7 @@ const writeRequest = (event, context) => {
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =
     requestResponseProto.RequestResponse.encode(payload).finish());
   process._rawDebug(`SERVERLESS_TELEMETRY.R.${payloadBuffer.toString('base64')}`);
+  await sendTelemetry('request-response', payloadBuffer);
 };
 
 const resolveResponseString = (response) => {
@@ -56,7 +58,7 @@ const resolveResponseString = (response) => {
   return JSON.stringify(response);
 };
 
-const writeResponse = (response, context) => {
+const writeResponse = async (response, context) => {
   const responseString = resolveResponseString(response);
   if (!responseString) return;
   const payload = (serverlessSdk._lastResponse = {
@@ -73,9 +75,10 @@ const writeResponse = (response, context) => {
   const payloadBuffer = (serverlessSdk._lastResponseBuffer =
     requestResponseProto.RequestResponse.encode(payload).finish());
   process._rawDebug(`SERVERLESS_TELEMETRY.R.${payloadBuffer.toString('base64')}`);
+  await sendTelemetry('request-response', payloadBuffer);
 };
 
-const writeTrace = () => {
+const writeTrace = async () => {
   const payload = (serverlessSdk._lastTrace = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -87,6 +90,7 @@ const writeTrace = () => {
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
   process._rawDebug(`SERVERLESS_TELEMETRY.T.${payloadBuffer.toString('base64')}`);
+  await sendTelemetry('trace', payloadBuffer);
 };
 
 module.exports = (originalHandler, options = {}) => {
@@ -108,6 +112,7 @@ module.exports = (originalHandler, options = {}) => {
     let isResolved = false;
     let responseStartTime;
     const invocationId = ++currentInvocationId;
+    serverlessSdk._deferredTelemetryRequests = [];
     if (invocationId > 1) {
       // Reset root span ids and startTime with every next invocation
       delete awsLambdaSpan.traceId;
@@ -123,9 +128,11 @@ module.exports = (originalHandler, options = {}) => {
       { startTime: requestStartTime }
     ));
     resolveEventTags(event);
-    if (!serverlessSdk._settings.disableRequestMonitoring) writeRequest(event, context);
+    if (!serverlessSdk._settings.disableRequestMonitoring) {
+      serverlessSdk._deferredTelemetryRequests.push(writeRequest(event, context));
+    }
 
-    const closeInvocation = (outcome, outcomeResult) => {
+    const closeInvocation = async (outcome, outcomeResult) => {
       if (invocationId !== currentInvocationId) return;
       if (isResolved) return;
       responseStartTime = process.hrtime.bigint();
@@ -146,14 +153,15 @@ module.exports = (originalHandler, options = {}) => {
       } else {
         resolveResponseTags(outcomeResult);
         if (!serverlessSdk._settings.disableResponseMonitoring) {
-          writeResponse(outcomeResult, context);
+          serverlessSdk._deferredTelemetryRequests.push(writeResponse(outcomeResult, context));
         }
       }
 
       const endTime = process.hrtime.bigint();
       awsLambdaInvocationSpan.close({ endTime });
       awsLambdaSpan.close({ endTime });
-      writeTrace();
+      serverlessSdk._deferredTelemetryRequests.push(writeTrace());
+      await Promise.all(serverlessSdk._deferredTelemetryRequests);
       serverlessSdk._debugLog(
         'Overhead duration: Internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
@@ -165,8 +173,7 @@ module.exports = (originalHandler, options = {}) => {
         closeInvocation(
           args[0] == null ? 'success' : 'error:handled',
           args[0] == null ? args[1] : args[0]
-        );
-        someAwsCallback(...args);
+        ).then(() => someAwsCallback(...args), someAwsCallback);
       };
     const originalDone = context.done;
     let contextDone = wrapAwsCallback(originalDone);
@@ -184,12 +191,12 @@ module.exports = (originalHandler, options = {}) => {
     if (typeof eventualResult.then !== 'function') return eventualResult;
     return Promise.resolve(eventualResult)
       .then(
-        (result) => {
-          closeInvocation('success', result);
+        async (result) => {
+          await closeInvocation('success', result);
           return result;
         },
-        (error) => {
-          closeInvocation('error:handled', error);
+        async (error) => {
+          await closeInvocation('error:handled', error);
           throw error;
         }
       )
