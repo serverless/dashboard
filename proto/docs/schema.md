@@ -142,9 +142,9 @@
 | outcome | [AwsLambdaTags.Outcome](#serverless-instrumentation-tags-v1-AwsLambdaTags-Outcome) |  | The Outcome of the Lambda invocation |
 | error_exception_message | [string](#string) | optional | Optional error exception message. |
 | error_exception_stacktrace | [string](#string) | optional | Optional error exception stacktrace. |
-| duration | [uint32](#uint32) | optional | The billed duration of the invocation in milliseconds. This will not be available when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available.
-
-Optional Event Tags are from 100 on |
+| duration | [uint32](#uint32) | optional | The billed duration of the invocation in milliseconds. This will not be available when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available. |
+| request_body | [string](#string) | optional | Request body |
+| response_body | [string](#string) | optional | Response body |
 | sqs | [AwsSqsEventTags](#serverless-instrumentation-tags-v1-AwsSqsEventTags) | optional | Will be set if the function is handling a SQS event |
 | sns | [AwsSnsEventTags](#serverless-instrumentation-tags-v1-AwsSnsEventTags) | optional | Will be set if the function is handling a SNS event |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | Will be set if the function is handling HTTP requests via any method, API GW, Function URLs, etc. |
@@ -234,6 +234,8 @@ Optional Event Tags are from 100 on |
 | operation | [string](#string) |  | The name of the operation corresponding to the request. |
 | request_id | [string](#string) | optional | The unique ID of the request. |
 | error | [string](#string) | optional | An optional error returned from the AWS APIs. |
+| request_body | [string](#string) | optional | Request body |
+| response_body | [string](#string) | optional | Response body |
 | dynamodb | [AwsSdkDynamodbTags](#serverless-instrumentation-tags-v1-AwsSdkDynamodbTags) | optional |  |
 | sqs | [AwsSdkSqsTags](#serverless-instrumentation-tags-v1-AwsSdkSqsTags) | optional |  |
 | sns | [AwsSdkSnsTags](#serverless-instrumentation-tags-v1-AwsSdkSnsTags) | optional |  |
@@ -353,8 +355,10 @@ outcomes upon completion.
 | path | [string](#string) |  | The path of the HTTP Request |
 | query_parameter_names | [string](#string) | repeated | Names of the query parameters |
 | request_header_names | [string](#string) | repeated | Request header names |
+| request_body | [string](#string) | optional | Request body |
 | status_code | [uint32](#uint32) | optional | The Response Status Code. |
 | error_code | [string](#string) | optional | Eventual request error code |
+| response_body | [string](#string) | optional | Response body |
 
 
 
