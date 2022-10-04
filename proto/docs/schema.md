@@ -393,6 +393,8 @@ outcomes upon completion.
 | platform | [string](#string) | optional | The platform that was instrumented. Currently Lambda is the only supported platform. |
 | service | [string](#string) |  | The service that was instrumented. For Lambda this will be the function name by default. |
 | region | [string](#string) | optional | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
+| account_id | [string](#string) | optional | The account id that instrumentation was performed in. This is used to determine which integration the payload was created in. |
+| request_id | [string](#string) | optional | The request id that created the payload. This is used to determine which specific invocation a payload is tied to. |
 | sdk | [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags) |  |  |
 | environment | [string](#string) | optional | An optional environment that can be attached. If there is an applicable environment tag this will be attached in a data enrichment process during ingestion. |
 | namespace | [string](#string) | optional | An optional namespace that can be attached. If there is an applicable namespace tag this will be attached in a data enrichment process during ingestion. |
