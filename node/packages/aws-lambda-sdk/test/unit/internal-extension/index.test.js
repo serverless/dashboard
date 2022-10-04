@@ -2,6 +2,7 @@
 
 const { expect } = require('chai');
 const path = require('path');
+const http = require('http');
 const isThenable = require('type/thenable/is');
 const requireUncached = require('ncjsm/require-uncached');
 const normalizeObject = require('../../utils/normalize-proto-object');
@@ -796,5 +797,33 @@ describe('internal-extension/index.test.js', () => {
     expect(expressRequest1Tags.http.host).to.equal('localhost:3177');
     expect(expressRequest1Tags.http.path).to.equal('/in-1');
     expect(expressRequest1Tags.http.statusCode.toString()).to.equal('200');
+  });
+
+  describe('dev mode', () => {
+    let server;
+    const payloadNames = [];
+    before(() => {
+      process.env.SLS_DEV_MODE_ORG_ID = 'test';
+      server = http.createServer((request, response) => {
+        if (request.method !== 'GET') throw new Error(`Unexpected method:${request.method}`);
+        payloadNames.push(request.url.slice(1));
+        request.on('data', () => {});
+        request.on('end', () => {
+          response.writeHead(200, {});
+          response.end('OK');
+        });
+      });
+
+      server.listen(2772);
+    });
+
+    after(() => {
+      delete process.env.SLS_DEV_MODE_ORG_ID;
+      server.close();
+    });
+    it('should support dev mode', async () => {
+      await handleInvocation('multi-async');
+      expect(payloadNames).to.deep.equal(['request-response', 'trace']);
+    });
   });
 });
