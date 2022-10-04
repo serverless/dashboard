@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -117,7 +118,7 @@ func (h *LogsApiHttpListener) span_http_handler(w http.ResponseWriter, r *http.R
 
 	spanPayload := []LogItem{{
 		LogType: "spans",
-		Record:  string(body),
+		Record:  base64.StdEncoding.EncodeToString(body),
 	}}
 
 	spanString, _ := json.Marshal(spanPayload)
@@ -140,7 +141,7 @@ func (h *LogsApiHttpListener) req_res_http_handler(w http.ResponseWriter, r *htt
 	reqResPayload := []LogItem{{
 		Time:    string(t),
 		LogType: "reqRes",
-		Record:  string(body),
+		Record:  base64.StdEncoding.EncodeToString(body),
 	}}
 
 	reqResString, _ := json.Marshal(reqResPayload)

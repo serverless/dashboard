@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -280,13 +281,15 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	}
 
 	for _, reqResPayload := range validationData2.ReqRes {
-		if reqResPayload.Payloads[0] != reqResData {
+		reqResStr, _ := base64.StdEncoding.DecodeString(reqResPayload.Payloads[0])
+		if string(reqResStr) != reqResData {
 			t.Errorf("Expected reqRes message %s Received %s", reqResData, reqResPayload.Payloads[0])
 		}
 	}
 
 	for _, spansPayload := range validationData2.Spans {
-		if spansPayload.Payloads[0] != spanData {
+		spanStr, _ := base64.StdEncoding.DecodeString(spansPayload.Payloads[0])
+		if string(spanStr) != spanData {
 			t.Errorf("Expected reqRes message %s Received %s", reqResData, spansPayload.Payloads[0])
 		}
 	}
