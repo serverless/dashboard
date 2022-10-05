@@ -87,6 +87,10 @@ Disable automated AWS SDK monitoring
 
 Disable automated express monitoring
 
+##### `SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB` (or `options.traceMaxCapturedBodySizeKb`)
+
+In dev mode, HTTP request and response bodies are stored as tags. To avoid performance issues, bodies that extend 10 000KB in size are not exposed. This default can be overridden with this settin
+
 ### Outcome
 
 SDK automatically creates the trace that covers internal process of function invocation and initialization.

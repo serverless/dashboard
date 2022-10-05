@@ -1141,7 +1141,7 @@ describe('integration', function () {
               expect(outerRequest2Span.parentSpanId).to.deep.equal(invocationSpan.id);
 
               const { tags: outerRequest1Tags } = outerRequest1Span;
-              expect(outerRequest1Tags.http.method).to.equal('GET');
+              expect(outerRequest1Tags.http.method).to.equal('POST');
               expect(outerRequest1Tags.http.protocol).to.equal('HTTP/1.1');
               expect(outerRequest1Tags.http.host).to.equal('localhost:3177');
               expect(outerRequest1Tags.http.path).to.equal('/out-1');
@@ -1153,7 +1153,7 @@ describe('integration', function () {
               expect(expressRequest2Span.parentSpanId).to.deep.equal(routeSpan.id);
 
               const { tags: expressRequest1Tags } = expressRequest1Span;
-              expect(expressRequest1Tags.http.method).to.equal('GET');
+              expect(expressRequest1Tags.http.method).to.equal('POST');
               expect(expressRequest1Tags.http.protocol).to.equal('HTTP/1.1');
               expect(expressRequest1Tags.http.host).to.equal('localhost:3177');
               expect(expressRequest1Tags.http.path).to.equal('/in-1');

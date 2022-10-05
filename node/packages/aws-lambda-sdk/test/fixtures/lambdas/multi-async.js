@@ -20,11 +20,11 @@ const initializeServer = () => {
 const sendRequest = (path) => {
   return new Promise((resolve) =>
     http
-      .request(`http://localhost:${TEST_SERVER_PORT}/${path}`, (response) => {
+      .request(`http://localhost:${TEST_SERVER_PORT}/${path}`, { method: 'POST' }, (response) => {
         response.on('data', () => {});
         response.on('end', resolve);
       })
-      .end()
+      .end('test')
   );
 };
 

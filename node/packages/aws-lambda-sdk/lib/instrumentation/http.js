@@ -33,6 +33,75 @@ const resolveQueryParamNamesFromSearchString = (searchString) => {
 };
 
 const install = (protocol, httpModule) => {
+  const bodySizeLimit = serverlessSdk._settings.traceMaxCapturedBodySizeKb * 1000;
+
+  const captureRequestBody = (traceSpan, req) => {
+    let isCapturing = true;
+    let body = '';
+    const originalWrite = req.write;
+    const originalEnd = req.end;
+    const abortCapture = () => {
+      isCapturing = false;
+      req.write = originalWrite;
+      req.end = originalEnd;
+      body = null;
+    };
+    req.write = function write(chunk, encoding, callback) {
+      if (isCapturing) {
+        if (typeof chunk === 'string') {
+          body += chunk;
+          if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
+        } else {
+          abortCapture();
+        }
+      }
+      return originalWrite.call(this, chunk, encoding, callback);
+    };
+    req.end = function end(chunk, encoding, callback) {
+      if (isCapturing) {
+        if (typeof chunk === 'string') {
+          body += chunk;
+          if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
+        } else if (chunk) {
+          abortCapture();
+        }
+        if (body) traceSpan.tags.set('http.request_body', body);
+        abortCapture();
+      }
+      return originalEnd.call(this, chunk, encoding, callback);
+    };
+  };
+
+  const captureResponseBody = (traceSpan, response) => {
+    const originalAddListener = response.addListener;
+    let isAttached = false;
+
+    response.addListener = response.on = function addListener(type, listener) {
+      if (!isAttached && type === 'data') {
+        isAttached = true;
+        response.addListener = response.on = originalAddListener;
+        let bodyBuffer = Buffer.from('');
+        response.on('data', (chunk) => {
+          if (!bodyBuffer) return;
+          bodyBuffer = Buffer.concat([bodyBuffer, chunk]);
+          if (bodyBuffer.length > bodySizeLimit) bodyBuffer = null;
+        });
+        response.on('end', () => {
+          const body = (() => {
+            if (!bodyBuffer?.length) return null;
+            try {
+              return new TextDecoder('utf-8', { fatal: true }).decode(bodyBuffer);
+            } catch {
+              return null;
+            }
+          })();
+          if (body) traceSpan.tags.set('http.response_body', body);
+        });
+      }
+      return originalAddListener.call(this, type, listener);
+    };
+  };
+
   const originalRequest = httpModule.request;
   const originalGet = httpModule.get;
 
@@ -73,6 +142,7 @@ const install = (protocol, httpModule) => {
       requestEndTime = process.hrtime.bigint();
       responseReadableState = response._readableState;
       traceSpan.tags.set('http.status_code', response.statusCode);
+      if (serverlessSdk._isDevMode) captureResponseBody(traceSpan, response);
       response.on('end', () => {
         if (!traceSpan.endTime) traceSpan.close();
       });
@@ -112,6 +182,8 @@ const install = (protocol, httpModule) => {
       },
       { prefix: 'http' }
     );
+
+    if (serverlessSdk._isDevMode) captureRequestBody(traceSpan, req);
 
     return req.on(errorMonitor, (error) => {
       if (traceSpan.endTime) return;

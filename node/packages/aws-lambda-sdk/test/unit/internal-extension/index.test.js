@@ -780,7 +780,7 @@ describe('internal-extension/index.test.js', () => {
     expect(outerRequest2Span.parentSpanId).to.deep.equal(invocationSpan.id);
 
     const { tags: outerRequest1Tags } = outerRequest1Span;
-    expect(outerRequest1Tags.http.method).to.equal('GET');
+    expect(outerRequest1Tags.http.method).to.equal('POST');
     expect(outerRequest1Tags.http.protocol).to.equal('HTTP/1.1');
     expect(outerRequest1Tags.http.host).to.equal('localhost:3177');
     expect(outerRequest1Tags.http.path).to.equal('/out-1');
@@ -792,7 +792,7 @@ describe('internal-extension/index.test.js', () => {
     expect(expressRequest2Span.parentSpanId).to.deep.equal(routeSpan.id);
 
     const { tags: expressRequest1Tags } = expressRequest1Span;
-    expect(expressRequest1Tags.http.method).to.equal('GET');
+    expect(expressRequest1Tags.http.method).to.equal('POST');
     expect(expressRequest1Tags.http.protocol).to.equal('HTTP/1.1');
     expect(expressRequest1Tags.http.host).to.equal('localhost:3177');
     expect(expressRequest1Tags.http.path).to.equal('/in-1');
@@ -833,14 +833,47 @@ describe('internal-extension/index.test.js', () => {
       server.close();
     });
     it('should support dev mode', async () => {
-      await handleInvocation('multi-async');
+      const {
+        trace: {
+          input: { spans },
+        },
+      } = await handleInvocation('multi-async');
+      for (const httpSpan of spans.slice(-4)) {
+        expect(httpSpan.name).to.equal('node.http.request');
+        expect(httpSpan.tags.http).to.not.have.property('requestBody');
+        expect(httpSpan.tags.http).to.not.have.property('responseBody');
+      }
+
+      const filteredTagNameTokens = new Set([
+        ['http', 'requestBody'],
+        ['http', 'responseBody'],
+      ]);
       expect(
         payloads.map(([type, payload]) => {
           switch (type) {
             case 'request-response':
               return { type, data: { $case: payload.data.$case } };
             case 'trace':
-              return { type, spans: payload.spans.map(({ name }) => ({ name })) };
+              return {
+                type,
+                spans: payload.spans.map(({ name, tags }) => {
+                  const filteredTags = {};
+                  tagFilter: for (const tagTokens of filteredTagNameTokens) {
+                    let result = tags;
+                    for (const tagToken of tagTokens) {
+                      result = result[tagToken];
+                      if (!result) continue tagFilter;
+                    }
+                    let target = filteredTags;
+                    for (const tagToken of tagTokens.slice(0, -1)) {
+                      if (!target[tagToken]) target[tagToken] = {};
+                      target = target[tagToken];
+                    }
+                    target[tagTokens[tagTokens.length - 1]] = result;
+                  }
+                  return { name, tags: filteredTags };
+                }),
+              };
             default:
               throw new Error('Unexpected');
           }
@@ -850,36 +883,56 @@ describe('internal-extension/index.test.js', () => {
         {
           type: 'trace',
           spans: [
-            { name: 'aws.lambda.initialization' },
-            { name: 'express.middleware.query' },
-            { name: 'express.middleware.expressinit' },
-            { name: 'express.middleware.jsonparser' },
+            { name: 'aws.lambda.initialization', tags: {} },
+            { name: 'express.middleware.query', tags: {} },
+            { name: 'express.middleware.expressinit', tags: {} },
+            { name: 'express.middleware.jsonparser', tags: {} },
           ],
         },
         {
           type: 'trace',
-          spans: [{ name: 'node.http.request' }],
-        },
-        {
-          type: 'trace',
-          spans: [{ name: 'node.http.request' }],
-        },
-        {
-          type: 'trace',
-          spans: [{ name: 'node.http.request' }],
-        },
-        {
-          type: 'trace',
-          spans: [{ name: 'node.http.request' }],
+          spans: [
+            {
+              name: 'node.http.request',
+              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+            },
+          ],
         },
         {
           type: 'trace',
           spans: [
-            { name: 'express.middleware.router' },
-            { name: 'express.middleware.route.get.anonymous' },
-            { name: 'express' },
-            { name: 'aws.lambda.invocation' },
-            { name: 'aws.lambda' },
+            {
+              name: 'node.http.request',
+              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+            },
+          ],
+        },
+        {
+          type: 'trace',
+          spans: [
+            {
+              name: 'node.http.request',
+              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+            },
+          ],
+        },
+        {
+          type: 'trace',
+          spans: [
+            {
+              name: 'node.http.request',
+              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+            },
+          ],
+        },
+        {
+          type: 'trace',
+          spans: [
+            { name: 'express.middleware.router', tags: {} },
+            { name: 'express.middleware.route.get.anonymous', tags: {} },
+            { name: 'express', tags: {} },
+            { name: 'aws.lambda.invocation', tags: {} },
+            { name: 'aws.lambda', tags: {} },
           ],
         },
       ]);
