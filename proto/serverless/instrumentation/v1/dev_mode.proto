@@ -19,8 +19,8 @@ message DevModePayload {
 
   oneof payload {
     // The set of lambda traces that were generated via an internal extension
-    TracePayload traces = 4;
+    TracePayload trace = 4;
     // The req or response data from the instrumented lambda function
-    RequestResponse req_res = 5;
+    RequestResponse request_response = 5;
   }
 }
