@@ -7,8 +7,8 @@ menuOrder: 6
 
 # Metrics 
 Metrics are automatically collected across your AWS Account
-when you [add an AWS Observability Integration](../instrumentation/index.md#adding-the-aws-observability-integration). These metrics are collected
-using [Cloudwatch Metric Streams](../instrumentation/data-sources.md#metric-streams)
+when you [add an AWS Observability Integration](../integrations/index.md#adding-the-aws-observability-integration). These metrics are collected
+using [Cloudwatch Metric Streams](../integrations/data-sources-and-roles.md#metric-streams)
 which allow us to collect metrics from a variety of AWS Services in aggregate.
 
 ## Metric Aggregation
@@ -48,11 +48,11 @@ for tracking Lambda functions associated with a common business outcome (e.g. a 
 
 - **Environment** Environment is another way to group sets of functions for filtering. These are used to associate apps across an entire environment such as staging, or production. 
 
-More details about configuring your Namespace and Environment tag can be found in our [Enabling Additional Monitoring Features Section](../instrumentation/enabling-logs-traces.md#setting-environment-and-namespace-tags)
+More details about configuring your Namespace and Environment tag can be found in our [Enabling Additional Monitoring Features Section](../integrations/enable-monitoring-features.md#setting-environment-and-namespace-tags)
 
 - **Region** - Region is the specific region your Lambda function is executing in. 
 
-- **Cloud Account** - Cloud Account will show the account number or nickname for an [AWS Observability Integrations you have added](../instrumentation/index.md#adding-the-aws-observability-integration).
+- **Cloud Account** - Cloud Account will show the account number or nickname for an [AWS Observability Integrations you have added](../integrations/index.md#adding-the-aws-observability-integration).
 
 
 

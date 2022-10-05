@@ -9,7 +9,7 @@ menuOrder: 4
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
 ## Organization
-An organization is a single tenant in Serverless product suite (including  Dashboard, and Serverless Cloud). An organization name needs to be unique and you need to [add at least one AWS Observability Integration](./instrumentation/index.md#adding-the-aws-observability-integration) to start using Serverless Console. 
+An organization is a single tenant in Serverless product suite (including  Dashboard, and Serverless Cloud). An organization name needs to be unique and you need to [add at least one AWS Observability Integration](./integrations/index.md#adding-the-aws-observability-integration) to start using Serverless Console. 
 
 ## Integration
 Integrations are how Serverless Console keeps track of third party tools you choose to instrument and monitor. You need at least one integration to utilize Serverless Console features and you can use add multiple integrations to a single organization. 
@@ -18,10 +18,10 @@ Integrations are how Serverless Console keeps track of third party tools you cho
 The AWS Observability Integration is a collection of infrastructure deployed and tracked by Serverless Console.  This integration is deployed using a [Cloudformation Stack](#cloudformation-stack) and IAM Role. 
 
 #### CloudFormation Stack
-[CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) is an AWS Service which allows you to create templates for creating AWS Infrastructure. Serverless Console creates the [Serverless-Inc-Role-Stack](../instrumentation/aws/iam-role-cfn-template.yaml) in your account when you add the AWS Observability Integration.
+[CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) is an AWS Service which allows you to create templates for creating AWS Infrastructure. Serverless Console creates the [Serverless-Inc-Role-Stack](../integrations/aws/iam-role-cfn-template.yaml) in your account when you add the AWS Observability Integration.
 
 #### IAM Roles
-An [Identity Access Management Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) defines a set of permissions for interacting with your AWS Account. Serverless Console adds an [the ServerlessMonitoringRole](../instrumentation/aws/iam-role-cfn-template.yaml) to create the following additional pieces of AWS Infrastructure. 
+An [Identity Access Management Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) defines a set of permissions for interacting with your AWS Account. Serverless Console adds an [the ServerlessMonitoringRole](../integrations/aws/iam-role-cfn-template.yaml) to create the following additional pieces of AWS Infrastructure. 
 
 #### Kinesis Firehose
 [A Kinesis Firehose](https://aws.amazon.com/kinesis/data-firehose/) is a streaming data pipeline used to send log data to Serverless Console. 
@@ -29,11 +29,15 @@ An [Identity Access Management Role](https://docs.aws.amazon.com/IAM/latest/User
 #### Cloudwatch Log Subscription Filter
 A [Cloudwatch Log Subscription Filter](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/SubscriptionFilters.html) specifies a set of logs to be set to a destination, such as Kinesis Firehose. 
 
+#### EventBridge
+
+#### CloudTrail
+
 #### Cloudwatch Metric Stream
 [Cloudwatch Metric Streams](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Metric-Streams.html) are used to collect aggregate metrics. Cloudwatch Metric streams allow you to collect metrics from any AWS Services. For a list of metrics we collect, see our [metrics section](./product/metrics.md).
 
 #### Lambda Layer
-[A Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) is a packaged library for distributing Lambda Functions. The [Serverless Extension](./instrumentation/data-sources.md#extensions) and [Serverless Node SDK](./instrumentation/data-sources.md#serverless-node-sdk-internal-extension) are packaged as Lambda Layers and attached to your function when you [enable additiona monitoring features](./instrumentation/enabling-logs-traces.md).
+[A Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) is a packaged library for distributing Lambda Functions. The [Serverless Extension](./integrations/data-sources-and-roles.md#extensions) and [Serverless Node SDK](./integrations/data-sources-and-roles.md#serverless-node-sdk-internal-extension) are packaged as Lambda Layers and attached to your function when you [enable additional monitoring features](./integrations/enable-monitoring-features.md).
 
 #### Serverless Extension
 An AWS Lambda Extension is extra code which you can add to your AWS Lambda Function via an AWS Lambda Layer in order to track telemetry data about each Invocation.  Serverless Console uses a sophisticated AWS Lambda Extension for collecting telemetry data in AWS Lambda Functions.

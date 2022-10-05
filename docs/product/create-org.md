@@ -15,7 +15,7 @@ Serverless for the first time.
 ## Adding Team Mates
 
 Console currently supports the following basic roles which are shared across
-your org. 
+your org.
 
 - **Owner** - Owner of the account. Can add other contributors and access the
 Org Settings. Only one owner per account can be present.
@@ -33,7 +33,7 @@ To configure deployment in these system, do the following.
 
 1. Go to the settings tab of your organization, and copy the org key to your clipboard
 1. Paste the value as the environment variable SLS_ORG_TOKEN in your CI/CD environment
-1. Deploy using the [Serverless Framework](../instrumentation/framework.md) to
+1. Deploy using the [Serverless Framework](../integrations/framework.md) to
 enable tracing and logs.
 
 ## Changing Org Name

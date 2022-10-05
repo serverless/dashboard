@@ -7,7 +7,7 @@ menuOrder: 5
 
 # Development Mode
 To make the most of your troubleshooting and development
-experience it is recommended to [enable logs](../instrumentation/enabling-logs-traces.md) on
+experience it is recommended to [enable logs](../integrations/enable-monitoring-features.md) on
 your functions. This collects logs from your function using Cloudwatch Subscriptions. 
 
 By default Dev Mode gives you an aggregated stream of all the
@@ -51,4 +51,4 @@ this to do keyword searches such as a user-id, or tag.
 
 ## Log Formatting
 Where possible we detect and format structured logs such as JSON. We also include
-encoded information in logs if you [enable tracing](../instrumentation/enabling-logs-traces.md#enabling-traces) on a function but this is hidden in development mode. 
+encoded information in logs if you [enable tracing](../integrations/enable-monitoring-features.md#enabling-traces) on a function but this is hidden in development mode. 

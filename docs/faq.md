@@ -10,7 +10,7 @@ menuOrder: 5
 ## Adding the AWS Observability Integration
 
 **What access do I need to add an AWS Account?**
-You will need to admin access to setup the AWS Account. Adding the Integration adds a CloudFormation stack that configures an IAM Role that then creates additional resources. More details are available in the [adding the AWS Observability guide](../instrumentation/index.md)
+You will need to admin access to setup the AWS Account. Adding the Integration adds a CloudFormation stack that configures an IAM Role that then creates additional resources. More details are available in the [adding the AWS Observability guide](../integrations/index.md)
 
 **What infrastructure is getting setup in my AWS Account?**
 When you add the AWS Observability the following components get setup.
@@ -19,7 +19,7 @@ When you add the AWS Observability the following components get setup.
 * [IAM Role](./glossary.md#iam-roles)
 * [Metric Streams](./glossary.md#cloudwatch-metric-stream)
 
-After you have added the AWS Observability integration, [enabling additional monitoring features](./instrumentation/enabling-logs-traces.md) will also create.
+After you have added the AWS Observability integration, [enabling additional monitoring features](./integrations/enable-monitoring-features.md) will also create.
 
 * [Lambda Layers](./glossary.md#lambda-layer)
 * [Cloudwatch Log Subscription Filters](./glossary.md#cloudwatch-subscriptions)
@@ -27,7 +27,7 @@ After you have added the AWS Observability integration, [enabling additional mon
 **How do I delete infrastructure setup by Serverless Console?**
 The best way to delete the infrastructure provisioned by Serverless Console is to Remove the integration using the Console UI. This will remove all the infrastructure associated with Serverless Console. 
 
-If you wish to disable function specific [Lambda Layers](./glossary.md#lambda-layer) or [Cloudwatch Log Subscription Filters](./glossary.md#cloudwatch-subscriptions) you can [disable function specific monitoring features](./instrumentation/enabling-logs-traces.md) on the integrations page.
+If you wish to disable function specific [Lambda Layers](./glossary.md#lambda-layer) or [Cloudwatch Log Subscription Filters](./glossary.md#cloudwatch-subscriptions) you can [disable function specific monitoring features](./integrations/enable-monitoring-features.md) on the integrations page.
 
 
 **What availability zones is Serverless Console hosted in?**
@@ -39,17 +39,17 @@ If your Lambda function is not in us-east-1 you may experience additional bandwi
 ## Configuring apps and services
 
 **How do I start using Serverless Console with my app?**
-Metrics for your Lambda function will automatically show up in Serverless Console once you deploy. You can [enable additional monitoring features](./instrumentation/enabling-logs-traces.md) to start capturing, logs, traces and using dev mode. 
+Metrics for your Lambda function will automatically show up in Serverless Console once you deploy. You can [enable additional monitoring features](./integrations/enable-monitoring-features.md) to start capturing, logs, traces and using dev mode. 
 
 **What does enabling dev-mode do?**
-Enabling dev-mode adds an [external extension](./instrumentation/enabling-logs-traces.md#enabling-dev-mode) to your Lambda function. This external function bypasses log collection in AWS Cloudwatch and sends the log directly to Serverless Console in under a second. 
+Enabling dev-mode adds an [external extension](./integrations/enable-monitoring-features.md#enabling-dev-mode) to your Lambda function. This external function bypasses log collection in AWS Cloudwatch and sends the log directly to Serverless Console in under a second. 
 
 **How long before a log or metric will show up in Serverless Console?**
 For metrics, the first metric may take a few minutes to show up when attaching a new integration or deploying a new function. Subsequent metric details will arrive in seconds. Logs and Traces will take several seconds to reconcile, but enabling dev mode streams directly with little to no noticable latency.
 
 **What Serverless.yaml fields effect console?**
 [Serverless Framework](https://www.serverless.com/framework/docs) is one of the easiest ways to integrate with Serverless Console and allows you
-to enable Logs, Traces, and Dev-Mode using Infrastructure as Code (IAC). See more details about using [Serverless Framework](./instrumentation/enabling-logs-traces.md#using-framework-to-enable-features).
+to enable Logs, Traces, and Dev-Mode using Infrastructure as Code (IAC). See more details about using [Serverless Framework](./integrations/enable-monitoring-features.md#using-framework-to-enable-features).
 
 
 ## Metrics and Use Cases
@@ -85,7 +85,7 @@ It's free to start using Serverless Console. With our generous free tier you can
 For details about our paid tiers see our [product pricing page](./product/pricing.md).
 
 **What happens when my org has been shutoff?**
-If you exceed the monthly quota for the Free Tier we will stop ingesting, logs, metrics and traces for your orginization. It will not [remove all infrastructure](./instrumentation/index.md#removing-the-aws-observability-integration) from your AWS account. 
+If you exceed the monthly quota for the Free Tier we will stop ingesting, logs, metrics and traces for your orginization. It will not [remove all infrastructure](./integrations/index.md#removing-the-aws-observability-integration) from your AWS account. 
 
 ## Data Retention
 

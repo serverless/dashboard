@@ -15,8 +15,9 @@ The [glossary](../glossary.md) provides a helpful starting
 point for terms and concepts you may need to learn before
 getting started.
 
-## Follow our Getting Started Guide for Serverless Framework
-The easiest way to get started is using our [Serverless Framework Guide](../index.md).
+##Add your AWS Account and follow our Getting Started Guide
+[Getting Started](../index.md) is as easy as added your AWS Account, and 
+walking through on onboarding process.
 
 ## Sign up or log in at console.serverless.com
 [Create your organization](create-org.md) and learn how to deploy by logging into [Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link)
