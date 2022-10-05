@@ -39,7 +39,7 @@ type ValidationResult struct {
 }
 
 var port = 9001
-var region = "us-east-1"
+var region = "us-east-2"
 var functionName = "test-function"
 
 type mockSTSClient struct {
