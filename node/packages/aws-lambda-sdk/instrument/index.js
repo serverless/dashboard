@@ -34,7 +34,6 @@ const reportRequest = async (event, context) => {
   });
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =
     requestResponseProto.RequestResponse.encode(payload).finish());
-  process._rawDebug(`SERVERLESS_TELEMETRY.R.${payloadBuffer.toString('base64')}`);
   await sendTelemetry('request-response', payloadBuffer);
 };
 
@@ -75,7 +74,6 @@ const reportResponse = async (response, context) => {
   });
   const payloadBuffer = (serverlessSdk._lastResponseBuffer =
     requestResponseProto.RequestResponse.encode(payload).finish());
-  process._rawDebug(`SERVERLESS_TELEMETRY.R.${payloadBuffer.toString('base64')}`);
   await sendTelemetry('request-response', payloadBuffer);
 };
 
