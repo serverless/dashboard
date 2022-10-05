@@ -222,15 +222,11 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: ReqRes###')) {
-        getCurrentInvocationData().reqRes.push(
-          JSON.parse(message.slice(message.lastIndexOf('###') + 3))
-        );
+        getCurrentInvocationData().reqRes.push(message.slice(message.lastIndexOf('###') + 3));
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Traces###')) {
-        getCurrentInvocationData().traces.push(
-          JSON.parse(message.slice(message.lastIndexOf('###') + 3))
-        );
+        getCurrentInvocationData().traces.push(message.slice(message.lastIndexOf('###') + 3));
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Extension overhead duration: External shutdown')) {

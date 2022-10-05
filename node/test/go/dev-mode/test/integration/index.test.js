@@ -60,22 +60,10 @@ describe('Integration', function () {
             // to communicate with the external extension
             for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
               expect(reqRes.length).to.equal(1);
-              for (const payload of reqRes) {
-                expect(payload).to.haveOwnProperty('region');
-                expect(payload).to.haveOwnProperty('accountId');
-                expect(payload).to.haveOwnProperty('timestamps');
-                expect(payload).to.haveOwnProperty('payloads');
-              }
             }
 
             for (const [, traces] of invocationsData.map((data) => data.traces).entries()) {
               expect(traces.length).to.equal(1);
-              for (const payload of traces) {
-                expect(payload).to.haveOwnProperty('region');
-                expect(payload).to.haveOwnProperty('accountId');
-                expect(payload).to.haveOwnProperty('requestId');
-                expect(payload).to.haveOwnProperty('payloads');
-              }
             }
           },
         },
