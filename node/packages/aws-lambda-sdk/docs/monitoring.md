@@ -66,6 +66,8 @@ Tags that apply to all AWS SDK requests:
 | `aws.sdk.operation`         | Operation name (e.g. `listtopics`)                                                     |
 | `aws.sdk.request_id`        | AWS reqeust id                                                                         |
 | `aws.sdk.error`             | If request ends with error, the error message                                          |
+| `aws.sdk.request_body`      | _(dev mode only)_ Request body                                                         |
+| `aws.sdk.response_body`     | _(dev mode only)_ Response body                                                        |
 
 #### `aws.sdk.sns` span tags`
 
