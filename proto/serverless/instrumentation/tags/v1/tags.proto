@@ -31,10 +31,6 @@ message SlsTags {
   string service = 3;
   // The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use.
   optional string region = 4;
-  // The account id that instrumentation was performed in. This is used to determine which integration the payload was created in.
-  optional string account_id = 6;
-  // The request id that created the payload. This is used to determine which specific invocation a payload is tied to.
-  optional string request_id = 7;
 
   message SdkTags {
     // The Name of the Serverless SDK used to instrument.
