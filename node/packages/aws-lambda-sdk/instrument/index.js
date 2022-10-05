@@ -11,6 +11,7 @@ const requestResponseProto = require('@serverless/sdk-schema/dist/request_respon
 const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
 const sendTelemetry = require('./lib/send-telemetry');
+const flushSpans = require('./lib/auto-send-spans').flush;
 const pkgJson = require('../package');
 
 const serverlessSdk = global.serverlessSdk || require('../');
@@ -78,7 +79,7 @@ const writeResponse = async (response, context) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
-const writeTrace = async () => {
+const writeTrace = () => {
   const payload = (serverlessSdk._lastTrace = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -90,7 +91,6 @@ const writeTrace = async () => {
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
   process._rawDebug(`SERVERLESS_TELEMETRY.T.${payloadBuffer.toString('base64')}`);
-  await sendTelemetry('trace', payloadBuffer);
 };
 
 module.exports = (originalHandler, options = {}) => {
@@ -160,7 +160,8 @@ module.exports = (originalHandler, options = {}) => {
       const endTime = process.hrtime.bigint();
       awsLambdaInvocationSpan.close({ endTime });
       awsLambdaSpan.close({ endTime });
-      serverlessSdk._deferredTelemetryRequests.push(writeTrace());
+      writeTrace();
+      flushSpans();
       await Promise.all(serverlessSdk._deferredTelemetryRequests);
       serverlessSdk._debugLog(
         'Overhead duration: Internal response:',

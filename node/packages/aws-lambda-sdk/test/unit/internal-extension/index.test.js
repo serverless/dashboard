@@ -801,16 +801,27 @@ describe('internal-extension/index.test.js', () => {
 
   describe('dev mode', () => {
     let server;
-    const payloadNames = [];
+    const payloads = [];
     before(() => {
+      const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+      const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
       process.env.SLS_DEV_MODE_ORG_ID = 'test';
       server = http.createServer((request, response) => {
         if (request.method !== 'GET') throw new Error(`Unexpected method:${request.method}`);
-        payloadNames.push(request.url.slice(1));
-        request.on('data', () => {});
+
+        let payload = Buffer.from('');
+        request.on('data', (chunk) => {
+          payload = Buffer.concat([payload, chunk]);
+        });
         request.on('end', () => {
           response.writeHead(200, {});
           response.end('OK');
+          const payloadType = request.url.slice(1);
+          const decodedPayload =
+            payloadType === 'request-response'
+              ? RequestResponse.decode(payload)
+              : TracePayload.decode(payload);
+          payloads.push([payloadType, decodedPayload]);
         });
       });
 
@@ -823,7 +834,55 @@ describe('internal-extension/index.test.js', () => {
     });
     it('should support dev mode', async () => {
       await handleInvocation('multi-async');
-      expect(payloadNames).to.deep.equal(['request-response', 'trace']);
+      expect(
+        payloads.map(([type, payload]) => {
+          switch (type) {
+            case 'request-response':
+              return { type, data: { $case: payload.data.$case } };
+            case 'trace':
+              return { type, spans: payload.spans.map(({ name }) => ({ name })) };
+            default:
+              throw new Error('Unexpected');
+          }
+        })
+      ).to.deep.equal([
+        { type: 'request-response', data: { $case: 'requestData' } },
+        {
+          type: 'trace',
+          spans: [
+            { name: 'aws.lambda.initialization' },
+            { name: 'express.middleware.query' },
+            { name: 'express.middleware.expressinit' },
+            { name: 'express.middleware.jsonparser' },
+          ],
+        },
+        {
+          type: 'trace',
+          spans: [{ name: 'node.http.request' }],
+        },
+        {
+          type: 'trace',
+          spans: [{ name: 'node.http.request' }],
+        },
+        {
+          type: 'trace',
+          spans: [{ name: 'node.http.request' }],
+        },
+        {
+          type: 'trace',
+          spans: [{ name: 'node.http.request' }],
+        },
+        {
+          type: 'trace',
+          spans: [
+            { name: 'express.middleware.router' },
+            { name: 'express.middleware.route.get.anonymous' },
+            { name: 'express' },
+            { name: 'aws.lambda.invocation' },
+            { name: 'aws.lambda' },
+          ],
+        },
+      ]);
     });
   });
 });

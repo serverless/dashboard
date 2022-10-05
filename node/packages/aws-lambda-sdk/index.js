@@ -74,3 +74,5 @@ serverlessSdk._debugLog = (...args) => {
 };
 
 serverlessSdk._isDevMode = Boolean(process.env.SLS_DEV_MODE_ORG_ID);
+serverlessSdk._traceSpanEmitter = require('./lib/trace-span/emitter');
+serverlessSdk.version = require('./package').version;

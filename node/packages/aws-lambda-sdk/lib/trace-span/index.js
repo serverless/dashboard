@@ -15,6 +15,7 @@ const lazy = require('d/lazy');
 const { AsyncLocalStorage } = require('node:async_hooks');
 const Long = require('long');
 const crypto = require('crypto');
+const emitter = require('./emitter');
 
 const isValidSpanName = RegExp.prototype.test.bind(/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/);
 const isValidTagName = RegExp.prototype.test.bind(
@@ -251,6 +252,7 @@ class TraceSpan {
     asyncLocalStorage.enterWith(this);
 
     this.parentSpan?.subSpans.add(this);
+    emitter.emit('open', this);
     if (immediateDescendants?.length) {
       // eslint-disable-next-line no-new
       new TraceSpan(immediateDescendants.shift(), {
@@ -312,6 +314,7 @@ class TraceSpan {
     } else {
       this.closeContext();
     }
+    emitter.emit('close', this);
     return this;
   }
   destroy() {
