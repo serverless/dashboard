@@ -18,15 +18,15 @@ All HTTP and HTTPS requests are monitored and stored as `node.http.request` & `n
 
 #### Trace span tags:
 
-| Name                  | Value                                           |
-| --------------------- | ----------------------------------------------- |
-| `http[s].method`      | Request method (e.g. `GET`)                     |
-| `http[s].protocol`    | Currently `HTTP/1.1` in all cases               |
-| `http[s].host`        | Domain name and port name if custom             |
-| `http[s].path`        | Request pathname (query string is not included) |
-| `http[s].query`       | Query string (if provided)                      |
-| `http[s].status_code` | Response status code                            |
-| `http[s].error_code`  | If request errored, its error code              |
+| Name               | Value                                           |
+| ------------------ | ----------------------------------------------- |
+| `http.method`      | Request method (e.g. `GET`)                     |
+| `http.protocol`    | Currently `HTTP/1.1` in all cases               |
+| `http.host`        | Domain name and port name if custom             |
+| `http.path`        | Request pathname (query string is not included) |
+| `http.query`       | Query string (if provided)                      |
+| `http.status_code` | Response status code                            |
+| `http.error_code`  | If request errored, its error code              |
 
 ## AWS SDK requests
 
