@@ -2,7 +2,6 @@ package agent
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,24 +13,6 @@ import (
 	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
 )
-
-type APIPayload struct {
-	Payload []byte `json:"payload"`
-}
-
-type ReqResAPIPayload struct {
-	Payloads   []string `json:"payloads"`
-	Timestamps []int64  `json:"timestamps"`
-	AccountId  string   `json:"accountId"`
-	Region     string   `json:"region"`
-}
-
-type SpanAPIPayload struct {
-	Payloads  []string `json:"payloads"`
-	AccountId string   `json:"accountId"`
-	Region    string   `json:"region"`
-	RequestId string   `json:"requestId"`
-}
 
 type LogMessage struct {
 	Message    string `json:"message"`
@@ -180,17 +161,6 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		lib.Error("Failed to marshal proto", protoErr)
 	}
 
-	// Add proto to json payload
-	jsonData := APIPayload{
-		Payload: protoBytes,
-	}
-
-	// Stringify json
-	body, err := json.Marshal(jsonData)
-	if err != nil {
-		return 0, err
-	}
-
 	// Send data to backends
-	return makeAPICall(body, lib.ReportLog, "/forwarder", "application/json")
+	return makeAPICall(protoBytes, lib.ReportLog, "/forwarder", "application/x-protobuf")
 }
