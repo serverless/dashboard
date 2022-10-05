@@ -28,6 +28,9 @@
     - [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags)
     - [Tags](#serverless-instrumentation-tags-v1-Tags)
   
+- [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
+    - [DevModePayload](#serverless-instrumentation-v1-DevModePayload)
+  
 - [serverless/instrumentation/v1/log.proto](#serverless_instrumentation_v1_log-proto)
     - [LogEvent](#serverless-instrumentation-v1-LogEvent)
     - [LogPayload](#serverless-instrumentation-v1-LogPayload)
@@ -393,8 +396,6 @@ outcomes upon completion.
 | platform | [string](#string) | optional | The platform that was instrumented. Currently Lambda is the only supported platform. |
 | service | [string](#string) |  | The service that was instrumented. For Lambda this will be the function name by default. |
 | region | [string](#string) | optional | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
-| account_id | [string](#string) | optional | The account id that instrumentation was performed in. This is used to determine which integration the payload was created in. |
-| request_id | [string](#string) | optional | The request id that created the payload. This is used to determine which specific invocation a payload is tied to. |
 | sdk | [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags) |  |  |
 | environment | [string](#string) | optional | An optional environment that can be attached. If there is an applicable environment tag this will be attached in a data enrichment process during ingestion. |
 | namespace | [string](#string) | optional | An optional namespace that can be attached. If there is an applicable namespace tag this will be attached in a data enrichment process during ingestion. |
@@ -433,6 +434,42 @@ Defined TagSets start at field number 100  //
 | aws | [AwsTags](#serverless-instrumentation-tags-v1-AwsTags) | optional | These tags are used an AWS resource/sdk is the producer of the span |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
 | https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="serverless_instrumentation_v1_dev_mode-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## serverless/instrumentation/v1/dev_mode.proto
+
+
+
+<a name="serverless-instrumentation-v1-DevModePayload"></a>
+
+### DevModePayload
+A DevMode Payload is a message that will contain reqRes data or span data
+that is forwarded to ingest via the internal extension
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| account_id | [string](#string) |  | The AWS Account ID where this payload originated from |
+| region | [string](#string) |  | The AWS Region where this payload originated from |
+| request_id | [string](#string) |  | The lambda request id where this payload originated from |
+| trace | [TracePayload](#serverless-instrumentation-v1-TracePayload) |  | The set of lambda traces that were generated via an internal extension |
+| request_response | [RequestResponse](#serverless-instrumentation-v1-RequestResponse) |  | The req or response data from the instrumented lambda function |
 
 
 
