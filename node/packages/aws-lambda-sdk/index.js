@@ -1,5 +1,6 @@
 'use strict';
 
+const coerceToNaturalNumber = require('type/natural-number/coerce');
 const TraceSpan = require('./lib/trace-span');
 
 const serverlessSdk = module.exports;
@@ -36,6 +37,10 @@ const resolveSettings = (options = {}) => {
   serverlessSdk._settings.disableExpressMonitoring = Boolean(
     process.env.SLS_DISABLE_EXPRESS_MONITORING || options.disableExpressMonitoring
   );
+  serverlessSdk._settings.traceMaxCapturedBodySizeKb =
+    coerceToNaturalNumber(process.env.SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB) ||
+    coerceToNaturalNumber(options.traceMaxCapturedBodySizeKb) ||
+    10000;
 };
 
 let isInitialized = false;
