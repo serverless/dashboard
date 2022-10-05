@@ -20,7 +20,7 @@ const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
   traceSpans;
 
-const writeRequest = async (event, context) => {
+const reportRequest = async (event, context) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -59,7 +59,7 @@ const resolveResponseString = (response) => {
   return JSON.stringify(response);
 };
 
-const writeResponse = async (response, context) => {
+const reportResponse = async (response, context) => {
   const responseString = resolveResponseString(response);
   if (!responseString) return;
   const payload = (serverlessSdk._lastResponse = {
@@ -79,7 +79,7 @@ const writeResponse = async (response, context) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
-const writeTrace = () => {
+const reportTrace = () => {
   const payload = (serverlessSdk._lastTrace = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -129,7 +129,7 @@ module.exports = (originalHandler, options = {}) => {
     ));
     resolveEventTags(event);
     if (!serverlessSdk._settings.disableRequestMonitoring) {
-      serverlessSdk._deferredTelemetryRequests.push(writeRequest(event, context));
+      serverlessSdk._deferredTelemetryRequests.push(reportRequest(event, context));
     }
 
     const closeInvocation = async (outcome, outcomeResult) => {
@@ -153,14 +153,14 @@ module.exports = (originalHandler, options = {}) => {
       } else {
         resolveResponseTags(outcomeResult);
         if (!serverlessSdk._settings.disableResponseMonitoring) {
-          serverlessSdk._deferredTelemetryRequests.push(writeResponse(outcomeResult, context));
+          serverlessSdk._deferredTelemetryRequests.push(reportResponse(outcomeResult, context));
         }
       }
 
       const endTime = process.hrtime.bigint();
       awsLambdaInvocationSpan.close({ endTime });
       awsLambdaSpan.close({ endTime });
-      writeTrace();
+      reportTrace();
       flushSpans();
       await Promise.all(serverlessSdk._deferredTelemetryRequests);
       serverlessSdk._debugLog(
