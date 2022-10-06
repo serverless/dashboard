@@ -5,7 +5,6 @@ const log = require('log').get('test');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
-const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
 const wait = require('timers-ext/promise/sleep');
 const basename = require('./basename');
 const awsRequest = require('../utils/aws-request');
@@ -228,21 +227,6 @@ const retrieveReports = async (testConfig) => {
         } else {
           startedMessage = payloadString;
           startedMessageType = 'trace';
-        }
-        continue;
-      }
-      if (message.startsWith('SERVERLESS_TELEMETRY.R.')) {
-        const payloadString = message.slice(message.indexOf('.R.') + 3);
-        if (payloadString.endsWith('\n')) {
-          const invocationData = getCurrentInvocationData();
-          const payload = normalizeProtoObject(
-            RequestResponse.decode(Buffer.from(payloadString.trim(), 'base64'))
-          );
-          if (payload.data.$case === 'responseData') invocationData.response = payload;
-          else invocationData.request = payload;
-        } else {
-          startedMessage = payloadString;
-          startedMessageType = getCurrentInvocationData().request ? 'response' : 'request';
         }
         continue;
       }
