@@ -6,23 +6,28 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"serverless/dev-mode-extension/agent"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
+	"google.golang.org/protobuf/proto"
 )
 
+type APIPayload struct {
+	Payload []byte `json:"payload"`
+}
+
 type Validations struct {
-	Register  string                   `json:"register"`
-	LogTypes  []string                 `json:"logTypes"`
-	LogURI    string                   `json:"logURI"`
-	SdkURI    string                   `json:"sdkURI"`
-	RequestId string                   `json:"requestId"`
-	Logs      []agent.APIPayload       `json:"logs"`
-	ReqRes    []agent.ReqResAPIPayload `json:"reqRes"`
-	Spans     []agent.SpanAPIPayload   `json:"spans"`
-	NextCount int64                    `json:"nextCount"`
+	Register  string       `json:"register"`
+	LogTypes  []string     `json:"logTypes"`
+	LogURI    string       `json:"logURI"`
+	SdkURI    string       `json:"sdkURI"`
+	RequestId string       `json:"requestId"`
+	Logs      []APIPayload `json:"logs"`
+	ReqRes    []APIPayload `json:"reqRes"`
+	Spans     []APIPayload `json:"spans"`
+	NextCount int64        `json:"nextCount"`
 }
 
 type LogRegisterDestinationInput struct {
@@ -62,9 +67,9 @@ var validations = Validations{
 	LogURI:    "",
 	SdkURI:    "http://127.0.0.1:2772",
 	RequestId: "",
-	Logs:      make([]agent.APIPayload, 0),
-	ReqRes:    make([]agent.ReqResAPIPayload, 0),
-	Spans:     make([]agent.SpanAPIPayload, 0),
+	Logs:      make([]APIPayload, 0),
+	ReqRes:    make([]APIPayload, 0),
+	Spans:     make([]APIPayload, 0),
 	NextCount: 0,
 }
 
@@ -197,29 +202,32 @@ func registerLogs(c *gin.Context) {
 }
 
 func saveLogs(c *gin.Context) {
-	var input agent.APIPayload
-	if err := c.BindJSON(&input); err != nil {
-		return
+	var input schema.LogPayload
+	if errA := c.ShouldBind(&input); errA == nil {
+		logPayload, _ := proto.Marshal(&input)
+		val := APIPayload{
+			Payload: logPayload,
+		}
+		validations.Logs = append(validations.Logs, val)
+		c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 	}
-	validations.Logs = append(validations.Logs, input)
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
 func saveReqRes(c *gin.Context) {
-	var input agent.ReqResAPIPayload
-	if err := c.BindJSON(&input); err != nil {
-		return
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	val := APIPayload{
+		Payload: body,
 	}
-	validations.ReqRes = append(validations.ReqRes, input)
+	validations.ReqRes = append(validations.ReqRes, val)
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
 func saveSpans(c *gin.Context) {
-	var input agent.SpanAPIPayload
-	if err := c.BindJSON(&input); err != nil {
-		return
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	val := APIPayload{
+		Payload: body,
 	}
-	validations.Spans = append(validations.Spans, input)
+	validations.Spans = append(validations.Spans, val)
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
@@ -314,9 +322,9 @@ func resetValidation(c *gin.Context) {
 		LogURI:    validations.LogURI,
 		SdkURI:    "http://127.0.0.1:2772",
 		RequestId: "",
-		Logs:      make([]agent.APIPayload, 0),
-		ReqRes:    make([]agent.ReqResAPIPayload, 0),
-		Spans:     make([]agent.SpanAPIPayload, 0),
+		Logs:      make([]APIPayload, 0),
+		ReqRes:    make([]APIPayload, 0),
+		Spans:     make([]APIPayload, 0),
 		NextCount: 0,
 	}
 	c.Data(http.StatusOK, "text/html", []byte("ok"))

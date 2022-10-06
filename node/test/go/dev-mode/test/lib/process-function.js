@@ -43,7 +43,7 @@ const create = async (testConfig, coreConfig) => {
             }
           : {}),
         SERVERLESS_PLATFORM_STAGE: 'dev',
-        SLS_ORG_ID: process.env.SLS_ORG_ID,
+        SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
         SLS_TEST_EXTENSION_LOG: '1',
       },
     },
@@ -183,7 +183,12 @@ const retrieveReports = async (testConfig) => {
     for (const { message } of events) {
       if (message.startsWith('⚡ DEV-MODE: initialization')) {
         processesData.push(
-          (currentProcessData = { extensionOverheadDurations: {}, logs: [], reqRes: [] })
+          (currentProcessData = {
+            extensionOverheadDurations: {},
+            logs: [],
+            reqRes: [],
+            traces: [],
+          })
         );
         continue;
       }
@@ -195,7 +200,12 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('START RequestId: ')) {
-        currentInvocationData = { extensionOverheadDurations: {}, logs: [], reqRes: [] };
+        currentInvocationData = {
+          extensionOverheadDurations: {},
+          logs: [],
+          reqRes: [],
+          traces: [],
+        };
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Overhead duration: External request')) {
@@ -212,9 +222,11 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: ReqRes###')) {
-        getCurrentInvocationData().reqRes.push(
-          JSON.parse(message.slice(message.lastIndexOf('###') + 3))
-        );
+        getCurrentInvocationData().reqRes.push(message.slice(message.lastIndexOf('###') + 3));
+        continue;
+      }
+      if (message.startsWith('⚡ DEV-MODE: Traces###')) {
+        getCurrentInvocationData().traces.push(message.slice(message.lastIndexOf('###') + 3));
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Extension overhead duration: External shutdown')) {

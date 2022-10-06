@@ -58,9 +58,13 @@ describe('Integration', function () {
           test: ({ invocationsData }) => {
             // Replace with external + sdk integration results once the sdk is configured
             // to communicate with the external extension
-            const allReqResData = invocationsData.map((data) => data.reqRes);
-            expect(allReqResData[0].length).to.equal(0);
-            expect(allReqResData[1].length).to.equal(0);
+            for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
+              expect(reqRes.length).to.equal(1);
+            }
+
+            for (const [, traces] of invocationsData.map((data) => data.traces).entries()) {
+              expect(traces.length).to.equal(1);
+            }
           },
         },
       },

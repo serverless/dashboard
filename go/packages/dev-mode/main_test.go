@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"serverless/dev-mode-extension/agent"
 	u "serverless/dev-mode-extension/utils"
 
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -30,12 +30,12 @@ type ValidationLogMessage struct {
 }
 
 type ValidationResult struct {
-	Register  RegisterPayload          `json:"register"`
-	RequestId string                   `json:"requestId"`
-	Logs      []agent.APIPayload       `json:"logs"`
-	ReqRes    []agent.ReqResAPIPayload `json:"reqRes"`
-	Spans     []agent.SpanAPIPayload   `json:"spans"`
-	NextCount int64                    `json:"nextCount"`
+	Register  RegisterPayload `json:"register"`
+	RequestId string          `json:"requestId"`
+	Logs      []u.APIPayload  `json:"logs"`
+	ReqRes    []u.APIPayload  `json:"reqRes"`
+	Spans     []u.APIPayload  `json:"spans"`
+	NextCount int64           `json:"nextCount"`
 }
 
 var port = 9001
@@ -280,14 +280,16 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	}
 
 	for _, reqResPayload := range validationData2.ReqRes {
-		if reqResPayload.Payloads[0] != reqResData {
-			t.Errorf("Expected reqRes message %s Received %s", reqResData, reqResPayload.Payloads[0])
+		reqResStr, _ := base64.StdEncoding.DecodeString(string(reqResPayload.Payload))
+		if string(reqResStr) != reqResData {
+			t.Errorf("Expected reqRes message %s Received %s", reqResData, reqResPayload.Payload)
 		}
 	}
 
 	for _, spansPayload := range validationData2.Spans {
-		if spansPayload.Payloads[0] != spanData {
-			t.Errorf("Expected reqRes message %s Received %s", reqResData, spansPayload.Payloads[0])
+		spanStr, _ := base64.StdEncoding.DecodeString(string(spansPayload.Payload))
+		if string(spanStr) != spanData {
+			t.Errorf("Expected reqRes message %s Received %s", reqResData, spansPayload.Payload)
 		}
 	}
 

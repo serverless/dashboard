@@ -2,7 +2,6 @@ package agent
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,24 +13,6 @@ import (
 	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
 )
-
-type APIPayload struct {
-	Payload []byte `json:"payload"`
-}
-
-type ReqResAPIPayload struct {
-	Payloads   []string `json:"payloads"`
-	Timestamps []int64  `json:"timestamps"`
-	AccountId  string   `json:"accountId"`
-	Region     string   `json:"region"`
-}
-
-type SpanAPIPayload struct {
-	Payloads  []string `json:"payloads"`
-	AccountId string   `json:"accountId"`
-	Region    string   `json:"region"`
-	RequestId string   `json:"requestId"`
-}
 
 type LogMessage struct {
 	Message    string `json:"message"`
@@ -97,30 +78,27 @@ func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPa
 	return payload
 }
 
-func CollectRequestResponseData(logs []LogItem) ([]string, []int64) {
-	messages := make([]string, 0)
-	timestamps := make([]int64, 0)
+func CollectRequestResponseData(logs []LogItem) [][]byte {
+	messages := make([][]byte, 0)
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
-			t, _ := time.Parse(time.RFC3339, log.Time)
-			messages = append(messages, log.Record.(string))
-			timestamps = append(timestamps, t.UnixMilli())
-		}
-	}
-	return messages, timestamps
-}
-
-func CollectTraceData(logs []LogItem) []string {
-	messages := make([]string, 0)
-	for _, log := range logs {
-		if log.LogType == "spans" {
-			messages = append(messages, log.Record.(string))
+			messages = append(messages, []byte(log.Record.(string)))
 		}
 	}
 	return messages
 }
 
-func makeAPICall(body []byte, testReporter func(string), path string) (int, error) {
+func CollectTraceData(logs []LogItem) [][]byte {
+	messages := make([][]byte, 0)
+	for _, log := range logs {
+		if log.LogType == "spans" {
+			messages = append(messages, []byte(log.Record.(string)))
+		}
+	}
+	return messages
+}
+
+func makeAPICall(body []byte, testReporter func(string), path string, contentType string) (int, error) {
 	// Send data to backends
 	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
 	var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
@@ -146,7 +124,7 @@ func makeAPICall(body []byte, testReporter func(string), path string) (int, erro
 		token, _ := os.LookupEnv("SLS_DEV_TOKEN")
 		client := &http.Client{}
 		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
-		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Content-Type", contentType)
 		req.Header.Add("Authorization", "Bearer "+token)
 		req.Header.Add("sls-token-type", "orgToken")
 		res, resErr := client.Do(req)
@@ -158,31 +136,17 @@ func makeAPICall(body []byte, testReporter func(string), path string) (int, erro
 }
 
 func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error) {
-	payloads, timestamps := CollectRequestResponseData(logs)
+	payloads := CollectRequestResponseData(logs)
 	if len(payloads) != 0 {
-		reqResPayload := ReqResAPIPayload{
-			Payloads:   payloads,
-			Timestamps: timestamps,
-			AccountId:  accountId,
-			Region:     os.Getenv("AWS_REGION"),
-		}
-		reqResBody, err := json.Marshal(reqResPayload)
-		if err == nil {
-			makeAPICall(reqResBody, lib.ReportReqRes, "/forwarder/reqres")
+		for _, payload := range payloads {
+			makeAPICall(payload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
 		}
 	}
 
 	tracePayloads := CollectTraceData(logs)
 	if len(tracePayloads) != 0 {
-		spansPayload := SpanAPIPayload{
-			Payloads:  tracePayloads,
-			AccountId: accountId,
-			Region:    os.Getenv("AWS_REGION"),
-			RequestId: requestId,
-		}
-		spanBody, err := json.Marshal(spansPayload)
-		if err == nil {
-			makeAPICall(spanBody, lib.ReportSpans, "/forwarder/spans")
+		for _, payload := range tracePayloads {
+			makeAPICall(payload, lib.ReportSpans, "/forwarder/spans", "application/x-protobuf")
 		}
 	}
 
@@ -197,17 +161,6 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		lib.Error("Failed to marshal proto", protoErr)
 	}
 
-	// Add proto to json payload
-	jsonData := APIPayload{
-		Payload: protoBytes,
-	}
-
-	// Stringify json
-	body, err := json.Marshal(jsonData)
-	if err != nil {
-		return 0, err
-	}
-
 	// Send data to backends
-	return makeAPICall(body, lib.ReportLog, "/forwarder")
+	return makeAPICall(protoBytes, lib.ReportLog, "/forwarder", "application/x-protobuf")
 }

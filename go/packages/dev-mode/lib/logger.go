@@ -96,7 +96,7 @@ func ReportSpans(logPayload string) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		BaseLogger.Printf("⚡ DEV-MODE: Spans###%s", logPayload)
+		BaseLogger.Printf("⚡ DEV-MODE: Traces###%s", logPayload)
 	}
 }
 

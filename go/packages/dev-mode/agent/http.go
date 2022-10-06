@@ -117,7 +117,7 @@ func (h *LogsApiHttpListener) span_http_handler(w http.ResponseWriter, r *http.R
 
 	spanPayload := []LogItem{{
 		LogType: "spans",
-		Record:  string(body),
+		Record:  body,
 	}}
 
 	spanString, _ := json.Marshal(spanPayload)
@@ -140,7 +140,7 @@ func (h *LogsApiHttpListener) req_res_http_handler(w http.ResponseWriter, r *htt
 	reqResPayload := []LogItem{{
 		Time:    string(t),
 		LogType: "reqRes",
-		Record:  string(body),
+		Record:  body,
 	}}
 
 	reqResString, _ := json.Marshal(reqResPayload)
