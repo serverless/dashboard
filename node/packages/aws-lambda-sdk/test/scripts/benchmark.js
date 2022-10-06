@@ -24,18 +24,21 @@ require('../benchmark')({
     `${[
       [
         'name',
-        'init:internal',
+        'init:internal:overhead',
+        'init:internal:total',
         'init:total',
 
-        'first:internal:request',
-        'first:internal:response',
+        'first:internal:request-overhead',
+        'first:internal:response-overhead',
+        'first:internal:total',
         'first:total',
         'first:billed',
         'first:local',
         'first:maxMemoryUsed',
 
-        'following:internal:request',
-        'following:internal:response',
+        'following:internal:request-overhead',
+        'following:internal:response-overhead',
+        'following:internal:total',
         'following:total',
         'following:billed',
         'following:local',
@@ -49,18 +52,27 @@ require('../benchmark')({
           ([benchmarkVariantName, { results: benchmarkVariantResults }]) =>
             [
               JSON.stringify(`${functionVariantName}:${benchmarkVariantName}`),
-              Math.round(benchmarkVariantResults.initialization.internal.average),
+              Math.round(benchmarkVariantResults.initialization.internal.overhead.average),
+              Math.round(benchmarkVariantResults.initialization.internal.total.average),
               Math.round(benchmarkVariantResults.initialization.total.average),
 
-              Math.round(benchmarkVariantResults.invocation.first.internal.request.average),
-              Math.round(benchmarkVariantResults.invocation.first.internal.response.average),
+              Math.round(benchmarkVariantResults.invocation.first.internal.requestOverhead.average),
+              Math.round(
+                benchmarkVariantResults.invocation.first.internal.responseOverhead.average
+              ),
+              Math.round(benchmarkVariantResults.invocation.first.internal.total.average),
               Math.round(benchmarkVariantResults.invocation.first.total.average),
               Math.round(benchmarkVariantResults.invocation.first.billed.average),
               Math.round(benchmarkVariantResults.invocation.first.local.average),
               Math.round(benchmarkVariantResults.invocation.first.maxMemoryUsed.average),
 
-              Math.round(benchmarkVariantResults.invocation.following.internal.request.average),
-              Math.round(benchmarkVariantResults.invocation.following.internal.response.average),
+              Math.round(
+                benchmarkVariantResults.invocation.following.internal.requestOverhead.average
+              ),
+              Math.round(
+                benchmarkVariantResults.invocation.following.internal.responseOverhead.average
+              ),
+              Math.round(benchmarkVariantResults.invocation.following.internal.total.average),
               Math.round(benchmarkVariantResults.invocation.following.total.average),
               Math.round(benchmarkVariantResults.invocation.following.billed.average),
               Math.round(benchmarkVariantResults.invocation.following.local.average),
