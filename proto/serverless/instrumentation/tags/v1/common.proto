@@ -4,6 +4,7 @@ package serverless.instrumentation.tags.v1;
 
 option go_package = ".;protoc";
 
+// Generic tagset intended to describe incoming or outgoing HTTP requests
 message HttpTags {
   reserved 5, 7, 10, 11;
   reserved "query", "request_headers", "response_headers", "response_header_names";
