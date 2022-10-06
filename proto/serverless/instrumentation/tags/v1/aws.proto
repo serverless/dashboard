@@ -111,6 +111,9 @@ message AwsLambdaTags {
   optional AwsLambdaInvocationTags invocation = 105;
 }
 
+// Describe routing of incoming HTTP requests.
+// Reflects configuration of a router used to route the request
+// It can be Express.js, or API Gateway if Express.js is not detected to be used
 message HttpRouterTags {
   // The HTTP Path defined by the route handler (either express or API Gateway)
   string path = 1;
