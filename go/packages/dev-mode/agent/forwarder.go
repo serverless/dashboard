@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -136,17 +137,46 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 }
 
 func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error) {
+	region := os.Getenv("AWS_REGION")
 	payloads := CollectRequestResponseData(logs)
 	if len(payloads) != 0 {
 		for _, payload := range payloads {
-			makeAPICall(payload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
+			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
+			var devModePayload schema.RequestResponse
+			reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
+			if reqResErr == nil {
+				finalProtoPayload := schema.DevModePayload{
+					RequestId: requestId,
+					AccountId: accountId,
+					Region:    region,
+					Payload: &schema.DevModePayload_RequestResponse{
+						RequestResponse: &devModePayload,
+					},
+				}
+				finalPayload, _ := proto.Marshal(&finalProtoPayload)
+				makeAPICall(finalPayload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
+			}
 		}
 	}
 
 	tracePayloads := CollectTraceData(logs)
 	if len(tracePayloads) != 0 {
 		for _, payload := range tracePayloads {
-			makeAPICall(payload, lib.ReportSpans, "/forwarder/spans", "application/x-protobuf")
+			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
+			var devModePayload schema.TracePayload
+			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
+			if traceErr == nil {
+				finalProtoPayload := schema.DevModePayload{
+					RequestId: requestId,
+					AccountId: accountId,
+					Region:    region,
+					Payload: &schema.DevModePayload_Trace{
+						Trace: &devModePayload,
+					},
+				}
+				finalPayload, _ := proto.Marshal(&finalProtoPayload)
+				makeAPICall(finalPayload, lib.ReportSpans, "/forwarder/spans", "application/x-protobuf")
+			}
 		}
 	}
 

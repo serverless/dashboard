@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"os"
@@ -80,7 +81,7 @@ func ReportLog(logPayload string) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		BaseLogger.Printf("⚡ DEV-MODE: Log###%s", logPayload)
+		BaseLogger.Printf("⚡ DEV-MODE: Log###%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
 	}
 }
 
@@ -88,7 +89,7 @@ func ReportReqRes(logPayload string) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		BaseLogger.Printf("⚡ DEV-MODE: ReqRes###%s", logPayload)
+		BaseLogger.Printf("⚡ DEV-MODE: ReqRes###%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
 	}
 }
 
@@ -96,7 +97,7 @@ func ReportSpans(logPayload string) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		BaseLogger.Printf("⚡ DEV-MODE: Traces###%s", logPayload)
+		BaseLogger.Printf("⚡ DEV-MODE: Traces###%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
 	}
 }
 

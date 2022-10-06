@@ -33,7 +33,7 @@ describe('Integration', function () {
           test: ({ invocationsData, testConfig }) => {
             for (const [, logs] of invocationsData.map((data) => data.logs).entries()) {
               expect(logs.length).to.equal(8);
-              const logData = Buffer.from(logs[0].payload, 'base64');
+              const logData = Buffer.from(logs[0], 'base64');
               const logPayload = logProto.LogPayload.decode(logData);
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {

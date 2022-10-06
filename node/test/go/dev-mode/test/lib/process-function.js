@@ -216,9 +216,7 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: Log###')) {
-        getCurrentInvocationData().logs.push(
-          JSON.parse(message.slice(message.lastIndexOf('###') + 3))
-        );
+        getCurrentInvocationData().logs.push(message.slice(message.lastIndexOf('###') + 3));
         continue;
       }
       if (message.startsWith('⚡ DEV-MODE: ReqRes###')) {
