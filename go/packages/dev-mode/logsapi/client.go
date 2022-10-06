@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"serverless/dev-mode-extension/lib"
 
 	"github.com/pkg/errors"
@@ -101,12 +102,19 @@ const (
 	SchemaVersionLatest   = SchemaVersion20210318
 )
 
+// Beta trace schema so we can use the updated API
+// in the supported regions
+const (
+	TraceSchemaVersion20220701 = "2022-07-01"
+	TraceSchemaVersionLatest   = TraceSchemaVersion20220701
+)
+
 // SubscribeRequest is the request body that is sent to Logs API on subscribe
 type SubscribeRequest struct {
-	SchemaVersion SchemaVersion `json:"schemaVersion"`
-	EventTypes    []EventType   `json:"types"`
-	BufferingCfg  BufferingCfg  `json:"buffering"`
-	Destination   Destination   `json:"destination"`
+	SchemaVersion string       `json:"schemaVersion"`
+	EventTypes    []EventType  `json:"types"`
+	BufferingCfg  BufferingCfg `json:"buffering"`
+	Destination   Destination  `json:"destination"`
 }
 
 // SubscribeResponse is the response body that is received from Logs API on subscribe
@@ -116,10 +124,17 @@ type SubscribeResponse struct {
 
 // Subscribe calls the Logs API to subscribe for the log events.
 func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destination Destination, extensionId string) (*SubscribeResponse, error) {
+	region := os.Getenv("AWS_REGION")
+	schemaVersion := SchemaVersionLatest
+	url := fmt.Sprintf("%s/2020-08-15/logs", c.logsApiBaseUrl)
+	if region == "us-east-1" {
+		url = fmt.Sprintf("%s/2022-07-01/telemetry", c.logsApiBaseUrl)
+		schemaVersion = TraceSchemaVersionLatest
+	}
 
 	data, err := json.Marshal(
 		&SubscribeRequest{
-			SchemaVersion: SchemaVersionLatest,
+			SchemaVersion: schemaVersion,
 			EventTypes:    types,
 			BufferingCfg:  bufferingCfg,
 			Destination:   destination,
@@ -130,7 +145,6 @@ func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destina
 
 	headers := make(map[string]string)
 	headers[lambdaAgentIdentifierHeaderKey] = extensionId
-	url := fmt.Sprintf("%s/2020-08-15/logs", c.logsApiBaseUrl)
 	resp, err := httpPutWithHeaders(c.httpClient, url, data, &headers)
 	if err != nil {
 		return nil, err
