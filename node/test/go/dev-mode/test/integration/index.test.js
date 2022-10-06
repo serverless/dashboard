@@ -26,7 +26,7 @@ describe('Integration', function () {
       '4s-logger',
       {
         variants: new Map([
-          // ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 5 } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 5 } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 5 } }],
         ]),
         config: {
