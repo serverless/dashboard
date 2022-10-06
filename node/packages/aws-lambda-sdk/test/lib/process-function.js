@@ -197,7 +197,9 @@ const retrieveReports = async (testConfig) => {
     };
     for (const { message } of events) {
       if (message.startsWith('⚡ SDK: Wrapper initialization')) {
-        processesData.push((currentProcessData = { extensionOverheadDurations: {} }));
+        processesData.push(
+          (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
+        );
         continue;
       }
       if (message.startsWith('⚡ SDK: Overhead duration: Internal initialization')) {
@@ -208,7 +210,7 @@ const retrieveReports = async (testConfig) => {
         continue;
       }
       if (message.startsWith('START RequestId: ')) {
-        currentInvocationData = { extensionOverheadDurations: {} };
+        currentInvocationData = { extensionOverheadDurations: {}, internalDurations: {} };
         continue;
       }
       if (message.startsWith('⚡ SDK: Overhead duration: Internal request')) {
@@ -221,9 +223,32 @@ const retrieveReports = async (testConfig) => {
       if (message.startsWith('SERVERLESS_TELEMETRY.T.')) {
         const payloadString = message.slice(message.indexOf('.T.') + 3);
         if (payloadString.endsWith('\n')) {
-          getCurrentInvocationData().trace = normalizeProtoObject(
+          const trace = normalizeProtoObject(
             TracePayload.decode(Buffer.from(payloadString.trim(), 'base64'))
           );
+          const [totalSpan] = trace.spans;
+          const [initializationSpan, invocationSpan] = (() => {
+            if (trace.spans[1].name === 'aws.lambda.initialization') return trace.spans.slice(1, 3);
+            return [null, trace.spans[1]];
+          })();
+
+          Object.assign(getCurrentInvocationData(), {
+            trace,
+            internalDurations: {
+              total: Math.round(
+                (totalSpan.endTimeUnixNano - totalSpan.startTimeUnixNano) / 1000000
+              ),
+              initialization: initializationSpan
+                ? Math.round(
+                    (initializationSpan.endTimeUnixNano - initializationSpan.startTimeUnixNano) /
+                      1000000
+                  )
+                : null,
+              invocation: Math.round(
+                (invocationSpan.endTimeUnixNano - invocationSpan.startTimeUnixNano) / 1000000
+              ),
+            },
+          });
         } else {
           startedMessage = payloadString;
           startedMessageType = 'trace';
@@ -250,7 +275,9 @@ const retrieveReports = async (testConfig) => {
       if (message.startsWith('REPORT RequestId: ')) {
         if (!currentProcessData) {
           // With extensions not loaded we won't get "Extension overhead.." log
-          processesData.push((currentProcessData = { extensionOverheadDurations: {} }));
+          processesData.push(
+            (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
+          );
         }
         const reportMatch = message.match(reportPattern);
         if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);

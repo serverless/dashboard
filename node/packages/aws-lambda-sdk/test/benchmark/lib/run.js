@@ -40,21 +40,32 @@ module.exports = async (useCasesConfig, coreConfig) => {
 
         const durationsData = {
           initialization: {
-            internal: reports.map(
-              ({
-                processesData: [
-                  {
-                    extensionOverheadDurations: { internalInit },
-                  },
-                ],
-              }) => internalInit || 0
-            ),
+            internal: {
+              overhead: reports.map(
+                ({
+                  processesData: [
+                    {
+                      extensionOverheadDurations: { internalInit },
+                    },
+                  ],
+                }) => internalInit || 0
+              ),
+              total: reports.map(
+                ({
+                  invocationsData: [
+                    {
+                      internalDurations: { initialization },
+                    },
+                  ],
+                }) => initialization || 0
+              ),
+            },
             total: reports.map(({ processesData: [{ initDuration }] }) => initDuration),
           },
           invocation: {
             first: {
               internal: {
-                request: reports.map(
+                requestOverhead: reports.map(
                   ({
                     invocationsData: [
                       {
@@ -63,7 +74,7 @@ module.exports = async (useCasesConfig, coreConfig) => {
                     ],
                   }) => internalRequest || 0
                 ),
-                response: reports.map(
+                responseOverhead: reports.map(
                   ({
                     invocationsData: [
                       {
@@ -71,6 +82,15 @@ module.exports = async (useCasesConfig, coreConfig) => {
                       },
                     ],
                   }) => internalResponse || 0
+                ),
+                total: reports.map(
+                  ({
+                    invocationsData: [
+                      {
+                        internalDurations: { invocation },
+                      },
+                    ],
+                  }) => invocation || 0
                 ),
               },
               total: reports.map(({ invocationsData: [{ duration }] }) => duration),
@@ -82,7 +102,7 @@ module.exports = async (useCasesConfig, coreConfig) => {
             },
             following: {
               internal: {
-                request: reports.map(
+                requestOverhead: reports.map(
                   ({
                     invocationsData: [
                       ,
@@ -92,7 +112,7 @@ module.exports = async (useCasesConfig, coreConfig) => {
                     ],
                   }) => internalRequest || 0
                 ),
-                response: reports.map(
+                responseOverhead: reports.map(
                   ({
                     invocationsData: [
                       ,
@@ -101,6 +121,16 @@ module.exports = async (useCasesConfig, coreConfig) => {
                       },
                     ],
                   }) => internalResponse || 0
+                ),
+                total: reports.map(
+                  ({
+                    invocationsData: [
+                      ,
+                      {
+                        internalDurations: { invocation },
+                      },
+                    ],
+                  }) => invocation || 0
                 ),
               },
               total: reports.map(({ invocationsData: [, { duration }] }) => duration),
@@ -116,8 +146,14 @@ module.exports = async (useCasesConfig, coreConfig) => {
         benchmarkVariantResult.results = {
           initialization: {
             internal: {
-              average: average(durationsData.initialization.internal),
-              median: median(durationsData.initialization.internal),
+              overhead: {
+                average: average(durationsData.initialization.internal.overhead),
+                median: median(durationsData.initialization.internal.overhead),
+              },
+              total: {
+                average: average(durationsData.initialization.internal.total),
+                median: median(durationsData.initialization.internal.total),
+              },
             },
             total: {
               average: average(durationsData.initialization.total),
@@ -127,13 +163,17 @@ module.exports = async (useCasesConfig, coreConfig) => {
           invocation: {
             first: {
               internal: {
-                request: {
-                  average: average(durationsData.invocation.first.internal.request),
-                  median: median(durationsData.invocation.first.internal.request),
+                requestOverhead: {
+                  average: average(durationsData.invocation.first.internal.requestOverhead),
+                  median: median(durationsData.invocation.first.internal.requestOverhead),
                 },
-                response: {
-                  average: average(durationsData.invocation.first.internal.response),
-                  median: median(durationsData.invocation.first.internal.response),
+                responseOverhead: {
+                  average: average(durationsData.invocation.first.internal.responseOverhead),
+                  median: median(durationsData.invocation.first.internal.responseOverhead),
+                },
+                total: {
+                  average: average(durationsData.invocation.first.internal.total),
+                  median: median(durationsData.invocation.first.internal.total),
                 },
               },
               total: {
@@ -155,13 +195,17 @@ module.exports = async (useCasesConfig, coreConfig) => {
             },
             following: {
               internal: {
-                request: {
-                  average: average(durationsData.invocation.following.internal.request),
-                  median: median(durationsData.invocation.following.internal.request),
+                requestOverhead: {
+                  average: average(durationsData.invocation.following.internal.requestOverhead),
+                  median: median(durationsData.invocation.following.internal.requestOverhead),
                 },
-                response: {
-                  average: average(durationsData.invocation.following.internal.response),
-                  median: median(durationsData.invocation.following.internal.response),
+                responseOverhead: {
+                  average: average(durationsData.invocation.following.internal.responseOverhead),
+                  median: median(durationsData.invocation.following.internal.responseOverhead),
+                },
+                total: {
+                  average: average(durationsData.invocation.following.internal.total),
+                  median: median(durationsData.invocation.following.internal.total),
                 },
               },
               total: {
