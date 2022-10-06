@@ -17,14 +17,14 @@ Enabling logs will create a [Cloudwatch Subscription](../glossary.md#cloudwatch-
 
 
 ## Enabling Traces
-Enabling traces allows you to inspect the [detailed interactions of a function invocation](../product/traces.md) and [get real time invocation events in dev-mode](../product/logs.md#real-time-invocation-events). This works by including a language specific SDK in your Lambda Function by adding an [layer](../glossary.md#lambda-layer) to your function. Enabling tracing will also add additional [encoded information](./data-sources-and-roles.md#encoded-log-information) to your logs.
+Enabling Traces allows you to inspect the [detailed interactions of a function invocation](../product/traces.md) and [get real time invocation events in dev-mode](../product/logs.md#real-time-invocation-events). This works by including a language specific SDK in your Lambda Function by adding an [layer](../glossary.md#lambda-layer) to your function. Enabling Tracing will also add additional [encoded information](./data-sources-and-roles.md#encoded-log-information) to your logs.
 
-While enabling traces will not affect the performance of your Lambda functions, it will result in additional billable compute time, and log content. This will result in some increase in cost for Cloudwatch and Lambda services for high volume functions. 
+While enabling Traces will not affect the performance of your Lambda functions, it will result in additional billable compute time, and log content. This will result in some increase in cost for Cloudwatch and Lambda services for high volume functions. 
 
 **Note: Tracing is only currently supported on Node.js functions**
 
 ## Enabling Dev Mode
-Enabling dev mode allows you to [stream real time logs](../product/logs.md#real-time-logging) for your Lambda function. This approach also [adds a layer](../glossary.md#lambda-layer) to your function but does so [external](data-sources-and-roles.md#external-extension) from your function. This means you can enable dev mode ona any runtime but there will be a small impact to your Lambda costs. 
+Enabling dev mode allows you to [stream real time logs](../product/logs.md#real-time-logging) for your Lambda function. This approach also [adds a layer](../glossary.md#lambda-layer) to your function but does so [externally](data-sources-and-roles.md#external-extension) from your function. This means you can enable dev mode on any runtime and there will be little to no impact to your Lambda cost and performance. 
 
 ## Metric Collection
 Metrics are collected for all functions by default, and can not be disabled on a per function basis
@@ -41,38 +41,3 @@ can be added per function.
 can be set by going to Settings -> Integrations -> Edit Integration. Each function will have the ability to select a pre-populated Environment tag, or to create a new one. Additional the environment
 tag can be set using the [stage parameter when deploying with Serverless Framework](../integrations/enable-monitoring-features.md#using-framework-to-enable-your-function)
 
-
-## Using Framework to Enable Features
-You can set the following properties in your `serverless.yaml` file
-for various features within Serverless Console.  This will allow you to continue 
-use existing Serverless Framework workflows with Serverless Console.
-
-
-```yaml
-
-# Organization name (required)
-org: myorg
-
-# 
-console: true # this will enable both logs and tracing for the specified function
-    monitoring: #these properties allow you to enable options independently
-      logs: 
-        disable: true
-      trace:
-        disable: true
-      dev-mode:
-        disable: true
-      
-# Service name # this can be used to set the namespace tag
-service: myservice
-
-# Framework version 3.23 or higher
-frameworkVersion: '3.23'
-```
-
-In addition to these properties the `ENVIRONMENT` is also based
-on the stage you use during the deploy command. 
-
-```text
-serverless deploy --stage #included as environment
-```

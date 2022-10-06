@@ -19,29 +19,28 @@ use the least privilege possible, and keep [detailed comments](../../instrumenta
 
 ## CloudTrail Events
 We use [EventBridge] as a data source for determining creation of resources and when appropriate
-[enable monitoring features](./enable-monitoring-features.md) for those resources. 
+[enable monitoring features](./enable-monitoring-features.md) for those resources. An EventBridge rule is setup in each zone you have Active Resources in. 
 
 ## Metric Streams
 Serverless Console collects metrics for all your Lambda functions using
 [Cloudwatch Metric Streams](https://aws.amazon.com/blogs/aws/cloudwatch-metric-streams-send-aws-metrics-to-partners-and-to-your-apps-in-real-time/). 
 
-
-### Lambda Metric Collection
-Currently metric streams are limited to collect metrics from Lambda, and API Gateway. While we only display a [subset of metrics](../product/metrics.md) [this guide offers complete list of Lambda metrics](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html) we collect.
+Currently metric streams are limited to collect metrics from Lambda, and API Gateway. While we only display a [subset of metrics](../product/metrics.md) [this guide offers complete list of Lambda metrics](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html) we collect. A unique metric stream and [Kinesis Firehose](../glossary.md#kinesis-firehose) is created in each zone you have [Active Resources](../glossary.md#active-resource) in. 
 
 ## CloudWatch Log Subscriptions
 When you enable logging for a functions we setup a [Cloudwatch Subscription](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions.html) to collect logs
-for that function. These logs are collected in us-east-1. Sending logs to other availability zones may result in higher bandwidth costs. 
+for that function. Cloudwatch Subscriptions are configured in the zone your function is deployed to. 
 
 ## Extensions
 Serverless Console leverages multiple [Lambda Extensions](../glossary.md#serverless-extension) for instrumenting Lambda Functions. These are used to collect [details about specific interactions](./enable-monitoring-features.md#enabling-traces) as well as [stream logs](./enable-monitoring-features.md#enabling-dev-mode).
 
 ## Serverless Node SDK (Internal Extension)
-The Serverless Node SDK can be added to your Lambda Function to [collect Traces](./enable-monitoring-features.md#enabling-traces). 
+The Serverless Node SDK can be added to your Lambda Function to [collect Traces](./enable-monitoring-features.md#enabling-traces) about the processing of your Lambda function. Currently this is limited to Node.js 14+ runtime. This extension is added when you [enable Tracing](./enable-monitoring-features.md#enabling-traces) in your function. 
 
 ## External Extension
-The Serverless External Extension is a runtime agnostic extension that stream logs](./enable-monitoring-features.md#enabling-dev-mode) to Serverless Console. 
+The Serverless External Extension is a runtime agnostic extension that [streams logs and events](./enable-monitoring-features.md#enabling-dev-mode) to Serverless Console. 
+
 
 ### Updating Extensions
-When you enable tracing for a function the latest version of the Lambda Layer will automatically
+When you enable Tracing for a function the latest version of the Lambda Layer will automatically
 be added to your function. If you need to update a the version for a function you have already enabled you will need to disable, and re-enable the function.     

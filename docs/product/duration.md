@@ -26,7 +26,7 @@ This does not include Cold Starts.
 **On the Explorer** 
 When the Trace is first received the value shown, is the Trace Duration of *your* function
 and does not yet include Extension Duration. A few seconds after the Trace is received we receive
-the full duration details and show the full duration with any Cold Starts duration. The max value progress bar is calculated based on the 5% slowest duration during the time frame to help show relative performance of the trace. 
+the full duration details and show the full duration with any Cold Starts duration. The max value progress bar is calculated based on the 5% slowest duration during the time frame to help show relative performance of the Trace. 
 
 **On Trace Detail View**
 The Duration shown in the header represents the execution time
@@ -34,7 +34,7 @@ of your function plus the duration of any execution time of any Lambda Extension
 including the Serverless Console Extension.
 
 The span chart is based on the start and end times collected from the 
-Open Telemetry trace, plus the recorded Cold Start if one occurred. 
+Open Telemetry Trace, plus the recorded Cold Start if one occurred. 
 It does not include Lambda Extension Execution Times and is therefore not \directly related to Billed Duration.
 
 **When Filtering**
@@ -66,7 +66,7 @@ It's important to note that your function's timeout setting limits the duration 
 
 The Invocation phase is comprised mostly of your handler (i.e. your business logic), and you want to optimize that as best you can because its performance (combined with Initialization performance) will have the biggest impact on the experience for your users and customers.
 
-* Running External Extensions in parallel with the function. These also continue running after the function has completed, enabling Serverless Console to capture diagnostic information and ingest metrics, traces and logs.
+* Running External Extensions in parallel with the function. These also continue running after the function has completed, enabling Serverless Console to capture diagnostic information and ingest metrics, Traces and logs.
 
 * Running the wrapper logic for Internal Extensions.
 

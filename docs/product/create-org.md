@@ -34,7 +34,7 @@ To configure deployment in these system, do the following.
 1. Go to the settings tab of your organization, and copy the org key to your clipboard
 1. Paste the value as the environment variable SLS_ORG_TOKEN in your CI/CD environment
 1. Deploy using the [Serverless Framework](../integrations/framework.md) to
-enable tracing and logs.
+enable Tracing and logs.
 
 ## Changing Org Name
 Org names can be changed from the Org Settings section of Console. 

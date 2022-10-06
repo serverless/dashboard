@@ -12,10 +12,17 @@ This is a consolidated list of terms and concepts, with precise definitions, whi
 An organization is a single tenant in Serverless product suite (including  Dashboard, and Serverless Cloud). An organization name needs to be unique and you need to [add at least one AWS Observability Integration](./integrations/index.md#adding-the-aws-observability-integration) to start using Serverless Console. 
 
 ## Integration
-Integrations are how Serverless Console keeps track of third party tools you choose to instrument and monitor. You need at least one integration to utilize Serverless Console features and you can use add multiple integrations to a single organization. 
+Integrations are how Serverless Console keeps track of third party tools you choose to instrument and monitor. You need at least one Integration to utilize Serverless Console features and you can use add multiple Integrations to a single organization. 
 
-### AWS Observability Integration
-The AWS Observability Integration is a collection of infrastructure deployed and tracked by Serverless Console.  This integration is deployed using a [Cloudformation Stack](#cloudformation-stack) and IAM Role. 
+## Resources
+Resources are an instance of a service on which you can enable monitoring. Currently this is limited
+to AWS Lambda Functions, but the set of supported resources is expected to grow over time.
+
+### Active Resource
+Active Resources is a Resources that have been active in the last 24 hour period. See our [pricing page](https://www.serverless.com/console/pricing) for more details about how we use Active Resources. 
+
+## AWS Observability Integration
+The AWS Observability Integration is a collection of infrastructure deployed and tracked by Serverless Console.  This Integration is deployed using a [Cloudformation Stack](#cloudformation-stack) and [IAM Role](./integrations/data-sources-and-roles.md#iam-roles). 
 
 #### CloudFormation Stack
 [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) is an AWS Service which allows you to create templates for creating AWS Infrastructure. Serverless Console creates the [Serverless-Inc-Role-Stack](../integrations/aws/iam-role-cfn-template.yaml) in your account when you add the AWS Observability Integration.

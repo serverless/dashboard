@@ -30,4 +30,4 @@ An active resource is a function that has on average had at least one invocation
 Invoices are calculated at the end of each calendar month based on the total number of invocations and active resource for that month. If you cancel a plan mid month you will be invoiced as the time of cancelation.
 
 ## Business Plan Pricing and Sampling
-For high volume orgs we offer custome pricing tiers and the ability to sample logs and traces. 
+For high volume orgs we offer custome pricing tiers and the ability to sample logs and Traces. 

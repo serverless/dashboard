@@ -51,4 +51,4 @@ this to do keyword searches such as a user-id, or tag.
 
 ## Log Formatting
 Where possible we detect and format structured logs such as JSON. We also include
-encoded information in logs if you [enable tracing](../integrations/enable-monitoring-features.md#enabling-traces) on a function but this is hidden in development mode. 
+encoded information in logs if you [enable Tracing](../integrations/enable-monitoring-features.md#enabling-traces) on a function but this is hidden in development mode. 

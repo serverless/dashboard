@@ -39,7 +39,7 @@ If your Lambda function is not in us-east-1 you may experience additional bandwi
 ## Configuring apps and services
 
 **How do I start using Serverless Console with my app?**
-Metrics for your Lambda function will automatically show up in Serverless Console once you deploy. You can [enable additional monitoring features](./integrations/enable-monitoring-features.md) to start capturing, logs, traces and using dev mode. 
+Metrics for your Lambda function will automatically show up in Serverless Console once you deploy. You can [enable additional monitoring features](./integrations/enable-monitoring-features.md) to start capturing, logs, Traces and using dev mode. 
 
 **What does enabling dev-mode do?**
 Enabling dev-mode adds an [external extension](./integrations/enable-monitoring-features.md#enabling-dev-mode) to your Lambda function. This external function bypasses log collection in AWS Cloudwatch and sends the log directly to Serverless Console in under a second. 
@@ -71,9 +71,9 @@ underlying [Trace](using/traces.md) that caused the problem.
 **How can I use console to find slow API Endpoints?**
 
 Slow API responses can negatively impact users and cost your organization money.
-Our metrics and trace explorer allow you to filter on specific endpoints and
+Our metrics and Trace explorer allow you to filter on specific endpoints and
 environment. From there the p95 metric shows you the worst 5% of API
-performance, and the p90 metric shows you the worst 10%. Filtering the traces
+performance, and the p90 metric shows you the worst 10%. Filtering the Traces
 for Durations higher than those metrics will lead you to your slowest requests. 
 
 
@@ -85,13 +85,13 @@ It's free to start using Serverless Console. With our generous free tier you can
 For details about our paid tiers see our [product pricing page](./product/pricing.md).
 
 **What happens when my org has been shutoff?**
-If you exceed the monthly quota for the Free Tier we will stop ingesting, logs, metrics and traces for your orginization. It will not [remove all infrastructure](./integrations/index.md#removing-the-aws-observability-integration) from your AWS account. 
+If you exceed the monthly quota for the Free Tier we will stop ingesting, logs, metrics and Traces for your orginization. It will not [remove all infrastructure](./integrations/index.md#removing-the-aws-observability-integration) from your AWS account. 
 
 ## Data Retention
 
 **What data is stored by Serverless Console and for how long?**
 
-We store all trace data, event payloads, metrics
+We store all Trace data, event payloads, metrics
 and logs in our systems for 30 days before being deleted.
 
 **How can I disable log and event data collection?**
