@@ -2,6 +2,8 @@
 
 const serverlessSdk = global.serverlessSdk || require('../');
 
+serverlessSdk._deferredTelemetryRequests = [];
+
 if (!serverlessSdk._isDevMode) {
   // No dev mode, export noop function
   module.exports.flush = () => {};
