@@ -41,7 +41,6 @@ In addition to collecting Trace data, the SDK will capture [real time invocation
 
 Currently this is limited to Node.js 14+ runtime only. 
 
-
 ## External Extension
 The Serverless External Extension is a runtime agnostic extension that [streams logs and events](./enable-monitoring-features.md#enabling-dev-mode) to Serverless Console. 
 
