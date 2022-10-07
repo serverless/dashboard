@@ -110,7 +110,6 @@ module.exports = (originalHandler, options = {}) => {
     let isResolved = false;
     let responseStartTime;
     const invocationId = ++currentInvocationId;
-    serverlessSdk._deferredTelemetryRequests = [];
     if (invocationId > 1) {
       // Reset root span ids and startTime with every next invocation
       delete awsLambdaSpan.traceId;
@@ -161,6 +160,7 @@ module.exports = (originalHandler, options = {}) => {
       reportTrace();
       flushSpans();
       await Promise.all(serverlessSdk._deferredTelemetryRequests);
+      serverlessSdk._deferredTelemetryRequests.length = 0;
       serverlessSdk._debugLog(
         'Overhead duration: Internal response:',
         `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`

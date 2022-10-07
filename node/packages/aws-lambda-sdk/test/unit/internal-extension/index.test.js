@@ -881,11 +881,14 @@ describe('internal-extension/index.test.js', () => {
           }
         })
       ).to.deep.equal([
+        {
+          type: 'trace',
+          spans: [{ name: 'aws.lambda.initialization', tags: {} }],
+        },
         { type: 'request-response', data: { $case: 'requestData' } },
         {
           type: 'trace',
           spans: [
-            { name: 'aws.lambda.initialization', tags: {} },
             { name: 'express.middleware.query', tags: {} },
             { name: 'express.middleware.expressinit', tags: {} },
             { name: 'express.middleware.jsonparser', tags: {} },
