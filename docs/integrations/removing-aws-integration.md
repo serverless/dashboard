@@ -24,9 +24,13 @@ our specific IAM Roles [in our data sources guide](./data-sources-and-roles.md#i
 
 1. Remove the EventBridge rule - Go to the [EventBridge rules page in AWS Console](https://us-east-1.console.aws.amazon.com/events/home?region=us-east-1#/rules) and delete the rule `serverless_lambda_deploy_events`. You will need to repeat this for each zone you have deployed Lambda functions to while using Serverless Console. 
 
+1. Remove s3 bucket - Go to the [S3 Buckets page in AWS Console]() and the bucket named ``. You will need to repeat this for each zone you have deployed Lambda functions to while using Serverless Console. 
+
 1. Remove the Cloudwatch Log Subscriptions - Go the your [Cloudwatch Logs Group Page in the AWS Console](https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups). For each function you have enabled log collection on open the corresponding Log Group (the function name will appear in the Log Group path). Under the Log Group click on the 'Subscription Filters' tab and remove the delete the filter name `serverless_logs-filter`.
 
 1. Remove the Extension, SDK and Env Vars - Go to your [Lambda page in AWS Console](https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions). For each function you have enabled Tracing or Dev Mode on click on the function. Go to the Layers section of the function and delete the layers with `sls-sdk-node` and `sls-external-extension`. Under Configuration -> Environment Variables remove the environment variables `AWS_LAMBDA_EXEC_WRAPPER`, `SLS_DEV_MODE_ORG_ID` and `SLS_ORG_ID`.
+
+
 
 ### Removing the legacy console extension
 If you have deployed to a version of Serverless Console prior to October 2022 then you may need to remove a legacy extension manually. To do this remove any layers named `sls-otel-extension-node-v*` and remove the environment variable `SLS_EXTENSION`.
