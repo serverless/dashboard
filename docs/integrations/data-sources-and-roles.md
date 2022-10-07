@@ -35,7 +35,12 @@ for that function. Cloudwatch Subscriptions are configured in the zone your func
 Serverless Console leverages multiple [Lambda Extensions](../glossary.md#serverless-extension) for instrumenting Lambda Functions. These are used to collect [details about specific interactions](./enable-monitoring-features.md#enabling-traces) as well as [stream logs](./enable-monitoring-features.md#enabling-dev-mode).
 
 ## Serverless Node SDK (Internal Extension)
-The Serverless Node SDK can be added to your Lambda Function to [collect Traces](./enable-monitoring-features.md#enabling-traces) about the processing of your Lambda function. Currently this is limited to Node.js 14+ runtime. This extension is added when you [enable Tracing](./enable-monitoring-features.md#enabling-traces) in your function. 
+The Serverless Node SDK can be added to your Lambda Function to [collect Traces](./enable-monitoring-features.md#enabling-traces) about the initialization, and invocation of your Lambda function. This gives you additional insight into the processing of your function and related services. This extension is added when you [enable Tracing](./enable-monitoring-features.md#enabling-traces) in your function. 
+
+In addition to collecting Trace data, the SDK will capture [real time invocation events](../product/logs.md#real-time-invocation-events) including request and response headers. This data is only used by the dev-mode feature and is not stored in Serverless Console. To opt out of collecting this data you can set the ENV VAR <details-needed> on your function. 
+
+Currently this is limited to Node.js 14+ runtime only. 
+
 
 ## External Extension
 The Serverless External Extension is a runtime agnostic extension that [streams logs and events](./enable-monitoring-features.md#enabling-dev-mode) to Serverless Console. 
