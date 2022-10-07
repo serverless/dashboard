@@ -184,6 +184,7 @@ const retrieveReports = async (testConfig) => {
     let currentProcessData;
     let startedMessage;
     let startedMessageType;
+    let isExternalExtensionLoaded = false;
     const getCurrentInvocationData = () => {
       if (!currentInvocationData) {
         log.error(
@@ -196,9 +197,23 @@ const retrieveReports = async (testConfig) => {
       return currentInvocationData;
     };
     for (const { message } of events) {
-      if (message.startsWith('⚡ SDK: Wrapper initialization')) {
+      if (message.startsWith('⚡ SDK: External initialization')) {
+        isExternalExtensionLoaded = true;
         processesData.push(
           (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
+        );
+        continue;
+      }
+      if (!isExternalExtensionLoaded && message.startsWith('⚡ SDK: Wrapper initialization')) {
+        processesData.push(
+          (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
+        );
+        continue;
+      }
+      if (message.startsWith('⚡ SDK: Overhead duration: External initialization')) {
+        currentProcessData.extensionOverheadDurations.externalInit = parseInt(
+          message.slice(message.lastIndexOf(':') + 1),
+          10
         );
         continue;
       }
@@ -267,6 +282,13 @@ const retrieveReports = async (testConfig) => {
       }
       if (message.startsWith('⚡ SDK: Overhead duration: Internal response')) {
         getCurrentInvocationData().extensionOverheadDurations.internalResponse = parseInt(
+          message.slice(message.lastIndexOf(':') + 1),
+          10
+        );
+        continue;
+      }
+      if (message.startsWith('⚡ SDK: Overhead duration: External invocation')) {
+        currentProcessData.extensionOverheadDurations.externalResponse = parseInt(
           message.slice(message.lastIndexOf(':') + 1),
           10
         );
