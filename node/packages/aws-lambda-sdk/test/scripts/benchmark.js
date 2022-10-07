@@ -24,12 +24,14 @@ require('../benchmark')({
     `${[
       [
         'name',
+        'init:external:overhead',
         'init:internal:overhead',
         'init:internal:total',
         'init:total',
 
         'first:internal:request-overhead',
         'first:internal:response-overhead',
+        'first:external:response-overhead',
         'first:internal:total',
         'first:total',
         'first:billed',
@@ -38,6 +40,7 @@ require('../benchmark')({
 
         'following:internal:request-overhead',
         'following:internal:response-overhead',
+        'following:external:response-overhead',
         'following:internal:total',
         'following:total',
         'following:billed',
@@ -52,6 +55,7 @@ require('../benchmark')({
           ([benchmarkVariantName, { results: benchmarkVariantResults }]) =>
             [
               JSON.stringify(`${functionVariantName}:${benchmarkVariantName}`),
+              Math.round(benchmarkVariantResults.initialization.externalOverhead.average),
               Math.round(benchmarkVariantResults.initialization.internal.overhead.average),
               Math.round(benchmarkVariantResults.initialization.internal.total.average),
               Math.round(benchmarkVariantResults.initialization.total.average),
@@ -60,6 +64,7 @@ require('../benchmark')({
               Math.round(
                 benchmarkVariantResults.invocation.first.internal.responseOverhead.average
               ),
+              Math.round(benchmarkVariantResults.invocation.first.externalResponseOverhead.average),
               Math.round(benchmarkVariantResults.invocation.first.internal.total.average),
               Math.round(benchmarkVariantResults.invocation.first.total.average),
               Math.round(benchmarkVariantResults.invocation.first.billed.average),
@@ -71,6 +76,9 @@ require('../benchmark')({
               ),
               Math.round(
                 benchmarkVariantResults.invocation.following.internal.responseOverhead.average
+              ),
+              Math.round(
+                benchmarkVariantResults.invocation.following.externalResponseOverhead.average
               ),
               Math.round(benchmarkVariantResults.invocation.following.internal.total.average),
               Math.round(benchmarkVariantResults.invocation.following.total.average),
