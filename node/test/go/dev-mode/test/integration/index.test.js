@@ -63,7 +63,9 @@ describe('Integration', function () {
             }
 
             for (const [, traces] of invocationsData.map((data) => data.traces).entries()) {
-              expect(traces.length).to.equal(1);
+              // Since we are sending spans as they are complete I need to change this to a variable length
+              // but we should always have at least 1
+              expect(traces.length >= 1).to.equal(true);
             }
           },
         },
