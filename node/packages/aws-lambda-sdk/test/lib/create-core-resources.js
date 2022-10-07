@@ -8,9 +8,10 @@ const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const buildLayer = require('../../scripts/lib/build');
 const awsRequest = require('../utils/aws-request');
+const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const basename = require('./basename');
 
-const createLayer = async ({ layerName, filename, skipBuild }) => {
+const createLayer = async ({ layerName, filename, zipBuffer, skipBuild }) => {
   if (!skipBuild) {
     log.info('Building layer');
     await buildLayer(filename);
@@ -20,7 +21,7 @@ const createLayer = async ({ layerName, filename, skipBuild }) => {
   const arn = (
     await awsRequest(Lambda, 'publishLayerVersion', {
       LayerName: layerName,
-      Content: { ZipFile: await fsp.readFile(filename) },
+      Content: { ZipFile: zipBuffer || (await fsp.readFile(filename)) },
     })
   ).LayerVersionArn;
   log.info('Layer ready %s', arn);
@@ -43,6 +44,23 @@ const createLayers = async (config, layerTypes) => {
           config.layerInternalArn = await createLayer({
             layerName: `${basename}-internal`,
             filename: path.resolve(__dirname, '../../dist/extension.internal.zip'),
+          });
+          return;
+        case 'nodeExternal':
+          if (process.env.TEST_EXTERNAL_LAYER_FILENAME) {
+            config.layerExternalArn = await createLayer({
+              layerName: `${basename}-external`,
+              filename: path.resolve(process.env.TEST_EXTERNAL_LAYER_FILENAME),
+              skipBuild: true,
+            });
+            return;
+          }
+          config.layerExternalArn = await createLayer({
+            layerName: `${basename}-external`,
+            zipBuffer: await resolveDirZipBuffer(
+              path.resolve(__dirname, '../fixtures/dev-mode-extension')
+            ),
+            skipBuild: true,
           });
           return;
         default:
@@ -108,9 +126,12 @@ const createRole = async (config) => {
   config.policyArn = policyArn;
 };
 
-module.exports = async (config) => {
+module.exports = async (config, options = {}) => {
   log.notice('Creating core resources %s', basename);
   config.accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
 
-  await Promise.all([createLayers(config, ['nodeInternal']), createRole(config)]);
+  await Promise.all([
+    createLayers(config, options.layerTypes || ['nodeInternal']),
+    createRole(config),
+  ]);
 };
