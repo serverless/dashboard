@@ -24,7 +24,7 @@ const reportPattern = new RegExp(
 const handledOutcomes = new Set(['success', 'error:handled']);
 
 const create = async (testConfig, coreConfig) => {
-  const { configuration } = testConfig;
+  const { configuration, deferredConfiguration } = testConfig;
   const resultConfiguration = {
     Role: coreConfig.roleArn,
     Runtime: 'nodejs16.x',
@@ -42,6 +42,7 @@ const create = async (testConfig, coreConfig) => {
     },
     Timeout: 10,
     ...configuration,
+    ...deferredConfiguration?.(testConfig, coreConfig),
   };
   if (process.env.SERVERLESS_PLATFORM_STAGE === 'dev') {
     resultConfiguration.Environment.Variables.SERVERLESS_PLATFORM_STAGE = 'dev';
