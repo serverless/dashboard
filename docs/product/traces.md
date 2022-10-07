@@ -47,4 +47,4 @@ for all events instrumented using our [Serverless Console Extension](../integrat
 
 ### Filters
 
-Tags are represented as filters across our [Metrics View](metrics.md), Explorer and [Dev Mode](logs.md).
+Tags are represented as filters across our [Metrics View](metrics.md), Explorer and [Dev Mode](dev-mode.md).

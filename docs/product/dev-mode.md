@@ -1,20 +1,28 @@
 <!--
-title: Logs
-menuText: Logs
+title: Dev Mode
+menuText: Dev Mode
 description: A guide for using logs within Serverless Console
 menuOrder: 5
 -->
 
 # Development Mode
-To make the most of your troubleshooting and development
-experience it is recommended to [enable logs](../integrations/enable-monitoring-features.md) on
-your functions. This collects logs from your function using Cloudwatch Subscriptions. 
+Dev(elopment) Mode is an optimized development focused suite of Observability
+tools for building and troubleshooting Serverless architectures. To get started you need [enable dev mode](../integrations/enable-monitoring-features.md) on
+your functions.
 
-By default Dev Mode gives you an aggregated stream of all the
-logs and function invocations for your org so that you can isolate
-and troubleshoot recent events. We recommended keeping dev mode open
-while you test your functions so you can quickly recreate precisely 
-what inputs are causing certain behavior in your application. 
+Once you have your function(s) enabled for Dev Mode you will 
+see an aggregate stream of [logs](#real-time-logging), [invocation events](#real-time-invocation-events), and [spans](#spans)
+for your function. You may need to filter for a namespace
+or environment to better troubleshoot your application.
+
+## Real Time Logging
+Using log statements is one of the more intuitive approach troubleshooting
+and Serverless Console offers you a best in class experience to using logs 
+across your Lambda Function. 
+
+Once you have [enabled dev mode](../integrations/enable-monitoring-features.md#enabling-dev-mode) you will start seeing logs forwarded directly from your Lambda function. 
+[Historical logs](#historical-logs) for your function are also collected using
+[CloudWatch Log Subscriptions](../integrations/data-sources-and-roles.md#cloudwatch-log-subscriptions). 
 
 ## Real Time Invocation Events
 Every function invocation will have a start and end event so even if your
@@ -32,12 +40,7 @@ inputs, and software version may have caused an issue.
 * **Log Lines** - You can group all the logs from a single invocation in the sidebar by clicking 
 in your log stream. The start and event, or log lines will open this transaction sidebar.
 
-## Real Time Logging
-Using log statements is one of the more intuitive approach troubleshooting
-and Serverless Console offers you a best in class experience to using logs 
-across your Lambda Function. 
-
-## Recent Logs
+## Historical Logs
 Development mode works similar to a terminal display in that the most recent 
 logs appear at the bottom of the screen automatically, unless you are scrolling
 upwards. This is deigned to be used in conjunction with fitters which allow you to
