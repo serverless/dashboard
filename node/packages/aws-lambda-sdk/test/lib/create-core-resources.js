@@ -131,7 +131,7 @@ module.exports = async (config, options = {}) => {
   config.accountId = (await awsRequest(STS, 'getCallerIdentity')).Account;
 
   await Promise.all([
-    createLayers(config, options.layerTypes || ['nodeInternal']),
+    createLayers(config, options.layerTypes || ['nodeInternal', 'nodeExternal']),
     createRole(config),
   ]);
 };

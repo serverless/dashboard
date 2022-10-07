@@ -7,9 +7,7 @@ const run = require('./lib/run');
 
 module.exports = async (options = {}) => {
   const coreConfig = {};
-  await createCoreResources(coreConfig, {
-    layerTypes: ['nodeInternal', 'nodeExternal'],
-  });
+  await createCoreResources(coreConfig);
 
   const allBenchmarkVariantsConfig = await resolveCommonBenchmarkVariantsConfig(
     coreConfig,

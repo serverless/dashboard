@@ -1062,8 +1062,60 @@ describe('integration', function () {
       'multi-async',
       {
         variants: new Map([
-          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
-          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          [
+            'v14',
+            {
+              config: { configuration: { Runtime: 'nodejs14.x' } },
+              variants: new Map([
+                [
+                  'dev-mode',
+                  {
+                    configuration: {
+                      Environment: {
+                        Variables: {
+                          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+                          SLS_ORG_ID: process.env.SLS_ORG_ID,
+                          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+                          SLS_SDK_DEBUG: '1',
+                        },
+                      },
+                    },
+                    deferredConfiguration: () => ({
+                      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
+                    }),
+                  },
+                ],
+                ['regular', {}],
+              ]),
+            },
+          ],
+          [
+            'v16',
+            {
+              config: { configuration: { Runtime: 'nodejs16.x' } },
+              variants: new Map([
+                [
+                  'dev-mode',
+                  {
+                    configuration: {
+                      Environment: {
+                        Variables: {
+                          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+                          SLS_ORG_ID: process.env.SLS_ORG_ID,
+                          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+                          SLS_SDK_DEBUG: '1',
+                        },
+                      },
+                    },
+                    deferredConfiguration: () => ({
+                      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
+                    }),
+                  },
+                ],
+                ['regular', {}],
+              ]),
+            },
+          ],
         ]),
         config: {
           test: ({ invocationsData }) => {
@@ -1135,6 +1187,7 @@ describe('integration', function () {
 
   before(async () => {
     await createCoreResources(coreConfig);
+
     for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to
