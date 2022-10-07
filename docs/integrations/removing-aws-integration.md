@@ -24,7 +24,7 @@ our specific IAM Roles [in our data sources guide](./data-sources-and-roles.md#i
 
 1. Remove the EventBridge rule - Go to the [EventBridge rules page in AWS Console](https://us-east-1.console.aws.amazon.com/events/home?region=us-east-1#/rules) and delete the rule `serverless_lambda_deploy_events`. You will need to repeat this for each zone you have deployed Lambda functions to while using Serverless Console. 
 
-1. Remove s3 bucket - Go to the [S3 Buckets page in AWS Console]() and the bucket named ``. You will need to repeat this for each zone you have deployed Lambda functions to while using Serverless Console. 
+1. Remove s3 bucket - Go to the [S3 Buckets page in AWS Console](https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1) and delete the buckets named `serverless.logs-firehose-backup-GUID` and `serverless.metrics-firehose-backup-GUID`. You will need to repeat this for each zone you have deployed Lambda functions to while using Serverless Console. 
 
 1. Remove the Cloudwatch Log Subscriptions - Go the your [Cloudwatch Logs Group Page in the AWS Console](https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups). For each function you have enabled log collection on open the corresponding Log Group (the function name will appear in the Log Group path). Under the Log Group click on the 'Subscription Filters' tab and remove the delete the filter name `serverless_logs-filter`.
 
