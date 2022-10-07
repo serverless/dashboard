@@ -5,6 +5,7 @@ const path = require('path');
 const http = require('http');
 const isThenable = require('type/thenable/is');
 const requireUncached = require('ncjsm/require-uncached');
+const wait = require('timers-ext/promise/sleep');
 const normalizeObject = require('../../utils/normalize-proto-object');
 const pkgJson = require('../../../package');
 
@@ -20,11 +21,12 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   const payload = options.payload || { test: true };
   const stringifiedPayload = JSON.stringify(payload);
   const outcome = await requireUncached(async () => {
-    await require('../../../internal-extension');
+    require('../../../internal-extension');
     const handlerModule = await require('../../../internal-extension/wrapper');
+    // Ensure tick gap between handler resolution and its invocation (reflects AWS env)
+    await wait();
     let result;
     let error;
-
     try {
       result = await new Promise((resolve, reject) => {
         const maybeThenable = handlerModule.handler(
