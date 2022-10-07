@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.8.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.7.0...@serverless/aws-lambda-sdk@0.8.0) (2022-10-07)
+
+### ⚠ BREAKING CHANGES
+
+- Request and response bodies are not longer reported in CloudWatch logs
+
+### Features
+
+- Support "dev" mode ([8e74674](https://github.com/serverless/console/commit/8e74674335bcfeed76e3ad891dfb685c15299228))
+- Report AWS SDK request and response body in dev mode ([8e87989](https://github.com/serverless/console/commit/8e87989e805b08fa007efb7eeb70e7d9c7d2d296))
+- Expose HTTP request and response bodies in tags in dev mode ([eefcb33](https://github.com/serverless/console/commit/eefcb3329946dd5c94e6e8b50898f112e8b9fe62))
+- In dev mode send spans as they are closed to external extension ([72b59b8](https://github.com/serverless/console/commit/72b59b8aa9ab09705a9a9110bc7b5e836e405236))
+- Do not write request and response payloads ([6d604c9](https://github.com/serverless/console/commit/6d604c9516e3664442435e26abfa4b807c87c289))
+
+### Maintenance Improvements
+
+- Improve variables naming ([99973ff](https://github.com/serverless/console/commit/99973ff4676b73abbd616156359c768a63333aef))
+- Support internal `_slsIngore` option to ignore HTTP requests ([85cb986](https://github.com/serverless/console/commit/85cb9861e799ecfd8fc756031f800382dea9ac95))
+
 ## [0.7.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.6.0...@serverless/aws-lambda-sdk@0.7.0) (2022-09-30)
 
 ### ⚠ BREAKING CHANGES
