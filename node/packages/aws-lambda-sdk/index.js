@@ -25,11 +25,8 @@ const resolveSettings = (options = {}) => {
   serverlessSdk._settings.disableHttpMonitoring = Boolean(
     process.env.SLS_DISABLE_HTTP_MONITORING || options.disableHttpMonitoring
   );
-  serverlessSdk._settings.disableRequestMonitoring = Boolean(
-    process.env.SLS_DISABLE_REQUEST_MONITORING || options.disableRequestMonitoring
-  );
-  serverlessSdk._settings.disableResponseMonitoring = Boolean(
-    process.env.SLS_DISABLE_RESPONSE_MONITORING || options.disableResponseMonitoring
+  serverlessSdk._settings.disableRequestResponseMonitoring = Boolean(
+    process.env.SLS_DISABLE_REQUEST_RESPONSE_MONITORING || options.disableRequestResponseMonitoring
   );
   serverlessSdk._settings.disableAwsSdkMonitoring = Boolean(
     process.env.SLS_DISABLE_AWS_SDK_MONITORING || options.disableAwsSdkMonitoring

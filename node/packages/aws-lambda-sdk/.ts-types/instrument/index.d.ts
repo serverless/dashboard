@@ -1,8 +1,7 @@
 interface SdkOptions {
   orgId?: string;
   disableHttpMonitoring?: boolean;
-  disableRequestMonitoring?: boolean;
-  disableResponseMonitoring?: boolean;
+  disableRequestResponseMonitoring?: boolean;
   disableAwsSdkMonitoring?: boolean;
   disableExpressMonitoring?: boolean;
   traceMaxCapturedBodySizeKb?: number;

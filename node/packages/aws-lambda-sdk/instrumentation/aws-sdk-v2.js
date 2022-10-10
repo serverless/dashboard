@@ -18,6 +18,8 @@ module.exports.install = (Sdk) => {
   if (!Sdk.VERSION.startsWith('2.')) {
     throw new TypeError(`Unsupported AWS SDK version: ${Sdk.VERSION}`);
   }
+  const shouldMonitorRequestResponse =
+    serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring;
   const originalRunTo = Sdk.Request.prototype.runTo;
   Sdk.Request.prototype.runTo = function runTo(state, done) {
     // identifier
@@ -33,7 +35,7 @@ module.exports.install = (Sdk) => {
         'aws.sdk.signature_version': this.service.config.signatureVersion,
         'aws.sdk.service': serviceName,
         'aws.sdk.operation': operationName,
-        'aws.sdk.request_body': serverlessSdk._isDevMode ? JSON.stringify(params) : null,
+        'aws.sdk.request_body': shouldMonitorRequestResponse ? JSON.stringify(params) : null,
       },
     });
     tagMapper?.params?.(traceSpan, params);
@@ -42,7 +44,7 @@ module.exports.install = (Sdk) => {
       if (response.error) {
         traceSpan.tags.set('aws.sdk.error', response.error.message);
       } else {
-        if (serverlessSdk._isDevMode) {
+        if (shouldMonitorRequestResponse) {
           traceSpan.tags.set('aws.sdk.response_body', JSON.stringify(response.data));
         }
         tagMapper?.responseData?.(traceSpan, response.data);

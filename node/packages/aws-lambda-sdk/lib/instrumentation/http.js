@@ -34,6 +34,8 @@ const resolveQueryParamNamesFromSearchString = (searchString) => {
 
 const install = (protocol, httpModule) => {
   const bodySizeLimit = serverlessSdk._settings.traceMaxCapturedBodySizeKb * 1000;
+  const shouldMonitorRequestResponse =
+    serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring;
 
   const captureRequestBody = (traceSpan, req) => {
     let isCapturing = true;
@@ -142,7 +144,7 @@ const install = (protocol, httpModule) => {
       requestEndTime = process.hrtime.bigint();
       responseReadableState = response._readableState;
       traceSpan.tags.set('http.status_code', response.statusCode);
-      if (serverlessSdk._isDevMode) captureResponseBody(traceSpan, response);
+      if (shouldMonitorRequestResponse) captureResponseBody(traceSpan, response);
       response.on('end', () => {
         if (!traceSpan.endTime) traceSpan.close();
       });
@@ -183,7 +185,7 @@ const install = (protocol, httpModule) => {
       { prefix: 'http' }
     );
 
-    if (serverlessSdk._isDevMode) captureRequestBody(traceSpan, req);
+    if (shouldMonitorRequestResponse) captureRequestBody(traceSpan, req);
 
     return req.on(errorMonitor, (error) => {
       if (traceSpan.endTime) return;
