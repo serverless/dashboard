@@ -20,6 +20,8 @@ module.exports.install = (client) => {
       : client.constructor.name
   ).toLowerCase();
   let uninstall;
+  const shouldMonitorRequestResponse =
+    serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring;
   client.middlewareStack.use({
     applyToStack: (stack) => {
       // Middleware added to mark start and end of an complete API call.
@@ -31,7 +33,9 @@ module.exports.install = (client) => {
             'aws.sdk.service': serviceName,
             'aws.sdk.operation': operationName,
             'aws.sdk.signature_version': 'v4',
-            'aws.sdk.request_body': serverlessSdk._isDevMode ? JSON.stringify(args.input) : null,
+            'aws.sdk.request_body': shouldMonitorRequestResponse
+              ? JSON.stringify(args.input)
+              : null,
           },
         });
         tagMapper?.params?.(traceSpan, args.input);
@@ -61,7 +65,7 @@ module.exports.install = (client) => {
           throw error;
         } else {
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
-          if (serverlessSdk._isDevMode) {
+          if (shouldMonitorRequestResponse) {
             traceSpan.tags.set('aws.sdk.response_body', JSON.stringify(response.output));
           }
           tagMapper?.responseData?.(traceSpan, response.output);

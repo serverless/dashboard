@@ -125,7 +125,7 @@ module.exports = (originalHandler, options = {}) => {
       { startTime: requestStartTime }
     ));
     resolveEventTags(event);
-    if (!serverlessSdk._settings.disableRequestMonitoring) {
+    if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
       serverlessSdk._deferredTelemetryRequests.push(reportRequest(event, context));
     }
 
@@ -149,7 +149,7 @@ module.exports = (originalHandler, options = {}) => {
         }
       } else {
         resolveResponseTags(outcomeResult);
-        if (!serverlessSdk._settings.disableResponseMonitoring) {
+        if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
           serverlessSdk._deferredTelemetryRequests.push(reportResponse(outcomeResult, context));
         }
       }

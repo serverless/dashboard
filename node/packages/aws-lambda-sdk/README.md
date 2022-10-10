@@ -71,13 +71,9 @@ Required setting. Id of your organization in Serverless Console.
 
 Disable tracing of HTTP and HTTPS requests
 
-##### `SLS_DISABLE_REQUEST_MONITORING` (or `options.disableRequestMonitoring`)
+##### `SLS_DISABLE_REQUEST_RESPONSE_MONITORING` (or `options.disableRequestResponseMonitoring`)
 
-Disable lambda requests (events) monitoring
-
-##### `SLS_DISABLE_RESPONSE_MONITORING` (or `options.disableResponseMonitoring`)
-
-Disable lambda responses monitoring
+(Dev mode only) Disable monitoring requests and reponses (function, AWS SDK requests and HTTP(S) requests)
 
 ##### `SLS_DISABLE_AWS_SDK_MONITORING` (or `options.disableAwsSdkMonitoring`)
 
