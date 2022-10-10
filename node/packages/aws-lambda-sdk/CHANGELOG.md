@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.8.0...@serverless/aws-lambda-sdk@0.8.1) (2022-10-10)
+
+### Bug Fixes
+
+- Ensure opt-out for request and response monitoring ([0555565](https://github.com/serverless/console/commit/0555565c25c9cc7490a90ef8c06651be1c6f15f8))
+
 ## [0.8.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.7.0...@serverless/aws-lambda-sdk@0.8.0) (2022-10-07)
 
 ### ⚠ BREAKING CHANGES
