@@ -611,7 +611,7 @@ jobs:
       - name: Build Dev Mode Extension Layer
         run: |
           cd go/packages/dev-mode
-          make build
+          make build_x86
 
       - name: Integration tests
         run: |
