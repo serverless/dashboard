@@ -4,7 +4,7 @@
     "@aws-sdk/client-sns": "^3.186.0",
     "@aws-sdk/client-sqs": "^3.186.0",
     "@aws-sdk/client-sts": "^3.186.0",
-    "express": "^4.18.1",
+    "express": "^4.18.2",
     "serverless-http": "^3.0.3",
     "timers-ext": "^0.1.7"
   }
