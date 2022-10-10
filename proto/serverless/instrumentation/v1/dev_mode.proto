@@ -17,10 +17,24 @@ message DevModePayload {
   // The lambda request id where this payload originated from
   string request_id = 3;
 
+  // Extracted Lambda Telemetry API data
+  optional LambdaTelemetry telemetry = 6;
+
   oneof payload {
     // The set of lambda traces that were generated via an internal extension
     TracePayload trace = 4;
     // The req or response data from the instrumented lambda function
     RequestResponse request_response = 5;
   }
+}
+
+// Lambda Telemetry API data. This data is only available for lambda functions that
+// have access to the telemetry API so it will not be included in all regions.
+message LambdaTelemetry {
+  // Init duration as reported by the metrics on the platform.initReport event
+  optional uint32 init_duration = 1;
+  // Internal runtime duration as reported by the metrics on the platform.runtimeDone event
+  optional uint32 internal_duration = 2;
+  // Internal runtime duration as reported by the responseLatency span on the platform.runtimeDone event
+  optional uint32 internal_response_latency = 3;
 }

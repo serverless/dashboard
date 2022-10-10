@@ -18,7 +18,6 @@ After the layer is deployed you can attach this layer to any lambda function, ju
 | `SLS_DEV_MODE_ORG_ID` | This is the id of the org that you will be publishing to | `true` |
 | `SLS_PUBLISH_ENDPOINT` | This is endpoint that you want logs to be forwarded to. This is helpful if you are trying to send logs to dev. | `false` |
 
-
 ## Testing
 This app is reusing unit tests from our node extension so the unit tests live in `../node/packages/aws-lambda-otel-extension/test/unit/external/index.test.ts`
 
