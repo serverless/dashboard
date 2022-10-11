@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.8.1...@serverless/aws-lambda-sdk@0.9.0) (2022-10-11)
+
+### ⚠ BREAKING CHANGES
+
+- Dev mode communication port was changed from 2772 to 2773. For compatibiility upgrade to v0.3+ version of the dev-mode layer
+
+### Maintenance Improvements
+
+- Switch dev mode communication port ([6df2fc9](https://github.com/serverless/console/commit/6df2fc9659eb7210768b135206b0a9d70e5957b5))
+
 ### [0.8.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.8.0...@serverless/aws-lambda-sdk@0.8.1) (2022-10-10)
 
 ### Bug Fixes
