@@ -37,11 +37,11 @@ jobs:
         run: |
           cd node
           npm update --save-dev --no-save
-      - name: Build layer
+      - name: Build layer for x86
         run: |
           cd go/packages/dev-mode
-          make build
-      - name: Publish layers (dev)
+          make build_x86
+      - name: Publish x86 layers (dev)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
@@ -51,11 +51,11 @@ jobs:
           cd node
           ./scripts/publish-extension-layers.js \
             --bucket-name sls-dev-layers-registry \
-            --layer-basename sls-external-extension \
+            --layer-basename sls-external-extension-x86 \
             --version $VERSION \
             --layer-filename ../go/packages/dev-mode/dist/extension.zip
 
-      - name: Publish layers (prod)
+      - name: Publish x86 layers (prod)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
@@ -66,6 +66,39 @@ jobs:
           cd node
           ./scripts/publish-extension-layers.js \
             --bucket-name sls-layers-registry \
-            --layer-basename sls-external-extension \
+            --layer-basename sls-external-extension-x86 \
+            --version $VERSION \
+            --layer-filename ../go/packages/dev-mode/dist/extension.zip
+
+      - name: Build layer for arm64
+        run: |
+          cd go/packages/dev-mode
+          make build_arm64
+      - name: Publish arm64 layers (dev)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          cd node
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-dev-layers-registry \
+            --layer-basename sls-external-extension-arm64 \
+            --version $VERSION \
+            --layer-filename ../go/packages/dev-mode/dist/extension.zip
+
+      - name: Publish arm64 layers (prod)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          TAG=${GITHUB_REF:10}
+          cd node
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-layers-registry \
+            --layer-basename sls-external-extension-arm64 \
             --version $VERSION \
             --layer-filename ../go/packages/dev-mode/dist/extension.zip

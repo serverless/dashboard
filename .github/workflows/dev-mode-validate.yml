@@ -18,6 +18,6 @@ jobs:
         with:
           go-version: '>=1.18.0'
       - name: Build layer
-        run: make build
+        run: make build_x86
       - name: Unit Test
         run: make test
