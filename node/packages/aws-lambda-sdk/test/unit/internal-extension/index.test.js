@@ -827,7 +827,7 @@ describe('internal-extension/index.test.js', () => {
         });
       });
 
-      server.listen(2772);
+      server.listen(2773);
     });
 
     after(() => {
