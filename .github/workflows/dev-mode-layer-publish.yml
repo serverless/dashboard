@@ -5,7 +5,7 @@ on:
       - "go/sls-external-extension@[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  publishNewVersion_x86:
+  publishNewVersion:
     name: Publish new version
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +41,7 @@ jobs:
         run: |
           cd go/packages/dev-mode
           make build_x86
-      - name: Publish layers (dev)
+      - name: Publish x86 layers (dev)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
@@ -55,7 +55,7 @@ jobs:
             --version $VERSION \
             --layer-filename ../go/packages/dev-mode/dist/extension.zip
 
-      - name: Publish layers (prod)
+      - name: Publish x86 layers (prod)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
@@ -70,43 +70,11 @@ jobs:
             --version $VERSION \
             --layer-filename ../go/packages/dev-mode/dist/extension.zip
 
-  publishNewVersion_arm64:
-    name: Publish new version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '>=1.18.0'
-      - name: Retrieve ~/.npm from cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/**package*.json') }}
-          restore-keys: npm-v16-${{ runner.os }}-refs/heads/main-
-      - name: Retrieve node_modules from cache
-        id: cacheNodeModules
-        uses: actions/cache@v2
-        with:
-          path: node/node_modules
-          key: node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/package.json') }}
-          restore-keys: node-modules-v16-${{ runner.os }}-refs/heads/main-
-      - name: Install Node.js and npm
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16.x
-          registry-url: https://registry.npmjs.org
-      - name: Install main project dependencies
-        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
-        run: |
-          cd node
-          npm update --save-dev --no-save
       - name: Build layer for arm64
         run: |
           cd go/packages/dev-mode
           make build_arm64
-      - name: Publish layers (dev)
+      - name: Publish arm64 layers (dev)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
@@ -120,7 +88,7 @@ jobs:
             --version $VERSION \
             --layer-filename ../go/packages/dev-mode/dist/extension.zip
 
-      - name: Publish layers (prod)
+      - name: Publish arm64 layers (prod)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
