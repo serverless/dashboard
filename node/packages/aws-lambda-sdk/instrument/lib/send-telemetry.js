@@ -12,7 +12,7 @@ const http = require('http');
 
 const keepAliveAgent = new http.Agent({ keepAlive: true });
 
-const telemetryServerUrl = 'http://localhost:2772/';
+const telemetryServerUrl = 'http://localhost:2773/';
 
 module.exports = async (name, body) => {
   let requestSocket;
