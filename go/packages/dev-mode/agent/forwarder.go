@@ -108,7 +108,8 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 		testReporter(string(body))
 		return 200, nil
 	} else {
-		url := "https://core.serverless.com/api/ingest" + path
+		url := lib.GetBaseUrl() + path
+		lib.Info("Publish URL", url)
 		// If we are running unit tests we want to publish logs to the local testing server
 		if internalLogsOnly {
 			extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
@@ -116,10 +117,6 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 				lib.Error("AWS_LAMBDA_RUNTIME_API is not set")
 			}
 			url = fmt.Sprintf("http://%s/save"+path, extensions_api_address)
-		}
-		var _, isDev = os.LookupEnv("SERVERLESS_PLATFORM_STAGE")
-		if isDev {
-			url = "https://core.serverless-dev.com/api/ingest" + path
 		}
 
 		token, _ := os.LookupEnv("SLS_DEV_TOKEN")
