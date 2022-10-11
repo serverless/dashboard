@@ -30,6 +30,7 @@
   
 - [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
     - [DevModePayload](#serverless-instrumentation-v1-DevModePayload)
+    - [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry)
   
 - [serverless/instrumentation/v1/log.proto](#serverless_instrumentation_v1_log-proto)
     - [LogEvent](#serverless-instrumentation-v1-LogEvent)
@@ -468,8 +469,27 @@ that is forwarded to ingest via the internal extension
 | account_id | [string](#string) |  | The AWS Account ID where this payload originated from |
 | region | [string](#string) |  | The AWS Region where this payload originated from |
 | request_id | [string](#string) |  | The lambda request id where this payload originated from |
+| telemetry | [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry) | optional | Extracted Lambda Telemetry API data |
 | trace | [TracePayload](#serverless-instrumentation-v1-TracePayload) |  | The set of lambda traces that were generated via an internal extension |
 | request_response | [RequestResponse](#serverless-instrumentation-v1-RequestResponse) |  | The req or response data from the instrumented lambda function |
+
+
+
+
+
+
+<a name="serverless-instrumentation-v1-LambdaTelemetry"></a>
+
+### LambdaTelemetry
+Lambda Telemetry API data. This data is only available for lambda functions that
+have access to the telemetry API so it will not be included in all regions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| init_duration_ms | [uint32](#uint32) | optional | Init duration in milliseconds as reported by the metrics on the platform.initReport event |
+| runtime_duration_ms | [uint32](#uint32) | optional | Internal runtime duration in milliseconds as reported by the metrics on the platform.runtimeDone event |
+| runtime_response_latency_ms | [uint32](#uint32) | optional | Internal runtime duration in milliseconds as reported by the responseLatency span on the platform.runtimeDone event |
 
 
 
