@@ -31,10 +31,10 @@ message DevModePayload {
 // Lambda Telemetry API data. This data is only available for lambda functions that
 // have access to the telemetry API so it will not be included in all regions.
 message LambdaTelemetry {
-  // Init duration as reported by the metrics on the platform.initReport event
-  optional uint32 init_duration = 1;
-  // Internal runtime duration as reported by the metrics on the platform.runtimeDone event
-  optional uint32 internal_duration = 2;
-  // Internal runtime duration as reported by the responseLatency span on the platform.runtimeDone event
-  optional uint32 internal_response_latency = 3;
+  // Init duration in milliseconds as reported by the metrics on the platform.initReport event
+  optional uint32 init_duration_ms = 1;
+  // Internal runtime duration in milliseconds as reported by the metrics on the platform.runtimeDone event
+  optional uint32 internal_duration_ms = 2;
+  // Internal runtime duration in milliseconds as reported by the responseLatency span on the platform.runtimeDone event
+  optional uint32 internal_response_latency_ms = 3;
 }
