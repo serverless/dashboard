@@ -18,7 +18,7 @@ import (
 
 // DefaultHttpListenerPort is used to set the URL where the logs will be sent by Logs API
 const DefaultHttpListenerPort = "1234"
-const DefaultSDKHttpListenerPort = "2772"
+const DefaultSDKHttpListenerPort = "2773"
 
 // LogsApiHttpListener is used to listen to the Logs API using HTTP
 type LogsApiHttpListener struct {

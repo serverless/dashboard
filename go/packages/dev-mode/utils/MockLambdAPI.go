@@ -65,7 +65,7 @@ var lambdaExtensionIdentifier = uuid.New().String()
 var validations = Validations{
 	Register:  "",
 	LogURI:    "",
-	SdkURI:    "http://127.0.0.1:2772",
+	SdkURI:    "http://127.0.0.1:2773",
 	RequestId: "",
 	Logs:      make([]APIPayload, 0),
 	ReqRes:    make([]APIPayload, 0),
@@ -78,7 +78,7 @@ func StartServer(functionName string, region string, port int64) *http.Server {
 	reg = region
 	// Reset LogURI between test runs only
 	validations.LogURI = ""
-	validations.SdkURI = "http://127.0.0.1:2772"
+	validations.SdkURI = "http://127.0.0.1:2773"
 	validations.NextCount = 0
 	srv := createLambdaServer(port)
 	go func() {
@@ -320,7 +320,7 @@ func resetValidation(c *gin.Context) {
 		Register: "",
 		// Don't clear logs URI or else the app wont work between invocations :)
 		LogURI:    validations.LogURI,
-		SdkURI:    "http://127.0.0.1:2772",
+		SdkURI:    "http://127.0.0.1:2773",
 		RequestId: "",
 		Logs:      make([]APIPayload, 0),
 		ReqRes:    make([]APIPayload, 0),
