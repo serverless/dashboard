@@ -20,31 +20,87 @@ Using log statements is one of the more intuitive approach troubleshooting
 and Serverless Console offers you a best in class experience to using logs 
 across your Lambda Function. 
 
-Once you have [enabled dev mode](../integrations/enable-monitoring-features.md#enabling-dev-mode) you will start seeing logs forwarded directly from your Lambda function. 
+Once you have [enabled Dev Mode](../integrations/enable-monitoring-features.md#enabling-dev-mode) you will start seeing logs forwarded directly from your Lambda function. 
 [Historical logs](#historical-logs) for your function are also collected using
 [CloudWatch Log Subscriptions](../integrations/data-sources-and-roles.md#cloudwatch-log-subscriptions). 
 
 ## Real Time Invocation Events
-Every function invocation will have a start and end event so even if your
-function does not output any logs, you can monitor it's interactions. Development mode 
-is intended to allow you to isolate important events as they happen, and further
-inspect the details of that event and logs.
+In addition to Logs, when you [enable Tracing](../integrations/enable-monitoring-features.md#enabling-traces) in your functions, you will receive real time event details for your function.
 
-When you click on an event the side panel will show the following key pieces of information.
+These will appear in the log stream as.
 
-* **Started and Ended events** - These will be inserted into the log stream to help
-showcase when an a Lambda function has started executed, and when it completes. 
-* **Event Payload** - This structured (JSON) data has details about the event that triggered
-the function, and details about which ARN was executed. This help you identify precisely what
-inputs, and software version may have caused an issue.
-* **Log Lines** - You can group all the logs from a single invocation in the sidebar by clicking 
-in your log stream. The start and event, or log lines will open this transaction sidebar.
+```
+Invocation Started: your-lambda-function 
+```
+
+### Event Payload
+With Tracing enabled you also receive additional details about the invocation
+of your function. This allows you to better recreate and troubleshoot behavior.
+
+This data is only forwarded to Dev Mode and is not stored in Serverless Console. 
+
+It will include helpful information about your event. Below is an example of an 
+[API Gateway](../glossary.md#api-gateway) request. 
+```
+{
+  "version": "2.0",
+  "routeKey": "$default",
+  "rawPath": "/",
+  "rawQueryString": "",
+  "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.9",
+    "cache-control": "max-age=0",
+    "content-length": "0",
+    "host": "n9gera3luh.execute-api.us-east-1.amazonaws.com",
+    "if-none-match": "W/\"23-chdbkHlXLH0xUOfv0n794s6zoK4\"",
+    "sec-ch-ua": "\"Google Chrome\";v=\"105\", \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"105\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "cross-site",
+    "sec-fetch-user": "?1",
+    "upgrade-insecure-requests": "1",
+    "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+    "x-amzn-trace-id": "Root=1-6345b256-1b6b2bca522d219c32dd52ae",
+    "x-forwarded-for": "174.51.29.171",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "requestContext": {
+    "accountId": "954436037962",
+    "apiId": "n9gera3luh",
+    "domainName": "n9gera3luh.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "n9gera3luh",
+    "http": {
+      "method": "GET",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "174.51.29.171",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
+    },
+    "requestId": "Z2jNjiVeIAMEMSQ=",
+    "routeKey": "$default",
+    "stage": "$default",
+    "time": "11/Oct/2022:18:13:42 +0000",
+    "timeEpoch": 1665512022559
+  },
+  "isBase64Encoded": false
+}
+```
+
+#### Log Panel
 
 ## Historical Logs
 Development mode works similar to a terminal display in that the most recent 
 logs appear at the bottom of the screen automatically, unless you are scrolling
-upwards. This is deigned to be used in conjunction with fitters which allow you to
-isolate specific interactions you care about.
+upwards. 
+
+This is design to help you isolate and recreate specific behavior while you develop
+and with logging enabled you are able to access recent historical logs as well. To access these logs
+apply filters and scroll upwards. 
 
 ## Filtering
 The default view for dev mode is across all your logs and invocations, so you will
