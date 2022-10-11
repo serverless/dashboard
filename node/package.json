@@ -33,7 +33,7 @@
     "@rollup/plugin-typescript": "^8.5.0",
     "@serverless/eslint-config": "^5.0.1",
     "@serverless/sdk-schema": "^0.10.1",
-    "@serverless/test": "^11.0.1",
+    "@serverless/test": "^11.0.2",
     "@serverless/utils": "^6.7.0",
     "@tsconfig/node16": "^1.0.3",
     "adm-zip": "^0.5.9",
