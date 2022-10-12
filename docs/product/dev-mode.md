@@ -41,7 +41,8 @@ This data is only forwarded to Dev Mode and is not stored in Serverless Console.
 
 It will include helpful information about your event. Below is an example of an 
 [API Gateway](../glossary.md#api-gateway) request. 
-```
+
+```json
 {
   "version": "2.0",
   "routeKey": "$default",
@@ -70,10 +71,10 @@ It will include helpful information about your event. Below is an example of an
     "x-forwarded-proto": "https"
   },
   "requestContext": {
-    "accountId": "954436037962",
-    "apiId": "n9gera3luh",
-    "domainName": "n9gera3luh.execute-api.us-east-1.amazonaws.com",
-    "domainPrefix": "n9gera3luh",
+    "accountId": "12345",
+    "apiId": "3luhn9gera",
+    "domainName": "3luhn9gera.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "3luhn9gera",
     "http": {
       "method": "GET",
       "path": "/",
@@ -81,7 +82,7 @@ It will include helpful information about your event. Below is an example of an
       "sourceIp": "174.51.29.171",
       "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
     },
-    "requestId": "Z2jNjiVeIAMEMSQ=",
+    "requestId": "Z2jNjiVeIAMdQ=",
     "routeKey": "$default",
     "stage": "$default",
     "time": "11/Oct/2022:18:13:42 +0000",
@@ -91,16 +92,27 @@ It will include helpful information about your event. Below is an example of an
 }
 ```
 
-#### Log Panel
+#### Invocation Logs Panel
+All logs for an invocation are grouped into a [Trace](./traces.md#traces-from-logs) (even when Tracing is not enabled on a function). You can interact with any event or log by clicking on it to
+view all other logs, [namespace and environment](./metrics.md#filters) details along with function name and AWS Account details. 
+
+#### Child Span Events
+With Tracing enabled you will also be able to see the sequence of all child spans of a Trace by
+clicking on a log or event. This will show [detailed information about the interactions](./traces.md#supported-child-spans) of your Lambda function along with more detailed specifics about those interactions. 
+
+In Dev Mode this includes specific of the request and response of particular interactions that 
+can be helpful for troubleshooting. For example below is a sample Dynamo DB request.
+
+```text
+TAGs sample needed for this
+```
 
 ## Historical Logs
 Development mode works similar to a terminal display in that the most recent 
-logs appear at the bottom of the screen automatically, unless you are scrolling
-upwards. 
+logs appear at the bottom of the screen automatically
 
-This is design to help you isolate and recreate specific behavior while you develop
-and with logging enabled you are able to access recent historical logs as well. To access these logs
-apply filters and scroll upwards. 
+This is designed to help you isolate and recreate specific behavior while you develop. You are also
+able to access recent historical logs by applying filters and scrolling upwards. 
 
 ## Filtering
 The default view for dev mode is across all your logs and invocations, so you will
@@ -110,4 +122,5 @@ this to do keyword searches such as a user-id, or tag.
 
 ## Log Formatting
 Where possible we detect and format structured logs such as JSON. We also include
-encoded information in logs if you [enable Tracing](../integrations/enable-monitoring-features.md#enabling-traces) on a function but this is hidden in development mode. 
+encoded information in logs if you [enable Tracing](../integrations/enable-monitoring-features.md#enabling-traces) on a function but this is hidden in development mode. In some cases we also hide
+logs that are not relevant for display but [encode information about the Trace](../integrations/data-sources-and-roles.md#serverless-node-sdk)

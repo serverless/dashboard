@@ -11,6 +11,10 @@ within Serverless Console. This helps provide a glossary of terms, and
 explains what is included, or excluded when looking at duration
 values in Serverless Console charts and interfaces.
 
+## Initialization
+
+## Invocation 
+
 
 ## Understanding Duration Across Console
 Applying these definitions, you can expect the following behavior and details
