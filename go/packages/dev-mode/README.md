@@ -34,3 +34,8 @@ Integrations tests for this extension are using the integration testing setup/fr
 
 ## Releasing a version
 When you are ready to release a new version of this extension simply increment the version number in the `version.txt` file.
+
+## Regional Endpoints
+This app uses regional endpoints when publishing telemetry data. This keeps our data transfer as fast as possible so that customer lambda functions do not experience unnecessarily long total durations while this extension forwards data to our backend.
+
+This does mean that if AWS adds a region or a region is not listed in the `regionMap` in the `publishUrl` file it is possible for telemetry API calls to fail. So it is important that if a new region is added to AWS that we deploy a new set of endpoints in [platform-core](https://github.com/serverlessinc/platform-core).
