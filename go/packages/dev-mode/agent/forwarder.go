@@ -3,6 +3,7 @@ package agent
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -24,9 +25,33 @@ type LogMessage struct {
 }
 
 type LogItem struct {
-	Time    string      `json:"time"`
-	LogType string      `json:"type"`
-	Record  interface{} `json:"record"`
+	Time     string      `json:"time"`
+	LogType  string      `json:"type"`
+	Metadata interface{} `json:"meta"`
+	Record   interface{} `json:"record"`
+}
+
+type MetricsObject struct {
+	DurationMs    uint32 `json:"durationMs"`
+	ProducedBytes uint32 `json:"producedBytes"`
+}
+
+type InitReportRecord struct {
+	InitializationType string        `json:"initializationType"`
+	Metrics            MetricsObject `json:"metrics"`
+	Phase              string        `json:"phase"`
+}
+
+type TelemetrySpans struct {
+	Name       string `json:"name"`
+	DurationMs uint32 `json:"durationMs"`
+}
+
+type RuntimeDoneRecord struct {
+	RequestId string           `json:"requestId"`
+	Status    string           `json:"status"`
+	Spans     []TelemetrySpans `json:"spans"`
+	Metrics   MetricsObject    `json:"metrics"`
 }
 
 func FindRequestId(logs []LogItem) string {
@@ -39,6 +64,66 @@ func FindRequestId(logs []LogItem) string {
 		}
 	}
 	return requestId
+}
+
+func FindInitReport(logs []LogItem) *LogItem {
+	for _, log := range logs {
+		if log.LogType == "platform.initReport" {
+			return &log
+		}
+	}
+	return nil
+}
+
+func FindRuntimeDone(logs []LogItem) *LogItem {
+	for _, log := range logs {
+		if log.LogType == "platform.runtimeDone" {
+			return &log
+		}
+	}
+	return nil
+}
+
+func FindResData(logs []LogItem) *LogItem {
+	for _, log := range logs {
+		if log.LogType == "reqRes" {
+			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
+			var reqResPayload schema.RequestResponse
+			reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
+			if reqResErr == nil {
+				responseData := ""
+				data := reqResPayload.GetData()
+				if resData, ok := data.(*schema.RequestResponse_ResponseData); ok {
+					responseData = resData.ResponseData
+				}
+				if responseData != "" {
+					return &log
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func FindReqData(logs []LogItem) *LogItem {
+	for _, log := range logs {
+		if log.LogType == "reqRes" {
+			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
+			var reqResPayload schema.RequestResponse
+			reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
+			if reqResErr == nil {
+				requestData := ""
+				data := reqResPayload.GetData()
+				if reqData, ok := data.(*schema.RequestResponse_RequestData); ok {
+					requestData = reqData.RequestData
+				}
+				if requestData != "" {
+					return &log
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPayload {
@@ -79,14 +164,19 @@ func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPa
 	return payload
 }
 
-func CollectRequestResponseData(logs []LogItem) [][]byte {
+func CollectRequestResponseData(logs []LogItem) ([][]byte, []*LogItem) {
 	messages := make([][]byte, 0)
+	metadata := make([]*LogItem, 0)
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
+			jsonString, _ := json.Marshal(log.Metadata)
+			meta := LogItem{}
+			json.Unmarshal(jsonString, &meta)
+			metadata = append(metadata, &meta)
 			messages = append(messages, []byte(log.Record.(string)))
 		}
 	}
-	return messages
+	return messages, metadata
 }
 
 func CollectTraceData(logs []LogItem) [][]byte {
@@ -135,27 +225,62 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 
 func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error) {
 	region := os.Getenv("AWS_REGION")
-	payloads := CollectRequestResponseData(logs)
+
+	// Send reqRes payloads
+	payloads, metadata := CollectRequestResponseData(logs)
 	if len(payloads) != 0 {
-		for _, payload := range payloads {
+		for index, payload := range payloads {
 			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
 			var devModePayload schema.RequestResponse
 			reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
 			if reqResErr == nil {
+
+				// Attach metadata from the Lambda Telemetry API
+				// to the finalPayload
+				var telemetry *schema.LambdaTelemetry
+				if metadata[index] != nil {
+					meta := metadata[index]
+					if meta.LogType == "platform.initReport" {
+						jsonString, _ := json.Marshal(meta.Record)
+						reportData := InitReportRecord{}
+						json.Unmarshal(jsonString, &reportData)
+						telemetry = &schema.LambdaTelemetry{
+							InitDurationMs: &reportData.Metrics.DurationMs,
+						}
+					} else if meta.LogType == "platform.runtimeDone" {
+						jsonString, _ := json.Marshal(meta.Record)
+						reportData := RuntimeDoneRecord{}
+						json.Unmarshal(jsonString, &reportData)
+						responseLatency := uint32(0)
+						for _, spanPayload := range reportData.Spans {
+							if spanPayload.Name == "responseLatency" {
+								responseLatency = spanPayload.DurationMs
+							}
+						}
+						telemetry = &schema.LambdaTelemetry{
+							RuntimeDurationMs:        &reportData.Metrics.DurationMs,
+							RuntimeResponseLatencyMs: &responseLatency,
+						}
+					}
+				}
+
 				finalProtoPayload := schema.DevModePayload{
 					RequestId: requestId,
 					AccountId: accountId,
 					Region:    region,
+					Telemetry: telemetry,
 					Payload: &schema.DevModePayload_RequestResponse{
 						RequestResponse: &devModePayload,
 					},
 				}
+
 				finalPayload, _ := proto.Marshal(&finalProtoPayload)
 				makeAPICall(finalPayload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
 			}
 		}
 	}
 
+	// Send trace payloads
 	tracePayloads := CollectTraceData(logs)
 	if len(tracePayloads) != 0 {
 		for _, payload := range tracePayloads {

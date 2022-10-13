@@ -74,6 +74,15 @@ func (e *Extension) ExternalExtension() {
 	// Helper function to empty the log queue
 	var receivedRuntimeDone bool = false
 	var requestId string = ""
+	// Save init report duration so we can send it as part of the req dev mode payload on the init_duration_ms
+	var initReport *agent.LogItem = nil
+	// Save response log so we can combine it with the runtimeDone event to include additional telemetry data
+	var responseLog *agent.LogItem = nil
+	// Boolean flag to determine if telemetry is enabled in the lambda functions region
+	telemetryEnabled := lib.IsTelemetryEnabledRegion()
+
+	// Save the res payload from the SDK so we can send it out at runtime done so we can include the
+	// runtime_duration_ms & runtime_response_latency_ms that is included in the runtime done event
 	flushLogQueue := func(force bool) {
 		for !(logQueue.Empty() && (force || receivedRuntimeDone)) {
 			logs, err := logQueue.Get(1)
@@ -88,6 +97,50 @@ func (e *Extension) ExternalExtension() {
 			if err := json.Unmarshal([]byte(logs[0].(string)), &arr); err != nil {
 				continue
 			}
+
+			// Only do this for telemetry enabled regions
+			// it is useless in all other regions
+			if telemetryEnabled {
+				// Save init report
+				// else add metadata to req report before sending to backend
+				if initReport == nil {
+					value := agent.FindInitReport(arr)
+					if value != nil {
+						initReport = value
+					}
+				} else {
+					value := agent.FindReqData(arr)
+					if value != nil {
+						for index, log := range arr {
+							if log.LogType == "reqRes" {
+								arr[index].Metadata = initReport
+								break
+							}
+						}
+					}
+				}
+
+				// Save Res Report and skip
+				// else we send res report to backend and continue
+				if responseLog == nil {
+					value := agent.FindResData(arr)
+					if value != nil {
+						responseLog = value
+						continue
+					}
+				} else if receivedRuntimeDone {
+					value := agent.FindRuntimeDone(arr)
+					resArr := []agent.LogItem{{
+						Time:     responseLog.Time,
+						LogType:  responseLog.LogType,
+						Record:   responseLog.Record,
+						Metadata: value,
+					}}
+					agent.ForwardLogs(resArr, requestId, AWS_ACCOUNT_ID)
+					continue
+				}
+			}
+
 			if requestId == "" {
 				requestId = agent.FindRequestId(arr)
 			}
@@ -96,6 +149,8 @@ func (e *Extension) ExternalExtension() {
 		}
 		// Reset request id just incase
 		requestId = ""
+		initReport = nil
+		responseLog = nil
 	}
 
 	// Create Logs API agent

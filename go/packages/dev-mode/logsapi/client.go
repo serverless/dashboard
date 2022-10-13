@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"serverless/dev-mode-extension/lib"
 
 	"github.com/pkg/errors"
@@ -124,10 +123,10 @@ type SubscribeResponse struct {
 
 // Subscribe calls the Logs API to subscribe for the log events.
 func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destination Destination, extensionId string) (*SubscribeResponse, error) {
-	region := os.Getenv("AWS_REGION")
+	telemetryEnabled := lib.IsTelemetryEnabledRegion()
 	schemaVersion := SchemaVersionLatest
 	url := fmt.Sprintf("%s/2020-08-15/logs", c.logsApiBaseUrl)
-	if region == "us-east-1" {
+	if telemetryEnabled {
 		url = fmt.Sprintf("%s/2022-07-01/telemetry", c.logsApiBaseUrl)
 		schemaVersion = TraceSchemaVersionLatest
 	}
