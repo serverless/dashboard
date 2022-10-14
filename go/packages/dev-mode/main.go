@@ -130,14 +130,12 @@ func (e *Extension) ExternalExtension() {
 					}
 				} else if receivedRuntimeDone {
 					value := agent.FindRuntimeDone(arr)
-					resArr := []agent.LogItem{{
+					arr = append(arr, agent.LogItem{
 						Time:     responseLog.Time,
 						LogType:  responseLog.LogType,
 						Record:   responseLog.Record,
 						Metadata: value,
-					}}
-					agent.ForwardLogs(resArr, requestId, AWS_ACCOUNT_ID)
-					continue
+					})
 				}
 			}
 
