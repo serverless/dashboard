@@ -77,7 +77,6 @@ module.exports = new Map([
           Segment: segment,
           TotalSegments: totalSegments,
           ExclusiveStartKey: exclusiveStartKey,
-          ExpressionAttributeValues: expressionAttributeValues,
         }
       ) => {
         const tags = {};
@@ -95,9 +94,6 @@ module.exports = new Map([
         if (segment) tags.segment = segment;
         if (totalSegments) tags.total_segments = totalSegments;
         if (exclusiveStartKey) tags.exclusive_start_key = JSON.stringify(exclusiveStartKey);
-        if (expressionAttributeValues) {
-          tags.attribute_values = JSON.stringify(expressionAttributeValues);
-        }
         traceSpan.tags.setMany(tags, { prefix: 'aws.sdk.dynamodb' });
       },
       responseData: (traceSpan, { Count: count, ScannedCount: scannedCount }) => {
