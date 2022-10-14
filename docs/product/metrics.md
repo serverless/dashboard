@@ -31,8 +31,8 @@ about each Lambda execution. These are aggregated per minute.
 To further classify function execution events, a summary of error events is collected
 across all your functions ech minute .
 
-**Lambda Compute Duration** - This metric is used for details about the
-total time it took for a given Trace. For more details about duration, see our 
+**Duration** - This an aggregated metric about the average, and outliers for the
+total time your function took to execute. For more details about duration, see our 
 [guide to understanding Lambda duration](./duration.md).
 
 ## Filters

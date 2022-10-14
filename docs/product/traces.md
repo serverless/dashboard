@@ -44,8 +44,6 @@ traces to find older invocations.
 A Trace allows you to understand the overall lifecycle, interactions, and
 timing of your Lambda function along with it's Logs and Metrics.  
 
-
-
 ### Spans
 A Trace contains a set of Spans associated with and displayed in the style of a 
 Gant Chart. This chart provides you with context for when, and 
@@ -60,7 +58,16 @@ Read more details about [understanding duration](./duration.md) and our
 [node SDK support for child spans](../integrations/data-sources-and-roles.md#supported-child-spans)
 
 ### Tags and Metrics
-Each Trace has a set of associated tags, and metrics. These include the [filters above](#filters) as well as metrics for [duration](./duration.md)
+Each Trace has a set of associated tags, and metrics. These include the [filters above](#filters) as well as metrics for [duration](./duration.md). In addition to the filters above the Trace also has details about.
+
+* **Request Id** - This is a unique id used on your trace. It is used to associate logs and metrics for a Trace.
+* **Arch** - This is the architecture (x86_64 or ARM64) that executed the function.
+* **Max Memory** - This is the Max Memory in MB used by your function.
+* **Version** - This is the version of the function that executed.
+* **Outcome** - 
+* **Log Group** - This is the Log Group where you can find logs for this function.
+* **Log Stream Name** - This is the Log Stream we used to collect logs for this function.
+
 
 
 

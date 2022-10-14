@@ -13,7 +13,7 @@ and what you may or may not want to enable them on your function.
 To access settings for individual functions go to Settings -> Integrations -> Edit Integration where you will find a list of resources associated with that AWS Account. 
 
 ## Enabling Logs
-Enabling logs will create a [Cloudwatch Subscription](../glossary.md#cloudwatch-subscriptions) for the function. This will allow you to scroll through and search for it using [historical logs in dev mode](../product/dev-mode.md#recent-logs). Since log collection leverages Cloudwatch there is no additional Lambda compute time (and cost) associated with log collection. That said there may be bandwidth costs associated with [sending logs across availability zones](../faq.md#adding-the-aws-observability-integration).
+Enabling logs will create a [Cloudwatch Subscription](../glossary.md#cloudwatch-subscriptions) for the function. This will allow you to scroll through and search for it using [historical logs in dev mode](../product/dev-mode.md#recent-logs). Since log collection leverages Cloudwatch there is no additional Lambda compute time (and cost) associated with log collection. That said there may be bandwidth costs associated with [sending logs across regions](../faq.md#adding-the-aws-observability-integration).
 
 
 ## Enabling Traces
