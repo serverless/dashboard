@@ -55,7 +55,20 @@ describe('Integration', function () {
           ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 10 }, includeInternal: true }],
         ]),
         config: {
-          test: ({ invocationsData }) => {
+          test: ({ invocationsData, testConfig }) => {
+            // Ensure that the logs are coming through
+            for (const [, logs] of invocationsData.map((data) => data.logs).entries()) {
+              expect(logs.length).to.equal(1);
+              const logData = Buffer.from(logs[0], 'base64');
+              const logPayload = logProto.LogPayload.decode(logData);
+              expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
+              logPayload.logEvents.forEach((logItem, index) => {
+                const message = logItem.message || '';
+                expect(
+                  `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
+                ).to.have.string(message.slice(message.lastIndexOf('\t') + 1).replace('\n', ''));
+              });
+            }
             // Replace with external + sdk integration results once the sdk is configured
             // to communicate with the external extension
             for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
