@@ -253,7 +253,6 @@ describe('integration', function () {
       expect(sdkTags).to.not.have.property('error');
       expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
-      expect(sdkTags.dynamodb.attributeValues).to.equal(JSON.stringify({ ':id': { S: 'test' } }));
       // Delete
       expect(dynamodbDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(dynamodbDeleteSpan.name).to.equal('aws.sdk.dynamodb.deletetable');
