@@ -300,7 +300,9 @@
 <a name="serverless-instrumentation-tags-v1-HttpRouterTags"></a>
 
 ### HttpRouterTags
-
+Describe routing of incoming HTTP requests.
+Reflects configuration of a router used to route the request
+It can be Express.js, or API Gateway if Express.js is not detected to be used
 
 
 | Field | Type | Label | Description |
@@ -348,7 +350,7 @@ outcomes upon completion.
 <a name="serverless-instrumentation-tags-v1-HttpTags"></a>
 
 ### HttpTags
-
+Generic tagset intended to describe incoming or outgoing HTTP requests
 
 
 | Field | Type | Label | Description |
