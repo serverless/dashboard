@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.9.0...@serverless/aws-lambda-sdk@0.9.1) (2022-10-17)
+
+### Features
+
+- Do not trace DynamoDb request `expressionValues` ([bbc118d](https://github.com/serverless/console/commit/bbc118dd3cd8d92178b198439e96be040629c72f))
+
 ## [0.9.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.8.1...@serverless/aws-lambda-sdk@0.9.0) (2022-10-11)
 
 ### ⚠ BREAKING CHANGES
