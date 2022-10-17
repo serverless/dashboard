@@ -52,12 +52,9 @@ SERVERLESS_TELEMETRY.T.ClsKJDc5NmUwMDY2LTZiNjQtNDk2NC1iODJlLTgzYmQxYWQzMjVhNhoOZ
 Disabling tracing will remove these statements from your logs. 
 
 ### Supported Child Spans
-Currently we support the colection of the following interactions along with tags for each. 
-
-* express.js
-* dynamoDB
-* SQS
-* SNS
+We support a variety of framework and services for instrumentation. This includes
+frameworks like express.js, and AWS services like Dynamo DB. For a complete details
+of supported instrumentation see our [SDK Documentation](https://github.com/serverless/console/blob/main/node/packages/aws-lambda-sdk/docs/monitoring.md).
 
 
 ## External Extension
