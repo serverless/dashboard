@@ -12,10 +12,11 @@ Console extension. There are a few things you will need to do before and after
 the release of the new Serverless Console.
 
 ## Action items before October 25th at 10AM PDT:
-- You MUST remove `console: true` from all `serverless.yml` files. To continue
-to monitor your services with Serverless Console, do not redeploy this change
-until after October 25th. After October 25th, deployments with `console: true`
-will fail.
+- You MUST remove `console: true` from all `serverless.yml` files. Deployments
+after October 25th at 10AM will fail if `console: true` is present in the
+`serverless.yml`. You can continue to deploy with `console: true` until then.
+You can also continue to use Serverless Console without change until then.
+
 - If you don’t also use Serverless Dashboard, then you SHOULD remove
 `org: <org>` from all `severless.yml` files.
 - Join the [Console community channel in Slack](https://serverless-contrib.slack.com/archives/C037D989FB5)
