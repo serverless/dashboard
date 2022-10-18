@@ -74,6 +74,7 @@ func (e *Extension) ExternalExtension() {
 	// Helper function to empty the log queue
 	var receivedRuntimeDone bool = false
 	var requestId string = ""
+	var traceId string = ""
 	// Save init report duration so we can send it as part of the req dev mode payload on the init_duration_ms
 	var initReport *agent.LogItem = nil
 	// Save response log so we can combine it with the runtimeDone event to include additional telemetry data
@@ -142,8 +143,13 @@ func (e *Extension) ExternalExtension() {
 			if requestId == "" {
 				requestId = agent.FindRequestId(arr)
 			}
+
+			// Find the trace id so we can attach it to incoming logs
+			if traceId == "" && os.Getenv("SLS_ORG_ID") != "" {
+				traceId = agent.FindTraceId(arr)
+			}
 			// Send to dev mode
-			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID)
+			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID, traceId)
 		}
 		// Reset request id just incase
 		requestId = ""

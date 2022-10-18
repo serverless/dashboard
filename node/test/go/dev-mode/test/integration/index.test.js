@@ -64,6 +64,8 @@ describe('Integration', function () {
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {
                 const message = logItem.message || '';
+                const traceId = logItem.traceId || '';
+                expect(traceId).to.not.be.empty;
                 expect(
                   `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
                 ).to.have.string(message.slice(message.lastIndexOf('\t') + 1).replace('\n', ''));
