@@ -12,9 +12,15 @@ Console extension. There are a few things you will need to do before and after
 the release of the new Serverless Console.
 
 ## Action items before October 25th at 10AM PDT:
-- You MUST remove `console: true` from all `serverless.yml` files.
+- You MUST remove `console: true` from all `serverless.yml` files. To continue
+to monitor your services with Serverless Console, do not redeploy this change
+until after October 25th. After October 25th, deployments with `console: true`
+will fail.
 - If you don’t also use Serverless Dashboard, then you SHOULD remove
 `app: <app>` from all `severless.yml` files.
+- Join the [Console community channel in Slack](https://serverless-contrib.slack.com/archives/C037D989FB5)
+for up to date changes. We are doing our best to release at this time, but if
+there are changes you’ll be able to get the latest in Slack.
 
 ## Action items after October 25th at 10AM PDT:
 - You MUST upgrade Serverless Framework to version 3.24.0 or greater with
@@ -28,6 +34,15 @@ reconnect your AWS account after October 25th at 10AM.
 
 The new version of Serverless Console no longer depends on the Serverless
 Framework to add the Lambda extension via Layers to your lambda functions.
+
+## Can I keep using Serverless Console?
+
+If you deploy your `serverless.yml` with `console: true` removed, you will no
+longer be able to monitor it in Serverless Console. Deployments with
+`console: true` will fail after October 25th. To keep using Serverless Console
+do not deploy with `console: true` prior to October 25th. Then follow the steps
+for "Action items after October 25th at 10AM PDT" to update to the latest
+version of Serverless Framework and Serverless Console.
 
 ### What will happen if I don’t complete the action items before October 25th?
 
