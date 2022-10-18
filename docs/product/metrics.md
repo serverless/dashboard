@@ -7,7 +7,7 @@ menuOrder: 6
 
 # Metrics 
 Metrics are automatically collected across your AWS Account
-when you [add an AWS Observability Integration](../integrations/index.md#adding-the-aws-observability-integration). These metrics are collected
+when you [add an AWS Integration](../integrations/index.md#adding-the-aws-observability-integration). These metrics are collected
 using [Cloudwatch Metric Streams](../integrations/data-sources-and-roles.md#metric-streams)
 which allow us to collect metrics from a variety of AWS Services in aggregate.
 
