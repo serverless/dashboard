@@ -52,7 +52,7 @@ More details about configuring your Namespace and Environment tag can be found i
 
 - **Region** - Region is the specific region your Lambda function is executing in. 
 
-- **Cloud Account** - Cloud Account will show the account number or nickname for an [AWS Observability Integrations you have added](../integrations/index.md#adding-the-aws-observability-integration).
+- **Cloud Account** - Cloud Account will show the account number or nickname for an [AWS Integrations you have added](../integrations/index.md#adding-the-aws-observability-integration).
 
 
 

@@ -9,7 +9,7 @@ menuOrder: 8
 The term duration is used in a variety of scenario and charts
 within Serverless Console. 
 
-This documentation helps provide a glossary of terms of the [AWS Lambda execution environment]((https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html).), 
+This documentation helps provide a glossary of terms of the [AWS Lambda execution environment](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html), 
 and explains what is included, or excluded when looking at duration
 values in Serverless Console charts and interfaces.
 

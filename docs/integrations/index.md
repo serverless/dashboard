@@ -1,7 +1,7 @@
 <!--
 title: Integrations
 menuText: Integrations
-description: Adding the AWS Observability Integration
+description: Adding the AWS Integration
 menuOrder: 3
 -->
 
@@ -29,7 +29,7 @@ These steps may take a few minutes depending on the complexity of your account.
 Note: this same process can be initiated from the CLI using [Serverless Framework](#onboarding-using-serverless-framework)
 
 ### Synching Inventory
-Setting up the AWS Observability Integration automatically sets up a synch process to ensure that
+Setting up the AWS Integration automatically sets up a synch process to ensure that
 the latest resources are available in your account. This process will regularly check your CloudFormation stacks and Lambda functions in your account. 
 
 This process will not apply specific [features you enable](./enable-monitoring-features.md) but instead reflect what features are applied in your AWS account. This will prevent any race conditions from occurring where we would attempt to add back an Lambda extension, or CloudWatch Log Subscription.
@@ -47,7 +47,7 @@ After this one time process has run, we store these values locally and allow you
 In addition to onboarding using [console.serverless.com]() in your browser you can easily onboard
 from the [Serverless Framework](https://github.com/serverless/serverless). 
 
-Upgrade to version 3.23+
+Upgrade to version 3.24.0+
 
 ```text
 npm install -g serverless
