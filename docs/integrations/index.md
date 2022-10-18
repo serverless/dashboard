@@ -14,7 +14,7 @@ process works and [what data is collected](./data-sources-and-roles.md) by Serve
 
 ## Adding your AWS Account
 Once you have [created an organization](../product/create-org.md) in Serverless Console
-you will be automatically be asked to add the AWS Account. Starting this process will start [syncing your resource](#synching-inventory) and will kick off the following in your AWS Account.
+you will be automatically be asked to add the AWS Account. Starting this process will start [syncing your resource](#synching-inventory) and will kick off the following in your AWS Account:
 
 1. Creation of [a set of IAM Roles](data-sources-and-roles.md#serverless-iam-roles) using CloudFormation. These roles are used to create additional infrastructure needed in your account. 
 
