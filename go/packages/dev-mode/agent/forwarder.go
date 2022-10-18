@@ -66,6 +66,22 @@ func FindRequestId(logs []LogItem) string {
 	return requestId
 }
 
+func FindTraceId(logs []LogItem) string {
+	var traceId string = ""
+	for _, log := range logs {
+		if log.LogType == "spans" {
+			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
+			var devModePayload schema.TracePayload
+			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
+			if traceErr == nil && devModePayload.Spans[0] != nil {
+				traceId = string(devModePayload.Spans[0].TraceId)
+				break
+			}
+		}
+	}
+	return traceId
+}
+
 func FindInitReport(logs []LogItem) *LogItem {
 	for _, log := range logs {
 		if log.LogType == "platform.initReport" {
@@ -126,7 +142,7 @@ func FindReqData(logs []LogItem) *LogItem {
 	return nil
 }
 
-func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPayload {
+func FormatLogs(logs []LogItem, requestId string, accountId string, traceId string) schema.LogPayload {
 	messages := make([]*schema.LogEvent, 0)
 	platform := "aws"
 	region := os.Getenv("AWS_REGION")
@@ -144,9 +160,10 @@ func FormatLogs(logs []LogItem, requestId string, accountId string) schema.LogPa
 		if log.LogType == "function" {
 			t, _ := time.Parse(time.RFC3339, log.Time)
 			if !strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.") {
+				// Apparently these environment variables don't
+				// exist in the extension 🤷‍♂️
 				logGroup := os.Getenv("AWS_LAMBDA_LOG_GROUP_NAME")
 				logStream := os.Getenv("AWS_LAMBDA_LOG_STREAM_NAME")
-				traceId := ""
 				messages = append(messages, &schema.LogEvent{
 					Message:    log.Record.(string),
 					Timestamp:  uint64(t.UnixMilli()),
@@ -223,7 +240,7 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 	}
 }
 
-func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error) {
+func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId string) (int, error) {
 	region := os.Getenv("AWS_REGION")
 
 	// Send reqRes payloads
@@ -302,7 +319,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string) (int, error
 		}
 	}
 
-	logPayload := FormatLogs(logs, requestId, accountId)
+	logPayload := FormatLogs(logs, requestId, accountId, traceId)
 	if len(logPayload.LogEvents) == 0 {
 		return 0, nil
 	}
