@@ -17,7 +17,7 @@ to monitor your services with Serverless Console, do not redeploy this change
 until after October 25th. After October 25th, deployments with `console: true`
 will fail.
 - If you don’t also use Serverless Dashboard, then you SHOULD remove
-`app: <app>` from all `severless.yml` files.
+`org: <org>` from all `severless.yml` files.
 - Join the [Console community channel in Slack](https://serverless-contrib.slack.com/archives/C037D989FB5)
 for up to date changes. We are doing our best to release at this time, but if
 there are changes you’ll be able to get the latest in Slack.
