@@ -1,0 +1,30 @@
+name: "Publish AWS Integration Cloudformation Template"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - instrumentation/aws/iam-role-cfn-template.yaml
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  BUCKET_NAME: s3://serverless-inc-role-stack
+
+jobs:
+  syncTemplateToS3:
+    name: "Sync Template to S3"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::177335420605:role/GithubActionsDeploymentRole
+          aws-region: us-east-1
+      - name: Sync to S3
+        run: |
+          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml $BUCKET_NAME/iam-role-cfn-template.yaml --acl public-read
+          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
