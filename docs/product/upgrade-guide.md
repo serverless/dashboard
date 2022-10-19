@@ -33,8 +33,10 @@ reconnect your AWS account after November 1st at 10AM.
 
 ### Why is this a breaking change?
 
-The new version of Serverless Console no longer depends on the Serverless
-Framework to add the Lambda extension via Layers to your lambda functions.
+We are changing how Serverless Console integrates with AWS to improve
+performance and broaden the scope of observable resources. This means the new
+version of Serverless Console no longer depends on the Serverless Framework to
+add the Lambda extension via Layers to your lambda functions.
 
 ## Can I keep using Serverless Console?
 
