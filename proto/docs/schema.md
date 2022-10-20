@@ -238,8 +238,6 @@
 | operation | [string](#string) |  | The name of the operation corresponding to the request. |
 | request_id | [string](#string) | optional | The unique ID of the request. |
 | error | [string](#string) | optional | An optional error returned from the AWS APIs. |
-| request_body | [string](#string) | optional | Request body |
-| response_body | [string](#string) | optional | Response body |
 | dynamodb | [AwsSdkDynamodbTags](#serverless-instrumentation-tags-v1-AwsSdkDynamodbTags) | optional |  |
 | sqs | [AwsSdkSqsTags](#serverless-instrumentation-tags-v1-AwsSdkSqsTags) | optional |  |
 | sns | [AwsSdkSnsTags](#serverless-instrumentation-tags-v1-AwsSdkSnsTags) | optional |  |
@@ -361,10 +359,8 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | path | [string](#string) |  | The path of the HTTP Request |
 | query_parameter_names | [string](#string) | repeated | Names of the query parameters |
 | request_header_names | [string](#string) | repeated | Request header names |
-| request_body | [string](#string) | optional | Request body |
 | status_code | [uint32](#uint32) | optional | The Response Status Code. |
 | error_code | [string](#string) | optional | Eventual request error code |
-| response_body | [string](#string) | optional | Response body |
 
 
 
@@ -698,6 +694,8 @@ the function invocation.
 - aws.lambda: Spans the full invocation duration of a lambda function - aws.lambda.invocation: Spans the cold-start duration of a lambda function |
 | start_time_unix_nano | [fixed64](#fixed64) |  | The start time of the span in nanoseconds from EPOCH. |
 | end_time_unix_nano | [fixed64](#fixed64) |  | The end time of the span in nanoseconds from EPOCH. An important invariant to keep in mind is that the root span will always have the latest end time. |
+| input | [string](#string) | optional | Eventual input body (e.g. HTTP request body) |
+| output | [string](#string) | optional | Eventual output body (e.g. HTTP response body) |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets |
 
 
