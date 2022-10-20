@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - instrumentation/aws/**
+      - instrumentation/aws/iam-role-cfn-template.yaml
 permissions:
   id-token: write
   contents: read
@@ -15,6 +15,7 @@ env:
 jobs:
   syncTemplateToS3:
     name: "Sync Template to S3"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2

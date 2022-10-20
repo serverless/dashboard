@@ -16,6 +16,7 @@ env:
 jobs:
   syncTemplateToS3:
     name: "Sync Template to S3"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
