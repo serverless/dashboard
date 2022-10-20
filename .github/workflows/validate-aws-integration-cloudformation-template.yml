@@ -31,11 +31,10 @@ jobs:
         id: stack-validate
         continue-on-error: true
         run: |
-          echo "Template URL: https://$BUCKET_NAME.s3.amazonaws.com/iam-role-cfn-template-${{ github.sha }}.yaml"
           aws cloudformation validate-template --template-url https://$BUCKET_NAME.s3.amazonaws.com/iam-role-cfn-template-${{ github.sha }}.yaml
-#      - name: Cleanup
-#        run: |
-#          aws s3 rm $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
+      - name: Cleanup
+        run: |
+          aws s3 rm $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
       - name: Check Validation
         if: steps.stack-validate.outcome != 'success'
         run: exit 1
