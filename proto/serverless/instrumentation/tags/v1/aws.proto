@@ -147,8 +147,8 @@ message AwsLambdaInvocationTags {
 
 message AwsSdkTags {
   // Retrieving AWS Account id is not straightforward therefore we it's not pursued at this point
-  reserved 1;
-  reserved "account_id";
+  reserved 1, 8, 9;
+  reserved "account_id", "request_body", "response_body";
 
   // The AWS Region this SDK call is being made against.
   optional string region = 2;
@@ -162,10 +162,6 @@ message AwsSdkTags {
   optional string request_id = 6;
   // An optional error returned from the AWS APIs.
   optional string error = 7;
-  // Request body
-  optional string request_body = 8;
-  // Response body
-  optional string response_body = 9;
 
   optional AwsSdkDynamodbTags dynamodb = 100;
   optional AwsSdkSqsTags sqs = 101;

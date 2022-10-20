@@ -14,7 +14,6 @@ option go_package = ".;protoc";
 message TracePayload {
     serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
 
-
     // A list of Spans to be ingest. Ingest does not impose a limit on the
     // number of Spans in a single payload. It is the responsibility of the
     // Span producers to limit the size of payloads based on their own requirements.
@@ -47,6 +46,11 @@ message Span {
     // An important invariant to keep in mind is that the root span will always have
     // the latest end time.
     fixed64 end_time_unix_nano = 6;
+
+    // Eventual input body (e.g. HTTP request body)
+    optional string input = 8;
+    // Eventual output body (e.g. HTTP response body)
+    optional string output = 9;
 
     // A message containing any number of Tagsets
     serverless.instrumentation.tags.v1.Tags tags = 7;
