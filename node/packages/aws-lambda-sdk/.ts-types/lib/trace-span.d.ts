@@ -13,6 +13,8 @@ declare class TraceSpan {
   subSpans: Set<TraceSpan>;
   spans: Set<TraceSpan>;
   tags: TraceSpanTags;
+  input?: string;
+  output?: string;
 
   close(): TraceSpan;
   closeContext(): undefined;

@@ -67,7 +67,7 @@ const install = (protocol, httpModule) => {
         } else if (chunk) {
           abortCapture();
         }
-        if (body) traceSpan.tags.set('http.request_body', body);
+        if (body) traceSpan.input = body;
         abortCapture();
       }
       return originalEnd.call(this, chunk, encoding, callback);
@@ -97,7 +97,7 @@ const install = (protocol, httpModule) => {
               return null;
             }
           })();
-          if (body) traceSpan.tags.set('http.response_body', body);
+          if (body) traceSpan.output = body;
         });
       }
       return originalAddListener.call(this, type, listener);

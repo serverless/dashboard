@@ -35,8 +35,8 @@ module.exports.install = (Sdk) => {
         'aws.sdk.signature_version': this.service.config.signatureVersion,
         'aws.sdk.service': serviceName,
         'aws.sdk.operation': operationName,
-        'aws.sdk.request_body': shouldMonitorRequestResponse ? JSON.stringify(params) : null,
       },
+      input: shouldMonitorRequestResponse ? JSON.stringify(params) : null,
     });
     tagMapper?.params?.(traceSpan, params);
     this.on('complete', (response) => {
@@ -44,9 +44,7 @@ module.exports.install = (Sdk) => {
       if (response.error) {
         traceSpan.tags.set('aws.sdk.error', response.error.message);
       } else {
-        if (shouldMonitorRequestResponse) {
-          traceSpan.tags.set('aws.sdk.response_body', JSON.stringify(response.data));
-        }
+        if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.data);
         tagMapper?.responseData?.(traceSpan, response.data);
       }
       if (!traceSpan.endTime) traceSpan.close();

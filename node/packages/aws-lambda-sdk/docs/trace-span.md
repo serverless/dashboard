@@ -54,6 +54,14 @@ Supported options
 
 - `prefix` - Tag name prefix for all tags
 
+### `input` _(string)_
+
+Eventual span input body
+
+### `output` _(string)_
+
+Eventual span output body
+
 ## Methods
 
 ### `close([options])`

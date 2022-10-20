@@ -12,7 +12,6 @@ if (!serverlessSdk._isDevMode) {
 
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const sendTelemetry = require('./send-telemetry');
-const devModeOnlyTags = require('./dev-mode-only-tags');
 
 const pendingSpans = [];
 let isScheduled = false;
@@ -27,9 +26,8 @@ const sendSpans = () => {
     },
     spans: pendingSpans.map((span) => {
       const result = span.toProtobufObject();
-      for (const tagName of span.tags.keys()) {
-        if (devModeOnlyTags.has(tagName)) span.tags.delete(tagName);
-      }
+      span.input = null;
+      span.output = null;
       return result;
     }),
   };

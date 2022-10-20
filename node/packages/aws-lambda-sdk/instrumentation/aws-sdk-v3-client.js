@@ -33,10 +33,8 @@ module.exports.install = (client) => {
             'aws.sdk.service': serviceName,
             'aws.sdk.operation': operationName,
             'aws.sdk.signature_version': 'v4',
-            'aws.sdk.request_body': shouldMonitorRequestResponse
-              ? JSON.stringify(args.input)
-              : null,
           },
+          input: shouldMonitorRequestResponse ? JSON.stringify(args.input) : null,
         });
         tagMapper?.params?.(traceSpan, args.input);
         const deferredRegion = client.config
@@ -65,9 +63,7 @@ module.exports.install = (client) => {
           throw error;
         } else {
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
-          if (shouldMonitorRequestResponse) {
-            traceSpan.tags.set('aws.sdk.response_body', JSON.stringify(response.output));
-          }
+          if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.output);
           tagMapper?.responseData?.(traceSpan, response.output);
           if (!traceSpan.endTime) traceSpan.close();
           return response;
