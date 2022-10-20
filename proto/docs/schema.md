@@ -289,6 +289,13 @@
 | ----- | ---- | ----- | ----------- |
 | lambda | [AwsLambdaTags](#serverless-instrumentation-tags-v1-AwsLambdaTags) | optional | The root AWS Lambda Span tags |
 | sdk | [AwsSdkTags](#serverless-instrumentation-tags-v1-AwsSdkTags) | optional | The AWS SDK Tags. These are only added when instrumented code makes a call to one of the AWS SDK functions |
+| account_id | [string](#string) | optional | Account Id is added to all schemas originating from aws during ingest as part of our data enrichment process |
+| region | [string](#string) | optional | Region is added to all schemas originating from aws during ingest as part of our data enrichment process |
+| request_id | [string](#string) | optional | RequestId is added to all schemas originating from aws lambda during ingest as part of our data enrichment process |
+| resource_name | [string](#string) | optional | ResourceName is added to all schemas originating from aws lambda during ingest as part of our data enrichment process |
+| sequence_id | [string](#string) | optional | The monotonically increasing sequence id for a LogEvent originating from aws lambda. This is used to determine the ordering of messages in a given stream of logs. If this is a LogEvent coming from Cloudwatch Logs, it will be provided otherwise it is the responsibility of the log producer to generate a sequence id. |
+| log_group | [string](#string) | optional | The Cloudwatch Log Group name for logs originating from aws lambda. |
+| log_stream | [string](#string) | optional | The Cloudwatch Log Group Stream id for logs originating from aws lambda. |
 
 
 
@@ -433,6 +440,10 @@ Defined TagSets start at field number 100  //
 | aws | [AwsTags](#serverless-instrumentation-tags-v1-AwsTags) | optional | These tags are used an AWS resource/sdk is the producer of the span |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
 | https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
+| sls_tags | [SlsTags](#serverless-instrumentation-tags-v1-SlsTags) | optional | These sls tags are added at ingest time to each span so that is why this is marked as optional here |
+| environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process |
+| namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process |
+| org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process |
 
 
 
@@ -518,14 +529,12 @@ have access to the telemetry API so it will not be included in all regions.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| message | [string](#string) |  | The LogEvent&#39;s body. |
 | timestamp | [fixed64](#fixed64) |  | The timestamp of when the LogEvent was created. |
-| sequence_id | [string](#string) |  | The monotonically increasing sequence id for a LogEvent. This is used to determine the ordering of messages in a given stream of logs. If this is a LogEvent coming from Cloudwatch Logs, it will be provided otherwise it is the responsibility of the log producer to generate a sequence id. |
-| log_group | [string](#string) | optional | The Cloudwatch Log Group name. |
-| log_stream | [string](#string) | optional | The Cloudwatch Log Group Stream id. |
-| account_id | [string](#string) | optional | The Owner Account Id of the Cloudwatch Log Group. |
-| request_id | [string](#string) | optional | The Lambda request Id that the log&#39;s are linked to. When ingesting LogEvents, ingest will attempt to infer the request_id from the payload and attach it. If it is not able to, then it will attempt to reconcile later. |
 | trace_id | [string](#string) | optional | The Trace Id that the log&#39;s are linked to. When ingesting LogEvents, ingest will attempt to infer the request_id from the payload and attach it. If it is not able to, then it will attempt to reconcile later. |
+| body | [string](#string) |  | The LogEvent&#39;s body. |
+| severity_text | [string](#string) |  | The calculated severity text value for a log |
+| severity_number | [uint64](#uint64) |  | The calculated severity text value for a log |
+| tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) | optional | A message containing any number of Tagsets |
 
 
 
@@ -656,6 +665,7 @@ the function invocation.
 | request_id | [string](#string) | optional | The Lambda Request Id. |
 | request_data | [string](#string) |  |  |
 | response_data | [string](#string) |  |  |
+| tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) | optional | A message containing any number of Tagsets |
 
 
 
