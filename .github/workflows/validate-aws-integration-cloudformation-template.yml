@@ -22,7 +22,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::321667558080:role/GithubActionsDeploymentRole
+          role-to-assume: arn:aws:iam::321667558080:role/GithubCFTPRRole
           aws-region: us-east-1
       - name: Sync to S3
         run: |
@@ -32,9 +32,9 @@ jobs:
         continue-on-error: true
         run: |
           aws cloudformation validate-template --template-url https://$BUCKET_NAME.s3.amazonaws.com/iam-role-cfn-template-${{ github.sha }}.yaml
-      - name: Cleanup
-        run: |
-          aws s3 rm $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
+#      - name: Cleanup
+#        run: |
+#          aws s3 rm $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
       - name: Check Validation
         if: steps.stack-validate.outcome != 'success'
         run: exit 1
