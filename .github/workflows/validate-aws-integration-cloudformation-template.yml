@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - instrumentation/aws/iam-role-cfn-template.yaml
+      - instrumentation/aws/**
 permissions:
   id-token: write
   contents: read
