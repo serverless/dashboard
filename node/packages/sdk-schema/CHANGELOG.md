@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.10.1...@serverless/sdk-schema@0.11.0) (2022-10-20)
+
+### ⚠ BREAKING CHANGES
+
+- `http.request_body`, `http.response_body`, `aws.sdk.request_body` and `aws.sdk.response_body` tags are removed in favor of top level `input and `output` properties
+
+### Features
+
+- Move span `input` and `output` data to top level properties ([277b6e9](https://github.com/serverless/console/commit/277b6e9eb3cd5517b83de2f9e4867d4d7f38cb81))
+
 ## [0.10.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.10.0...@serverless/sdk-schema@0.10.1) (2022-10-04)
 
 ### Features
