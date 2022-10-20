@@ -39,7 +39,14 @@ message LogEvent {
 
     // The calculated severity text value for a log
     uint64 severity_number = 11;
-
+    
     // A message containing any number of Tagsets
     optional serverless.instrumentation.tags.v1.Tags tags = 12;
+
+    // Is historical is addedd via ingestion so that we can tell the differnce between
+    // historical payloads and live streamed payloads
+    optional bool is_historical = 13;
+
+    // Type is used to determine the kind of document that is being send via a livestream
+    optional string type = 14;
 }

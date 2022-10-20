@@ -47,14 +47,21 @@ message Span {
     // the latest end time.
     fixed64 end_time_unix_nano = 6;
 
-    // The timestamp that is created in ingestion as the search key
-    optional fixed64 timestamp = 10;
+    // A message containing any number of Tagsets
+    serverless.instrumentation.tags.v1.Tags tags = 7;
 
     // Eventual input body (e.g. HTTP request body)
     optional string input = 8;
     // Eventual output body (e.g. HTTP response body)
     optional string output = 9;
 
-    // A message containing any number of Tagsets
-    serverless.instrumentation.tags.v1.Tags tags = 7;
+    // The timestamp that is created in ingestion as the search key
+    optional fixed64 timestamp = 10;
+
+    // Is historical is addedd via ingestion so that we can tell the differnce between
+    // historical payloads and live streamed payloads
+    optional bool is_historical = 11;
+
+    // Type is used to determine the kind of document that is being send via a livestream
+    optional string type = 12;
 }
