@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.12.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.11.0...@serverless/sdk-schema@0.11.1) (2022-10-20)
+
+### ⚠ BREAKING CHANGES
+
+- Updated logs schema to support ingest process a bit better ([f217ea2](https://github.com/serverless/console/commit/f217ea24e86352b7d5ac1f877180b8037778bcec))
+
 ## [0.11.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.10.1...@serverless/sdk-schema@0.11.0) (2022-10-20)
 
 ### ⚠ BREAKING CHANGES
