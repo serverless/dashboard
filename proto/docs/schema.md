@@ -704,6 +704,7 @@ the function invocation.
 - aws.lambda: Spans the full invocation duration of a lambda function - aws.lambda.invocation: Spans the cold-start duration of a lambda function |
 | start_time_unix_nano | [fixed64](#fixed64) |  | The start time of the span in nanoseconds from EPOCH. |
 | end_time_unix_nano | [fixed64](#fixed64) |  | The end time of the span in nanoseconds from EPOCH. An important invariant to keep in mind is that the root span will always have the latest end time. |
+| timestamp | [fixed64](#fixed64) | optional | The timestamp that is created in ingestion as the search key |
 | input | [string](#string) | optional | Eventual input body (e.g. HTTP request body) |
 | output | [string](#string) | optional | Eventual output body (e.g. HTTP response body) |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets |
