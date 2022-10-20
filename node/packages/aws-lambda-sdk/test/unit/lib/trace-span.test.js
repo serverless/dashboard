@@ -67,6 +67,14 @@ describe('lib/trace-span.test.js', () => {
     expect(childSpan.endTime).to.equal(endTime);
   });
 
+  it('should support `input`', () => {
+    expect(new TraceSpan('child', { input: 'foo' }).close().input).to.equal('foo');
+  });
+
+  it('should support `input`', () => {
+    expect(new TraceSpan('child', { output: 'foo' }).close().output).to.equal('foo');
+  });
+
   it('should support creation of immediate descendant spans', () => {
     const childSpan = new TraceSpan('child', {
       immediateDescendants: ['grandchild', 'grandgrandchild'],
@@ -134,6 +142,8 @@ describe('lib/trace-span.test.js', () => {
 
   it('should prepare Protobuf ready object', () => {
     const childSpan = new TraceSpan('child');
+    childSpan.input = 'some input';
+    childSpan.output = 'some output';
     childSpan.tags.set('toptag', '1');
     childSpan.tags.set('top.nested', '2');
     childSpan.tags.set('top.deep.nested', '3');
@@ -151,6 +161,8 @@ describe('lib/trace-span.test.js', () => {
       name: 'child',
       startTimeUnixNano: protoJson.startTimeUnixNano,
       endTimeUnixNano: protoJson.endTimeUnixNano,
+      input: 'some input',
+      output: 'some output',
       tags: {
         toptag: '1',
         top: { nested: '2', deep: { nested: '3' } },

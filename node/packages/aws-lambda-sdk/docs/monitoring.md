@@ -18,18 +18,16 @@ All HTTP and HTTPS requests are monitored and stored as `node.http.request` & `n
 
 #### Trace span tags:
 
-| Name                         | Value                                            |
-| ---------------------------- | ------------------------------------------------ |
-| `http.method`                | Request method (e.g. `GET`)                      |
-| `http.protocol`              | Currently `HTTP/1.1` in all cases                |
-| `http.host`                  | Domain name and port name if custom              |
-| `http.path`                  | Request pathname (query string is not included)  |
-| `http.query_parameter_names` | Query string parameter names (if provided)       |
-| `http.request_header_names`  | Request header names                             |
-| `http.status_code`           | Response status code                             |
-| `http.error_code`            | If request errored, its error code               |
-| `http.request_body`          | _(dev mode only)_ Request body (if UTF8 string)  |
-| `http.response_body`         | _(dev mode only)_ Response body (if UTF8 string) |
+| Name                         | Value                                           |
+| ---------------------------- | ----------------------------------------------- |
+| `http.method`                | Request method (e.g. `GET`)                     |
+| `http.protocol`              | Currently `HTTP/1.1` in all cases               |
+| `http.host`                  | Domain name and port name if custom             |
+| `http.path`                  | Request pathname (query string is not included) |
+| `http.query_parameter_names` | Query string parameter names (if provided)      |
+| `http.request_header_names`  | Request header names                            |
+| `http.status_code`           | Response status code                            |
+| `http.error_code`            | If request errored, its error code              |
 
 ## AWS SDK requests
 
@@ -68,8 +66,6 @@ Tags that apply to all AWS SDK requests:
 | `aws.sdk.operation`         | Operation name (e.g. `listtopics`)                                                     |
 | `aws.sdk.request_id`        | AWS reqeust id                                                                         |
 | `aws.sdk.error`             | If request ends with error, the error message                                          |
-| `aws.sdk.request_body`      | _(dev mode only)_ Request body                                                         |
-| `aws.sdk.response_body`     | _(dev mode only)_ Response body                                                        |
 
 #### `aws.sdk.sns` span tags`
 

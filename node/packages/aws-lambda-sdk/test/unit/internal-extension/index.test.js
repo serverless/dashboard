@@ -842,14 +842,10 @@ describe('internal-extension/index.test.js', () => {
       } = await handleInvocation('multi-async');
       for (const httpSpan of spans.slice(-4)) {
         expect(httpSpan.name).to.equal('node.http.request');
-        expect(httpSpan.tags.http).to.not.have.property('requestBody');
-        expect(httpSpan.tags.http).to.not.have.property('responseBody');
+        expect(httpSpan.input).to.be.undefined;
+        expect(httpSpan.output).to.be.undefined;
       }
 
-      const filteredTagNameTokens = new Set([
-        ['http', 'requestBody'],
-        ['http', 'responseBody'],
-      ]);
       expect(
         payloads.map(([type, payload]) => {
           switch (type) {
@@ -858,23 +854,7 @@ describe('internal-extension/index.test.js', () => {
             case 'trace':
               return {
                 type,
-                spans: payload.spans.map(({ name, tags }) => {
-                  const filteredTags = {};
-                  tagFilter: for (const tagTokens of filteredTagNameTokens) {
-                    let result = tags;
-                    for (const tagToken of tagTokens) {
-                      result = result[tagToken];
-                      if (!result) continue tagFilter;
-                    }
-                    let target = filteredTags;
-                    for (const tagToken of tagTokens.slice(0, -1)) {
-                      if (!target[tagToken]) target[tagToken] = {};
-                      target = target[tagToken];
-                    }
-                    target[tagTokens[tagTokens.length - 1]] = result;
-                  }
-                  return { name, tags: filteredTags };
-                }),
+                spans: payload.spans.map(({ name, input, output }) => ({ name, input, output })),
               };
             default:
               throw new Error('Unexpected');
@@ -883,15 +863,15 @@ describe('internal-extension/index.test.js', () => {
       ).to.deep.equal([
         {
           type: 'trace',
-          spans: [{ name: 'aws.lambda.initialization', tags: {} }],
+          spans: [{ name: 'aws.lambda.initialization', input: undefined, output: undefined }],
         },
         { type: 'request-response', data: { $case: 'requestData' } },
         {
           type: 'trace',
           spans: [
-            { name: 'express.middleware.query', tags: {} },
-            { name: 'express.middleware.expressinit', tags: {} },
-            { name: 'express.middleware.jsonparser', tags: {} },
+            { name: 'express.middleware.query', input: undefined, output: undefined },
+            { name: 'express.middleware.expressinit', input: undefined, output: undefined },
+            { name: 'express.middleware.jsonparser', input: undefined, output: undefined },
           ],
         },
         {
@@ -899,7 +879,8 @@ describe('internal-extension/index.test.js', () => {
           spans: [
             {
               name: 'node.http.request',
-              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+              input: 'test',
+              output: '"ok"',
             },
           ],
         },
@@ -908,7 +889,8 @@ describe('internal-extension/index.test.js', () => {
           spans: [
             {
               name: 'node.http.request',
-              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+              input: 'test',
+              output: '"ok"',
             },
           ],
         },
@@ -917,7 +899,8 @@ describe('internal-extension/index.test.js', () => {
           spans: [
             {
               name: 'node.http.request',
-              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+              input: 'test',
+              output: '"ok"',
             },
           ],
         },
@@ -926,18 +909,19 @@ describe('internal-extension/index.test.js', () => {
           spans: [
             {
               name: 'node.http.request',
-              tags: { http: { requestBody: 'test', responseBody: '"ok"' } },
+              input: 'test',
+              output: '"ok"',
             },
           ],
         },
         {
           type: 'trace',
           spans: [
-            { name: 'express.middleware.router', tags: {} },
-            { name: 'express.middleware.route.get.anonymous', tags: {} },
-            { name: 'express', tags: {} },
-            { name: 'aws.lambda.invocation', tags: {} },
-            { name: 'aws.lambda', tags: {} },
+            { name: 'express.middleware.router', input: undefined, output: undefined },
+            { name: 'express.middleware.route.get.anonymous', input: undefined, output: undefined },
+            { name: 'express', input: undefined, output: undefined },
+            { name: 'aws.lambda.invocation', input: undefined, output: undefined },
+            { name: 'aws.lambda', input: undefined, output: undefined },
           ],
         },
       ]);

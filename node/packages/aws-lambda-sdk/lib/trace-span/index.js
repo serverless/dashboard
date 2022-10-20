@@ -236,6 +236,8 @@ class TraceSpan {
       name: 'options.tags',
     });
     if (tags) this.tags.setMany(tags);
+    if (options.input != null) this.input = options.input;
+    if (options.output != null) this.output = options.output;
     if (!rootSpan) {
       rootSpan = this;
       this.parentSpan = null;
@@ -329,6 +331,8 @@ class TraceSpan {
       name: this.name,
       startTime: resolveEpochTimestampString(this.startTime),
       endTime: this.endTime && resolveEpochTimestampString(this.endTime),
+      input: this.input || undefined,
+      output: this.output || undefined,
       tags: Object.fromEntries(this.tags),
     };
   }
@@ -351,6 +355,8 @@ class TraceSpan {
       name: this.name,
       startTimeUnixNano: toLong(resolveEpochTimestampString(this.startTime)),
       endTimeUnixNano: this.endTime ? toLong(resolveEpochTimestampString(this.endTime)) : undefined,
+      input: this.input || undefined,
+      output: this.output || undefined,
       tags,
     };
   }
@@ -359,6 +365,20 @@ class TraceSpan {
       this,
       ...Array.from(this.subSpans, (subSpan) => Array.from(subSpan.spans)).flat(Infinity),
     ]);
+  }
+  get input() {
+    return this._input || null;
+  }
+  set input(body) {
+    if (body == null) delete this._input;
+    else this._input = ensureString(body);
+  }
+  get output() {
+    return this._output || null;
+  }
+  set output(body) {
+    if (body == null) delete this._output;
+    else this._output = ensureString(body);
   }
 }
 
