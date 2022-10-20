@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.10.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.9.1...@serverless/aws-lambda-sdk@0.10.0) (2022-10-20)
+
+### ⚠ BREAKING CHANGES
+
+- SDK Schema is upgraded to v0.11 - `http.request_body`, `http.response_body`, `aws.sdk.request_body` and `aws.sdk.response_body` tags are removed in favor of top level `input` and `output` properties.
+
+### Features
+
+- Adapt `span.input` and `span.output` ([bb5e222](https://github.com/serverless/console/commit/bb5e222f2f1efd5392ffb5cc6cb259d388238673))
+
 ### [0.9.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.9.0...@serverless/aws-lambda-sdk@0.9.1) (2022-10-17)
 
 ### Features
