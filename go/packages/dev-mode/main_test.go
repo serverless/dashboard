@@ -210,8 +210,8 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
 		}
 		for index, event := range protoPayload.LogEvents {
-			if event.Message != messages[index] {
-				t.Errorf("Expected log message %s Received %s", event.Message, messages[index])
+			if event.Body != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Body, messages[index])
 			}
 		}
 	}
@@ -273,8 +273,8 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
 		}
 		for index, event := range protoPayload.LogEvents {
-			if event.Message != messages2[index] {
-				t.Errorf("Expected log message %s Received %s", messages2[index], event.Message)
+			if event.Body != messages2[index] {
+				t.Errorf("Expected log message %s Received %s", messages2[index], event.Body)
 			}
 		}
 	}
@@ -348,8 +348,8 @@ func TestStartInvokeDone(t *testing.T) {
 			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
 		}
 		for index, event := range protoPayload.LogEvents {
-			if event.Message != messages[index] {
-				t.Errorf("Expected log message %s Received %s", event.Message, messages[index])
+			if event.Body != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Body, messages[index])
 			}
 		}
 	}
@@ -414,8 +414,8 @@ func TestStartDoneInvoke(t *testing.T) {
 			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
 		}
 		for index, event := range protoPayload.LogEvents {
-			if event.Message != messages[index] {
-				t.Errorf("Expected log message %s Received %s", event.Message, messages[index])
+			if event.Body != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Body, messages[index])
 			}
 		}
 	}
