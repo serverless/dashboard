@@ -1,40 +1,40 @@
-name: "Publish AWS Integration Cloudformation Template"
+name: "Validate AWS Integration Cloudformation Template"
 
 on:
   pull_request:
     branches: [main]
     paths:
       - instrumentation/aws/iam-role-cfn-template.yaml
-      -
 permissions:
   id-token: write
   contents: read
 
 env:
-  BUCKET_NAME: s3://serverless-inc-role-stack-dev
+  BUCKET_NAME: serverless-inc-role-stack-dev
 
 jobs:
   syncTemplateToS3:
     name: "Sync Template to S3"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::321667558080:role/GithubActionsDeploymentRole
+          role-to-assume: arn:aws:iam::321667558080:role/GithubCFTPRRole
           aws-region: us-east-1
       - name: Sync to S3
         run: |
-          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
+          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml s3://$BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
       - name: Validate Cloudformation Stack
         id: stack-validate
         continue-on-error: true
         run: |
-          aws cloudformation validate-template --template-url https://$BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
+          aws cloudformation validate-template --template-url https://$BUCKET_NAME.s3.amazonaws.com/iam-role-cfn-template-${{ github.sha }}.yaml
       - name: Cleanup
         run: |
-          aws s3 rm $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
+          aws s3 rm s3://$BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
       - name: Check Validation
         if: steps.stack-validate.outcome != 'success'
         run: exit 1

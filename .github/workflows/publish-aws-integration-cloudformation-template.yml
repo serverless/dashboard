@@ -11,11 +11,12 @@ permissions:
   contents: read
 
 env:
-  BUCKET_NAME: s3://serverless-inc-role-stack
+  BUCKET_NAME: serverless-inc-role-stack
 
 jobs:
   syncTemplateToS3:
     name: "Sync Template to S3"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -26,5 +27,5 @@ jobs:
           aws-region: us-east-1
       - name: Sync to S3
         run: |
-          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml $BUCKET_NAME/iam-role-cfn-template.yaml --acl public-read
-          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
+          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml s3://$BUCKET_NAME/iam-role-cfn-template.yaml --acl public-read
+          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml s3://$BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
