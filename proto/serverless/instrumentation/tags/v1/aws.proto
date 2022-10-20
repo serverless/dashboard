@@ -12,6 +12,28 @@ message AwsTags {
   // The AWS SDK Tags. These are only added when instrumented code
   // makes a call to one of the AWS SDK functions
   optional AwsSdkTags sdk = 101;
+
+  // Account Id is added to all schemas originating from aws during ingest as part of our data enrichment process
+  optional string account_id = 102;
+  // Region is added to all schemas originating from aws during ingest as part of our data enrichment process
+  optional string region = 103;
+  // RequestId is added to all schemas originating from aws lambda during ingest as part of our data enrichment process
+  optional string request_id = 104;
+  // ResourceName is added to all schemas originating from aws lambda during ingest as part of our data enrichment process
+  optional string resource_name = 105;
+
+  // The monotonically increasing sequence id for a LogEvent originating from aws lambda.
+  // This is used to determine the ordering of messages in a given stream of logs.
+  // If this is a LogEvent coming from Cloudwatch Logs, it will be provided
+  // otherwise it is the responsibility of the log producer to generate
+  // a sequence id.
+  optional string sequence_id = 3;
+
+  // The Cloudwatch Log Group name for logs originating from aws lambda.
+  optional string log_group = 4;
+
+  // The Cloudwatch Log Group Stream id for logs originating from aws lambda.
+  optional string log_stream = 5;
 }
 
 message AwsApiGatewayTags {
