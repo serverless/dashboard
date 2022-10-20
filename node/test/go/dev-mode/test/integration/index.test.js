@@ -37,10 +37,10 @@ describe('Integration', function () {
               const logPayload = logProto.LogPayload.decode(logData);
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {
-                const message = logItem.message || '';
+                const body = logItem.body || '';
                 expect(
                   `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
-                ).to.have.string(message.slice(message.lastIndexOf('\t') + 1).replace('\n', ''));
+                ).to.have.string(body.slice(body.lastIndexOf('\t') + 1).replace('\n', ''));
               });
             }
           },
@@ -63,12 +63,12 @@ describe('Integration', function () {
               const logPayload = logProto.LogPayload.decode(logData);
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {
-                const message = logItem.message || '';
+                const body = logItem.body || '';
                 const traceId = logItem.traceId || '';
                 expect(traceId).to.not.be.empty;
                 expect(
                   `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
-                ).to.have.string(message.slice(message.lastIndexOf('\t') + 1).replace('\n', ''));
+                ).to.have.string(body.slice(body.lastIndexOf('\t') + 1).replace('\n', ''));
               });
             }
             // Replace with external + sdk integration results once the sdk is configured
