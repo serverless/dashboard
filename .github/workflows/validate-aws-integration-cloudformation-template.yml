@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  BUCKET_NAME: s3://serverless-inc-role-stack-dev
+  BUCKET_NAME: serverless-inc-role-stack-dev
 
 jobs:
   syncTemplateToS3:
@@ -26,13 +26,13 @@ jobs:
           aws-region: us-east-1
       - name: Sync to S3
         run: |
-          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
+          aws s3 cp ./instrumentation/aws/iam-role-cfn-template.yaml s3://$BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml --acl public-read
       - name: Validate Cloudformation Stack
         id: stack-validate
         continue-on-error: true
         run: |
           echo "Template URL: https://$BUCKET_NAME.s3.amazonaws.com/iam-role-cfn-template-${{ github.sha }}.yaml"
-          aws cloudformation validate-template --template-url $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
+          aws cloudformation validate-template --template-url https://$BUCKET_NAME.s3.amazonaws.com/iam-role-cfn-template-${{ github.sha }}.yaml
 #      - name: Cleanup
 #        run: |
 #          aws s3 rm $BUCKET_NAME/iam-role-cfn-template-${{ github.sha }}.yaml
