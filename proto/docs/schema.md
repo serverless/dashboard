@@ -535,6 +535,8 @@ have access to the telemetry API so it will not be included in all regions.
 | severity_text | [string](#string) |  | The calculated severity text value for a log |
 | severity_number | [uint64](#uint64) |  | The calculated severity text value for a log |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) | optional | A message containing any number of Tagsets |
+| is_historical | [bool](#bool) | optional | Is historical is addedd via ingestion so that we can tell the differnce between historical payloads and live streamed payloads |
+| type | [string](#string) | optional | Type is used to determine the kind of document that is being send via a livestream |
 
 
 
@@ -666,6 +668,8 @@ the function invocation.
 | request_data | [string](#string) |  |  |
 | response_data | [string](#string) |  |  |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) | optional | A message containing any number of Tagsets |
+| is_historical | [bool](#bool) | optional | Is historical is addedd via ingestion so that we can tell the differnce between historical payloads and live streamed payloads |
+| type | [string](#string) | optional | Type is used to determine the kind of document that is being send via a livestream |
 
 
 
@@ -704,10 +708,12 @@ the function invocation.
 - aws.lambda: Spans the full invocation duration of a lambda function - aws.lambda.invocation: Spans the cold-start duration of a lambda function |
 | start_time_unix_nano | [fixed64](#fixed64) |  | The start time of the span in nanoseconds from EPOCH. |
 | end_time_unix_nano | [fixed64](#fixed64) |  | The end time of the span in nanoseconds from EPOCH. An important invariant to keep in mind is that the root span will always have the latest end time. |
-| timestamp | [fixed64](#fixed64) | optional | The timestamp that is created in ingestion as the search key |
+| tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets |
 | input | [string](#string) | optional | Eventual input body (e.g. HTTP request body) |
 | output | [string](#string) | optional | Eventual output body (e.g. HTTP response body) |
-| tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets |
+| timestamp | [fixed64](#fixed64) | optional | The timestamp that is created in ingestion as the search key |
+| is_historical | [bool](#bool) | optional | Is historical is addedd via ingestion so that we can tell the differnce between historical payloads and live streamed payloads |
+| type | [string](#string) | optional | Type is used to determine the kind of document that is being send via a livestream |
 
 
 
