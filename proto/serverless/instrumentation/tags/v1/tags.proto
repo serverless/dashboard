@@ -20,6 +20,16 @@ message Tags {
 
   // These tags are used when an http library is making a https request
   optional serverless.instrumentation.tags.v1.HttpTags https = 107;
+
+  // These sls tags are added at ingest time to each span so that is why this is marked as optional here
+  optional serverless.instrumentation.tags.v1.SlsTags sls_tags = 108;
+
+  // Environment is added to all schemas during ingest as part of our data enrichment process
+  optional string environment = 109;
+  // Namespace is added to all schemas during ingest as part of our data enrichment process
+  optional string namespace = 110;
+  // OrgId is added to all schemas during ingest as part of our data enrichment process
+  optional string org_id = 111;
 }
 
 message SlsTags {

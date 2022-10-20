@@ -19,38 +19,27 @@ message LogPayload {
 }
 
 message LogEvent {
-
-    // The LogEvent's body.
-    string message = 1;
+    reserved 1, 3, 4, 5, 6, 7;
+    reserved "message", "sequence_id", "log_group", "log_stream", "account_id", "request_id";
 
     // The timestamp of when the LogEvent was created.
     fixed64 timestamp = 2;
-
-    // The monotonically increasing sequence id for a LogEvent. This is used
-    // to determine the ordering of messages in a given stream of logs.
-    // If this is a LogEvent coming from Cloudwatch Logs, it will be provided
-    // otherwise it is the responsibility of the log producer to generate
-    // a sequence id.
-    string sequence_id = 3;
-
-    // The Cloudwatch Log Group name.
-    optional string log_group = 4;
-
-    // The Cloudwatch Log Group Stream id.
-    optional string log_stream = 5;
-
-    // The Owner Account Id of the Cloudwatch Log Group.
-    optional string account_id = 6;
-
-    // The Lambda request Id that the log's are linked to.
-    // When ingesting LogEvents, ingest will attempt to infer
-    // the request_id from the payload and attach it. If it is not
-    // able to, then it will attempt to reconcile later.
-    optional string request_id = 7;
 
     // The Trace Id that the log's are linked to.
     // When ingesting LogEvents, ingest will attempt to infer
     // the request_id from the payload and attach it. If it is not
     // able to, then it will attempt to reconcile later.
     optional string trace_id = 8;
+
+    // The LogEvent's body.
+    string body = 9;
+
+    // The calculated severity text value for a log
+    string severity_text = 10;
+
+    // The calculated severity text value for a log
+    uint64 severity_number = 11;
+
+    // A message containing any number of Tagsets
+    optional serverless.instrumentation.tags.v1.Tags tags = 12;
 }
