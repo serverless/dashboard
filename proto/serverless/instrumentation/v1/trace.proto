@@ -47,6 +47,9 @@ message Span {
     // the latest end time.
     fixed64 end_time_unix_nano = 6;
 
+    // The timestamp that is created in ingestion as the search key
+    optional fixed64 timestamp = 10;
+
     // Eventual input body (e.g. HTTP request body)
     optional string input = 8;
     // Eventual output body (e.g. HTTP response body)
