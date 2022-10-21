@@ -8,6 +8,8 @@ import "serverless/instrumentation/tags/v1/common.proto";
 option go_package = ".;protoc";
 
 message Tags {
+  reserved 108;
+  reserved "sls_tags";
   // ============================================ //
   // Defined TagSets start at field number 100  //
   // ========================================== //
@@ -21,8 +23,8 @@ message Tags {
   // These tags are used when an http library is making a https request
   optional serverless.instrumentation.tags.v1.HttpTags https = 107;
 
-  // These sls tags are added at ingest time to each span so that is why this is marked as optional here
-  optional serverless.instrumentation.tags.v1.SlsTags sls_tags = 108;
+  // These sdk tags are added at ingest time so we know where the data was generated from
+  optional serverless.instrumentation.tags.v1.SdkTags sdk = 109;
 
   // Environment is added to all schemas during ingest as part of our data enrichment process
   optional string environment = 109;
@@ -42,14 +44,7 @@ message SlsTags {
   // The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use.
   optional string region = 4;
 
-  message SdkTags {
-    // The Name of the Serverless SDK used to instrument.
-    string name = 1;
-    // The version of the Serverless SDK used to instrument.
-    string version = 2;
-  }
-
-  SdkTags sdk = 5;
+  serverless.instrumentation.tags.v1.SdkTags sdk = 5;
 
   // An optional environment that can be attached. If there is an applicable
   // environment tag this will be attached in a data enrichment process during
@@ -59,4 +54,11 @@ message SlsTags {
   // namespace tag this will be attached in a data enrichment process during
   // ingestion.
   optional string namespace = 17;
+}
+
+message SdkTags {
+  // The Name of the Serverless SDK used to instrument.
+  string name = 1;
+  // The version of the Serverless SDK used to instrument.
+  string version = 2;
 }

@@ -36,4 +36,7 @@ message RequestResponse {
 
   // Type is used to determine the kind of document that is being send via a livestream
   optional string type = 9;
+
+  // The timestamp of when the req/res data was generated.
+  optional fixed64 timestamp = 10;
 }
