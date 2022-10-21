@@ -21,7 +21,7 @@
     "@aws-sdk/client-dynamodb": "^3.192.0",
     "@aws-sdk/client-iam": "^3.192.0",
     "@aws-sdk/client-lambda": "^3.192.0",
-    "@aws-sdk/client-s3": "^3.192.0",
+    "@aws-sdk/client-s3": "^3.193.0",
     "@aws-sdk/client-sns": "^3.192.0",
     "@aws-sdk/client-sqs": "^3.192.0",
     "@aws-sdk/client-sts": "^3.192.0",
