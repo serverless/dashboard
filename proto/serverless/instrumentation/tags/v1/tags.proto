@@ -24,7 +24,7 @@ message Tags {
   optional serverless.instrumentation.tags.v1.HttpTags https = 107;
 
   // These sdk tags are added at ingest time so we know where the data was generated from
-  optional serverless.instrumentation.tags.v1.SdkTags sdk = 109;
+  optional serverless.instrumentation.tags.v1.SdkTags sdk = 112;
 
   // Environment is added to all schemas during ingest as part of our data enrichment process
   optional string environment = 109;
