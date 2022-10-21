@@ -24,8 +24,8 @@
     - [HttpTags](#serverless-instrumentation-tags-v1-HttpTags)
   
 - [serverless/instrumentation/tags/v1/tags.proto](#serverless_instrumentation_tags_v1_tags-proto)
+    - [SdkTags](#serverless-instrumentation-tags-v1-SdkTags)
     - [SlsTags](#serverless-instrumentation-tags-v1-SlsTags)
-    - [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags)
     - [Tags](#serverless-instrumentation-tags-v1-Tags)
   
 - [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
@@ -390,30 +390,9 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 
 
 
-<a name="serverless-instrumentation-tags-v1-SlsTags"></a>
+<a name="serverless-instrumentation-tags-v1-SdkTags"></a>
 
-### SlsTags
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| org_id | [string](#string) |  | A Serverless Platform OrgId. |
-| platform | [string](#string) | optional | The platform that was instrumented. Currently Lambda is the only supported platform. |
-| service | [string](#string) |  | The service that was instrumented. For Lambda this will be the function name by default. |
-| region | [string](#string) | optional | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
-| sdk | [SlsTags.SdkTags](#serverless-instrumentation-tags-v1-SlsTags-SdkTags) |  |  |
-| environment | [string](#string) | optional | An optional environment that can be attached. If there is an applicable environment tag this will be attached in a data enrichment process during ingestion. |
-| namespace | [string](#string) | optional | An optional namespace that can be attached. If there is an applicable namespace tag this will be attached in a data enrichment process during ingestion. |
-
-
-
-
-
-
-<a name="serverless-instrumentation-tags-v1-SlsTags-SdkTags"></a>
-
-### SlsTags.SdkTags
+### SdkTags
 
 
 
@@ -427,12 +406,31 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 
 
 
+<a name="serverless-instrumentation-tags-v1-SlsTags"></a>
+
+### SlsTags
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| org_id | [string](#string) |  | A Serverless Platform OrgId. |
+| platform | [string](#string) | optional | The platform that was instrumented. Currently Lambda is the only supported platform. |
+| service | [string](#string) |  | The service that was instrumented. For Lambda this will be the function name by default. |
+| region | [string](#string) | optional | The region that instrumentation was performed in. This is used to determine which Serverless Ingest API to use. |
+| sdk | [SdkTags](#serverless-instrumentation-tags-v1-SdkTags) |  |  |
+| environment | [string](#string) | optional | An optional environment that can be attached. If there is an applicable environment tag this will be attached in a data enrichment process during ingestion. |
+| namespace | [string](#string) | optional | An optional namespace that can be attached. If there is an applicable namespace tag this will be attached in a data enrichment process during ingestion. |
+
+
+
+
+
+
 <a name="serverless-instrumentation-tags-v1-Tags"></a>
 
 ### Tags
-============================================ //
-Defined TagSets start at field number 100  //
-========================================== //
+
 
 
 | Field | Type | Label | Description |
@@ -440,7 +438,7 @@ Defined TagSets start at field number 100  //
 | aws | [AwsTags](#serverless-instrumentation-tags-v1-AwsTags) | optional | These tags are used an AWS resource/sdk is the producer of the span |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
 | https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
-| sls_tags | [SlsTags](#serverless-instrumentation-tags-v1-SlsTags) | optional | These sls tags are added at ingest time to each span so that is why this is marked as optional here |
+| sdk | [SdkTags](#serverless-instrumentation-tags-v1-SdkTags) | optional | These sdk tags are added at ingest time so we know where the data was generated from |
 | environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process |
 | namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process |
 | org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process |
@@ -670,6 +668,7 @@ the function invocation.
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) | optional | A message containing any number of Tagsets |
 | is_historical | [bool](#bool) | optional | Is historical is addedd via ingestion so that we can tell the differnce between historical payloads and live streamed payloads |
 | type | [string](#string) | optional | Type is used to determine the kind of document that is being send via a livestream |
+| timestamp | [fixed64](#fixed64) | optional | The timestamp of when the req/res data was generated. |
 
 
 
