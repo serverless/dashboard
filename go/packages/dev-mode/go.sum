@@ -74,6 +74,8 @@ go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.9 h1:d0M2P/9X2jKYZsqH
 go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.9/go.mod h1:6WY9HNTpyOtrLS29m5eTD1/XdrTSqnWDmLqwX3gaO0s=
 go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.10 h1:s9pPVAXTQQQT86mvV0dTrW7b2/ohS2hObyUA+EQ5ZRA=
 go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.10/go.mod h1:6WY9HNTpyOtrLS29m5eTD1/XdrTSqnWDmLqwX3gaO0s=
+go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.13 h1:Pk1IVAONEB975N6zAxUoNx8mSb5dthqZ9/1qlj7sBG8=
+go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.13/go.mod h1:6WY9HNTpyOtrLS29m5eTD1/XdrTSqnWDmLqwX3gaO0s=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/goleak v1.1.11 h1:wy28qYRKZgnJTxGxvye5/wgWr1EKjmUDGYox5mGlRlI=

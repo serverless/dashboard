@@ -217,7 +217,8 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 				logGroup := os.Getenv("AWS_LAMBDA_LOG_GROUP_NAME")
 				logStream := os.Getenv("AWS_LAMBDA_LOG_STREAM_NAME")
 				orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
-				body, level, logLevel := tryParseBody(log.Record.(*string))
+				rec := log.Record.(string)
+				body, level, logLevel := tryParseBody(&rec)
 				messages = append(messages, &schema.LogEvent{
 					Body:           body,
 					Timestamp:      uint64(t.UnixMilli()),
