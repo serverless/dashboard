@@ -84,7 +84,7 @@ func FindTraceId(logs []LogItem) string {
 			var devModePayload schema.TracePayload
 			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
 			if traceErr == nil && devModePayload.Spans[0] != nil {
-				traceId = string(devModePayload.Spans[0].TraceId)
+				traceId = base64.StdEncoding.EncodeToString(devModePayload.Spans[0].TraceId)
 				break
 			}
 		}

@@ -82,6 +82,11 @@ func (e *Extension) ExternalExtension() {
 	// Boolean flag to determine if telemetry is enabled in the lambda functions region
 	telemetryEnabled := lib.IsTelemetryEnabledRegion()
 
+	deferredLogs := []agent.LogItem{}
+
+	wrapper := os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
+	hasInternalExtension := wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
+
 	// Save the res payload from the SDK so we can send it out at runtime done so we can include the
 	// runtime_duration_ms & runtime_response_latency_ms that is included in the runtime done event
 	flushLogQueue := func(force bool) {
@@ -148,11 +153,32 @@ func (e *Extension) ExternalExtension() {
 			if traceId == "" && os.Getenv("SLS_ORG_ID") != "" {
 				traceId = agent.FindTraceId(arr)
 			}
-			// Send to dev mode
+
+			if traceId == "" && hasInternalExtension {
+				deferredLogs = append(deferredLogs, arr...)
+				continue
+			} else if requestId == "" {
+				deferredLogs = append(deferredLogs, arr...)
+				continue
+			}
+
+			// Add deferred logs to array
+			if len(deferredLogs) > 0 {
+				for _, log := range deferredLogs {
+					arr = append(arr, log)
+				}
+				deferredLogs = []agent.LogItem{}
+			}
+
+			// Send to dev mode if we have requestId and traceId
 			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID, traceId)
 		}
-		// Reset request id just incase
-		requestId = ""
+
+		// Force send logs at end of loop
+		if len(deferredLogs) > 0 {
+			agent.ForwardLogs(deferredLogs, requestId, AWS_ACCOUNT_ID, traceId)
+		}
+
 		initReport = nil
 		responseLog = nil
 	}
@@ -197,6 +223,8 @@ func (e *Extension) ExternalExtension() {
 				receivedRuntimeDone = false
 				// Flush log queue in here after waking up
 				flushLogQueue(false)
+				traceId = ""
+				requestId = ""
 				// Overhead duration log for benchmarks
 				lib.ReportOverheadDuration(startTime)
 			}
