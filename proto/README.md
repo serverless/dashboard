@@ -10,7 +10,7 @@
 
 ### Generating Library
 
-1. From `./proto` run `buf build && buf generate`
+1. From `./proto` run `buf build & buf generate`
 1. From `./node` run `npm install`
 2. From `./node/packages/sdk-schema` run `npm run build`
 

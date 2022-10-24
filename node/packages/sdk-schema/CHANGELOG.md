@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.12.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.12.0...@serverless/sdk-schema@0.12.1) (2022-10-24)
+
+### Features
+
+- Added timestamp to req/res proto schema ([ce13fd8](https://github.com/serverless/console/commit/ce13fd8c83cd42b9dc708745647be8761c15bc42))
+
 ### [0.12.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.11.0...@serverless/sdk-schema@0.11.1) (2022-10-20)
 
 ### ⚠ BREAKING CHANGES
