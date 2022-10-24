@@ -16,16 +16,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var LogLevels = map[string]int64{
-	"TRACE":    -1,
-	"DEBUG":    0,
-	"INFO":     1,
-	"WARN":     2,
-	"ERROR":    3,
-	"FATAL":    4,
-	"CRITICAL": 4,
-}
-
 type LogMessage struct {
 	Message    string `json:"message"`
 	Timestamp  int64  `json:"timestamp"`
@@ -110,48 +100,6 @@ func FindRuntimeDone(logs []LogItem) *LogItem {
 	return nil
 }
 
-func tryParseBody(body *string) (string, string, int64) {
-	level := "INFO"
-
-	if body == nil {
-		return "", level, LogLevels[level]
-	}
-
-	// if this is AWS Node.js format, let's clean it
-	parts := strings.Split(*body, "\t")
-	if len(parts) > 3 {
-		b := strings.Join(parts[3:], "\t")
-		if _, ok := LogLevels[parts[2]]; ok {
-			level = parts[2]
-		}
-
-		return b, level, LogLevels[level]
-	}
-	// Check if we have a JSON object that contains a level or
-	// logLevel. This is copied from the frontend implementation
-	// we had left over from our OTEL days. This will reduce the
-	// amount of code we need on the frontend :)
-	var jsonMap map[string]interface{}
-	jsonParseError := json.Unmarshal([]byte(*body), &jsonMap)
-	if jsonParseError == nil {
-		logLevel1 := jsonMap["level"]
-		logLevel2 := jsonMap["logLevel"]
-		workingLevel := "INFO"
-		if logLevel1 != nil {
-			workingLevel = strings.ToUpper(logLevel1.(string))
-		} else if logLevel2 != nil {
-			workingLevel = strings.ToUpper(logLevel1.(string))
-		}
-		levelNumber, ok := LogLevels[workingLevel]
-		if ok {
-			return *body, workingLevel, levelNumber
-		}
-	}
-	//TODO: try other log formats
-
-	return *body, level, LogLevels[level]
-}
-
 func FindResData(logs []LogItem) *LogItem {
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
@@ -218,12 +166,13 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 				logStream := os.Getenv("AWS_LAMBDA_LOG_STREAM_NAME")
 				orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
 				rec := log.Record.(string)
-				body, level, logLevel := tryParseBody(&rec)
 				messages = append(messages, &schema.LogEvent{
-					Body:           body,
-					Timestamp:      uint64(t.UnixMilli()),
-					SeverityText:   level,
-					SeverityNumber: uint64(logLevel),
+					Body:      rec,
+					Timestamp: uint64(t.UnixMilli()),
+					// Allow the backend to handle setting
+					// the severity levels
+					SeverityText:   "Info",
+					SeverityNumber: uint64(1),
 					TraceId:        &traceId,
 					Tags: &tags.Tags{
 						Aws: &tags.AwsTags{
