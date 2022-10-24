@@ -8,7 +8,6 @@ const isPlainObject = require('type/plain-object/is');
 const coerceToString = require('type/string/coerce');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
-const Long = require('long');
 const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
 const sendTelemetry = require('./lib/send-telemetry');
@@ -21,16 +20,6 @@ const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
   traceSpans;
 
-const resolveEpochTimestampString = (() => {
-  const diff = BigInt(Date.now()) * BigInt(1000000) - process.hrtime.bigint();
-  return (uptimeTimestamp) => String(uptimeTimestamp + diff);
-})();
-
-const toLong = (value) => {
-  const data = Long.fromString(String(value));
-  return new Long(data.low, data.high, true);
-};
-
 const reportRequest = async (event, context, requestStartTime) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
@@ -41,7 +30,7 @@ const reportRequest = async (event, context, requestStartTime) => {
     traceId: Buffer.from(awsLambdaSpan.traceId),
     spanId: Buffer.from(awsLambdaSpan.id),
     requestId: context.awsRequestId,
-    timestamp: toLong(resolveEpochTimestampString(requestStartTime)),
+    timestamp: requestStartTime,
     data: { $case: 'requestData', requestData: JSON.stringify(event) },
   });
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =
@@ -82,7 +71,7 @@ const reportResponse = async (response, context, endTime) => {
     traceId: Buffer.from(awsLambdaSpan.traceId),
     spanId: Buffer.from(awsLambdaSpan.id),
     requestId: context.awsRequestId,
-    timestamp: toLong(resolveEpochTimestampString(endTime)),
+    timestamp: endTime,
     data: { $case: 'responseData', responseData: responseString },
   });
   const payloadBuffer = (serverlessSdk._lastResponseBuffer =
@@ -140,7 +129,7 @@ module.exports = (originalHandler, options = {}) => {
     resolveEventTags(event);
     if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
       serverlessSdk._deferredTelemetryRequests.push(
-        reportRequest(event, context, requestStartTime)
+        reportRequest(event, context, awsLambdaInvocationSpan.getStartTime())
       );
     }
 
@@ -165,15 +154,18 @@ module.exports = (originalHandler, options = {}) => {
         }
       } else {
         resolveResponseTags(outcomeResult);
-        if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
-          serverlessSdk._deferredTelemetryRequests.push(
-            reportResponse(outcomeResult, context, endTime)
-          );
-        }
       }
 
       awsLambdaInvocationSpan.close({ endTime });
       awsLambdaSpan.close({ endTime });
+      if (
+        !serverlessSdk._settings.disableRequestResponseMonitoring &&
+        outcome !== 'error:handled'
+      ) {
+        serverlessSdk._deferredTelemetryRequests.push(
+          reportResponse(outcomeResult, context, awsLambdaInvocationSpan.getEndTime())
+        );
+      }
       reportTrace();
       flushSpans();
       await Promise.all(serverlessSdk._deferredTelemetryRequests);
