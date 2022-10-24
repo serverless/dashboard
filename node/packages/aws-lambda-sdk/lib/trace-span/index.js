@@ -319,6 +319,12 @@ class TraceSpan {
     emitter.emit('close', this);
     return this;
   }
+  getStartTime() {
+    return toLong(resolveEpochTimestampString(this.startTime));
+  }
+  getEndTime() {
+    return toLong(resolveEpochTimestampString(this.endTime));
+  }
   destroy() {
     this.closeContext();
     this.parentSpan?.subSpans.delete(this);
