@@ -38,7 +38,7 @@ performance and broaden the scope of observable resources. This means the new
 version of Serverless Console no longer depends on the Serverless Framework to
 add the Lambda extension via Layers to your lambda functions.
 
-## Can I keep using Serverless Console?
+### Can I keep using Serverless Console?
 
 If you deploy your `serverless.yml` with `console: true` removed, you will no
 longer be able to monitor it in Serverless Console. Deployments with
