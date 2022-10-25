@@ -34,6 +34,9 @@ const toLong = (value) => {
   return new Long(data.low, data.high, true);
 };
 
+const toProtobufEpochTimestamp = (uptimeTimestamp) =>
+  toLong(resolveEpochTimestampString(uptimeTimestamp));
+
 const resolvePorotbufValue = (key, value) => {
   switch (key) {
     // enum cases
@@ -319,12 +322,6 @@ class TraceSpan {
     emitter.emit('close', this);
     return this;
   }
-  getStartTime() {
-    return toLong(resolveEpochTimestampString(this.startTime));
-  }
-  getEndTime() {
-    return toLong(resolveEpochTimestampString(this.endTime));
-  }
   destroy() {
     this.closeContext();
     this.parentSpan?.subSpans.delete(this);
@@ -359,8 +356,8 @@ class TraceSpan {
       traceId: Buffer.from(this.traceId),
       parentSpanId: this.parentSpan ? Buffer.from(this.parentSpan.id) : undefined,
       name: this.name,
-      startTimeUnixNano: toLong(resolveEpochTimestampString(this.startTime)),
-      endTimeUnixNano: this.endTime ? toLong(resolveEpochTimestampString(this.endTime)) : undefined,
+      startTimeUnixNano: toProtobufEpochTimestamp(this.startTime),
+      endTimeUnixNano: this.endTime ? toProtobufEpochTimestamp(this.endTime) : undefined,
       input: this.input || undefined,
       output: this.output || undefined,
       tags,
@@ -387,6 +384,8 @@ class TraceSpan {
     else this._output = ensureString(body);
   }
 }
+
+TraceSpan._toProtobufEpochTimestamp = toProtobufEpochTimestamp;
 
 Object.defineProperties(
   TraceSpan.prototype,

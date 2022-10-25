@@ -20,7 +20,9 @@ const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
   traceSpans;
 
-const reportRequest = async (event, context, requestStartTime) => {
+const toProtobufEpochTimestamp = awsLambdaSpan.constructor._toProtobufEpochTimestamp;
+
+const reportRequest = async (event, context) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -30,7 +32,7 @@ const reportRequest = async (event, context, requestStartTime) => {
     traceId: Buffer.from(awsLambdaSpan.traceId),
     spanId: Buffer.from(awsLambdaSpan.id),
     requestId: context.awsRequestId,
-    timestamp: requestStartTime,
+    timestamp: toProtobufEpochTimestamp(traceSpans.awsLambdaInvocation.startTime),
     data: { $case: 'requestData', requestData: JSON.stringify(event) },
   });
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =
@@ -71,7 +73,7 @@ const reportResponse = async (response, context, endTime) => {
     traceId: Buffer.from(awsLambdaSpan.traceId),
     spanId: Buffer.from(awsLambdaSpan.id),
     requestId: context.awsRequestId,
-    timestamp: endTime,
+    timestamp: toProtobufEpochTimestamp(endTime),
     data: { $case: 'responseData', responseData: responseString },
   });
   const payloadBuffer = (serverlessSdk._lastResponseBuffer =
@@ -128,9 +130,7 @@ module.exports = (originalHandler, options = {}) => {
     ));
     resolveEventTags(event);
     if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
-      serverlessSdk._deferredTelemetryRequests.push(
-        reportRequest(event, context, awsLambdaInvocationSpan.getStartTime())
-      );
+      serverlessSdk._deferredTelemetryRequests.push(reportRequest(event, context));
     }
 
     const closeInvocation = async (outcome, outcomeResult) => {
@@ -138,7 +138,6 @@ module.exports = (originalHandler, options = {}) => {
       if (isResolved) return;
       responseStartTime = process.hrtime.bigint();
       isResolved = true;
-      const endTime = process.hrtime.bigint();
 
       awsLambdaSpan.tags.set('aws.lambda.outcome', outcome);
       if (outcome === 'error:handled') {
@@ -156,16 +155,17 @@ module.exports = (originalHandler, options = {}) => {
         resolveResponseTags(outcomeResult);
       }
 
-      awsLambdaInvocationSpan.close({ endTime });
-      awsLambdaSpan.close({ endTime });
+      const endTime = process.hrtime.bigint();
       if (
         !serverlessSdk._settings.disableRequestResponseMonitoring &&
         outcome !== 'error:handled'
       ) {
         serverlessSdk._deferredTelemetryRequests.push(
-          reportResponse(outcomeResult, context, awsLambdaInvocationSpan.getEndTime())
+          reportResponse(outcomeResult, context, endTime)
         );
       }
+      awsLambdaInvocationSpan.close({ endTime });
+      awsLambdaSpan.close({ endTime });
       reportTrace();
       flushSpans();
       await Promise.all(serverlessSdk._deferredTelemetryRequests);
