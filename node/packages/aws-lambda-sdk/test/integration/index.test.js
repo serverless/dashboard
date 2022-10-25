@@ -560,7 +560,7 @@ describe('integration', function () {
                   });
                 },
               },
-              invoke: async (testConfig) => {
+              invoke: async function self(testConfig) {
                 const startTime = process.hrtime.bigint();
                 const response = await fetch(
                   `https://${testConfig.restApiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test/some-path/some-param`,
@@ -573,6 +573,10 @@ describe('integration', function () {
                   }
                 );
                 if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
                   throw new Error(`Unexpected response status: ${response.status}`);
                 }
                 const payload = { raw: await response.text() };
@@ -616,7 +620,7 @@ describe('integration', function () {
                   await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
                 },
               },
-              invoke: async (testConfig) => {
+              invoke: async function self(testConfig) {
                 const startTime = process.hrtime.bigint();
                 const response = await fetch(
                   `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
@@ -629,6 +633,10 @@ describe('integration', function () {
                   }
                 );
                 if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
                   throw new Error(`Unexpected response status: ${response.status}`);
                 }
                 const payload = { raw: await response.text() };
@@ -669,7 +677,7 @@ describe('integration', function () {
                   await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
                 },
               },
-              invoke: async (testConfig) => {
+              invoke: async function self(testConfig) {
                 const startTime = process.hrtime.bigint();
                 const response = await fetch(
                   `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
@@ -682,6 +690,10 @@ describe('integration', function () {
                   }
                 );
                 if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
                   throw new Error(`Unexpected response status: ${response.status}`);
                 }
                 const payload = { raw: await response.text() };
@@ -766,7 +778,7 @@ describe('integration', function () {
                   });
                 },
               },
-              invoke: async (testConfig) => {
+              invoke: async function self(testConfig) {
                 const startTime = process.hrtime.bigint();
                 const response = await fetch(`${testConfig.functionUrl}/test?foo=bar`, {
                   method: 'POST',
@@ -776,6 +788,10 @@ describe('integration', function () {
                   },
                 });
                 if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
                   throw new Error(`Unexpected response status: ${response.status}`);
                 }
                 const payload = { raw: await response.text() };
@@ -988,7 +1004,7 @@ describe('integration', function () {
             await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
           },
         },
-        invoke: async (testConfig) => {
+        invoke: async function self(testConfig) {
           const startTime = process.hrtime.bigint();
           const response = await fetch(
             `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
@@ -1001,6 +1017,10 @@ describe('integration', function () {
             }
           );
           if (response.status !== 200) {
+            if (response.status === 404) {
+              await wait(1000);
+              return self(testConfig);
+            }
             throw new Error(`Unexpected response status: ${response.status}`);
           }
           const payload = { raw: await response.text() };
