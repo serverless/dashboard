@@ -23,10 +23,8 @@ const expectedRequestData = {
   traceId: Buffer.from('YTZkZTMxMzgtMmM0ZS00M2QxLTk0YTAtMDVmMjQ0NzJlNjg1'),
   spanId: Buffer.from('Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk'),
   requestId: '568fbbf3-e55c-494a-b00f-afab24ea4799',
-  data: {
-    $case: 'requestData',
-    requestData: '{"message": "hello world"}',
-  },
+  origin: 1,
+  body: '{"message": "hello world"}',
 };
 
 const expectedResponseData = {
@@ -43,10 +41,8 @@ const expectedResponseData = {
   traceId: Buffer.from('YTZkZTMxMzgtMmM0ZS00M2QxLTk0YTAtMDVmMjQ0NzJlNjg1'),
   spanId: Buffer.from('Y2M4MWUwNjctMWNmYi00ZmYxLWE2OWItMDVhOTQ4NGZmZmFk'),
   requestId: '568fbbf3-e55c-494a-b00f-afab24ea4799',
-  data: {
-    $case: 'responseData',
-    responseData: '{"processed": true}',
-  },
+  origin: 2,
+  body: '{"processed": true}',
 };
 
 describe('request-response-schema', () => {
