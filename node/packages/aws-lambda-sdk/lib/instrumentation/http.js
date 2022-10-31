@@ -93,7 +93,7 @@ const install = (protocol, httpModule) => {
         });
         response.on('end', () => {
           const body = (() => {
-            if (!bodyBuffer?.length) return null;
+            if (!bodyBuffer || !bodyBuffer.length) return null;
             try {
               return new TextDecoder('utf-8', { fatal: true }).decode(bodyBuffer);
             } catch {
@@ -157,7 +157,7 @@ const install = (protocol, httpModule) => {
     const traceSpan = serverlessSdk.createTraceSpan(`node.${protocol}.request`, {
       startTime,
       onCloseByRoot: () => {
-        if (responseReadableState?.flowing === false) {
+        if (responseReadableState && responseReadableState.flowing === false) {
           // Response data was not observed
           traceSpan.close({ endTime: requestEndTime });
           return;

@@ -23,7 +23,7 @@ module.exports.install = (layerPrototype) => {
       expressSpansMap.set(req, expressRouteData);
       res.on('finish', () => {
         const endTime = process.hrtime.bigint();
-        if (expressRouteData.route?.path) {
+        if (expressRouteData.route && expressRouteData.route.path) {
           // Override eventual API Gateway's `resourcePath`
           awsLambdaSpan.tags.delete('aws.lambda.http_router.path');
           awsLambdaSpan.tags.set('aws.lambda.http_router.path', expressRouteData.route.path);

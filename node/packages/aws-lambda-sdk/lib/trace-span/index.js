@@ -12,7 +12,7 @@ const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 const d = require('d');
 const lazy = require('d/lazy');
-const { AsyncLocalStorage } = require('node:async_hooks');
+const { AsyncLocalStorage } = require('async_hooks');
 const Long = require('long');
 const crypto = require('crypto');
 const emitter = require('./emitter');
@@ -214,7 +214,7 @@ class TraceSpan {
           { code: 'FUTURE_SPAN_START_TIME' }
         );
       }
-      if (startTime < this.parentSpan?.startTime) {
+      if (this.parentSpan && startTime < this.parentSpan.startTime) {
         throw Object.assign(
           new Error(
             'Cannot intialize span: Start time cannot be older than start time of parent span'
@@ -256,9 +256,9 @@ class TraceSpan {
 
     asyncLocalStorage.enterWith(this);
 
-    this.parentSpan?.subSpans.add(this);
+    if (this.parentSpan) this.parentSpan.subSpans.add(this);
     emitter.emit('open', this);
-    if (immediateDescendants?.length) {
+    if (immediateDescendants && immediateDescendants.length) {
       // eslint-disable-next-line no-new
       new TraceSpan(immediateDescendants.shift(), {
         startTime: this.startTime,
@@ -324,7 +324,7 @@ class TraceSpan {
   }
   destroy() {
     this.closeContext();
-    this.parentSpan?.subSpans.delete(this);
+    if (this.parentSpan) this.parentSpan.subSpans.delete(this);
     this.parentSpan = null;
   }
   toJSON() {

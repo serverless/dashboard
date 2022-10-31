@@ -299,6 +299,7 @@ describe('integration', function () {
       'callback',
       {
         variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           [
@@ -453,6 +454,7 @@ describe('integration', function () {
       'esbuild-from-esm-callback',
       {
         variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
@@ -462,6 +464,7 @@ describe('integration', function () {
       'thenable',
       {
         variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
@@ -471,6 +474,7 @@ describe('integration', function () {
       'callback-error',
       {
         variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
@@ -481,6 +485,7 @@ describe('integration', function () {
       'thenable-error',
       {
         variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
@@ -1075,6 +1080,33 @@ describe('integration', function () {
       'multi-async',
       {
         variants: new Map([
+          [
+            'v12',
+            {
+              config: { configuration: { Runtime: 'nodejs12.x' } },
+              variants: new Map([
+                [
+                  'dev-mode',
+                  {
+                    configuration: {
+                      Environment: {
+                        Variables: {
+                          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+                          SLS_ORG_ID: process.env.SLS_ORG_ID,
+                          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+                          SLS_SDK_DEBUG: '1',
+                        },
+                      },
+                    },
+                    deferredConfiguration: () => ({
+                      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
+                    }),
+                  },
+                ],
+                ['regular', {}],
+              ]),
+            },
+          ],
           [
             'v14',
             {

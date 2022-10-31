@@ -141,7 +141,8 @@ module.exports = (originalHandler, options = {}) => {
 
       awsLambdaSpan.tags.set('aws.lambda.outcome', outcome);
       if (outcome === 'error:handled') {
-        const errorMessage = outcomeResult?.message || coerceToString(outcomeResult);
+        const errorMessage =
+          (outcomeResult && outcomeResult.message) || coerceToString(outcomeResult);
         if (errorMessage) {
           awsLambdaSpan.tags.set(
             'aws.lambda.error_exception_message',

@@ -6,6 +6,7 @@ const projectDir = path.resolve(__dirname, '../..');
 
 module.exports = {
   extends: path.resolve(projectDir, '.eslintrc.js'),
+  parserOptions: { ecmaVersion: 2019 },
   rules: {
     'import/no-extraneous-dependencies': [
       'error',
