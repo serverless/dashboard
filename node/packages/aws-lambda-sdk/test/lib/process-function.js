@@ -40,7 +40,7 @@ const create = async (testConfig, coreConfig) => {
         SLS_SDK_DEBUG: '1',
       },
     },
-    Timeout: 10,
+    Timeout: 15,
     ...configuration,
     ...(deferredConfiguration && deferredConfiguration(testConfig, coreConfig)),
   };
