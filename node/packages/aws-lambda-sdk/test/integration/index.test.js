@@ -267,6 +267,22 @@ describe('integration', function () {
     }
   };
 
+  const devModeConfiguration = {
+    configuration: {
+      Environment: {
+        Variables: {
+          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+          SLS_ORG_ID: process.env.SLS_ORG_ID,
+          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+          SLS_SDK_DEBUG: '1',
+        },
+      },
+    },
+    deferredConfiguration: () => ({
+      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
+    }),
+  };
+
   const useCasesConfig = new Map([
     [
       'esm-callback/index',
@@ -1085,24 +1101,7 @@ describe('integration', function () {
             {
               config: { configuration: { Runtime: 'nodejs12.x' } },
               variants: new Map([
-                [
-                  'dev-mode',
-                  {
-                    configuration: {
-                      Environment: {
-                        Variables: {
-                          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
-                          SLS_ORG_ID: process.env.SLS_ORG_ID,
-                          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
-                          SLS_SDK_DEBUG: '1',
-                        },
-                      },
-                    },
-                    deferredConfiguration: () => ({
-                      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
-                    }),
-                  },
-                ],
+                ['dev-mode', devModeConfiguration],
                 ['regular', {}],
               ]),
             },
@@ -1112,24 +1111,7 @@ describe('integration', function () {
             {
               config: { configuration: { Runtime: 'nodejs14.x' } },
               variants: new Map([
-                [
-                  'dev-mode',
-                  {
-                    configuration: {
-                      Environment: {
-                        Variables: {
-                          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
-                          SLS_ORG_ID: process.env.SLS_ORG_ID,
-                          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
-                          SLS_SDK_DEBUG: '1',
-                        },
-                      },
-                    },
-                    deferredConfiguration: () => ({
-                      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
-                    }),
-                  },
-                ],
+                ['dev-mode', devModeConfiguration],
                 ['regular', {}],
               ]),
             },
@@ -1139,24 +1121,7 @@ describe('integration', function () {
             {
               config: { configuration: { Runtime: 'nodejs16.x' } },
               variants: new Map([
-                [
-                  'dev-mode',
-                  {
-                    configuration: {
-                      Environment: {
-                        Variables: {
-                          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
-                          SLS_ORG_ID: process.env.SLS_ORG_ID,
-                          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
-                          SLS_SDK_DEBUG: '1',
-                        },
-                      },
-                    },
-                    deferredConfiguration: () => ({
-                      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
-                    }),
-                  },
-                ],
+                ['dev-mode', devModeConfiguration],
                 ['regular', {}],
               ]),
             },
