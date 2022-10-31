@@ -906,6 +906,7 @@ describe('internal-extension/index.test.js', () => {
             },
           ],
         },
+        { type: 'request-response', origin: 2 },
         {
           type: 'trace',
           spans: [

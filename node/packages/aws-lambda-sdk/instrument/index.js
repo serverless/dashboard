@@ -4,7 +4,6 @@
 
 const ensurePlainFunction = require('type/plain-function/ensure');
 const isError = require('type/error/is');
-const isPlainObject = require('type/plain-object/is');
 const coerceToString = require('type/string/coerce');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
@@ -42,7 +41,7 @@ const reportRequest = async (event, context) => {
 };
 
 const resolveResponseString = (response) => {
-  if (!isPlainObject(response)) return null;
+  if (response === undefined) return null;
   if (awsLambdaSpan.tags.get('aws.lambda.event_source') === 'aws.apigateway') {
     if (typeof response.body === 'string') {
       response = { ...response };
@@ -64,7 +63,6 @@ const resolveResponseString = (response) => {
 
 const reportResponse = async (response, context, endTime) => {
   const responseString = resolveResponseString(response);
-  if (!responseString) return;
   const payload = (serverlessSdk._lastResponse = {
     slsTags: {
       orgId: serverlessSdk.orgId,
