@@ -44,6 +44,8 @@
 - [serverless/instrumentation/v1/request_response.proto](#serverless_instrumentation_v1_request_response-proto)
     - [RequestResponse](#serverless-instrumentation-v1-RequestResponse)
   
+    - [RequestResponse.Origin](#serverless-instrumentation-v1-RequestResponse-Origin)
+  
 - [serverless/instrumentation/v1/trace.proto](#serverless_instrumentation_v1_trace-proto)
     - [Span](#serverless-instrumentation-v1-Span)
     - [TracePayload](#serverless-instrumentation-v1-TracePayload)
@@ -653,7 +655,7 @@ Metrics plus the global tags required by our Serverless Ingest Platform.
 ### RequestResponse
 RequestResponse is the AWS Lambda Event and Response Data.
 In the Serverless Platform there will be two of these payloads
-One for Event payload and then one for the payload returned at the end of 
+One for Event payload and then one for the payload returned at the end of
 the function invocation.
 
 
@@ -663,8 +665,8 @@ the function invocation.
 | trace_id | [bytes](#bytes) | optional | The trace Id of the invocation |
 | span_id | [bytes](#bytes) | optional | The span id of the root Lambda Span that request data is attached to on ingest. |
 | request_id | [string](#string) | optional | The Lambda Request Id. |
-| request_data | [string](#string) |  |  |
-| response_data | [string](#string) |  |  |
+| body | [string](#string) | optional | JSON string of the request or the response body In case of response may be omited if lambda resolved with no value |
+| origin | [RequestResponse.Origin](#serverless-instrumentation-v1-RequestResponse-Origin) |  | Type of body |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) | optional | A message containing any number of Tagsets |
 | is_historical | [bool](#bool) | optional | Is historical is addedd via ingestion so that we can tell the differnce between historical payloads and live streamed payloads |
 | type | [string](#string) | optional | Type is used to determine the kind of document that is being send via a livestream |
@@ -675,6 +677,19 @@ the function invocation.
 
 
  
+
+
+<a name="serverless-instrumentation-v1-RequestResponse-Origin"></a>
+
+### RequestResponse.Origin
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ORIGIN_UNSPECIFIED | 0 | Not disclosed (not applicable as property is required) |
+| ORIGIN_REQUEST | 1 | Function request event |
+| ORIGIN_RESPONSE | 2 | Function handler response |
+
 
  
 
