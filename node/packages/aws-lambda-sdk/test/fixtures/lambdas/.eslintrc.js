@@ -2,7 +2,7 @@
 
 const path = require('path');
 
-const projectDir = path.resolve(__dirname, '../../../../../');
+const projectDir = path.resolve(__dirname, '../../../');
 
 module.exports = {
   extends: path.resolve(projectDir, '.eslintrc.js'),
@@ -10,10 +10,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        packageDir: [
-          projectDir,
-          path.resolve(projectDir, 'packages/aws-lambda-sdk/test/fixtures/lambdas'),
-        ],
+        packageDir: [projectDir, path.resolve(projectDir, 'test/fixtures/lambdas')],
       },
     ],
     'no-console': 'off',
