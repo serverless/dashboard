@@ -300,13 +300,7 @@ describe('integration', function () {
       {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
-          [
-            'v16',
-            {
-              configuration: { Runtime: 'nodejs16.x' },
-              invokePayload: { test: 'foo' },
-            },
-          ],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           [
             'sqs',
             {
