@@ -74,7 +74,7 @@ describe('Integration', function () {
             // Replace with external + sdk integration results once the sdk is configured
             // to communicate with the external extension
             for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
-              expect(reqRes.length).to.equal(1);
+              expect(reqRes.length).to.equal(2);
             }
 
             for (const [, traces] of invocationsData.map((data) => data.traces).entries()) {
