@@ -5,7 +5,7 @@ description: A guide for using logs within Serverless Console
 menuOrder: 5
 -->
 
-# Development Mode
+# Dev Mode
 Dev(elopment) Mode is an optimized development focused suite of Observability
 tools for building and troubleshooting Serverless architectures. To get started you need [enable dev mode](../integrations/enable-monitoring-features.md) on
 your functions.
@@ -106,14 +106,14 @@ can be helpful for troubleshooting. For example below is a sample Dynamo DB requ
 ```text
 TAGs sample needed for this
 ```
-
+<!--
 ## Historical Logs
 Development mode works similar to a terminal display in that the most recent 
 logs appear at the bottom of the screen automatically
 
 This is designed to help you isolate and recreate specific behavior while you develop. You are also
 able to access recent historical logs by applying filters and scrolling upwards. 
-
+-->
 ## Filtering
 The default view for dev mode is across all your logs and invocations, so you will
 likely need to apply filters to meaningfully utilize Dev Mode. We recommend filtering 
