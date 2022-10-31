@@ -1191,6 +1191,20 @@ describe('integration', function () {
         },
       },
     ],
+    [
+      'callback-no-result',
+      {
+        variants: new Map([
+          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
+          ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
+        ]),
+        config: Object.assign({
+          isCustomResponse: true,
+          devModeConfiguration,
+        }),
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
@@ -1216,7 +1230,11 @@ describe('integration', function () {
       const { expectedOutcome } = testConfig;
       const { invocationsData } = testResult;
       if (expectedOutcome === 'success' || expectedOutcome === 'error:handled') {
-        if (expectedOutcome === 'success' && !testConfig.isAsyncInvocation) {
+        if (
+          expectedOutcome === 'success' &&
+          !testConfig.isAsyncInvocation &&
+          !testConfig.isCustomResponse
+        ) {
           for (const { responsePayload } of invocationsData) {
             expect(responsePayload.raw).to.equal('"ok"');
           }

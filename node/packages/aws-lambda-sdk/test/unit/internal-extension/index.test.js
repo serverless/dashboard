@@ -100,7 +100,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   } else {
     if (outcome.error) throw outcome.error;
     if (options.isApiEndpoint) expect(JSON.parse(outcome.result.body)).to.equal('ok');
-    else expect(outcome.result).to.equal('ok');
+    else if (!options.isCustomReponse) expect(outcome.result).to.equal('ok');
 
     expect(lambdaSpanTags.aws.lambda.outcome).to.equal(1);
   }
@@ -162,7 +162,7 @@ describe('internal-extension/index.test.js', () => {
       isApiEndpoint: true,
       payload: {
         resource: '/some-path/{param}',
-        path: '/some-path/some-param',
+        path: '/some-path/some.-param',
         httpMethod: 'POST',
         headers: {
           'Accept': '*/*',
@@ -795,7 +795,7 @@ describe('internal-extension/index.test.js', () => {
 
   describe('dev mode', () => {
     let server;
-    const payloads = [];
+    let payloads = [];
     before(() => {
       const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
       const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
@@ -822,11 +822,16 @@ describe('internal-extension/index.test.js', () => {
       server.listen(2773);
     });
 
+    afterEach(() => {
+      payloads = [];
+    });
+
     after(() => {
       delete process.env.SLS_DEV_MODE_ORG_ID;
       server.close();
     });
-    it('should support dev mode', async () => {
+
+    it('should provide general support', async () => {
       const {
         trace: {
           input: { spans },
@@ -913,6 +918,41 @@ describe('internal-extension/index.test.js', () => {
             { name: 'express.middleware.router', input: undefined, output: undefined },
             { name: 'express.middleware.route.get.anonymous', input: undefined, output: undefined },
             { name: 'express', input: undefined, output: undefined },
+            { name: 'aws.lambda.invocation', input: undefined, output: undefined },
+            { name: 'aws.lambda', input: undefined, output: undefined },
+          ],
+        },
+      ]);
+    });
+
+    it('should support no return functions', async () => {
+      await handleInvocation('callback-no-result', { isCustomReponse: true });
+
+      expect(
+        payloads.map(([type, payload]) => {
+          switch (type) {
+            case 'request-response':
+              return { type, origin: payload.origin };
+            case 'trace':
+              return {
+                type,
+                spans: payload.spans.map(({ name, input, output }) => ({ name, input, output })),
+              };
+            default:
+              throw new Error('Unexpected');
+          }
+        })
+      ).to.deep.equal([
+        {
+          type: 'trace',
+          spans: [{ name: 'aws.lambda.initialization', input: undefined, output: undefined }],
+        },
+        { type: 'request-response', origin: 1 },
+
+        { type: 'request-response', origin: 2 },
+        {
+          type: 'trace',
+          spans: [
             { name: 'aws.lambda.invocation', input: undefined, output: undefined },
             { name: 'aws.lambda', input: undefined, output: undefined },
           ],
