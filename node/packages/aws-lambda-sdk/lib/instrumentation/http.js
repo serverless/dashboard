@@ -85,7 +85,10 @@ const install = (protocol, httpModule) => {
         let bodyBuffer = Buffer.from('');
         response.on('data', (chunk) => {
           if (!bodyBuffer) return;
-          bodyBuffer = Buffer.concat([bodyBuffer, chunk]);
+          bodyBuffer = Buffer.concat([
+            bodyBuffer,
+            typeof chunk === 'string' ? Buffer.from(chunk) : chunk,
+          ]);
           if (bodyBuffer.length > bodySizeLimit) bodyBuffer = null;
         });
         response.on('end', () => {
