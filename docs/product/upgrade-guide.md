@@ -12,13 +12,17 @@ extension on Serverless Framework version 3.23.0 and earlier. There are a few
 things you will need to do to upgrade to the latest Serverless Console.
 
 ## Action Items
-- You MUST remove `console: true` from all `serverless.yml` files.
+- You MUST remove `console: true` from all `serverless.yml` files. Deployments
+with `console: true` in the `serverless.yml` will fail if you are on version
+older than 3.24.0 of the Serverless Framework. Deployments with `console: true`
+in the `serverless.yml` will succeed, but present a deprecation warning if you
+are on version 3.24.0 or newer of the Serverless Framework.
 - You SHOULD remove `org: <org>` from all `severless.yml` files, if you are not
 also using Serverless Dashboard.
-- You MUST upgrade Serverless Framework to version 3.24.0 or greater with
-`npm i serverless --global`.
-- You MUST run `serverless --console`, or visit https://console.serverless.com,
-to reconnect your AWS account.
+- You MUST upgrade Serverless Framework to version 3.24.0 or new with
+`npm i serverless -g`. This version is required to upgrade to the new Serverless
+Console version.
+- You MUST visit https://console.serverless.com to reconnect your AWS account.
 
 ## FAQ
 
