@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.10.2...@serverless/aws-lambda-sdk@0.11.0) (2022-10-31)
+
+### ⚠ BREAKING CHANGES
+
+- Upgrade `@serverless/sdk-schema` from v0.12 to v0.13
+
+### Features
+
+- Report all kind of responses ([2731384](https://github.com/serverless/console/commit/2731384fe4a291def130877d73a8ca654f23e9fa))
+- Support Node.js v12 ([5737b5c](https://github.com/serverless/console/commit/5737b5c222e76a02a47c4603deeecfd6927122fd))
+
+### Bug Fixes
+
+- Fix capture of HTTP response body when it's a string ([466fc22](https://github.com/serverless/console/commit/466fc22e8f22d6cbcc08beb503ed7c1733175020))
+
+### Maintenance Improvements
+
+- Cleanup support for `startTime` and `endTime` in response ([e5ef5e8](https://github.com/serverless/console/commit/e5ef5e8acef239265ec122c61d5d0ac7e3ef221b))
+- Upgrade to `@serverless/sdk-schema` v0.13 ([6ad4b72](https://github.com/serverless/console/commit/6ad4b72ebc261807f918a4e3158bc08c5d87c884))
+
 ### [0.10.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.10.1...@serverless/aws-lambda-sdk@0.10.2) (2022-10-24)
 
 ### Features
