@@ -28,13 +28,24 @@ These steps may take a few minutes depending on the complexity of your account.
 
 Note: this same process can be initiated from the CLI using [Serverless Framework](#onboarding-using-serverless-framework)
 
-### Synching Inventory
-Setting up the AWS Integration automatically sets up a synch process to ensure that
-the latest resources are available in your account. This process will regularly check your CloudFormation stacks and Lambda functions in your account. 
+### Integration Status
+Once you have initiated the creation CloudFormation stack the process will take a few moments
+and the status of your integration will be one of the following.
 
-This process will not apply specific [features you enable](./enable-monitoring-features.md) but instead reflect what features are applied in your AWS account. This will prevent any race conditions from occurring where we would attempt to add back an Lambda extension, or CloudWatch Log Subscription.
+**Pending** - A pending integration is still setting up initial infrastructure
+in your AWS account.
 
-In addition to a regular synching process when a new Lambda function is deployed, we synch your changes and automatically apply an instrumentation settings you have. This means you will not have to re-enable features when you deploy an update to a function you are already monitoring.
+**Running** - This running integration has setup the initial infrastructure, but is 
+currently synching inventory across your account. In addition to synching resources
+when you are adding your AWS Account, the integration may appear as running due
+to periodic synching processes that occur.
+
+**Complete** - A complete integration has all infrastructure in place and 
+inventory is up to date.  
+
+**Incomplete** - An incomplete integration is missing infrastructure and may or may
+not have accurate inventory information. You will need to delete this integration
+or contact support.
 
 #### Environment and Namespace Tags
 During the initial synch we traverse all Lambda functions and CloudFormation stacks to help determine
@@ -44,7 +55,7 @@ After this one time process has run, we store these values locally and allow you
 
 
 ## Onboarding using the Serverless Framework
-In addition to onboarding using [console.serverless.com]() in your browser you can easily onboard
+In addition to onboarding using [console.serverless.com](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) in your browser you can easily onboard
 from the [Serverless Framework](https://github.com/serverless/serverless). 
 
 Upgrade to version 3.24.0+
