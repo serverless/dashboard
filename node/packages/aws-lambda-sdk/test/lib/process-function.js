@@ -123,6 +123,7 @@ const retrieveReports = async (testConfig) => {
   const retrieveEvents = async (nextToken = undefined) => {
     const result = await awsRequest(CloudWatchLogs, 'filterLogEvents', {
       startTime: testConfig.invokeStartTime,
+      limit: 100, // To ensure debug log shows all
       logGroupName: `/aws/lambda/${testConfig.configuration.FunctionName}`,
       nextToken,
     });
