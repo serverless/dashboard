@@ -112,7 +112,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   expect(normalizeObject(outcome.request.output)).to.deep.equal(
     normalizeObject(outcome.request.input)
   );
-  expect(outcome.request.input.data.requestData).to.deep.equal(stringifiedPayload);
+  expect(outcome.request.input.body).to.deep.equal(stringifiedPayload);
 
   if (outcome.response.input) {
     expect(normalizeObject(outcome.response.output)).to.deep.equal(
@@ -238,9 +238,7 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.aws.lambda.httpRouter.path).to.equal('/some-path/{param}');
 
-    expect(response.data.responseData).to.deep.equal(
-      JSON.stringify({ statusCode: 200, body: '"ok"' })
-    );
+    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
@@ -341,9 +339,7 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.aws.lambda.httpRouter.path).to.equal('/v1');
 
-    expect(response.data.responseData).to.deep.equal(
-      JSON.stringify({ statusCode: 200, body: '"ok"' })
-    );
+    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
@@ -419,9 +415,7 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.aws.lambda.httpRouter.path).to.equal('/v2');
 
-    expect(response.data.responseData).to.deep.equal(
-      JSON.stringify({ statusCode: 200, body: '"ok"' })
-    );
+    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle function url payload event', async () => {
@@ -488,9 +482,7 @@ describe('internal-extension/index.test.js', () => {
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
-    expect(response.data.responseData).to.deep.equal(
-      JSON.stringify({ statusCode: 200, body: '"ok"' })
-    );
+    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle SQS event', async () => {
@@ -725,7 +717,7 @@ describe('internal-extension/index.test.js', () => {
 
     expect(lambdaTags.aws.lambda.httpRouter.path).to.equal('/foo');
 
-    expect(JSON.parse(response.data.responseData).body).to.deep.equal(JSON.stringify('ok'));
+    expect(JSON.parse(response.body).body).to.deep.equal(JSON.stringify('ok'));
 
     expect(expressSpan.name).to.equal('express');
     expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
@@ -850,7 +842,7 @@ describe('internal-extension/index.test.js', () => {
         payloads.map(([type, payload]) => {
           switch (type) {
             case 'request-response':
-              return { type, data: { $case: payload.data.$case } };
+              return { type, origin: payload.origin };
             case 'trace':
               return {
                 type,
@@ -865,7 +857,7 @@ describe('internal-extension/index.test.js', () => {
           type: 'trace',
           spans: [{ name: 'aws.lambda.initialization', input: undefined, output: undefined }],
         },
-        { type: 'request-response', data: { $case: 'requestData' } },
+        { type: 'request-response', origin: 1 },
         {
           type: 'trace',
           spans: [
