@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.13.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.12.1...@serverless/sdk-schema@0.13.0) (2022-10-31)
+
+### ⚠ BREAKING CHANGES
+
+- `requestResponse` payload: `data` is removed in favor of `body` and `origin`
+
+### Features
+
+- `requestResponse` payload: Replace `data` with `body` and `origin` ([c1c7b86](https://github.com/serverless/console/commit/c1c7b86a5a4e49de79dadc717d8d31ebafc69602))
+- Support Node.js v12 ([bb62fa1](https://github.com/serverless/console/commit/bb62fa1506fdd6a99635fd780e6cbc2d5c58a10f))
+
 ### [0.12.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.12.0...@serverless/sdk-schema@0.12.1) (2022-10-24)
 
 ### Features
