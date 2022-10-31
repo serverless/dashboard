@@ -8,7 +8,7 @@ require (
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
 	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.9.1
-	go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.14
+	go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.15
 	go.uber.org/zap v1.23.0
 	google.golang.org/protobuf v1.28.1
 )

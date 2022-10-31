@@ -107,12 +107,8 @@ func FindResData(logs []LogItem) *LogItem {
 			var reqResPayload schema.RequestResponse
 			reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
 			if reqResErr == nil {
-				responseData := ""
-				data := reqResPayload.GetData()
-				if resData, ok := data.(*schema.RequestResponse_ResponseData); ok {
-					responseData = resData.ResponseData
-				}
-				if responseData != "" {
+				origin := reqResPayload.GetOrigin().String()
+				if origin == "ORIGIN_RESPONSE" {
 					return &log
 				}
 			}
@@ -128,12 +124,8 @@ func FindReqData(logs []LogItem) *LogItem {
 			var reqResPayload schema.RequestResponse
 			reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
 			if reqResErr == nil {
-				requestData := ""
-				data := reqResPayload.GetData()
-				if reqData, ok := data.(*schema.RequestResponse_RequestData); ok {
-					requestData = reqData.RequestData
-				}
-				if requestData != "" {
+				origin := reqResPayload.GetOrigin().String()
+				if origin == "ORIGIN_REQUEST" {
 					return &log
 				}
 			}
