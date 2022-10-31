@@ -36,7 +36,7 @@ module.exports.install = (client) => {
           },
           input: shouldMonitorRequestResponse ? JSON.stringify(args.input) : null,
         });
-        tagMapper?.params?.(traceSpan, args.input);
+        if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
         const deferredRegion = client.config
           .region()
           .then((region) => traceSpan.tags.set('aws.sdk.region', region));
@@ -64,7 +64,9 @@ module.exports.install = (client) => {
         } else {
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
           if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.output);
-          tagMapper?.responseData?.(traceSpan, response.output);
+          if (tagMapper && tagMapper.responseData) {
+            tagMapper.responseData(traceSpan, response.output);
+          }
           if (!traceSpan.endTime) traceSpan.close();
           return response;
         }

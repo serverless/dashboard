@@ -42,7 +42,7 @@ const create = async (testConfig, coreConfig) => {
     },
     Timeout: 10,
     ...configuration,
-    ...deferredConfiguration?.(testConfig, coreConfig),
+    ...(deferredConfiguration && deferredConfiguration(testConfig, coreConfig)),
   };
   if (process.env.SERVERLESS_PLATFORM_STAGE === 'dev') {
     resultConfiguration.Environment.Variables.SERVERLESS_PLATFORM_STAGE = 'dev';

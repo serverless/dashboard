@@ -38,14 +38,14 @@ module.exports.install = (Sdk) => {
       },
       input: shouldMonitorRequestResponse ? JSON.stringify(params) : null,
     });
-    tagMapper?.params?.(traceSpan, params);
+    if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
     this.on('complete', (response) => {
       if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
       if (response.error) {
         traceSpan.tags.set('aws.sdk.error', response.error.message);
       } else {
         if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.data);
-        tagMapper?.responseData?.(traceSpan, response.data);
+        if (tagMapper && tagMapper.responseData) tagMapper.responseData(traceSpan, response.data);
       }
       if (!traceSpan.endTime) traceSpan.close();
     });
