@@ -1,7 +1,7 @@
 <!--
 title: Enabling Additional Monitoring Features
-menuText:   Enabling Additional Monitoring Features Monitoring Features
-description: Enabling Monitoring Features
+menuText:   Enabling Additional Monitoring Features
+description: Enabling Additional Monitoring Features
 menuOrder: 4
 -->
 
