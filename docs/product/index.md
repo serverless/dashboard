@@ -9,7 +9,7 @@ menuOrder: 2
 On Tuesday, November 1st at 10AM PDT, we released a new version of Serverless Console 
 which breaks deployments with the Serverless Console extension on Serverless Framework 
 version 3.23.0 and earlier. There are a few things you will need to do to 
-upgrade to the latest [Serverless Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link).
+[upgrade](upgrade-guide.md) to the latest [Serverless Console](https://console.serverless.com?utm_campaign=Console%20Signup&utm_source=docs&utm_content=console%20docs%20login%20link).
 
 ## Add your AWS Account
 [Getting Started](../index.md) is as easy as adding your AWS Account, and 
