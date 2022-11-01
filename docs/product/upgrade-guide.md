@@ -2,7 +2,7 @@
 title: Upgrade Guide
 menuText: Upgrade Guide
 description: Upgrading Serverless Console for November release
-menuOrder: 7
+menuOrder: 1
 -->
 # Upgrade Guide
 
