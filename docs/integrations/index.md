@@ -53,7 +53,7 @@ a helpful Environment, and Namespace. Environment is determined by the Lambda En
 
 After this one time process has run, we store these values locally and allow you to change them locally. Note, this does mean these values could potentially get out of synch if you change them later in your Environment Variable, or CloudFormation Stack. 
 
-
+<!--
 ## Onboarding using the Serverless Framework
 In addition to onboarding using [console.serverless.com](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) in your browser you can easily onboard
 from the [Serverless Framework](https://github.com/serverless/serverless). 
@@ -69,4 +69,4 @@ And run our onboarding command to walk through the same process above from the c
 ```text
 serverless --console 
 ```
-
+-->
