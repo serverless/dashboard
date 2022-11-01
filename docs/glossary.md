@@ -6,112 +6,121 @@ menuOrder: 4
 -->
 
 # Glossary
-
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
-## Traces
+## Organization
+An organization is a single tenant in Serverless product suite (including  Dashboard, and Serverless Cloud). An organization name needs to be unique and you need to [add at least one AWS Observability Integration](./integrations/index.md#adding-the-aws-observability-integration) to start using Serverless Console. 
 
-A Trace is Serverless Console's parent unit of measurement, covering all that happened when your application handled an HTTP request or an AWS Lambda invocation. A Trace can contain one or many Spans, depending on what it's measuring.
+## Integration
+Integrations are how Serverless Console keeps track of third party tools you choose to instrument and monitor. You need at least one Integration to utilize Serverless Console features and you can use add multiple Integrations to a single organization. 
 
-## AWS Lambda
+## Resources
+Resources are an instance of a service on which you can enable monitoring. Currently this is limited
+to AWS Lambda Functions, but the set of supported resources is expected to grow over time.
 
-The Trace for an AWS Lambda specifically measures the combined lifecyle phased of AWS Lambda Initialization, Invocation, and Shutdown.
+### Function
+A function is an instance of an [AWS Lambda](#aws-lambda) application. Functions can be written
+in a variety of languages and support a large number of runtime environments. 
 
-Additionally, the duration of the Trace is what AWS Lambda bills for, based on 1ms increments.  Duration charges apply to initialization code that is declared outside of the handler in the Initiatlization phase, code that runs in the handler of a function during the Invocation phase, as well as the time it takes for code in any last running Extensions to finish executing during Shutdown phase.
+### Active Resource
+Active Resources is a Resources that have been active in the last 24 hour period. See our [pricing page](https://www.serverless.com/console/pricing) for more details about how we use Active Resources. 
 
-It’s important to note that duration of Traces for AWS Lambda is not the same as the performance your users and customers experience when using your AWS Lambda-based application. The Spans of AWS Lambda Initialization and Invocation duration affect your application experience, not the AWS Lambda Shutdown.
+## AWS Integration
+The AWS Observability Integration is a collection of infrastructure deployed and tracked by Serverless Console.  This Integration is deployed using a [Cloudformation Stack](#cloudformation-stack) and [IAM Role](./integrations/data-sources-and-roles.md#iam-roles). 
+
+### AWS Lambda
+AWS Lambda is a Serverless, event-driven computing environment for running Serverless applications
+also known as [functions](#function). 
 
 ### Initialization
+Initialization refers to the period of function execution prior to the invocation of your handler. More details on the AWS Execution environment are available in our [understanding Lambda duration guide](./product/duration.md).
 
-This is a Span within a Trace for AWS Lambda that represents the time spent loading your AWS Lambda function and running any initialization code.
+#### Cold Start
+A cold start is the name for a first-time initilization phase which takes longer than subsequent
+initilizations. See more details in our [understanding Lambda duration guide](./product/duration.md).
 
-Initialization includes the following:
+#### Invocation
 
-* Extension Init – Initializing all External AWS Lambda Extensions configured on the function (there is a limit of 10 Extensions per function).
+#### Function Handler
+The handler of an AWS Lambda function is where your business logic resides. Regardless of language
+or runtime all AWS Lambda functions have a Handler which corresponds to the [Invocation phase](./product/duration.md#invocation) of the execution. 
 
-* Runtime Init – Initializing the AWS Lambda Runtime (e.g, Node.js, Python).
+#### Function Error (Caught Exception)
+Function errors are errors caught in an exception handlers you have included
+in your code. It can be helpful to include function handlers in your code for known
+failure points so you can find these failures in [Trace Explorer](./product/traces.md#explorer-view).
 
-* Function Init – Initializing the AWS Lambda Function code.
+#### Function Failure (Uncaught Exception)
+A function failure occurs when an error occurs that is not handled as an exception.
+In these cases the function may fail to invoke. These appear on the metrics page
+and are sortable on the [Trace Explorer](./product/traces.md#explorer-view).
 
-Initialization only appears for the first event processed by each instance of your function, which is also known as a Cold-Start. It can also appear in advance of function invocations if you have enabled provisioned concurrency.
+#### Lambda Runtime
+[Lambda runtimes](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-concepts.html#gettingstarted-concepts-runtime) provide a language and architecture specific environment for executing your code. 
+Serverless Console works on all function regardless of functions but [enabling tracing](./integrations/enable-monitoring-features.md#enabling-traces) requires Node.14 or later.
 
-You will want to optimize Initialization performance as best you can. Poor Initialization performance will directly affect the experience of your users and customers. Additionally, it's important to note that AWS charges you for Initialization time. Unfortunately, no tooling can offer a breakdown of what happens within the Initialization phase of AWS Lambda. Generally, adding multiple Extensions, large code file sizes, and using a slower runtime (e.g., Java) are the biggest culprits when it comes to slow Initialization.
+### CloudFormation Stack
+[CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) is an AWS Service which allows you to create templates for creating AWS Infrastructure. Serverless Console creates the [Serverless-Inc-Role-Stack](../integrations/aws/iam-role-cfn-template.yaml) in your account when you add the AWS Observability Integration.
 
-Once initialized, each instance of your function can process thousands of requests without performing another Initialization. However, AWS Lambda function instance containers will shutdown within 5-15 minutes of inactivity. After that, the next event will be a Cold-Start, causing Initialization to run again.
+### IAM Roles
+An [Identity Access Management Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) defines a set of permissions for interacting with your AWS Account. Serverless Console adds an [the ServerlessMonitoringRole](../integrations/aws/iam-role-cfn-template.yaml) to create the following additional pieces of AWS Infrastructure. 
 
-### Invocation  
+### Kinesis Firehose
+[A Kinesis Firehose](https://aws.amazon.com/kinesis/data-firehose/) is a streaming data pipeline used to send log data to Serverless Console. 
 
-This is a Span within a Trace for AWS Lambda.  After Initialization, Extensions and the handler of the AWS Lambda function run in the Invocation phase. This phase includes:
+### Cloudwatch Log Subscription Filter
+A [Cloudwatch Log Subscription Filter](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/SubscriptionFilters.html) specifies a set of logs to be set to a destination, such as Kinesis Firehose. 
 
-* Running External Extensions in parallel with the function. These also continue running after the function has completed, enabling Serverless Console to capture diagnostic information and ingest metrics, traces and logs.
+### EventBridge
+[EventBridge](https://docs.aws.amazon.com/eventbridge/) is an event bus for publishing events, and is used for transporting CloudTrail events from your AWS account to Serverless Console. These events are used to track new Lambda function deployments.
 
-* Running the wrapper logic for Internal Extensions.
+### CloudTrail
+[CloudTrail](https://docs.aws.amazon.com/cloudtrail/) is a service used for getting a history of
+all AWS API calls in your AWS account. 
 
-* Running the handler for your AWS Lambda.
+### Cloudwatch Metric Stream
+[Cloudwatch Metric Streams](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Metric-Streams.html) are used to collect aggregate metrics. Cloudwatch Metric streams allow you to collect metrics from any AWS Services. For a list of metrics we collect, see our [metrics section](./product/metrics.md).
 
-The Invocation phase is comprised mostly of your handler (i.e. your business logic), and you want to optimize that as best you can because its performance (combined with Initialization performance) will have the biggest impact on the experience for your users and customers.
+### Lambda Layer
+[A Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) is a packaged library for distributing Lambda Functions. The [Serverless external extension](./integrations/data-sources-and-roles.md#extensions) and [Serverless Node SDK](./integrations/data-sources-and-roles.md#serverless-node-sdk) are packaged as Lambda Layers and attached to your function when you [enable additional monitoring features](./integrations/enable-monitoring-features.md).
 
-Serverless Console provides a lot of auto-instrumentation for measuring Spans within the Invocation span, such as requests to other AWS Services and HTTP calls generally.
-
-It's important to note that your function's timeout setting limits the duration of the entire Invocation phase. For example, if you set the function timeout as 360 seconds, the function and all extensions need to complete within 360 seconds.
-
-### Shutdown
-
-This phase of AWS Lambda which unfortunately cannot be measured by observability tools, but must be acknowledged.  This phase is run when AWS Lambda is about to shut down the runtime.
-
-This phase includes:
-
-* Running cleanup tasks in Extensions.
-
-Additional time is allocated to your AWS Lambda function's timeout limit for Shutdown.
-
-### Handler
-
-The handler of an AWS Lambda function is where your business logic resides.
-
-### Extension
-
+### Serverless External Extension
 An AWS Lambda Extension is extra code which you can add to your AWS Lambda Function via an AWS Lambda Layer in order to track telemetry data about each Invocation.  Serverless Console uses a sophisticated AWS Lambda Extension for collecting telemetry data in AWS Lambda Functions.
 
-### Cold-Start
+### Serverless Node SDK
+The Serverless Node SDK is a Lambda Extension that instruments your code for specific interactions
+within your [handler](#function-handler) and with other AWS Services. See more details on [supported child spans](./integrations/data-sources-and-roles.md#supported-child-spans).
 
-When an AWS Lambda function recieves a request, and it has not been used before, or for several minutes, its environment and code must first be Initialized.  This process is known as an AWS Lambda Cold-Start.  This process adds latency to the overall invocation duration.
+## Tracing
+A [Trace](./product/traces.md) is collection of Logs, Metrics, and Spans associated with an a functions initialization, invocation and shutdown phases. A Trace allows you to understand the progression of these phases and further troubleshoot slowness or errors.
 
-After the execution completes, the execution environment is frozen. To improve resource management and performance, the Lambda service retains the execution environment for a non-deterministic period of time. During this time, if another request arrives for the same function, the service may reuse the environment. This second request typically finishes more quickly, since the execution environment already exists and it’s not necessary to download the code and run the initialization code. This is called a Warm-Start.
+### Namespace 
+A namespace is a tag that can be applied to one or more of your functions to group 
+functions that have related business outcomes - e.g. shopping-cart.
 
-According to an analysis of production Lambda workloads, cold starts typically occur in under 1% of invocations. The duration of a cold start varies from under 100 ms to over 1 second.
+### Environment
+Environment allows you to group functions across specific environments like development, production, etc.
 
-### Warm-Start
+### Spans
+Spans are child interactions that occur within your Trace. This include the various phases
+of your execution as well as more [detailed interactions](./integrations/data-sources-and-roles.md#supported-child-spans) that occur within your function. 
 
-When an AWS Lambda function instance receives a request after having received previous requests within the last few minutes.  The Initialization phase does not happen and this is known as a Warm-Start.
+### Request
+This is a unique id used on your trace. It is used to associate logs and metrics for a Trace.
 
-### Timeout
+### Arch
+This is the architecture (x86_64 or ARM64) that executed the function.
 
-A timeout is a configurable limit for the duration of your AWS Lambda.
+###  Max Memory
+This is the Max Memory in MB used by your function.
 
+### Version 
+This is the version of the function that executed.
 
-<!--
-# Benchmark
+### Outcome
 
-A Benchmark is a general way of describing the results of running a test against a Use-Case and specific Variations thereof.
+### Log Group 
+A log group is collection of logs organized for filtering and sorting in [CloudWatch](#cloudwatch-log-subscription-filter). 
 
-## Use-Case
-
-A Benchmark Use-Case represents a common use-case we want to measure via a Benchmark.
-
-For example, measuring the performance of sending an AWS Lambda function using Node.js + Express.js is a Benchmark Use-Case.
-
-## Variant
-
-A Benchmark Use-Case Variant is a variation of a Benchmark Use-Case that we wish to run a Benchmark for independently to observe something specific.  
-
-Every Benchmark Use-Case can have one of multiple Variations. 
-
-For example, measuring the performance of an AWS Lambda function using Node.js + Express.js is a Benchmark Use-Case, and measuring it during an AWS Lambda Cold-Start, an AWS Lambda Warm-Start, are Variations.
-
-## Report
-
-A report detailing and summarizing the results of running Benchmarks against different Use-Case Variations, published by Serverless Inc.
-
--->
-
+### Log Stream Name
+ This is the [log subscription filter](#cloudwatch-log-subscription-filter) we used to collect logs for this function.

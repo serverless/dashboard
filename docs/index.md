@@ -8,46 +8,20 @@ menuOrder: 1
 # Getting Started
 Welcome to Serverless Console. 
 
-The next-generation monitoring tool for Teams 
-building with Serverless architectures. The easiest way 
-to get started with Serverless Console is using the 
-latest version of Serverless Framework (v3.18+ required).
-**Note:** Only Node.js is supported at this time. 
+A Developer focused observability platform for
+teams building using Serverless Architectures.
 
-```text
-npm install -g serverless
-```
+Here's what you need to start using console.
 
-You can configure an existing project with 
-Serverless by adding `--console` flag to the serverless command. 
+## Sign up or Login to Serverless Console
+Sign up and create your organization on [Serverless Console](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) (This takes 2 seconds)
 
-```text
-serverless --console
-```
+## Connect your AWS Account
+Login to an AWS account, and start connecting your functions. (This takes 2 minutes)
 
-This will set the following in your Serverless project. 
+## Enable Tracing and Logs
+Choose a function your working on, and start using [Dev Mode](product/dev-mode.md#real-time-logging) to tail your logs and transactions.
 
-```yaml
-console: true
-org: my-org
-service: my-aws-node-project
+To learn more about how we're collecting data from your account see our [Instrumentation Section](./integrations/)
 
-frameworkVersion: '3'
-```
-
-**Note:** If you are using Serverless Dashboard features be sure to keep an
-app property set. This will give you access to existing dashboard
-features like Providers, Parameters and Secrets. 
-
-**Invoke your function, and login to Serverless Console**
-Once you have deployed your function, do the following to start using Serverless Console.
-
-1. Sign up or login to [Serverless Console](https://console.serverless.com?ref_website=https%3A%2F%2Fwww.serverless.com%2Fconsole%2Fdocs%2F) 
-1. Invoke your function, or hit your API Endpoint
-
-It may take a second for the first data point to show up,
-but will speed up considerably from there. Each time you invoke
-one of your instrumented functions, we receive [Traces](./product//traces.md) in Console. 
-
-For more details see our [product section](./product) or learn about using [Serverless Console on AWS](./integrations/aws/).
-
+Or dive in and learn more about using [Logs](./product/dev-mode.md), [Metrics](./product/metrics.md), and [Traces](./product/traces.md) in Serverless Console.

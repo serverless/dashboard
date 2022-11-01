@@ -6,72 +6,68 @@ menuOrder: 8
 -->
 
 # Duration
-The term duration is used in a variety of scenario and charts
-within Serverless Console. This helps provide a glossary of terms, and 
-explains what is included, or excluded when looking at duration
-values in Serverless Console charts and interfaces.
+Understanding how Lambda Duration impact user experience and
+cost is complicated to understand. This guide helps distill
+key terms of the [AWS Lambda execution environment](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html), and how we use them in our product.
 
+## Glossary
 
-## Understanding Duration Across Console
-Applying these definitions, you can expect the following behavior and details
-are included across Console. 
+### AWS Lambda Duration
 
-**On the Metrics View**
-The red number and dots represent the slowest 5% of transactions that occurred 
-during the time frame selected. This does not include Cold Starts. 
+This is the Duration number from the CloudWatch `REPORT` of an AWS Lambda invocation.  It’s not the [Billed Duration](#aws-billed-duration).  This does not contain AWS Lambda’s Initialization Phase, except for in the case where the Initialization Phase fails to start-up due to an error in your code and is retried.  Then you will be billed for that time and this is added under the Initialization Phase.
 
-The black number and line describe the average Duration for the selected time frame. 
-This does not include Cold Starts.
+```text
+2022-06-13T15:06:51.041-07:00   REPORT RequestId: a9fa9a-819a-19a9-faia-afu891asf	Duration: 480.41 ms	Billed Duration: 481 ms	Memory Size: 1024 MB	Max Memory Used: 133 MB
+```
 
-**On the Explorer** 
-When the Trace is first received the value shown, is the Trace Duration of *your* function
-and does not yet include Extension Duration. A few seconds after the Trace is received we receive
-the full duration details and show the full duration with any Cold Starts duration. The max value progress bar is calculated based on the 5% slowest duration during the time frame to help show relative performance of the trace. 
+### AWS Billed Duration
+THE Billed Duration is the total compute time that you are charged for for a particular Lambda execution. This can include compute across a variety of phases of execution (see image below.)
 
-**On Trace Detail View**
-The Duration shown in the header represents the execution time
-of your function plus the duration of any execution time of any Lambda Extensions 
-including the Serverless Console Extension.
+![Billed Duration Breakdown](./AWS-phases.png)
 
-The span chart is based on the start and end times collected from the 
-Open Telemetry trace, plus the recorded Cold Start if one occurred. 
-It does not include Lambda Extension Execution Times and is therefore not \directly related to Billed Duration.
+### AWS Lambda Start Time
+This is the timestamp on the Cloudwatch `START` log line of an AWS Lambda invocation.  This starts after the AWS Lambda Initialization Phase, when the AWS Lambda Invocation Phase begins
 
-**When Filtering**
-Filtering is based on the Duration of your function, pluse the duration 
-of any Lambda Extensions including the Serverless Runtime OTEL Extension.
+```text
+2022-06-13T15:06:50.561-07:00	START RequestId: a9fa9a-819a-19a9-faia-afu891asf Version: $LATEST
+```
 
-**When Calculating Cost**
-Cost is calculated based on Billed Duration. 
+### AWS Lambda End Time
+This is the timestamp on the Cloudwatch `END` log line of an AWS Lambda invocation.
 
-## Optimizing Initialization in AWS Lambda
-Initialization includes the following:
+```text
+2022-06-13T15:06:51.041-07:00	END RequestId: a9fa9a-819a-19a9-faia-afu891asf
+```
 
-* Initializing all External AWS Lambda Extensions configured
-on the function (there is a limit of 10 Extensions per function).
+### AWS Lambda Init Duration
+This is the Init Duration number from the Cloudwatch `REPORT` of an AWS Lambda invocation.  This is optionally shown, mostly if the AWS Lambda invocation was a cold-start.
 
-* Initializing the AWS Lambda Runtime (e.g, Node.js, Python).
+```text
+2022-06-13T15:06:51.041-07:00   REPORT RequestId: a9fa9a-819a-19a9-faia-afu891asf	Duration: 480.41 ms	Billed Duration: 481 ms	Memory Size: 1024 MB	Max Memory Used: 133 MB   Init Duration: 1099.82 ms
+```
 
-* Initializing the AWS Lambda Function code.
+## Child Spans
+We breakdown the execution of Lambda invocations into the following spans. If you have [Tracing Enabled](../integrations/enable-monitoring-features.md#enabling-traces) on your function this will include our [Node SDK](../integrations/data-sources-and-roles.md#serverless-node-sdk) you will see the following spans.  
 
-You will want to optimize Initialization performance as best you can. Poor Initialization performance will directly affect the experience of your users and customers. Additionally, it's important to note that AWS charges you for Initialization time. Unfortunately, no tooling can offer a breakdown of what happens within the Initialization phase of AWS Lambda. Generally, adding multiple Extensions, large code file sizes, and using a slower runtime (e.g., Java) are the biggest culprits when it comes to slow Initialization.
+### `aws.lambda`
+This is the parent Span in every AWS Lambda Trace. It covers the following AWS Lambda lifecycle phases: Initialization and Invocation.
 
-Once initialized, each instance of your function can process thousands of requests without performing another Initialization. However, AWS Lambda function instance containers will shutdown within 5-15 minutes of inactivity. After that, the next event will be a Cold-Start, causing Initialization to run again.
+If you DO NOT have our SDK installed as an Internal AWS Lambda Extension via our AWS Lambda Layer, this Span’s `startTime` is based on the **AWS Lambda Start Time** and its `endTime` is based on the **AWS Lambda End Time**.  Optionally, if AWS Lambda Init Duration is available, this Span’s startTime is adjusted by subtracting the AWS Lambda Init Duration from the AWS Lambda Start Time.
 
-## Configuring Timeouts in AWS Lambda
-It's important to note that your function's timeout setting limits the duration of the entire Invocation phase. For example, if you set the function timeout as 360 seconds, the function and all extensions need to complete within 360 seconds.
+If you DO have our SDK installed as an Internal AWS Lambda Extension via our AWS Lambda Layer, this Span’s `startTime` is based on the **AWS Lambda Start Time** and its `endTime` is based on the **AWS Lambda End Time**.  Optionally, if **AWS Lambda Init Duration** is available, this Span’s `startTime` is adjusted by subtracting the **AWS Lambda Init Duration** from the **AWS Lambda Start Time**.  The `startTime` of both `aws.lambda` and `aws.lambda.initialization` Spans should always be the same, since the former is the parent of the latter.
 
+It’s important to note that there are cases where a bug in your code can cause AWS Lambda’s `initialization` phase to fail (e.g. a bug outside your function handler exists or module import fails).  This can result in an AWS Lambda Duration that exceeds the difference between the AWS Lambda Start Time and AWS Lambda End Time because AWS Lambda may retry the initialization phase upon failure.  If your AWS Lambda function already has a slow cold-start time, this will cause those retries to take longer, greatly increasing the AWS Lambda Duration.
 
-## Extensions and the Invocation Phase
+ ### aws.lambda.initialization
+This Span covers the entire Initialization Phase of the AWS Lambda execution (AKA the “Cold-Start” Phase).  This Span is only available if you have our SDK installed as an Internal AWS Lambda Extension via our AWS Lambda Layer, and the **AWS Lambda Init Duration** exists.
 
-The Invocation phase is comprised mostly of your handler (i.e. your business logic), and you want to optimize that as best you can because its performance (combined with Initialization performance) will have the biggest impact on the experience for your users and customers.
+This Span’s `startTime` is based on the **AWS Lambda Start Time** minus the **AWS Lambda Init Duration**.  This Span’s `endTime` is calculated by our SDK, which shows more accurately when the Initialization Phase ended.  The `startTime` of both `aws.lambda` and `aws.lambda.initialization` Spans should always be the same, since the former is the parent of the latter.
 
-* Running External Extensions in parallel with the function. These also continue running after the function has completed, enabling Serverless Console to capture diagnostic information and ingest metrics, traces and logs.
+### aws.lambda.invocation
+This Span covers the entire Invocation Phase of the AWS Lambda execution.  This Span is only available if you have our SDK installed as an Internal AWS Lambda Extension via our AWS Lambda Layer.
 
-* Running the wrapper logic for Internal Extensions.
+This Span’s `startTime` is based on the **AWS Lambda Start Time**.  This Span’s endTime is calculated by our SDK, which shows more accurately when the Invocation Phase ended.
 
-* Running the handler for your AWS Lambda.
+It’s important to note that the **AWS Lambda Duration** is not the same as the AWS Lambda Invocation Phase, due to possible post-processing that may happen in any AWS Lambda External Extensions installed.  Depending on how the External Extension is configured, this post-processing should happen after your AWS Lambda function handler code has been completed, so it should not affect your application performance.  Often, this post-processing can be greater than the duration of your handler code.
 
-
-
-
+Therefore, this Span and the `aws.lambda.initialization` Span offers the greatest understanding of your application performance, and the latency your end-users may experience.  Looking at this information will offer greater clarity than looking at the AWS Lambda Duration.

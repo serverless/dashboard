@@ -15,7 +15,7 @@ Serverless for the first time.
 ## Adding Team Mates
 
 Console currently supports the following basic roles which are shared across
-your org. 
+your org.
 
 - **Owner** - Owner of the account. Can add other contributors and access the
 Org Settings. Only one owner per account can be present.
@@ -33,12 +33,8 @@ To configure deployment in these system, do the following.
 
 1. Go to the settings tab of your organization, and copy the org key to your clipboard
 1. Paste the value as the environment variable SLS_ORG_TOKEN in your CI/CD environment
-
-### AWS Access Key and Secret
-In order to deploy to your AWS account you'll need to configure your
-credentials locally for the account you wish to deploy to. You can do this
-by setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-respectively. See the [Serverless Framework documentation](https://www.serverless.com/framework/docs/providers/aws/guide/credentials#creating-aws-access-keys) for more details on setting these up. 
+1. Deploy using the [Serverless Framework](../integrations/framework.md) to
+enable Tracing and logs.
 
 ## Changing Org Name
 Org names can be changed from the Org Settings section of Console. 
