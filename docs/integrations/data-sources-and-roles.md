@@ -11,15 +11,15 @@ by Serverless Console.
 
 ## IAM Roles
 We configure three IAM Roles when adding your AWS Account. Where possible, we try to 
-use the least privilege possible, and keep [detailed comments](../../instrumentation/aws/iam-role-cfn-template.yaml) about the permissions we need.
+use the least privilege possible, and keep [detailed comments](https://github.com/serverless/console/blob/main/instrumentation/aws/iam-role-cfn-template.yaml) about the permissions we need.
 
 * `ServerlessRole` - This is the primary role we use for the setting up general infrastructure
 *  `ServerlessEventSubscriptionExecutionRole` - This role is used to configure [EventBridge](../glossary.md#EventBridge) for processing new [CloudTrail](../glossary.md#cloudtrail) events.
 * `ServerlessMonitoringRole` - This is the role used to create required [Kinesis Firehose instances](../glossary.md#kinesis-firehose) and [CloudWatch Metric Stream](../glossary.md#cloudwatch-metric-stream).
 
 ## CloudTrail Events
-We use [EventBridge] as a data source for determining creation of resources and when appropriate
-[enable monitoring features](./enable-monitoring-features.md) for those resources. An EventBridge rule is setup in each region you have Active Resources in. 
+We use CloudTrial as a data source for determining creation of resources and when appropriate
+[enable monitoring features](./enable-monitoring-features.md) for those resources. An [EventBridge](../glossary.md#eventbridge) rule is setup in each region you have Active Resources in. 
 
 ## Metric Streams
 Serverless Console collects metrics for all your Lambda functions using
