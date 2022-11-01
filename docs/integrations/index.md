@@ -32,9 +32,6 @@ Note: this same process can be initiated from the CLI using [Serverless Framewor
 Once you have initiated the creation CloudFormation stack the process will take a few moments
 and the status of your integration will be one of the following.
 
-**Pending** - A pending integration is still setting up initial infrastructure
-in your AWS account.
-
 **Running** - This running integration has setup the initial infrastructure, but is 
 currently synching inventory across your account. In addition to synching resources
 when you are adding your AWS Account, the integration may appear as running due

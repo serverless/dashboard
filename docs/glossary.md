@@ -9,7 +9,7 @@ menuOrder: 4
 This is a consolidated list of terms and concepts, with precise definitions, which are used within Serverless Console and the broader cloud industry.  Whenever possible, Serverless Console adopts existing industry terms, rather than create new ones.
 
 ## Organization
-An organization is a single tenant in Serverless product suite (including  Dashboard, and Serverless Cloud). An organization name needs to be unique and you need to [add at least one AWS Observability Integration](./integrations/index.md#adding-the-aws-observability-integration) to start using Serverless Console. 
+An organization is a single tenant in Serverless product suite (including  Dashboard, and Serverless Cloud). An organization name needs to be unique and you need to [add at least one AWS Integration](./integrations/index.md#adding-the-aws-observability-integration) to start using Serverless Console. 
 
 ## Integration
 Integrations are how Serverless Console keeps track of third party tools you choose to instrument and monitor. You need at least one Integration to utilize Serverless Console features and you can use add multiple Integrations to a single organization. 
@@ -26,7 +26,7 @@ in a variety of languages and support a large number of runtime environments.
 Active Resources is a Resources that have been active in the last 24 hour period. See our [pricing page](https://www.serverless.com/console/pricing) for more details about how we use Active Resources. 
 
 ## AWS Integration
-The AWS Observability Integration is a collection of infrastructure deployed and tracked by Serverless Console.  This Integration is deployed using a [Cloudformation Stack](#cloudformation-stack) and [IAM Role](./integrations/data-sources-and-roles.md#iam-roles). 
+The AWS Integration is a collection of infrastructure deployed and tracked by Serverless Console.  This Integration is deployed using a [Cloudformation Stack](#cloudformation-stack) and [IAM Role](./integrations/data-sources-and-roles.md#iam-roles). 
 
 ### AWS Lambda
 AWS Lambda is a Serverless, event-driven computing environment for running Serverless applications
@@ -60,10 +60,10 @@ and are sortable on the [Trace Explorer](./product/traces.md#explorer-view).
 Serverless Console works on all function regardless of functions but [enabling tracing](./integrations/enable-monitoring-features.md#enabling-traces) requires Node.14 or later.
 
 ### CloudFormation Stack
-[CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) is an AWS Service which allows you to create templates for creating AWS Infrastructure. Serverless Console creates the [Serverless-Inc-Role-Stack](../integrations/aws/iam-role-cfn-template.yaml) in your account when you add the AWS Observability Integration.
+[CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) is an AWS Service which allows you to create templates for creating AWS Infrastructure. Serverless Console creates the [Serverless-Inc-Role-Stack](../integrations/aws/iam-role-cfn-template.yaml) in your account when you add the AWS Integration.
 
 ### IAM Roles
-An [Identity Access Management Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) defines a set of permissions for interacting with your AWS Account. Serverless Console adds an [the ServerlessMonitoringRole](../integrations/aws/iam-role-cfn-template.yaml) to create the following additional pieces of AWS Infrastructure. 
+An [Identity Access Management Role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) defines a set of permissions for interacting with your AWS Account. Serverless Console adds an [the ServerlessMonitoringRole](https://github.com/serverless/console/blob/main/instrumentation/aws/iam-role-cfn-template.yaml) to create the following additional pieces of AWS Infrastructure. 
 
 ### Kinesis Firehose
 [A Kinesis Firehose](https://aws.amazon.com/kinesis/data-firehose/) is a streaming data pipeline used to send log data to Serverless Console. 
