@@ -312,7 +312,7 @@ class TraceSpan {
       if (leftoverSpans.length) {
         process.stderr.write(
           "Serverless SDK Warning: Following trace spans didn't end before end of " +
-            `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}`
+            `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}\n`
         );
       }
       asyncLocalStorage.enterWith(this);
