@@ -110,10 +110,10 @@ const install = (protocol, httpModule) => {
   const originalRequest = httpModule.request;
   const originalGet = httpModule.get;
 
-  const request = function request(url, options, cb) {
+  const request = function request(...args) {
     const startTime = process.hrtime.bigint();
     serverlessSdk._debugLog('HTTP request', shouldIgnoreFollowingRequest, new Error().stack);
-    const args = [url, options, cb];
+    let [url, options] = args;
 
     let cbIndex = 2;
     if (typeof url === 'string') {
