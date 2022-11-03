@@ -6,7 +6,7 @@ menuOrder: 1
 -->
 # Upgrade Guide
 
-On **Tuesday, November 1st at 10AM PDT**, we released a new version of
+On **Tuesday, November 1st at 11 AM PDT**, we released a new version of
 Serverless Console which breaks deployments with the Serverless Console
 extension on Serverless Framework version 3.23.0 and earlier. There are a few
 things you will need to do to upgrade to the latest Serverless Console.
@@ -18,6 +18,10 @@ older than 3.24.0 of the Serverless Framework.
 - You SHOULD remove `org: <org>` from all `severless.yml` files, if you are not
 also using Serverless Dashboard.
 - You MUST visit https://console.serverless.com to reconnect your AWS account.
+If you are using the Serverless Framework, you can use `serverless --console` to
+reconnect your AWS account.
+- You SHOULD upgrade to Serverless Framework 3.24.0 or higher with
+`npm i serverless --global`.
 
 ## FAQ
 
