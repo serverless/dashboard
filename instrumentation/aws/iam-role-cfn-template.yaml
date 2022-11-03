@@ -31,7 +31,7 @@ Resources:
       Version:
         Ref: Version
   APIDestinationsEventBridgeServiceLinkedRole:
-    Type: 'AWS::IAM::ServiceLinkedRole'
+    Type: AWS::IAM::ServiceLinkedRole
     DeletionPolicy: Retain
     Properties:
       AWSServiceName: apidestinations.events.amazonaws.com
@@ -1618,50 +1618,52 @@ Resources:
 
             Resource:
               # The bucket name will include unique id to avoid bucket duplication
+              - "arn:aws:s3:::serverless.firehose-backup-*"
+              # Legacy buckets for firehoses
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
               - "arn:aws:s3:::serverless.logs-firehose-backup-*"
           - Effect: Allow
             Sid: "ServerlessIncEventBridgeAccess"
             Action:
-                # Grants permission to retrive details about a Connection in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeConnection.html
-                - "events:DescribeConnection"
-                # Grants permission to retrive details about a Rule in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeRule.html
-                - "events:DescribeRule"
-                # Grants permission to retrieve details about an API Destination in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeApiDestination.html
-                - "events:DescribeApiDestination"
-                # Grants permission to create a new Connection in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateConnection.html
-                - "events:CreateConnection"
-                # Grants permission to create a new API Destination in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateApiDestination.html
-                - "events:CreateApiDestination"
-                # Grants permission to create or update an Event Rule in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html
-                - "events:PutRule"
-                # Grants permission to create or update an Event Rule Target in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutTargets.html
-                - "events:PutTargets"
-                # Grants permission to update a Connection in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UpdateConnection.html
-                - "events:UpdateConnection"
-                # Grant permission to update an API Destination in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UpdateApiDestination.html
-                - "events:UpdateApiDestination"
-                # Grant permission to delete an Event Rule in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteRule.html
-                - "events:DeleteRule"
-                # Grant permission to delete a Connection in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteConnection.html
-                - "events:DeleteConnection"
-                # Grant permission to delete an API Destination in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteApiDestination.html
-                - "events:DeleteApiDestination"
-                # Grant permission to remove an Event Rule Target in Amazon Eventbridge.
-                # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_RemoveTargets.html
-                - "events:RemoveTargets"
+              # Grants permission to retrive details about a Connection in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeConnection.html
+              - "events:DescribeConnection"
+              # Grants permission to retrive details about a Rule in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeRule.html
+              - "events:DescribeRule"
+              # Grants permission to retrieve details about an API Destination in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeApiDestination.html
+              - "events:DescribeApiDestination"
+              # Grants permission to create a new Connection in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateConnection.html
+              - "events:CreateConnection"
+              # Grants permission to create a new API Destination in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateApiDestination.html
+              - "events:CreateApiDestination"
+              # Grants permission to create or update an Event Rule in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html
+              - "events:PutRule"
+              # Grants permission to create or update an Event Rule Target in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutTargets.html
+              - "events:PutTargets"
+              # Grants permission to update a Connection in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UpdateConnection.html
+              - "events:UpdateConnection"
+              # Grant permission to update an API Destination in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UpdateApiDestination.html
+              - "events:UpdateApiDestination"
+              # Grant permission to delete an Event Rule in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteRule.html
+              - "events:DeleteRule"
+              # Grant permission to delete a Connection in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteConnection.html
+              - "events:DeleteConnection"
+              # Grant permission to delete an API Destination in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DeleteApiDestination.html
+              - "events:DeleteApiDestination"
+              # Grant permission to remove an Event Rule Target in Amazon Eventbridge.
+              # https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_RemoveTargets.html
+              - "events:RemoveTargets"
             Resource:
               - !Sub "arn:aws:events:*:${AWS::AccountId}:rule/serverless_*"
               - !Sub "arn:aws:events:*:${AWS::AccountId}:rule/default/serverless_*"
@@ -1829,6 +1831,9 @@ Resources:
               # https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
               - "s3:PutObject"
             Resource:
+              - "arn:aws:s3:::serverless.firehose-backup-*"
+              - "arn:aws:s3:::serverless.firehose-backup-*/*"
+              # Legacy buckets for firehoses
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*"
               - "arn:aws:s3:::serverless.metrics-firehose-backup-*/*"
               - "arn:aws:s3:::serverless.logs-firehose-backup-*"
