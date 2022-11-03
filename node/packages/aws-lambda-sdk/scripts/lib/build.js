@@ -13,6 +13,14 @@ const internalDir = path.resolve(packageDir, 'internal-extension');
 
 const extensionDirname = 'sls-sdk-node';
 
+const runEsbuild = async (...args) => {
+  try {
+    return (await spawn(esbuildFilename, args)).stdoutBuffer;
+  } catch (error) {
+    throw new Error(`ESbuild errored: ${String(error.stdBuffer)}`);
+  }
+};
+
 module.exports = async (distFilename) => {
   const zip = new AdmZip();
 
@@ -23,25 +31,21 @@ module.exports = async (distFilename) => {
       zip.addLocalFile(path.resolve(internalDir, 'exec-wrapper.sh'), extensionDirname);
       zip.addFile(
         `${extensionDirname}/index.js`,
-        (
-          await spawn(esbuildFilename, [
-            path.resolve(path.resolve(internalDir, 'index.js')),
-            '--bundle',
-            '--platform=node',
-          ])
-        ).stdoutBuffer
+        await runEsbuild(
+          path.resolve(path.resolve(internalDir, 'index.js')),
+          '--bundle',
+          '--platform=node'
+        )
       );
       zip.addFile(
         `${extensionDirname}/wrapper.js`,
-        (
-          await spawn(esbuildFilename, [
-            path.resolve(path.resolve(internalDir, 'wrapper.js')),
-            '--bundle',
-            '--platform=node',
-            '--external:./',
-            '--external:../',
-          ])
-        ).stdoutBuffer
+        await runEsbuild(
+          path.resolve(path.resolve(internalDir, 'wrapper.js')),
+          '--bundle',
+          '--platform=node',
+          '--external:./',
+          '--external:../'
+        )
       );
     })(),
   ]);
