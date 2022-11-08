@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.11.3](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.2...@serverless/aws-lambda-sdk@0.11.3) (2022-11-08)
+
+### Maintenance Improvements
+
+- Improve SDK error messaging ([f35ff84](https://github.com/serverless/console/commit/f35ff84bde2b6051303e2fe79fc77eab7613aaee))
+
 ### [0.11.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.1...@serverless/aws-lambda-sdk@0.11.2) (2022-11-03)
 
 ### Bug Fixes
