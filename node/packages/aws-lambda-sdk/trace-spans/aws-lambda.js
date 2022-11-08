@@ -14,7 +14,9 @@ const arch = (() => {
     case 'arm64':
       return 'arm64';
     default:
-      process.stderr.write(`Serverless SDK Error: Unrecognized architecture: "${process.arch}"\n`);
+      process.stderr.write(
+        `Serverless SDK Warning: Unrecognized architecture: "${process.arch}"\n`
+      );
       return null;
   }
 })();

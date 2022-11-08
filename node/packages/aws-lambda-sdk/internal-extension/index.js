@@ -11,7 +11,7 @@ if (!process.env._HANDLER.includes('.') || process.env._HANDLER.includes('..')) 
 }
 if (!process.env.SLS_ORG_ID) {
   process.stderr.write(
-    'Serverless SDK Error: Cannot instrument function: Missing "SLS_ORG_ID" environment variable\n'
+    'Serverless SDK Warning: Cannot instrument function: Missing "SLS_ORG_ID" environment variable\n'
   );
   return;
 }
