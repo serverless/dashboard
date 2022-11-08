@@ -33,7 +33,7 @@ module.exports = async (name, body) => {
         (response) => {
           if (response.statusCode !== 200) {
             process.stderr.write(
-              'Serverless SDK Error: Cannot propagate telemetry, ' +
+              'Serverless SDK Warning: Cannot propagate telemetry, ' +
                 `server responded with "${response.statusCode}" status code\n`
             );
           }
@@ -46,7 +46,7 @@ module.exports = async (name, body) => {
       request.end();
     });
   } catch (error) {
-    process.stderr.write(`Serverless SDK Error: Cannot propagate telemetry: ${error.message}\n`);
+    process.stderr.write(`Serverless SDK Warning: Cannot propagate telemetry: ${error.message}\n`);
   } finally {
     if (requestSocket) requestSocket.unref();
   }
