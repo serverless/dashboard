@@ -129,97 +129,97 @@ Resources:
               # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAccount.html
               - "apigateway:GetAccount"
               # Describe an existing Authorizer resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetAuthorizer.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAuthorizer.html
               - "apigateway:GetAuthorizer"
               # Describe an existing Authorizers resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetAuthorizers.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetAuthorizers.html
               - "apigateway:GetAuthorizers"
               # Describe a BasePathMapping resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetBasePathMapping.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetBasePathMapping.html
               - "apigateway:GetBasePathMapping"
               # Represents a collection of BasePathMapping resources.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetBasePathMappings.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetBasePathMappings.html
               - "apigateway:GetBasePathMappings"
               # Gets information about a Deployment resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDeployment.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDeployment.html
               - "apigateway:GetDeployment"
               # Gets information about a Deployments collection.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDeployments.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDeployments.html
               - "apigateway:GetDeployments"
               # Represents a domain name that is contained in a simpler, more intuitive URL that can be called.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDomainName.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDomainName.html
               - "apigateway:GetDomainName"
               # Represents a collection of DomainName resources.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetDomainNames.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetDomainNames.html
               - "apigateway:GetDomainNames"
               # Exports a deployed version of a RestApi in a specified format.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetExport.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetExport.html
               - "apigateway:GetExport"
               # Gets a GatewayResponse of a specified response type on the given RestApi.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetGatewayResponse.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetGatewayResponse.html
               - "apigateway:GetGatewayResponse"
               # Gets the GatewayResponses collection on the given RestApi.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetGatewayResponses.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetGatewayResponses.html
               - "apigateway:GetGatewayResponses"
               # Get the integration settings.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetIntegration.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetIntegration.html
               - "apigateway:GetIntegration"
               # Represents a get integration response.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetIntegrationResponse.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetIntegrationResponse.html
               - "apigateway:GetIntegrationResponse"
               # Describe an existing Method resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetMethod.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetMethod.html
               - "apigateway:GetMethod"
               # Describes a MethodResponse resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetMethodResponse.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetMethodResponse.html
               - "apigateway:GetMethodResponse"
               # Describes an existing model defined for a RestApi resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetModel.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetModel.html
               - "apigateway:GetModel"
               # Describes existing Models defined for a RestApi resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetModels.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetModels.html
               - "apigateway:GetModels"
               # Generates a sample mapping template that can be used to transform a payload into the structure of a model.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetModelTemplate.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetModelTemplate.html
               - "apigateway:GetModelTemplate"
               # Gets a RequestValidator of a given RestApi.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRequestValidator.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRequestValidator.html
               - "apigateway:GetRequestValidator"
               # Gets the RequestValidators collection of a given RestApi.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRequestValidators.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRequestValidators.html
               - "apigateway:GetRequestValidators"
               # Lists information about a resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetResource.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetResource.html
               - "apigateway:GetResource"
               # Lists information about a collection of Resource resources.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetResources.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetResources.html
               - "apigateway:GetResources"
               # Lists the RestApi resource in the collection.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRestApi.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRestApi.html
               - "apigateway:GetRestApi"
               # Lists the RestApis resources for your collection.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetRestApis.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetRestApis.html
               - "apigateway:GetRestApis"
               # Gets information about a Stage resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetStage.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetStage.html
               - "apigateway:GetStage"
               # Gets information about one or more Stage resources.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetStages.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetStages.html
               - "apigateway:GetStages"
               # Gets the Tags collection for a given resource.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetTags.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetTags.html
               - "apigateway:GetTags"
               # Gets the usage data of a usage plan in a specified time interval.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetUsage.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetUsage.html
               - "apigateway:GetUsage"
               # Gets a usage plan of a given plan identifier.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetUsagePlan.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetUsagePlan.html
               - "apigateway:GetUsagePlan"
               # Gets all the usage plans of the caller's account.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetUsagePlans.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetUsagePlans.html
               - "apigateway:GetUsagePlans"
               # Gets a specified VPC link under the caller's account in a region.
-              # https://docs.aws.amazon.com/zh_cn/apigateway/latest/api/API_GetVpcLink.html
+              # https://docs.aws.amazon.com/apigateway/latest/api/API_GetVpcLink.html
               - "apigateway:GetVpcLink"
 
               #
