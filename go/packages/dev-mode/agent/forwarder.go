@@ -259,6 +259,15 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 				var telemetry *schema.LambdaTelemetry
 				if metadata[index] != nil {
 					meta := metadata[index]
+					// Update the response payload so that it uses the
+					// time from the platform.runtimeDone event
+					if meta.Time != "" && devModePayload.Origin == schema.RequestResponse_ORIGIN_RESPONSE {
+						metaTime, err := time.Parse("2006-01-02T15:04:05.000Z", meta.Time)
+						if err == nil {
+							epoch := uint64(metaTime.UnixNano())
+							devModePayload.Timestamp = &epoch
+						}
+					}
 					if meta.LogType == "platform.initReport" {
 						jsonString, _ := json.Marshal(meta.Record)
 						reportData := InitReportRecord{}
