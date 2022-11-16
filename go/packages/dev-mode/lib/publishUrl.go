@@ -21,8 +21,11 @@ func GetBaseUrl() string {
 		region = fallbackRegion
 	}
 
-	if _, isDev := os.LookupEnv("SERVERLESS_PLATFORM_STAGE"); isDev {
-		return fmt.Sprintf("https://%s.core.serverless-dev.com/extension/api/ingest", region)
+	if value, isDev := os.LookupEnv("SERVERLESS_PLATFORM_STAGE"); isDev {
+		if value == "dev" {
+			return fmt.Sprintf("https://%s.core.serverless-dev.com/extension/api/ingest", region)
+		}
+		return value
 	}
 	return fmt.Sprintf("https://%s.core.serverless.com/extension/api/ingest", region)
 }
