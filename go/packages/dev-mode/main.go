@@ -79,8 +79,6 @@ func (e *Extension) ExternalExtension() {
 	var initReport *agent.LogItem = nil
 	// Save response log so we can combine it with the runtimeDone event to include additional telemetry data
 	var responseLog *agent.LogItem = nil
-	// Boolean flag to determine if telemetry is enabled in the lambda functions region
-	telemetryEnabled := lib.IsTelemetryEnabledRegion()
 
 	deferredLogs := []agent.LogItem{}
 
@@ -104,45 +102,41 @@ func (e *Extension) ExternalExtension() {
 				continue
 			}
 
-			// Only do this for telemetry enabled regions
-			// it is useless in all other regions
-			if telemetryEnabled {
-				// Save init report
-				// else add metadata to req report before sending to backend
-				if initReport == nil {
-					value := agent.FindInitReport(arr)
-					if value != nil {
-						initReport = value
-					}
-				} else {
-					value := agent.FindReqData(arr)
-					if value != nil {
-						for index, log := range arr {
-							if log.LogType == "reqRes" {
-								arr[index].Metadata = initReport
-								break
-							}
+			// Save init report
+			// else add metadata to req report before sending to backend
+			if initReport == nil {
+				value := agent.FindInitReport(arr)
+				if value != nil {
+					initReport = value
+				}
+			} else {
+				value := agent.FindReqData(arr)
+				if value != nil {
+					for index, log := range arr {
+						if log.LogType == "reqRes" {
+							arr[index].Metadata = initReport
+							break
 						}
 					}
 				}
+			}
 
-				// Save Res Report and skip
-				// else we send res report to backend and continue
-				if responseLog == nil {
-					value := agent.FindResData(arr)
-					if value != nil {
-						responseLog = value
-						continue
-					}
-				} else if receivedRuntimeDone {
-					value := agent.FindRuntimeDone(arr)
-					arr = append(arr, agent.LogItem{
-						Time:     responseLog.Time,
-						LogType:  responseLog.LogType,
-						Record:   responseLog.Record,
-						Metadata: value,
-					})
+			// Save Res Report and skip
+			// else we send res report to backend and continue
+			if responseLog == nil {
+				value := agent.FindResData(arr)
+				if value != nil {
+					responseLog = value
+					continue
 				}
+			} else if receivedRuntimeDone {
+				value := agent.FindRuntimeDone(arr)
+				arr = append(arr, agent.LogItem{
+					Time:     responseLog.Time,
+					LogType:  responseLog.LogType,
+					Record:   responseLog.Record,
+					Metadata: value,
+				})
 			}
 
 			if requestId == "" {
