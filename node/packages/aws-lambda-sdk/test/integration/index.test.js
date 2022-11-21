@@ -290,6 +290,7 @@ describe('integration', function () {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -299,6 +300,7 @@ describe('integration', function () {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -308,6 +310,7 @@ describe('integration', function () {
         variants: new Map([
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -318,6 +321,7 @@ describe('integration', function () {
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
           [
             'sqs',
             {
@@ -473,6 +477,7 @@ describe('integration', function () {
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -483,6 +488,7 @@ describe('integration', function () {
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -493,6 +499,7 @@ describe('integration', function () {
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
         config: { expectedOutcome: 'error:handled' },
       },
@@ -504,6 +511,7 @@ describe('integration', function () {
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
         config: { expectedOutcome: 'error:handled' },
       },
@@ -1008,8 +1016,45 @@ describe('integration', function () {
         ]),
       },
     ],
-    ['aws-sdk-v2', { test: testAwsSdk }],
-    ['aws-sdk-v3', { test: testAwsSdk }],
+    [
+      'aws-sdk-v2',
+      {
+        config: { test: testAwsSdk },
+        variants: new Map([
+          [
+            'internal',
+            {
+              configuration: {
+                Runtime: 'nodejs16.x',
+                Code: {
+                  ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws-sdk-v2.js')),
+                },
+              },
+            },
+          ],
+          ['external', {}],
+        ]),
+      },
+    ],
+    [
+      'aws-sdk-v3',
+      {
+        config: { test: testAwsSdk },
+        variants: new Map([
+          [
+            'internal',
+            {
+              configuration: {
+                Code: {
+                  ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws-sdk-v3.js')),
+                },
+              },
+            },
+          ],
+          ['external', { configuration: { Runtime: 'nodejs16.x' } }],
+        ]),
+      },
+    ],
     [
       'express',
       {
@@ -1126,6 +1171,16 @@ describe('integration', function () {
               ]),
             },
           ],
+          [
+            'v18',
+            {
+              config: { configuration: { Runtime: 'nodejs18.x' } },
+              variants: new Map([
+                ['dev-mode', devModeConfiguration],
+                ['regular', {}],
+              ]),
+            },
+          ],
         ]),
         config: {
           test: ({ invocationsData }) => {
@@ -1198,6 +1253,7 @@ describe('integration', function () {
           ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
           ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
           ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
         ]),
         config: Object.assign({
           isCustomResponse: true,

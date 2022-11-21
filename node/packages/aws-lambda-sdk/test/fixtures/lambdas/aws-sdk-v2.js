@@ -3,7 +3,7 @@
 // eslint-disable-next-line import/no-unresolved
 const { SQS, SNS, DynamoDB, STS } = require('aws-sdk');
 
-const wait = require('timers-ext/promise/sleep');
+const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const sqs = new SQS();
 const sns = new SNS();
