@@ -5,7 +5,7 @@ const { SNS } = require('@aws-sdk/client-sns');
 const { STS } = require('@aws-sdk/client-sts');
 const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
-const wait = require('timers-ext/promise/sleep');
+const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const sqs = new SQS();
 const sns = new SNS();
