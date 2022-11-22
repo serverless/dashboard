@@ -175,7 +175,7 @@ message AwsSdkTags {
   // The AWS Region this SDK call is being made against.
   optional string region = 2;
   // AWS Authentication signature version of the request.
-  string signature_version = 3;
+  optional string signature_version = 3;
   // The name of the service to which a request is made.
   string service = 4;
   // The name of the operation corresponding to the request.
