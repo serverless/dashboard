@@ -235,7 +235,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | region | [string](#string) | optional | The AWS Region this SDK call is being made against. |
-| signature_version | [string](#string) |  | AWS Authentication signature version of the request. |
+| signature_version | [string](#string) | optional | AWS Authentication signature version of the request. |
 | service | [string](#string) |  | The name of the service to which a request is made. |
 | operation | [string](#string) |  | The name of the operation corresponding to the request. |
 | request_id | [string](#string) | optional | The unique ID of the request. |
