@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.13.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.13.0...@serverless/sdk-schema@0.13.1) (2022-11-24)
+
+### Features
+
+- Make `aws.sdk.signature_version` tag optional ([cd566b0](https://github.com/serverless/console/commit/cd566b0f685bc62a1fd74840278fdd9f618c0cb0))
+
 ## [0.13.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.12.1...@serverless/sdk-schema@0.13.0) (2022-10-31)
 
 ### ⚠ BREAKING CHANGES
