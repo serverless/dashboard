@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.11.4](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.3...@serverless/aws-lambda-sdk@0.11.4) (2022-11-24)
+
+### Bug Fixes
+
+- Ensure to not crash in main SDK processing points ([5499231](https://github.com/serverless/console/commit/54992319357db3d4d215ea0c86f233dbdd0654a9))
+
 ### [0.11.3](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.2...@serverless/aws-lambda-sdk@0.11.3) (2022-11-08)
 
 ### Maintenance Improvements
