@@ -4,6 +4,7 @@ package serverless.instrumentation.tags.v1;
 
 import "serverless/instrumentation/tags/v1/aws.proto";
 import "serverless/instrumentation/tags/v1/common.proto";
+import "serverless/instrumentation/tags/v1/error.proto";
 
 option go_package = ".;protoc";
 
@@ -32,6 +33,9 @@ message Tags {
   optional string namespace = 110;
   // OrgId is added to all schemas during ingest as part of our data enrichment process
   optional string org_id = 111;
+
+  // These tags are used when an event has occured and is reported on the event.
+  optional serverless.instrumentation.tags.v1.ErrorTags error = 113;
 }
 
 message SlsTags {

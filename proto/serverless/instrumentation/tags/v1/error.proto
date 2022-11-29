@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package serverless.instrumentation.tags.v1;
+
+option go_package = ".;protoc";
+
+message ErrorTags {
+    // The Error Name
+    string name = 1;
+    // The Error Message - Depending on runtime this is defined or not.
+    optional string message = 2;
+    // The Error stacktrace if applicable
+    optional string stacktrace = 3;
+
+    enum ErrorType {
+        ERROR_TYPE_UNSPECIFIED = 0;
+
+        ERROR_TYPE_UNCAUGHT = 1;
+        
+        ERROR_TYPE_UNCAUGHT_TIMEOUT = 2;
+
+        ERROR_TYPE_UNCAUGHT_OOM = 3;
+
+        ERROR_TYPE_UNCAUGHT_AWS_LAMBDA_INIT = 4;
+
+        ERROR_TYPE_UNCAUGHT_AWS_LAMBDA_RESOLVED = 5;
+
+        ERROR_TYPE_CAUGHT = 6;
+
+    }
+
+    ErrorType type = 4;
+}

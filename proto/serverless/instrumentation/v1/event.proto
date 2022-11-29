@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package serverless.instrumentation.v1;
+
+import "serverless/instrumentation/tags/v1/tags.proto";
+
+option go_package = ".;protoc";
+
+// An EventPayload is a message that will contain any number
+// of Events plus the global tags required by our Serverless Ingest Platform.
+message EventPayload {
+    serverless.instrumentation.tags.v1.SlsTags sls_tags = 1;
+
+    // A list of Events to be ingested. Ingest does not impose a limit on the
+    // number of Events in a single payload. It is the responsibility of the 
+    // Event producer to limit the size of payloads based on their own requirements.
+    repeated serverless.instrumentation.v1.Event events = 2;
+}
+
+message Event {
+    // The Event ID, this will be a random 8-byte ID encoded as a length 16 lowercase hex string.
+    bytes id = 1;
+  
+    // The Trace ID, this will be a random 16-byte ID encoded as a length 32 lowercase hex string.
+    // The Trace ID is what is used to group all spans for specific trace together.
+    bytes trace_id = 2;
+   
+    // An optional Span ID to be used to create to show the span context that the event was generated in.
+    // In practical terms, every span except the root span will have a parent span ID.
+    optional bytes span_id = 3;
+
+    // The timestamp of when the Event happened in nanoseconds from EPOCH.
+    fixed64 timestamp_unix_nano = 4;
+
+    // The name that is used internal in the Serverless platform to identify the event.
+    string event_name = 5;
+
+    // The optional customTags that can be attached to an event when published.
+    // This is expected to be a JSON object in string format.
+    optional string custom_tags = 6;
+
+    // A message containing any number of Tagsets.
+    serverless.instrumentation.tags.v1.Tags tags = 15;
+}
