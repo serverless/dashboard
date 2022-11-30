@@ -16,25 +16,11 @@ message ErrorTags {
         // No ErrorType was provided. This should never be the case and if it is received ingest will ignore it.
         ERROR_TYPE_UNSPECIFIED = 0;
 
-        // An Uncaught exception was raised that interupts execution unexpectedly. 
+        // An unexpected error that caused the application to fail
         ERROR_TYPE_UNCAUGHT = 1;
        
-        // An Uncaught exception, specifically a timeout of the compute environment,
-        // A timeout in Lambda, for example, is registered when ingest receives a log line
-        // stating that the task timed out.
-        ERROR_TYPE_UNCAUGHT_TIMEOUT = 2;
-
-        // An Uncaught exception, specifically the compute environment ran out of memory.
-        ERROR_TYPE_UNCAUGHT_OOM = 3;
-
-        // An uncaught exception that takes place during the AWS Lambda Initialization phase.
-        ERROR_TYPE_UNCAUGHT_AWS_LAMBDA_INIT = 4;
-
-        // An uncaught exception that takes place during the AWS Lambda Invocation phase.
-        ERROR_TYPE_UNCAUGHT_AWS_LAMBDA_RESOLVED = 5;
-
         // An error that was explicitly caught with the Serverless SDK
-        ERROR_TYPE_CAUGHT = 6;
+        ERROR_TYPE_CAUGHT = 2;
 
     }
 
