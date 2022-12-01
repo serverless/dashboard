@@ -19,7 +19,9 @@ message ErrorTags {
         // An unexpected error that caused the application to fail
         ERROR_TYPE_UNCAUGHT = 1;
        
-        // An error that was explicitly caught with the Serverless SDK
+        // An error that was reported via the Serverless SDK.
+        // Error that doesn't explicitly fail the application.
+        // Multiple errors of this type can be reported during a single application run
         ERROR_TYPE_CAUGHT = 2;
 
     }
