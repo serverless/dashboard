@@ -3,6 +3,7 @@ syntax = "proto3";
 package serverless.instrumentation.v1;
 
 import "serverless/instrumentation/tags/v1/tags.proto";
+import "serverless/instrumentation/v1/event.proto";
 
 option go_package = ".;protoc";
 
@@ -18,6 +19,11 @@ message TracePayload {
     // number of Spans in a single payload. It is the responsibility of the
     // Span producers to limit the size of payloads based on their own requirements.
     repeated serverless.instrumentation.v1.Span spans = 3;
+
+    // A list of Events to be ingested. Ingest does not impose a limit on the
+    // number of Events in a single payload. It is the responsibility of the
+    // Event producers to limit the size of paylaods based on their own requirements.
+    repeated serverless.instrumentation.v1.Event events = 4;
 }
 
 message Span {
