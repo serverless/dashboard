@@ -252,11 +252,14 @@ jobs:
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
       - name: Buf Lint
         if: steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-lint-action@v1
         with:
           input: "proto"
+          github_token: ${{ github.token }}
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
@@ -450,6 +453,8 @@ jobs:
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
       - name: Build /sdk-schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
