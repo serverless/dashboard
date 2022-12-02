@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package serverless.instrumentation.tags.v1;
+
+option go_package = ".;protoc";
+
+message ErrorTags {
+    // The Error Name
+    string name = 1;
+    // The Error Message - Depending on runtime this is defined or not.
+    optional string message = 2;
+    // The Error stacktrace if applicable
+    optional string stacktrace = 3;
+
+    enum ErrorType {
+        // No ErrorType was provided. This should never be the case and if it is received ingest will ignore it.
+        ERROR_TYPE_UNSPECIFIED = 0;
+
+        // An unexpected error that caused the application to fail
+        ERROR_TYPE_UNCAUGHT = 1;
+       
+        // An error that was reported via the Serverless SDK.
+        // Error that doesn't explicitly fail the application.
+        // Multiple errors of this type can be reported during a single application run
+        ERROR_TYPE_CAUGHT = 2;
+
+    }
+
+    ErrorType type = 4;
+}
