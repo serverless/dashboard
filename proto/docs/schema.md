@@ -23,6 +23,11 @@
 - [serverless/instrumentation/tags/v1/common.proto](#serverless_instrumentation_tags_v1_common-proto)
     - [HttpTags](#serverless-instrumentation-tags-v1-HttpTags)
   
+- [serverless/instrumentation/tags/v1/error.proto](#serverless_instrumentation_tags_v1_error-proto)
+    - [ErrorTags](#serverless-instrumentation-tags-v1-ErrorTags)
+  
+    - [ErrorTags.ErrorType](#serverless-instrumentation-tags-v1-ErrorTags-ErrorType)
+  
 - [serverless/instrumentation/tags/v1/tags.proto](#serverless_instrumentation_tags_v1_tags-proto)
     - [SdkTags](#serverless-instrumentation-tags-v1-SdkTags)
     - [SlsTags](#serverless-instrumentation-tags-v1-SlsTags)
@@ -31,6 +36,10 @@
 - [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
     - [DevModePayload](#serverless-instrumentation-v1-DevModePayload)
     - [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry)
+  
+- [serverless/instrumentation/v1/event.proto](#serverless_instrumentation_v1_event-proto)
+    - [Event](#serverless-instrumentation-v1-Event)
+    - [EventPayload](#serverless-instrumentation-v1-EventPayload)
   
 - [serverless/instrumentation/v1/log.proto](#serverless_instrumentation_v1_log-proto)
     - [LogEvent](#serverless-instrumentation-v1-LogEvent)
@@ -385,6 +394,53 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 
 
 
+<a name="serverless_instrumentation_tags_v1_error-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## serverless/instrumentation/tags/v1/error.proto
+
+
+
+<a name="serverless-instrumentation-tags-v1-ErrorTags"></a>
+
+### ErrorTags
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | The Error Name |
+| message | [string](#string) | optional | The Error Message - Depending on runtime this is defined or not. |
+| stacktrace | [string](#string) | optional | The Error stacktrace if applicable |
+| type | [ErrorTags.ErrorType](#serverless-instrumentation-tags-v1-ErrorTags-ErrorType) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="serverless-instrumentation-tags-v1-ErrorTags-ErrorType"></a>
+
+### ErrorTags.ErrorType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ERROR_TYPE_UNSPECIFIED | 0 | No ErrorType was provided. This should never be the case and if it is received ingest will ignore it. |
+| ERROR_TYPE_UNCAUGHT | 1 | An unexpected error that caused the application to fail |
+| ERROR_TYPE_CAUGHT | 2 | An error that was reported via the Serverless SDK. Error that doesn&#39;t explicitly fail the application. Multiple errors of this type can be reported during a single application run |
+
+
+ 
+
+ 
+
+ 
+
+
+
 <a name="serverless_instrumentation_tags_v1_tags-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -444,6 +500,7 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process |
 | namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process |
 | org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process |
+| error | [ErrorTags](#serverless-instrumentation-tags-v1-ErrorTags) | optional | These tags are used when an event has occured and is reported on the event. |
 
 
 
@@ -499,6 +556,60 @@ have access to the telemetry API so it will not be included in all regions.
 | init_duration_ms | [uint32](#uint32) | optional | Init duration in milliseconds as reported by the metrics on the platform.initReport event |
 | runtime_duration_ms | [uint32](#uint32) | optional | Internal runtime duration in milliseconds as reported by the metrics on the platform.runtimeDone event |
 | runtime_response_latency_ms | [uint32](#uint32) | optional | Internal runtime duration in milliseconds as reported by the responseLatency span on the platform.runtimeDone event |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="serverless_instrumentation_v1_event-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## serverless/instrumentation/v1/event.proto
+
+
+
+<a name="serverless-instrumentation-v1-Event"></a>
+
+### Event
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [bytes](#bytes) |  | The Event ID, this will be a random 8-byte ID encoded as a length 16 lowercase hex string. |
+| trace_id | [bytes](#bytes) |  | The Trace ID, this will be a random 16-byte ID encoded as a length 32 lowercase hex string. The Trace ID is what is used to group all spans for specific trace together. |
+| span_id | [bytes](#bytes) | optional | An optional Span ID to be used to create to show the span context that the event was generated in. In practical terms, every span except the root span will have a parent span ID. |
+| timestamp_unix_nano | [fixed64](#fixed64) |  | The timestamp of when the Event happened in nanoseconds from EPOCH. |
+| event_name | [string](#string) |  | The name that is used internal in the Serverless platform to identify the event. |
+| custom_tags | [string](#string) | optional | The optional customTags that can be attached to an event when published. This is expected to be a JSON object in string format. |
+| tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets. |
+
+
+
+
+
+
+<a name="serverless-instrumentation-v1-EventPayload"></a>
+
+### EventPayload
+An EventPayload is a message that will contain any number
+of Events plus the global tags required by our Serverless Ingest Platform.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| sls_tags | [serverless.instrumentation.tags.v1.SlsTags](#serverless-instrumentation-tags-v1-SlsTags) |  |  |
+| events | [Event](#serverless-instrumentation-v1-Event) | repeated | A list of Events to be ingested. Ingest does not impose a limit on the number of Events in a single payload. It is the responsibility of the Event producer to limit the size of payloads based on their own requirements. |
 
 
 
