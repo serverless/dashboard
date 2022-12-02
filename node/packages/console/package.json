@@ -1,0 +1,42 @@
+{
+  "name": "@serverless/console",
+  "repository": "serverless/console",
+  "version": "0.1.0",
+  "author": "Serverless, Inc.",
+  "standard-version": {
+    "tagPrefix": "@serverless/console@",
+    "path": ".",
+    "skip": {
+      "commit": true,
+      "tag": true
+    },
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "perf",
+        "section": "Performance Improvements"
+      },
+      {
+        "type": "refactor",
+        "section": "Maintenance Improvements"
+      }
+    ]
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.45.0"
+  }
+}

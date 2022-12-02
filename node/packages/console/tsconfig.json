@@ -1,0 +1,14 @@
+{
+    "extends": "@tsconfig/node16/tsconfig.json",
+    "compilerOptions": {
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "outDir": "./dist",
+        "sourceMap": true,
+        "noImplicitAny": false
+    },
+    "include": [
+        "src/**/*",
+        "tests/**/*"
+    ]
+}

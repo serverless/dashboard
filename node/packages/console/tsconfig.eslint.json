@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+      ".eslintrc.js", // ESLint's config must be included
+      ".",
+    ],
+  }
+  
+  
+  
