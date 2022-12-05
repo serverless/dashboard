@@ -70,6 +70,7 @@ const testTracePayload = {
       },
     },
   ],
+  events: [],
 };
 
 describe('span-schema', () => {
