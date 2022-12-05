@@ -859,6 +859,7 @@ will make up the complete Trace.
 | ----- | ---- | ----- | ----------- |
 | sls_tags | [serverless.instrumentation.tags.v1.SlsTags](#serverless-instrumentation-tags-v1-SlsTags) |  |  |
 | spans | [Span](#serverless-instrumentation-v1-Span) | repeated | A list of Spans to be ingest. Ingest does not impose a limit on the number of Spans in a single payload. It is the responsibility of the Span producers to limit the size of payloads based on their own requirements. |
+| events | [Event](#serverless-instrumentation-v1-Event) | repeated | A list of Events to be ingested. Ingest does not impose a limit on the number of Events in a single payload. It is the responsibility of the Event producers to limit the size of paylaods based on their own requirements. |
 
 
 
