@@ -9,12 +9,13 @@ if (!serverlessSdk._isDevMode) {
 }
 
 const http = require('http');
+const limit = require('ext/promise/limit').bind(Promise);
 
 const keepAliveAgent = new http.Agent({ keepAlive: true });
 
 const telemetryServerUrl = 'http://localhost:2773/';
 
-module.exports = async (name, body) => {
+module.exports = limit(10, async (name, body) => {
   let requestSocket;
   const requestStartTime = process.hrtime.bigint();
   serverlessSdk._debugLog('Telemetry send', name);
@@ -56,4 +57,4 @@ module.exports = async (name, body) => {
       Number(process.hrtime.bigint() - requestStartTime) / 1000000
     )}ms`
   );
-};
+});
