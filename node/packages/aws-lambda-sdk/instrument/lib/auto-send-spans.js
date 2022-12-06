@@ -12,11 +12,14 @@ if (!serverlessSdk._isDevMode) {
 
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const sendTelemetry = require('./send-telemetry');
+const invocationContextAccessor = require('./invocation-context-accessor');
 
 const pendingSpans = [];
 let isScheduled = false;
+let timeoutId = null;
 const sendSpans = () => {
   isScheduled = false;
+  clearTimeout(timeoutId);
   if (!pendingSpans.length) return;
   const payload = {
     slsTags: {
@@ -42,7 +45,11 @@ serverlessSdk._traceSpanEmitter.on('close', (traceSpan) => {
   pendingSpans.push(traceSpan);
   if (!isScheduled) {
     isScheduled = true;
-    process.nextTick(sendSpans);
+    const context = invocationContextAccessor.value;
+    timeoutId = setTimeout(
+      sendSpans,
+      Math.min(100, Math.max(0, context ? context.getRemainingTimeInMillis() - 50 : 100))
+    );
   }
 });
 
