@@ -37,7 +37,8 @@ module.exports = async (name, body) => {
                 `server responded with "${response.statusCode}" status code\n`
             );
           }
-          resolve();
+          response.on('data', () => {});
+          response.on('end', resolve);
         }
       );
       request.on('error', reject);
