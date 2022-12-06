@@ -11,6 +11,7 @@ const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
 const sendTelemetry = require('./lib/send-telemetry');
 const flushSpans = require('./lib/auto-send-spans').flush;
+const invocationContextAccessor = require('./lib/invocation-context-accessor');
 const pkgJson = require('../package');
 
 const serverlessSdk = global.serverlessSdk || require('../');
@@ -117,6 +118,7 @@ module.exports = (originalHandler, options = {}) => {
     let originalDone;
     try {
       serverlessSdk._debugLog('Invocation: start');
+      invocationContextAccessor.set(context);
       let isResolved = false;
       let responseStartTime;
       const invocationId = ++currentInvocationId;
