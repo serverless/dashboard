@@ -27,12 +27,7 @@ const sendSpans = () => {
       service: process.env.AWS_LAMBDA_FUNCTION_NAME,
       sdk: { name: '@serverless/aws-lambda-sdk', version: serverlessSdk.version },
     },
-    spans: pendingSpans.map((span) => {
-      const result = span.toProtobufObject();
-      span.input = null;
-      span.output = null;
-      return result;
-    }),
+    spans: pendingSpans.map((span) => span.toProtobufObject()),
     events: [],
   };
   pendingSpans.length = 0;
@@ -48,7 +43,7 @@ serverlessSdk._traceSpanEmitter.on('close', (traceSpan) => {
     const context = invocationContextAccessor.value;
     timeoutId = setTimeout(
       sendSpans,
-      Math.min(100, Math.max(0, context ? context.getRemainingTimeInMillis() - 50 : 100))
+      Math.min(50, Math.max(0, context ? context.getRemainingTimeInMillis() - 50 : 50))
     );
   }
 });
