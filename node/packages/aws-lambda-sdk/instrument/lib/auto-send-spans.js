@@ -30,6 +30,7 @@ const sendSpans = () => {
       span.output = null;
       return result;
     }),
+    events: [],
   };
   pendingSpans.length = 0;
   serverlessSdk._deferredTelemetryRequests.push(

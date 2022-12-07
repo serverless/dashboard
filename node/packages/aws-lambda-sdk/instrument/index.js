@@ -89,6 +89,7 @@ const reportTrace = () => {
       sdk: { name: pkgJson.name, version: pkgJson.version },
     },
     spans: Array.from(awsLambdaSpan.spans).map((span) => span.toProtobufObject()),
+    events: [],
   });
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
