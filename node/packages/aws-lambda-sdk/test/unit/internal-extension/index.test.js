@@ -796,6 +796,26 @@ describe('internal-extension/index.test.js', () => {
   describe('dev mode', () => {
     let server;
     let payloads = [];
+
+    const resolvePayloadsSummary = () => {
+      const payloadsSummary = { requestResponses: [], traceSpans: [] };
+      for (const [type, payload] of payloads) {
+        switch (type) {
+          case 'request-response':
+            payloadsSummary.requestResponses.push({ origin: payload.origin });
+            break;
+          case 'trace':
+            payloadsSummary.traceSpans.push(
+              ...payload.spans.map(({ name, input, output }) => ({ name, input, output }))
+            );
+            break;
+          default:
+            throw new Error('Unexpected');
+        }
+      }
+      return payloadsSummary;
+    };
+
     before(() => {
       const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
       const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
@@ -843,121 +863,53 @@ describe('internal-extension/index.test.js', () => {
         expect(httpSpan.output).to.be.undefined;
       }
 
-      expect(
-        payloads.map(([type, payload]) => {
-          switch (type) {
-            case 'request-response':
-              return { type, origin: payload.origin };
-            case 'trace':
-              return {
-                type,
-                spans: payload.spans.map(({ name, input, output }) => ({ name, input, output })),
-              };
-            default:
-              throw new Error('Unexpected');
-          }
-        })
-      ).to.deep.equal([
-        {
-          type: 'trace',
-          spans: [{ name: 'aws.lambda.initialization', input: undefined, output: undefined }],
-        },
-        { type: 'request-response', origin: 1 },
-        {
-          type: 'trace',
-          spans: [
-            { name: 'express.middleware.query', input: undefined, output: undefined },
-            { name: 'express.middleware.expressinit', input: undefined, output: undefined },
-            { name: 'express.middleware.jsonparser', input: undefined, output: undefined },
-          ],
-        },
-        {
-          type: 'trace',
-          spans: [
-            {
-              name: 'node.http.request',
-              input: 'test',
-              output: '"ok"',
-            },
-          ],
-        },
-        {
-          type: 'trace',
-          spans: [
-            {
-              name: 'node.http.request',
-              input: 'test',
-              output: '"ok"',
-            },
-          ],
-        },
-        {
-          type: 'trace',
-          spans: [
-            {
-              name: 'node.http.request',
-              input: 'test',
-              output: '"ok"',
-            },
-          ],
-        },
-        {
-          type: 'trace',
-          spans: [
-            {
-              name: 'node.http.request',
-              input: 'test',
-              output: '"ok"',
-            },
-          ],
-        },
-        { type: 'request-response', origin: 2 },
-        {
-          type: 'trace',
-          spans: [
-            { name: 'express.middleware.router', input: undefined, output: undefined },
-            { name: 'express.middleware.route.get.anonymous', input: undefined, output: undefined },
-            { name: 'express', input: undefined, output: undefined },
-            { name: 'aws.lambda.invocation', input: undefined, output: undefined },
-            { name: 'aws.lambda', input: undefined, output: undefined },
-          ],
-        },
-      ]);
+      expect(resolvePayloadsSummary()).to.deep.equal({
+        requestResponses: [{ origin: 1 }, { origin: 2 }],
+        traceSpans: [
+          { name: 'aws.lambda.initialization', input: undefined, output: undefined },
+          { name: 'express.middleware.query', input: undefined, output: undefined },
+          { name: 'express.middleware.expressinit', input: undefined, output: undefined },
+          { name: 'express.middleware.jsonparser', input: undefined, output: undefined },
+          {
+            name: 'node.http.request',
+            input: 'test',
+            output: '"ok"',
+          },
+          {
+            name: 'node.http.request',
+            input: 'test',
+            output: '"ok"',
+          },
+          {
+            name: 'node.http.request',
+            input: 'test',
+            output: '"ok"',
+          },
+          {
+            name: 'node.http.request',
+            input: 'test',
+            output: '"ok"',
+          },
+          { name: 'express.middleware.router', input: undefined, output: undefined },
+          { name: 'express.middleware.route.get.anonymous', input: undefined, output: undefined },
+          { name: 'express', input: undefined, output: undefined },
+          { name: 'aws.lambda.invocation', input: undefined, output: undefined },
+          { name: 'aws.lambda', input: undefined, output: undefined },
+        ],
+      });
     });
 
     it('should support no return functions', async () => {
       await handleInvocation('callback-no-result', { isCustomReponse: true });
 
-      expect(
-        payloads.map(([type, payload]) => {
-          switch (type) {
-            case 'request-response':
-              return { type, origin: payload.origin };
-            case 'trace':
-              return {
-                type,
-                spans: payload.spans.map(({ name, input, output }) => ({ name, input, output })),
-              };
-            default:
-              throw new Error('Unexpected');
-          }
-        })
-      ).to.deep.equal([
-        {
-          type: 'trace',
-          spans: [{ name: 'aws.lambda.initialization', input: undefined, output: undefined }],
-        },
-        { type: 'request-response', origin: 1 },
-
-        { type: 'request-response', origin: 2 },
-        {
-          type: 'trace',
-          spans: [
-            { name: 'aws.lambda.invocation', input: undefined, output: undefined },
-            { name: 'aws.lambda', input: undefined, output: undefined },
-          ],
-        },
-      ]);
+      expect(resolvePayloadsSummary()).to.deep.equal({
+        requestResponses: [{ origin: 1 }, { origin: 2 }],
+        traceSpans: [
+          { name: 'aws.lambda.initialization', input: undefined, output: undefined },
+          { name: 'aws.lambda.invocation', input: undefined, output: undefined },
+          { name: 'aws.lambda', input: undefined, output: undefined },
+        ],
+      });
     });
   });
 });
