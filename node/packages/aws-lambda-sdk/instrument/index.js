@@ -89,7 +89,12 @@ const reportTrace = () => {
       service: process.env.AWS_LAMBDA_FUNCTION_NAME,
       sdk: { name: pkgJson.name, version: pkgJson.version },
     },
-    spans: Array.from(awsLambdaSpan.spans).map((span) => span.toProtobufObject()),
+    spans: Array.from(awsLambdaSpan.spans).map((span) => {
+      const spanPayload = span.toProtobufObject();
+      delete spanPayload.input;
+      delete spanPayload.output;
+      return spanPayload;
+    }),
     events: [],
   });
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
