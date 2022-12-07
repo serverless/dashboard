@@ -33,6 +33,6 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           add: ./proto/docs/schema.md
-          message: "chore: Update Protobuf Documentation"
+          message: "doc: Update Protobuf Documentation"
           committer_name: serverless-ci
           committer_email: platform@serverless.com
