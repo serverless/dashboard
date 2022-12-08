@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.13.2...@serverless/sdk-schema@0.14.0) (2022-12-07)
+
+### ⚠ BREAKING CHANGES
+
+- `tracePayload`: `events` is added as a repeated field
+
+### Features
+
+- Add Events as a property of TracePayload ([aced7ec](https://github.com/serverless/console/commit/aced7ecb10f4dd862d1ed29fbe2717974ed78022))
+
 ### [0.13.2](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.13.1...@serverless/sdk-schema@0.13.2) (2022-12-02)
 
 ### Features
