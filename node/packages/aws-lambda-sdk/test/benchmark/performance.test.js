@@ -25,16 +25,16 @@ describe('performance', function () {
   });
 
   it('should introduce reasonable first invocation overhead', () => {
-    expect(results.get('internal').results.invocation.first.total.median).to.be.below(11);
+    expect(results.get('internal').results.invocation.first.total.median).to.be.below(15);
     expect(results.get('internalAndExternal').results.invocation.first.total.median).to.be.below(
-      40
+      90
     );
   });
 
   it('should introduce reasonable following invocation overhead', () => {
     expect(results.get('internal').results.invocation.following.total.median).to.be.below(10);
     expect(results.get('internalAndExternal').results.invocation.first.total.median).to.be.below(
-      40
+      90
     );
   });
 });
