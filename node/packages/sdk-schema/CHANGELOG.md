@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.14.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.13.2...@serverless/sdk-schema@0.14.0) (2022-12-07)
 
+### ⚠ BREAKING CHANGES
+
+- `tracePayload`: `events` is added as a repeated field
+
 ### Features
 
 - Add Events as a property of TracePayload ([aced7ec](https://github.com/serverless/console/commit/aced7ecb10f4dd862d1ed29fbe2717974ed78022))
