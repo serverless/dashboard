@@ -211,9 +211,11 @@ const processStartTime = process.hrtime.bigint();
     servers.add(
       http
         .createServer((request, response) => {
+          debugLog('External: telemetry request');
           request.on('data', () => {});
           request.on('end', () => {
             response.writeHead(200, '');
+            debugLog('External: telemetry response');
             response.end('OK');
           });
         })
