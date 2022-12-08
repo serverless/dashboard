@@ -4,11 +4,7 @@
 
 _DIsable with `SLS_DISABLE_REQUEST_MONITORING` and `SLS_DISABLE_RESPONSE_MONITORING` environment variables respectively_
 
-SDK reads and writes to logs request (lambda event) and response data. This data is written with a log line looking as:
-
-```
-SERVERLESS_TELEMETRY.R.<base64 encoded payload>
-```
+SDK reads and writes to logs request (lambda event) and response data. This data is written along with the Trace.
 
 ## HTTP(S) requests
 
@@ -43,13 +39,13 @@ However if AWS SDK is bundled or imported via ESM import, then instrumentation n
 import AWS from 'aws-sdk';
 
 // Instrument AWS SDK v2:
-serverlessSdk.instrument.awsSdkV2(AWS);
+serverlessSdk.instrumentation.awsSdkV2.install(AWS);
 
 import { Lambda } from '@aws/client-lambda';
 const lambda = new Lambda({ region: process.env.AWS_REGION });
 
 // Instrument AWS SDK v3 Client
-serverlessSdk.instrument.awsSdkV3Client(lambda);
+serverlessSdk.instrumentation.awsSdkV3Client.install(lambda);
 ```
 
 Covered AWS SDK requests are reflected in `aws.sdk.<service-name>` spans
@@ -120,7 +116,7 @@ import express from 'express';
 
 const app = express();
 
-serverlessSdk.instrument.expressApp(express);
+serverlessSdk.instrumentation.expressApp.install(express);
 ```
 
 Handling of express route is covered in context of main `express` span. Additionally middleware jobs are recorded as following spans:
