@@ -1261,6 +1261,27 @@ describe('integration', function () {
         }),
       },
     ],
+    [
+      'delayed-http-request',
+      {
+        variants: new Map([
+          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
+          ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
+        ]),
+        config: {
+          test: ({ invocationsData }) => {
+            expect(invocationsData[1].trace.spans.map(({ name }) => name)).to.deep.equal([
+              'aws.lambda',
+              'node.http.request',
+              'aws.lambda.invocation',
+            ]);
+          },
+          hasOrphanedSpans: true,
+        },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
@@ -1313,10 +1334,12 @@ describe('integration', function () {
             expect(String(initializationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
           } else {
-            expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
-              'aws.lambda',
-              'aws.lambda.invocation',
-            ]);
+            if (!testConfig.hasOrphanedSpans) {
+              expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
+                'aws.lambda',
+                'aws.lambda.invocation',
+              ]);
+            }
             expect(lambdaSpan.tags.aws.lambda.isColdstart).to.be.false;
             const [, invocationSpan] = spans;
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));

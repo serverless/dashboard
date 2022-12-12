@@ -127,15 +127,7 @@ module.exports = (originalHandler, options = {}) => {
       let isResolved = false;
       let responseStartTime;
       const invocationId = ++currentInvocationId;
-      if (invocationId > 1) {
-        // Reset root span ids and startTime with every next invocation
-        delete awsLambdaSpan.traceId;
-        delete awsLambdaSpan.id;
-        delete awsLambdaSpan.endTime;
-        awsLambdaSpan.startTime = requestStartTime;
-        awsLambdaSpan.tags.reset();
-        awsLambdaSpan.subSpans.clear();
-      }
+      if (invocationId > 1) awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
       const awsLambdaInvocationSpan = (traceSpans.awsLambdaInvocation =
         serverlessSdk.createTraceSpan('aws.lambda.invocation', { startTime: requestStartTime }));
@@ -184,6 +176,14 @@ module.exports = (originalHandler, options = {}) => {
           awsLambdaSpan.close({ endTime });
           reportTrace();
           flushSpans();
+
+          // Clear root span
+          delete awsLambdaSpan.traceId;
+          delete awsLambdaSpan.id;
+          delete awsLambdaSpan.endTime;
+          awsLambdaSpan.tags.reset();
+          awsLambdaSpan.subSpans.clear();
+
           await Promise.all(serverlessSdk._deferredTelemetryRequests);
           serverlessSdk._deferredTelemetryRequests.length = 0;
           serverlessSdk._debugLog(
