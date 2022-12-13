@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.11.5](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.4...@serverless/aws-lambda-sdk@0.11.5) (2022-12-13)
+
+### Bug Fixes
+
+- Fix handling of deferred spans, started before handler invocation ([0970940](https://github.com/serverless/console/commit/0970940e88c06b0d937a4c55d237723550f6dd60))
+- To respect open handles wait for response to end ([cc3a531](https://github.com/serverless/console/commit/cc3a531353bef5b6bce1d80911b10ff6544f50ea))
+- Reduce number of concurrently open requests to avoid EMFILE ([55d314d](https://github.com/serverless/console/commit/55d314d85e186d21f7e9561a1c5b39929e784615))
+- Clear `input` and `output` for trace payload reliably ([03140cb](https://github.com/serverless/console/commit/03140cbf7af52f88b8e91bc444b2cf8bfa3ef19a))
+
+### Maintenance Improvements
+
+- Upgrade `@serverless/sdk-schema` to v0.14 ([365ba4e](https://github.com/serverless/console/commit/365ba4e5258c1df65d945372904096afddf64f33))
+- Limit maximum number of concurrent requests to avoid EMFILE ([d16b28c](https://github.com/serverless/console/commit/d16b28c258630808957488df3109fa9592878f01))
+- Remove dead code ([73c9fa5](https://github.com/serverless/console/commit/73c9fa54c896a52567dedab0c34f087affd15a53))
+
 ### [0.11.4](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.3...@serverless/aws-lambda-sdk@0.11.4) (2022-11-24)
 
 ### Bug Fixes
