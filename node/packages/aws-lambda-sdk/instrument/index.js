@@ -14,7 +14,7 @@ const flushSpans = require('./lib/auto-send-spans').flush;
 const invocationContextAccessor = require('./lib/invocation-context-accessor');
 const pkgJson = require('../package');
 
-const serverlessSdk = global.serverlessSdk || require('../');
+const serverlessSdk = require('./lib/sdk');
 
 const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =

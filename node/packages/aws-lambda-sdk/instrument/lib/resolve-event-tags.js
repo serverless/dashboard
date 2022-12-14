@@ -2,7 +2,7 @@
 
 const isObject = require('type/object/is');
 
-const awsLambdaSpan = (global.serverlessSdk || require('../../')).traceSpans.awsLambda;
+const awsLambdaSpan = require('./sdk').traceSpans.awsLambda;
 
 const objHasOwnProperty = Object.prototype.hasOwnProperty;
 

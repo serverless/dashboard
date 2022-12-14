@@ -2,7 +2,7 @@
 
 const coerceNaturalNumber = require('type/natural-number/coerce');
 
-const awsLambdaSpan = (global.serverlessSdk || require('../../')).traceSpans.awsLambda;
+const awsLambdaSpan = require('./sdk').traceSpans.awsLambda;
 
 module.exports = (response) => {
   switch (awsLambdaSpan.tags.get('aws.lambda.event_type')) {
