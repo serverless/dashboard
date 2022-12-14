@@ -1,6 +1,6 @@
 'use strict';
 
-const serverlessSdk = global.serverlessSdk || require('../');
+const serverlessSdk = require('./sdk');
 
 if (!serverlessSdk._isDevMode) {
   // No dev mode, export noop function

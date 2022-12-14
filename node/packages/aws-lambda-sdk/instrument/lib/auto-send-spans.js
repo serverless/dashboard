@@ -1,6 +1,6 @@
 'use strict';
 
-const serverlessSdk = global.serverlessSdk || require('../');
+const serverlessSdk = require('./sdk');
 
 serverlessSdk._deferredTelemetryRequests = [];
 
