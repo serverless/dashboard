@@ -210,7 +210,6 @@ jobs:
         run: |
           cd node
           ./scripts/commitlint.js packages/sdk-schema main..HEAD
-
       - name: Validate packages/aws-lambda-otel-extension changelog (if new version)
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'
         run: |
