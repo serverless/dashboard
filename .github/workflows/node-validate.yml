@@ -40,6 +40,8 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            sdk:
+              - 'node/packages/sdk/**'
             sdkSchema:
               - 'node/packages/sdk-schema/**'
             proto:
@@ -126,6 +128,17 @@ jobs:
             packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-refs/heads/main-
 
+      - name: Retrieve packages/sdk/node_modules from cache
+        if: steps.pathChanges.outputs.sdk == 'true'
+        id: cacheSdkNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk/node_modules
+          key: packages/sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk/package.json') }}
+          restore-keys: |
+            packages/sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+            packages/sdk/node-modules-v16-${{ runner.os }}-refs/heads/main-
+
       - name: Retrieve packages/sdk-schema/node_modules from cache
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
@@ -180,6 +193,12 @@ jobs:
           cd node/packages/aws-lambda-sdk/test/fixtures/lambdas
           npm update --no-save
 
+      - name: Install packages/sdk dependencies
+        if: steps.pathChanges.outputs.sdk == 'true' && steps.cacheSdkNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/sdk
+          npm update --no-save
+
       - name: Install packages/sdk-schema dependencies
         if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -205,11 +224,17 @@ jobs:
         run: |
           cd node
           ./scripts/commitlint.js packages/aws-lambda-sdk main..HEAD
+      - name: Validate packages/sdk commit messages
+        if: steps.pathChanges.outputs.sdk == 'true' && github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
+        run: |
+          cd node
+          ./scripts/commitlint.js packages/sdk main..HEAD
       - name: Validate packages/sdk-schema commit messages
         if: steps.pathChanges.outputs.sdkSchema == 'true' && github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
         run: |
           cd node
           ./scripts/commitlint.js packages/sdk-schema main..HEAD
+
       - name: Validate packages/aws-lambda-otel-extension changelog (if new version)
         if: steps.pathChanges.outputs.awsLambdaOtelExtension == 'true'
         run: |
@@ -223,6 +248,15 @@ jobs:
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd node/packages/aws-lambda-sdk
+          NEW_VERSION=`git diff -U0 main package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0"];
+          then
+            npx dump-release-notes-from-cc-changelog $NEW_VERSION
+          fi
+      - name: Validate packages/sdk changelog (if new version)
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          cd node/packages/sdk
           NEW_VERSION=`git diff -U0 main package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0"];
           then
@@ -247,6 +281,11 @@ jobs:
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd node/packages/aws-lambda-sdk
+          npm test
+      - name: Unit tests sdk
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          cd node/packages/sdk
           npm test
 
       - name: Buf Setup
@@ -289,6 +328,8 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            sdk:
+              - 'node/packages/sdk/**'
             sdkSchema:
               - 'node/packages/sdk-schema/**'
             proto:
@@ -375,6 +416,17 @@ jobs:
             packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
             packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-refs/heads/main-
 
+      - name: Retrieve packages/sdk/node_modules from cache
+        if: steps.pathChanges.outputs.sdk == 'true'
+        id: cacheSdkNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk/node_modules
+          key: packages/sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk/package.json') }}
+          restore-keys: |
+            packages/sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
+            packages/sdk/node-modules-v14-${{ runner.os }}-refs/heads/main-
+
       - name: Retrieve packages/sdk-schema/node_modules from cache
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
@@ -429,6 +481,12 @@ jobs:
           cd node/packages/aws-lambda-sdk/test/fixtures/lambdas
           npm update --no-save
 
+      - name: Install packages/sdk dependencies
+        if: steps.pathChanges.outputs.sdk == 'true' && steps.cacheSdkNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/sdk
+          npm update --no-save
+
       - name: Install packages/sdk-schema dependencies
         if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -448,6 +506,13 @@ jobs:
           # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
           export PATH="$PWD/node/node_modules/.bin:$PATH"
           cd node/packages/aws-lambda-sdk
+          npm run test:isolated
+      - name: Unit tests sdk
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
+          export PATH="$PWD/node/node_modules/.bin:$PATH"
+          cd node/packages/sdk
           npm run test:isolated
 
       - name: Buf Setup
