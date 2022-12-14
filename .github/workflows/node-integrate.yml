@@ -21,8 +21,9 @@ jobs:
     outputs:
       pathChangedAwsLambdaOtelExtension: ${{ steps.pathChanges.outputs.awsLambdaOtelExtension }}
       pathChangedAwsLambdaSdk: ${{ steps.pathChanges.outputs.awsLambdaSdk }}
-      pathChangedTestGoDevMode: ${{ steps.pathChanges.outputs.testGoDevMode }}
+      pathChangedSdk: ${{ steps.pathChanges.outputs.sdk}}
       pathChangedSdkSchema: ${{ steps.pathChanges.outputs.sdkSchema}}
+      pathChangedTestGoDevMode: ${{ steps.pathChanges.outputs.testGoDevMode }}
       pathChangedProto: ${{ steps.pathChanges.outputs.proto }}
     steps:
       - name: Checkout repository
@@ -36,11 +37,13 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            sdk:
+              - 'node/packages/sdk/**'
+            sdkSchema:
+              - 'node/packages/sdk-schema/**'
             testGoDevMode:
               - 'go/packages/dev-mode/**'
               - 'node/test/go/dev-mode/**'
-            sdkSchema:
-              - 'node/packages/sdk-schema/**'
             proto:
               - 'proto/**'
 
@@ -109,6 +112,15 @@ jobs:
           key: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/test/fixtures/lambdas/package.json') }}
           restore-keys: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
 
+      - name: Retrieve packages/sdk/node_modules from cache
+        if: steps.pathChanges.outputs.sdk == 'true'
+        id: cacheSdkNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk/node_modules
+          key: packages/sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk/package.json') }}
+          restore-keys: packages/sdk/node-modules-v16-${{ runner.os }}-${{ github.ref }}-
+
       - name: Retrieve packages/sdk-schema/node_modules from cache
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
@@ -161,6 +173,12 @@ jobs:
           cd node/packages/aws-lambda-sdk/test/fixtures/lambdas
           npm update --no-save
 
+      - name: Install packages/sdk dependencies
+        if: steps.pathChanges.outputs.sdk == 'true' && steps.cacheSdkNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/sdk
+          npm update --no-save
+
       - name: Install packages/sdk-schema dependencies
         if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -176,6 +194,11 @@ jobs:
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd node/packages/aws-lambda-sdk
+          npm test
+      - name: Unit tests /sdk
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          cd node/packages/sdk
           npm test
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
@@ -214,11 +237,13 @@ jobs:
               - 'node/packages/aws-lambda-otel-extension/**'
             awsLambdaSdk:
               - 'node/packages/aws-lambda-sdk/**'
+            sdk:
+              - 'node/packages/sdk/**'
+            sdkSchema:
+              - 'node/packages/sdk-schema/**'
             testGoDevMode:
               - 'go/packages/dev-mode/**'
               - 'node/test/go/dev-mode/**'
-            sdkSchema:
-              - 'node/packages/sdk-schema/**'
             proto:
               - 'proto/**'
 
@@ -286,6 +311,15 @@ jobs:
           key: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/aws-lambda-sdk/test/fixtures/lambdas/package.json') }}
           restore-keys: packages/aws-lambda-sdk/test/fixtures/lambdas/node-modules-v14-${{ runner.os }}-refs/heads/main-
 
+      - name: Retrieve packages/sdk/node_modules from cache
+        if: steps.pathChanges.outputs.sdk == 'true'
+        id: cacheSdkNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/packages/sdk/node_modules
+          key: packages/sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('node/packages/sdk/package.json') }}
+          restore-keys: packages/sdk/node-modules-v14-${{ runner.os }}-${{ github.ref }}-
+
       - name: Retrieve packages/sdk-schema/node_modules from cache
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         id: cacheSdkSchemaNodeModules
@@ -338,6 +372,12 @@ jobs:
           cd node/packages/aws-lambda-sdk/test/fixtures/lambdas
           npm update --no-save
 
+      - name: Install packages/sdk dependencies
+        if: steps.pathChanges.outputs.sdk == 'true' && steps.cacheSdkNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node/packages/sdk
+          npm update --no-save
+
       - name: Install packages/sdk-schema dependencies
         if: (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true') && steps.cacheSdkSchemaNodeModules.outputs.cache-hit != 'true'
         run: |
@@ -357,6 +397,13 @@ jobs:
           # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
           export PATH="$PWD/node/node_modules/.bin:$PATH"
           cd node/packages/aws-lambda-sdk
+          npm run test:isolated
+      - name: Unit tests sdk
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          # npm v6 doesn't add parent node_modules/.bin to PATH, workaround it
+          export PATH="$PWD/node/node_modules/.bin:$PATH"
+          cd node/packages/sdk
           npm run test:isolated
 
       - name: Buf Setup
@@ -545,6 +592,57 @@ jobs:
             git push --tags
           fi
 
+  integrateSdk:
+    name: Integrate @serverless/sdk
+    runs-on: ubuntu-latest
+    needs: [linuxNode16, linuxNode14]
+    if: needs.linuxNode16.outputs.pathChangedSdk == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # Ensure to have complete history of commits pushed with given push operation
+          # It's loose and imperfect assumption that no more than 30 commits will be pushed at once
+          fetch-depth: 30
+          # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
+          # Hence we're passing 'serverless-ci' user authentication token
+          token: ${{ secrets.USER_GITHUB_TOKEN }}
+      # We should have real integration tests here, but for now we are just going to tag a release if unit tests pass
+      - name: Tag if new version
+        run: |
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} node/packages/sdk/package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
+          then
+            git tag @serverless/sdk@$NEW_VERSION
+            git push --tags
+          fi
+
+  integrateSdkSchema:
+    name: Integrate @serverless/sdk-schema
+    runs-on: ubuntu-latest
+    needs: [linuxNode16, linuxNode14]
+    if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode16.outputs.pathChangedProto == 'true'
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # Ensure to have complete history of commits pushed with given push operation
+          # It's loose and imperfect assumption that no more than 30 commits will be pushed at once
+          fetch-depth: 30
+          # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
+          # Hence we're passing 'serverless-ci' user authentication token
+          token: ${{ secrets.USER_GITHUB_TOKEN }}
+      # We should have real integration tests here, but for now we are just going to tag a release if unit tests pass
+      - name: Tag if new version
+        run: |
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} node/packages/sdk-schema/package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
+          then
+            git tag @serverless/sdk-schema@$NEW_VERSION
+            git push --tags
+          fi
+
   integrateTestGoDevMode:
     name: Integrate Dev Mode Extension
     runs-on: ubuntu-latest
@@ -624,31 +722,5 @@ jobs:
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
           then
             git tag go/sls-external-extension@$NEW_VERSION
-            git push --tags
-          fi
-
-  integrateSdkSchema:
-    name: Integrate @serverless/sdk-schema
-    runs-on: ubuntu-latest
-    needs: [linuxNode16, linuxNode14]
-    if: needs.linuxNode16.outputs.pathChangedSdkSchema == 'true' || needs.linuxNode16.outputs.pathChangedProto == 'true'
-    timeout-minutes: 5
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          # Ensure to have complete history of commits pushed with given push operation
-          # It's loose and imperfect assumption that no more than 30 commits will be pushed at once
-          fetch-depth: 30
-          # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
-          # Hence we're passing 'serverless-ci' user authentication token
-          token: ${{ secrets.USER_GITHUB_TOKEN }}
-      # We should have real integration tests here, but for now we are just going to tag a release if unit tests pass
-      - name: Tag if new version
-        run: |
-          NEW_VERSION=`git diff -U0 ${{ github.event.before }} node/packages/sdk-schema/package.json | grep '"version": "' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
-          if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
-          then
-            git tag @serverless/sdk-schema@$NEW_VERSION
             git push --tags
           fi
