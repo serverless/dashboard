@@ -1,4 +1,4 @@
-import TraceSpan from '../lib/trace-span';
+import TraceSpan from '@serverless/sdk/lib/trace-span';
 
 declare const awsLambdaTraceSpan: TraceSpan;
 

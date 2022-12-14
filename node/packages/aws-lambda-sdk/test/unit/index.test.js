@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 
-const TraceSpan = require('../../lib/trace-span');
+const TraceSpan = require('@serverless/sdk/lib/trace-span');
 
 describe('index.test.js', () => {
   let serverlessSdk;

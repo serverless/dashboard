@@ -102,6 +102,17 @@ const reportTrace = () => {
   process._rawDebug(`SERVERLESS_TELEMETRY.T.${payloadBuffer.toString('base64')}`);
 };
 
+const resolveOutcomeEnumValue = (value) => {
+  switch (value) {
+    case 'success':
+      return 1;
+    case 'error:handled':
+      return 5;
+    default:
+      throw new Error(`Unexpected outcome value: ${value}`);
+  }
+};
+
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
   serverlessSdk._initialize(options);
@@ -143,7 +154,7 @@ module.exports = (originalHandler, options = {}) => {
           responseStartTime = process.hrtime.bigint();
           isResolved = true;
 
-          awsLambdaSpan.tags.set('aws.lambda.outcome', outcome);
+          awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));
           if (outcome === 'error:handled') {
             const errorMessage =
               (outcomeResult && outcomeResult.message) || coerceToString(outcomeResult);

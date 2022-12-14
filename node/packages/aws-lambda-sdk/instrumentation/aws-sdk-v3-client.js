@@ -2,7 +2,7 @@
 
 const ensureObject = require('type/object/ensure');
 const doNotInstrumentFollowingHttpRequest =
-  require('../lib/instrumentation/http').ignoreFollowingRequest;
+  require('@serverless/sdk/lib/instrumentation/http').ignoreFollowingRequest;
 
 const instrumentedClients = new WeakMap();
 

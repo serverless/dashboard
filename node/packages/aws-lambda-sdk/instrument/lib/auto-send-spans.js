@@ -36,7 +36,7 @@ const sendSpans = () => {
   );
 };
 
-serverlessSdk._traceSpanEmitter.on('close', (traceSpan) => {
+serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => {
   pendingSpans.push(traceSpan);
   if (!isScheduled) {
     isScheduled = true;
