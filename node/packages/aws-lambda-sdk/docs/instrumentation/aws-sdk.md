@@ -1,31 +1,4 @@
-# AWS Lambda SDK internal flow monitoring
-
-## Request and response data
-
-_DIsable with `SLS_DISABLE_REQUEST_MONITORING` and `SLS_DISABLE_RESPONSE_MONITORING` environment variables respectively_
-
-SDK reads and writes to logs request (lambda event) and response data. This data is written along with the Trace.
-
-## HTTP(S) requests
-
-_Disable with `SLS_DISABLE_HTTP_MONITORING` environment variable_
-
-All HTTP and HTTPS requests are monitored and stored as `node.http.request` & `node.https.request` trace spans
-
-#### Trace span tags:
-
-| Name                         | Value                                           |
-| ---------------------------- | ----------------------------------------------- |
-| `http.method`                | Request method (e.g. `GET`)                     |
-| `http.protocol`              | Currently `HTTP/1.1` in all cases               |
-| `http.host`                  | Domain name and port name if custom             |
-| `http.path`                  | Request pathname (query string is not included) |
-| `http.query_parameter_names` | Query string parameter names (if provided)      |
-| `http.request_header_names`  | Request header names                            |
-| `http.status_code`           | Response status code                            |
-| `http.error_code`            | If request errored, its error code              |
-
-## AWS SDK requests
+# AWS SDK instrumentation
 
 _Disable with `SLS_DISABLE_AWS_SDK_MONITORING` environment variable_
 
@@ -50,7 +23,7 @@ serverlessSdk.instrumentation.awsSdkV3Client.install(lambda);
 
 Covered AWS SDK requests are reflected in `aws.sdk.<service-name>` spans
 
-#### Base span tags
+## Base span tags
 
 Tags that apply to all AWS SDK requests:
 
@@ -63,7 +36,7 @@ Tags that apply to all AWS SDK requests:
 | `aws.sdk.request_id`        | AWS reqeust id                                                                         |
 | `aws.sdk.error`             | If request ends with error, the error message                                          |
 
-#### `aws.sdk.sns` span tags`
+## `aws.sdk.sns` span tags`
 
 Tags that apply to requests that go to SNS service
 
@@ -72,7 +45,7 @@ Tags that apply to requests that go to SNS service
 | `aws.sdk.sns.topic_name`  | Topic name               |
 | `aws.sdk.sns.message_ids` | Ids of affected messages |
 
-#### `aws.sdk.sqs` span tags`
+## `aws.sdk.sqs` span tags`
 
 Tags that apply to requests that go to SQS service
 
@@ -81,7 +54,7 @@ Tags that apply to requests that go to SQS service
 | `aws.sdk.sqs.queue_name`  | Queue name               |
 | `aws.sdk.sqs.message_ids` | Ids of affected messages |
 
-#### `aws.sdk.dynamodb` span tags`
+## `aws.sdk.dynamodb` span tags`
 
 Tags that apply to requests that go to DynamoDb service
 
@@ -102,31 +75,6 @@ Tags that apply to requests that go to DynamoDb service
 | `aws.sdk.dynamodb.count`             | The value of the `Count` response parameter                 |
 | `aws.sdk.dynamodb.scanned_count`     | The value of the `ScannedCount` response parameter          |
 
-## express middlewares
+## Request and response data
 
-_Disable with `SLS_DISABLE_EXPRESS_MONITORING` environment variable_
-
-If [`express`](https://expressjs.com/) framework (together with tools like [`serverless-http`](https://github.com/dougmoscrop/serverless-http)) is used to route incoming requests. Trace sans for it's middlewares are created
-
-Tracing is turned on automatically, assuming that `express` is loaded normally via Node.js `require`.
-If it comes bundled or imported via ESM import, then instrumentation needs to be turned on manually with following steps:
-
-```javascript
-import express from 'express';
-
-const app = express();
-
-serverlessSdk.instrumentation.expressApp.install(express);
-```
-
-Handling of express route is covered in context of main `express` span. Additionally middleware jobs are recorded as following spans:
-
-- `express.middleware.<name>`, generic middleware (setup via `app.use`)
-- `express.middlewa.route.<method>.<name>` - route specific middleware (setup via `app.get`, `app.post` etc.)
-- `express.middleware.error.<name>` - error handling middleware
-
-#### Tags introduced on `aws.lambda` span
-
-| Name                          | Value                 |
-| ----------------------------- | --------------------- |
-| `aws.lambda.http_router.path` | Middleware route path |
+In developer mode, additionally request and response bodies are monitored. That can be disabled with `SLS_DISABLE_REQUEST_RESPONSE_MONITORING` environment variable

@@ -1,71 +1,16 @@
 # @serverless/aws-lambda-sdk
 
-## AWS Lambda dedicated tracing utility
+## AWS Lambda [Serverless Console](https://www.serverless.com/console) SDK
 
-Instruments AWS Lambda functions and propagates traces to the [Serverless Console](https://www.serverless.com/console/docs)
+Instruments AWS Lambda functions, propagates traces to the [Serverless Console](https://www.serverless.com/console/docs) and exposes Serverless SDK to function logic
 
 ### Setup
 
 #### 1. Register with [Serverless Console](https://console.serverless.com/)
 
-#### 2. Instrument functions with the SDK in one of the following ways:
+#### 2. In [Serverless Console](https://console.serverless.com/) turn on integration for your AWS account and chosen Lambdas
 
-##### (A) Attach internal extension layer
-
-Resolve Layer ARN with following steps
-
-- Search for latest release of `@serverless/aws-lambda-sdk` at https://github.com/serverless/console/releases
-- In attached `sls-sdk-node.json` asset, find ARN of a layer in a region in which function is deployed
-
-1. Attach layer to the function
-2. Configure following environment variables for the function environment:
-   - `SLS_ORG_ID`: _(id of your organization in Serverless Console)_
-   - `AWS_LAMBDA_EXEC_WRAPPER`: `/opt/sls-sdk-node/exec-wrapper.sh`
-3. If needed Serverless SDK can be accessed at `serverlessSdk` global variable
-
-##### (B) Instrument function manually
-
-1. Ensure `@serverless/aws-lambda-sdk` dependency installed for the function
-
-2. Decorate function handler:
-
-_CJS:_
-
-```javascript
-const instrument = require('@serverless/aws-lambda-sdk/instrument');
-
-module.exports.handler = instrument(
-  (event, context, callback) => {
-    /* Original handler logic */
-  },
-  options // Optional, see documentation below
-);
-```
-
-_ESM:_
-
-```javascript
-import instrument from '@serverless/aws-lambda-sdk/instrument';
-
-export const handler = instrument(
-  (event, context, callback) => {
-    /* Original handler logic  */
-  },
-  options // Optional, see documentation below
-);
-```
-
-3. If needed Serveless SDK can be loaded by requiring (or importing) `@serverless/aws-lambda-sdk`
-
-#### Configuration options.
-
-Extension can be configured either via environment variables, or in case of manual instrumentation by passing the options object to `instrument` function;
-
-If given setting is set via both environment variable and property in options object, the environment variable takes precedence.
-
-##### `SLS_ORG_ID` (or `options.orgId`)
-
-Required setting. Id of your organization in Serverless Console.
+#### 3. (optionally) Fine tune default instrumentation behavior with following options
 
 ##### `SLS_DISABLE_HTTP_MONITORING` (or `options.disableHttpMonitoring`)
 
@@ -87,12 +32,17 @@ Disable automated express monitoring
 
 In dev mode, HTTP request and response bodies are stored as tags. To avoid performance issues, bodies that extend 10 000KB in size are not exposed. This default can be overridden with this settin
 
-### Outcome
+### Instrumentation
 
-SDK automatically creates the trace that covers internal process of function invocation and initialization.
+AWS Lambda SDK automatically creates `aws.lambda`, `aws.lambda.initialization` and `aws.lambda.invocation` trace spans.
+For more details see [SDK Trace spans documentation](docs/sdk-trace.md)
 
-For details check:
+Additionally automatic instrumentation (with caveats) is provided for:
 
-- [AWS Lambda SDK main trace spans](docs/sdk-trace.md).
-- [AWS Lambda SDK internal flow traces](docs/monitoring.md)
-- [Serverless SDK interface](docs/sdk.md)
+- [HTTP(s) requests](https://github.com/serverless/console/tree/main/node/packages/sdk/docs/instrumentation/http.md)
+- [express app](https://github.com/serverless/console/tree/main/node/packages/sdk/docs/instrumentation/express-app.md)
+- [AWS SDK requests](docs/instrumentation/aws-sdk.md)
+
+### SDK API
+
+- [serverlessSdk](docs/sdk.md)

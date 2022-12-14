@@ -21,7 +21,7 @@ _Tags exposed on top trace_
 
 ## Trace spans
 
-SDK automatically creates following spans, all spans expose [TraceSpan](trace-span.md) interface
+SDK automatically creates following spans, all spans expose [TraceSpan](https://github.com/serverless/console/tree/main/node/packages/sdk/trace-span.md) interface
 
 ### `aws.lambda`
 
@@ -147,7 +147,3 @@ _Current invocation span can always be accessed at `serverlessSdk.traceSpans.aws
 #### Tags
 
 _None_
-
----
-
-For documentation on trace spans that cover internal lambda flow check [monitoring](./monitoring.md) documentation.

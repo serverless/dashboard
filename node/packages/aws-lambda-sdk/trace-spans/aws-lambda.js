@@ -1,6 +1,6 @@
 'use strict';
 
-const TraceSpan = require('../lib/trace-span');
+const TraceSpan = require('@serverless/sdk/lib/trace-span');
 
 const immutableTags = {
   'aws.lambda.name': process.env.AWS_LAMBDA_FUNCTION_NAME,

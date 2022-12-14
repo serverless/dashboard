@@ -1,6 +1,6 @@
 'use strict';
 
-const cjsHook = require('../utils/cjs-hook');
+const cjsHook = require('@serverless/sdk/lib/instrumentation/utils/cjs-hook');
 const instrumentV2Sdk = require('../../../instrumentation/aws-sdk-v2').install;
 const instrumentV3Client = require('../../../instrumentation/aws-sdk-v3-client').install;
 

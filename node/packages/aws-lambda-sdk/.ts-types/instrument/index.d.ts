@@ -1,11 +1,8 @@
-interface SdkOptions {
-  orgId?: string;
-  disableHttpMonitoring?: boolean;
-  disableRequestResponseMonitoring?: boolean;
+import { SdkOptions } from '@serverless/sdk';
+
+interface AwsLambdaSdkOptions extends SdkOptions {
   disableAwsSdkMonitoring?: boolean;
-  disableExpressMonitoring?: boolean;
-  traceMaxCapturedBodySizeKb?: number;
 }
 
-declare function instrument(handler: Function, options?: SdkOptions): Function;
+declare function instrument(handler: Function, options?: AwsLambdaSdkOptions): Function;
 export default instrument;

@@ -47,9 +47,10 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     } catch (invocationError) {
       error = invocationError;
     }
-    require('../../../lib/instrumentation/http').uninstall();
+    require('@serverless/sdk/lib/instrumentation/http').uninstall();
+    require('@serverless/sdk/lib/instrumentation/express').uninstall();
     require('../../../lib/instrumentation/aws-sdk').uninstall();
-    require('../../../lib/instrumentation/express').uninstall();
+    delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
     const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
