@@ -70,7 +70,7 @@ class TraceSpan {
     const defaultStartTime = process.hrtime.bigint();
     const startTime = ensureBigInt(options.startTime, { isOptional: true });
     if (startTime) {
-      if (startTime > process.hrtime.bigint()) {
+      if (startTime > defaultStartTime) {
         throw Object.assign(
           new Error('Cannot intialize span: Start time cannot be set in the future'),
           { code: 'FUTURE_SPAN_START_TIME' }
