@@ -1,10 +1,4 @@
-declare class TraceSpanTags extends Map {
-  set(key: string, value: boolean | number | string | Date | Array): TraceSpanTags;
-  setMany(
-    tags: Record<string, boolean | number | string | Date | Array | Null>,
-    options?: { prefix?: string }
-  ): TraceSpanTags;
-}
+import Tags from './tags';
 
 declare class TraceSpan {
   traceId: string;
@@ -12,7 +6,7 @@ declare class TraceSpan {
   parentSpan: TraceSpan | null;
   subSpans: Set<TraceSpan>;
   spans: Set<TraceSpan>;
-  tags: TraceSpanTags;
+  tags: Tags;
   input?: string;
   output?: string;
 
