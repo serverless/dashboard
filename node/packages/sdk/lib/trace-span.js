@@ -14,11 +14,7 @@ const ensureSpanName = require('./get-ensure-resource-name')('INVALID_TRACE_SPAN
 const emitter = require('./emitter');
 const Tags = require('./tags');
 const generateId = require('./generate-id');
-
-const resolveEpochTimestampString = (() => {
-  const diff = BigInt(Date.now()) * BigInt(1000000) - process.hrtime.bigint();
-  return (uptimeTimestamp) => String(uptimeTimestamp + diff);
-})();
+const resolveEpochTimestampString = require('./resolve-epoch-timestamp-string');
 
 const toLong = (value) => {
   const data = Long.fromString(String(value));
@@ -64,6 +60,10 @@ const asyncLocalStorage = new AsyncLocalStorage();
 let rootSpan;
 
 class TraceSpan {
+  static resolveCurrentSpan() {
+    return asyncLocalStorage.getStore() || rootSpan || null;
+  }
+
   constructor(name, options = {}) {
     const defaultStartTime = process.hrtime.bigint();
     const startTime = ensureBigInt(options.startTime, { isOptional: true });
@@ -102,7 +102,7 @@ class TraceSpan {
           code: 'UNREACHABLE_TRACE',
         });
       }
-      this.parentSpan = asyncLocalStorage.getStore() || rootSpan || null;
+      this.parentSpan = TraceSpan.resolveCurrentSpan();
       while (this.parentSpan.endTime) this.parentSpan = this.parentSpan.parentSpan || rootSpan;
     }
 
