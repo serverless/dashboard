@@ -6,16 +6,15 @@ const ensureIterable = require('type/iterable/ensure');
 const isObject = require('type/object/is');
 const ensurePlainObject = require('type/plain-object/ensure');
 const ensurePlainFunction = require('type/plain-function/ensure');
-const resolveException = require('type/lib/resolve-exception');
 const d = require('d');
 const lazy = require('d/lazy');
 const { AsyncLocalStorage } = require('async_hooks');
 const Long = require('long');
 const crypto = require('crypto');
+const ensureSpanName = require('./get-ensure-resource-name')('INVALID_TRACE_SPAN_NAME');
 const emitter = require('./emitter');
 const Tags = require('./tags');
 
-const isValidSpanName = RegExp.prototype.test.bind(/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/);
 const generateId = () => crypto.randomBytes(16).toString('hex');
 
 const resolveEpochTimestampString = (() => {
@@ -55,23 +54,6 @@ const resolvePorotbufValue = (key, value) => {
 
 const snakeToCamelCase = (string) =>
   string.replace(/_(.)/g, (ignore, letter) => letter.toUpperCase());
-
-const ensureSpanName = (() => {
-  const errorCode = 'INVALID_TRACE_SPAN_NAME';
-  return (inputValue) => {
-    const value = ensureString(inputValue, {
-      errorCode,
-      errorMessage: 'Invalid trace span name: Expected string, received "%v"',
-    });
-    if (isValidSpanName(value)) return value;
-    return resolveException(inputValue, null, {
-      errorCode,
-      errorMessage:
-        'Invalid trace span name: Name should contain dot separated tokens that follow ' +
-        '"[a-z][a-z0-9]*" pattern. Received "%v"',
-    });
-  };
-})();
 
 class StringifiableSet extends Set {
   toJSON() {
