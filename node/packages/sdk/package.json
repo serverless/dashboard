@@ -1,7 +1,7 @@
 {
   "name": "@serverless/sdk",
   "repository": "serverless/console",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Serverless, Inc.",
   "dependencies": {
     "d": "^1.0.1",
