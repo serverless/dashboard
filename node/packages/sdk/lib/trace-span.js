@@ -15,9 +15,7 @@ const Tags = require('./tags');
 const toLong = require('./to-long');
 const generateId = require('./generate-id');
 const resolveEpochTimestampString = require('./resolve-epoch-timestamp-string');
-
-const toProtobufEpochTimestamp = (uptimeTimestamp) =>
-  toLong(resolveEpochTimestampString(uptimeTimestamp));
+const toProtobufEpochTimestamp = require('./to-protobuf-epoch-timestamp');
 
 const resolvePorotbufValue = (key, value) => {
   switch (key) {
