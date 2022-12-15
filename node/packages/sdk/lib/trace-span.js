@@ -10,12 +10,10 @@ const d = require('d');
 const lazy = require('d/lazy');
 const { AsyncLocalStorage } = require('async_hooks');
 const Long = require('long');
-const crypto = require('crypto');
 const ensureSpanName = require('./get-ensure-resource-name')('INVALID_TRACE_SPAN_NAME');
 const emitter = require('./emitter');
 const Tags = require('./tags');
-
-const generateId = () => crypto.randomBytes(16).toString('hex');
+const generateId = require('./generate-id');
 
 const resolveEpochTimestampString = (() => {
   const diff = BigInt(Date.now()) * BigInt(1000000) - process.hrtime.bigint();
