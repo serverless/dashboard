@@ -39,7 +39,17 @@ module.exports.install = (Sdk) => {
       input: shouldMonitorRequestResponse ? JSON.stringify(params) : null,
     });
     if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
+    let wasCompleted = false;
     this.on('complete', (response) => {
+      if (wasCompleted) {
+        process.stderr.write(
+          'Serverless SDK Warning: Detected doubled handling for same AWS SDK request. ' +
+            'It may happen if for the same request both callback and promise resolution ' +
+            'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n'
+        );
+        return;
+      }
+      wasCompleted = true;
       if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
       if (response.error) {
         traceSpan.tags.set('aws.sdk.error', response.error.message);
