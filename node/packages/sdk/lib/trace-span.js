@@ -9,17 +9,12 @@ const ensurePlainFunction = require('type/plain-function/ensure');
 const d = require('d');
 const lazy = require('d/lazy');
 const { AsyncLocalStorage } = require('async_hooks');
-const Long = require('long');
 const ensureSpanName = require('./get-ensure-resource-name')('INVALID_TRACE_SPAN_NAME');
 const emitter = require('./emitter');
 const Tags = require('./tags');
+const toLong = require('./to-long');
 const generateId = require('./generate-id');
 const resolveEpochTimestampString = require('./resolve-epoch-timestamp-string');
-
-const toLong = (value) => {
-  const data = Long.fromString(String(value));
-  return new Long(data.low, data.high, true);
-};
 
 const toProtobufEpochTimestamp = (uptimeTimestamp) =>
   toLong(resolveEpochTimestampString(uptimeTimestamp));
