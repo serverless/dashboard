@@ -257,7 +257,7 @@ class TraceSpan {
     asyncLocalStorage.enterWith(this);
 
     if (this.parentSpan) this.parentSpan.subSpans.add(this);
-    emitter.emit('open', this);
+    emitter.emit('trace-span-open', this);
     if (immediateDescendants && immediateDescendants.length) {
       // eslint-disable-next-line no-new
       new TraceSpan(immediateDescendants.shift(), {
@@ -319,7 +319,7 @@ class TraceSpan {
     } else {
       this.closeContext();
     }
-    emitter.emit('close', this);
+    emitter.emit('trace-span-close', this);
     return this;
   }
   destroy() {
