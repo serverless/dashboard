@@ -78,4 +78,4 @@ serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);
 };
 
-serverlessSdk._traceSpanEmitter = require('./lib/trace-span/emitter');
+serverlessSdk._eventEmitter = require('./lib/emitter');
