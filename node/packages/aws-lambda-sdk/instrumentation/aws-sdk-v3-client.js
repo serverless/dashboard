@@ -58,7 +58,9 @@ module.exports.install = (client) => {
         })();
         await deferredRegion;
         if (error) {
-          if (error.$metadata) traceSpan.tags.set('aws.sdk.request_id', error.$metadata.requestId);
+          if (error.$metadata && error.$metadata.requestId) {
+            traceSpan.tags.set('aws.sdk.request_id', error.$metadata.requestId);
+          }
           if (!traceSpan.endTime) traceSpan.close();
           throw error;
         } else {
