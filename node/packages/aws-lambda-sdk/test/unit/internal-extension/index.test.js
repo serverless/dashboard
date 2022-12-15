@@ -794,6 +794,28 @@ describe('internal-extension/index.test.js', () => {
     expect(expressRequest1Tags.http.statusCode.toString()).to.equal('200');
   });
 
+  it('should expose working SDK', async () => {
+    const {
+      trace: { input: trace },
+      result,
+    } = await handleInvocation('sdk', {
+      isCustomReponse: true,
+      payload: { isTriggeredByUnitTest: true },
+    });
+
+    const { spans } = trace;
+
+    expect(spans.map(({ name }) => name)).to.deep.equal([
+      'aws.lambda',
+      'aws.lambda.initialization',
+      'aws.lambda.invocation',
+      'user.span',
+    ]);
+    expect(result.name).to.equal(pkgJson.name);
+    expect(result.version).to.equal(pkgJson.version);
+    expect(result.rootSpanName).to.equal('aws.lambda');
+  });
+
   describe('dev mode', () => {
     let server;
     let payloads = [];

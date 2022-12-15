@@ -1303,6 +1303,43 @@ describe('integration', function () {
         },
       },
     ],
+    [
+      'sdk',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: {
+          isCustomResponse: true,
+          test: ({ invocationsData }) => {
+            for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
+              const { spans } = trace;
+              if (index === 0) {
+                expect(spans.map(({ name }) => name)).to.deep.equal([
+                  'aws.lambda',
+                  'aws.lambda.initialization',
+                  'aws.lambda.invocation',
+                  'user.span',
+                ]);
+              } else {
+                expect(spans.map(({ name }) => name)).to.deep.equal([
+                  'aws.lambda',
+                  'aws.lambda.invocation',
+                  'user.span',
+                ]);
+              }
+              const payload = JSON.parse(responsePayload.raw);
+              expect(payload.name).to.equal(pkgJson.name);
+              expect(payload.version).to.equal(pkgJson.version);
+              expect(payload.rootSpanName).to.equal('aws.lambda');
+            }
+          },
+        },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);

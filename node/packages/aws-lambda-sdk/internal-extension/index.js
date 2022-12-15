@@ -70,7 +70,17 @@ try {
   };
 
   EvalError.$serverlessAwsLambdaInitializationStartTime = processStartTime;
-  global.serverlessSdk = require('../')._initialize();
+
+  (() => {
+    try {
+      require.resolve('@serverless/aws-lambda-sdk');
+    } catch {
+      return require('../');
+    }
+
+    // eslint-disable-next-line import/no-unresolved
+    return require('@serverless/aws-lambda-sdk');
+  })()._initialize();
 
   let hasInitializationFailed = false;
   const startTime = process.hrtime.bigint();
