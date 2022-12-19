@@ -23,3 +23,11 @@ Create custom trade span
   - `onCloseByRoot` _(function)_ - If provided, it'll be invoked if span will be autoclosed when closing the invocation trace. Useful for reporting errors in such scenarios
 
 Returns instance of [TraceSpan](trace-span.md)
+
+### `.captureError(error[, options])`
+
+Record captured error
+
+- `error` - Captured error
+- `options`:
+  - `tags` _(object)_ - User tags object. Tag names can contain only lowercase alphanumeric tokens separated with dot. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
