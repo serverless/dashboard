@@ -156,7 +156,7 @@ class TraceSpan {
       endTime: this.endTime && resolveEpochTimestampString(this.endTime),
       input: this.input || undefined,
       output: this.output || undefined,
-      tags: Object.fromEntries(this.tags),
+      tags: this.tags,
     };
   }
   toProtobufObject() {

@@ -124,4 +124,7 @@ module.exports = class Tags extends Map {
     }
     return this;
   }
+  toJSON() {
+    return Object.fromEntries(this);
+  }
 };
