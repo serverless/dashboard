@@ -4,17 +4,6 @@ const toLong = require('./to-long');
 
 const resolvePorotbufValue = (key, value) => {
   switch (key) {
-    // enum cases
-    case 'aws.lambda.outcome':
-      switch (value) {
-        case 'success':
-          return 1;
-        case 'error:handled':
-          return 5;
-        default:
-          // Will error in tests
-          return null;
-      }
     default:
       if (Array.isArray(value)) {
         if (typeof value[0] === 'number') return value.map(toLong);
