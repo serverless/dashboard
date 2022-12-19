@@ -2,13 +2,17 @@
 
 const { expect } = require('chai');
 
-const Long = require('long');
-
-const TraceSpan = require('../../../lib/trace-span');
+const requireUncached = require('ncjsm/require-uncached');
 
 describe('lib/trace-span.test.js', () => {
   let rootSpan;
+  let TraceSpan;
+  let Long;
   before(() => {
+    requireUncached(() => {
+      Long = require('long');
+      TraceSpan = require('../../../lib/trace-span');
+    });
     rootSpan = new TraceSpan('test');
   });
   after(() => {
