@@ -24,6 +24,12 @@ interface Sdk {
       onCloseByRoot?: Function;
     }
   ): TraceSpan;
+  captureError(
+    error: Error,
+    options?: {
+      tags?: Record<string, boolean | number | string | Date | Array | Null>;
+    }
+  ): undefined;
 }
 
 export default Sdk;
