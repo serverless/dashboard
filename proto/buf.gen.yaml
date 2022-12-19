@@ -8,3 +8,7 @@ plugins:
       - forceLong=long
       - esModuleInterop=true
       - oneof=unions
+  - plugin: buf.build/protocolbuffers/pyi
+    out: ../python/packages/sdk-schema
+  - plugin: buf.build/protocolbuffers/python
+    out: ../python/packages/sdk-schema
