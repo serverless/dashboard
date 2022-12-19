@@ -2,7 +2,7 @@
 
 const toLong = require('./to-long');
 
-const resolvePorotbufValue = (key, value) => {
+const resolveProtbufValue = (key, value) => {
   switch (key) {
     default:
       if (Array.isArray(value)) {
@@ -26,7 +26,7 @@ module.exports = (tags) => {
       if (!context[token]) context[token] = {};
       context = context[token];
     }
-    context[lastToken] = resolvePorotbufValue(key, value);
+    context[lastToken] = resolveProtbufValue(key, value);
   }
   return protobufTags;
 };
