@@ -2,7 +2,9 @@
 
 const sdk = require('@serverless/sdk');
 
+let counter = 0;
 module.exports.handler = async (event) => {
+  const invocationId = ++counter;
   if (!sdk) throw new Error('SDK not exported');
   if (!event.isTriggeredByUnitTest) {
     // eslint-disable-next-line import/no-unresolved
@@ -11,6 +13,10 @@ module.exports.handler = async (event) => {
   }
 
   sdk.createTraceSpan('user.span').close();
+
+  sdk.captureError(new Error('Captured error'), {
+    tags: { 'user.tag': 'example', 'invocationid': invocationId },
+  });
 
   return {
     name: sdk.name,
