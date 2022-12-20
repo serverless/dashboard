@@ -60,7 +60,7 @@ Required setting. Id of your organization in Serverless Console.
 
 ##### `SLS_DISABLE_HTTP_MONITORING` (or `options.disableHttpMonitoring`)
 
-Disable tracing of HTTP and HTTPS requests
+Disable tracing of HTTP and HTTPS requests. See [HTTP instrumentation](docs/instrumentation/http.md)
 
 ##### `SLS_DISABLE_REQUEST_RESPONSE_MONITORING` (or `options.disableRequestResponseMonitoring`)
 
@@ -68,7 +68,7 @@ Disable tracing of HTTP and HTTPS requests
 
 ##### `SLS_DISABLE_EXPRESS_MONITORING` (or `options.disableExpressMonitoring`)
 
-Disable automated express monitoring
+Disable automated express monitoring. See [express app instrumentation](docs/instrumentation/express-app.md)
 
 ##### `SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB` (or `options.traceMaxCapturedBodySizeKb`)
 
