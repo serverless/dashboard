@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package serverless.instrumentation.tags.v1;
+
+option go_package = ".;protoc";
+
+message WarningTags {
+    // The Warning Message
+    string message = 1;
+}
