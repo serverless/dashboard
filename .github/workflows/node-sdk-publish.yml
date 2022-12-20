@@ -1,0 +1,55 @@
+name: "Node: Publish @serverless/sdk"
+
+on:
+  push:
+    tags:
+      - "@serverless/sdk@[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publishNewSdkVersion:
+    name: Publish new version
+    runs-on: ubuntu-latest
+    env:
+      # It'll work with secrets.GITHUB_TOKEN (which is provided by GitHub unconditionally)
+      # Still then release author would be "github-actions". It's better if it's dedicated repo bot
+      GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org
+      - name: Retrieve ~/.npm from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/**package*.json') }}
+          restore-keys: npm-v16-${{ runner.os }}-refs/heads/main-
+
+      - name: Retrieve node_modules from cache
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: node/node_modules
+          key: node-modules-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('node/package.json') }}
+          restore-keys: node-modules-v16-${{ runner.os }}-refs/heads/main-A
+
+      - name: Install main project dependencies
+        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd node
+          npm update --save-dev --no-save
+
+      - name: Publish New Version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd ./node/packages/sdk
+          npm publish
+      - name: Publish release notes
+        run: |
+          cd node/packages/sdk
+          TAG=${GITHUB_REF:10}
+          npx github-release-from-cc-changelog $TAG

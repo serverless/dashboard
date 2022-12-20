@@ -1056,6 +1056,27 @@ describe('integration', function () {
       },
     ],
     [
+      'aws-sdk-v2-doubled-resolution',
+      {
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            spans.shift();
+            expect(spans.map(({ name }) => name)).to.deep.equal([
+              'aws.sdk.lambda.listfunctions',
+              'aws.sdk.lambda.listfunctions',
+            ]);
+          }
+        },
+      },
+    ],
+    [
       'express',
       {
         hooks: {

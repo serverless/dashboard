@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.11.6](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.5...@serverless/aws-lambda-sdk@0.11.6) (2022-12-19)
+
+### Bug Fixes
+
+- Do not attempt to set AWS SDK request id when there's no request ([85f02ad](https://github.com/serverless/console/commit/85f02adb46f93325b6e01678fc4de05c5212d766))
+- Do not crash in case of AWS SDK v2 double resolution setup ([95449b8](https://github.com/serverless/console/commit/95449b899de59600f13d62a9c446b3292d302ddd))
+
 ### [0.11.5](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.4...@serverless/aws-lambda-sdk@0.11.5) (2022-12-13)
 
 ### Bug Fixes
