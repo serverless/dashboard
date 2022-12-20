@@ -5,8 +5,6 @@ package serverless.instrumentation.tags.v1;
 option go_package = ".;protoc";
 
 message WarningTags {
-    // The Warning Name
-    optional string name = 1;
     // The Warning Message
-    optional string message = 2;
+    string message = 1;
 }
