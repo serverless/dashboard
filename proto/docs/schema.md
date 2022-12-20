@@ -33,6 +33,9 @@
     - [SlsTags](#serverless-instrumentation-tags-v1-SlsTags)
     - [Tags](#serverless-instrumentation-tags-v1-Tags)
   
+- [serverless/instrumentation/tags/v1/warning.proto](#serverless_instrumentation_tags_v1_warning-proto)
+    - [WarningTags](#serverless-instrumentation-tags-v1-WarningTags)
+  
 - [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
     - [DevModePayload](#serverless-instrumentation-v1-DevModePayload)
     - [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry)
@@ -500,7 +503,39 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process |
 | namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process |
 | org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process |
-| error | [ErrorTags](#serverless-instrumentation-tags-v1-ErrorTags) | optional | These tags are used when an event has occured and is reported on the event. |
+| error | [ErrorTags](#serverless-instrumentation-tags-v1-ErrorTags) | optional | These tags are used when an error has occured and is reported on the event. |
+| warning | [WarningTags](#serverless-instrumentation-tags-v1-WarningTags) | optional | These tags are used when a warning has occured and is reported on the event. |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="serverless_instrumentation_tags_v1_warning-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## serverless/instrumentation/tags/v1/warning.proto
+
+
+
+<a name="serverless-instrumentation-tags-v1-WarningTags"></a>
+
+### WarningTags
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| message | [string](#string) |  | The Warning Message |
 
 
 
