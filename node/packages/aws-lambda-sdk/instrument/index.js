@@ -148,6 +148,15 @@ module.exports = (originalHandler, options = {}) => {
       }
 
       closeInvocation = async (outcome, outcomeResult) => {
+        let isRootSpanReset = false;
+        const clearRootSpan = () => {
+          delete awsLambdaSpan.traceId;
+          delete awsLambdaSpan.id;
+          delete awsLambdaSpan.endTime;
+          awsLambdaSpan.tags.reset();
+          awsLambdaSpan.subSpans.clear();
+          isRootSpanReset = true;
+        };
         try {
           if (invocationId !== currentInvocationId) return;
           if (isResolved) return;
@@ -187,13 +196,7 @@ module.exports = (originalHandler, options = {}) => {
           awsLambdaSpan.close({ endTime });
           reportTrace();
           flushSpans();
-
-          // Clear root span
-          delete awsLambdaSpan.traceId;
-          delete awsLambdaSpan.id;
-          delete awsLambdaSpan.endTime;
-          awsLambdaSpan.tags.reset();
-          awsLambdaSpan.subSpans.clear();
+          clearRootSpan();
 
           await Promise.all(serverlessSdk._deferredTelemetryRequests);
           serverlessSdk._deferredTelemetryRequests.length = 0;
@@ -208,6 +211,7 @@ module.exports = (originalHandler, options = {}) => {
               'Response handling failed: ',
             error && (error.stack || error)
           );
+          if (!isRootSpanReset) clearRootSpan();
         }
       };
       const wrapAwsCallback =
