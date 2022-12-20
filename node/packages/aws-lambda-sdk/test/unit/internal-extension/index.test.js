@@ -803,7 +803,7 @@ describe('internal-extension/index.test.js', () => {
       payload: { isTriggeredByUnitTest: true },
     });
 
-    const { spans } = trace;
+    const { spans, events } = trace;
 
     expect(spans.map(({ name }) => name)).to.deep.equal([
       'aws.lambda',
@@ -814,6 +814,26 @@ describe('internal-extension/index.test.js', () => {
     expect(result.name).to.equal(pkgJson.name);
     expect(result.version).to.equal(pkgJson.version);
     expect(result.rootSpanName).to.equal('aws.lambda');
+
+    const userEvent = events[0];
+    expect(events).to.deep.equal([
+      {
+        id: userEvent.id,
+        traceId: spans[0].traceId,
+        spanId: spans[2].id,
+        timestampUnixNano: userEvent.timestampUnixNano,
+        eventName: userEvent.eventName,
+        customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': 1 }),
+        tags: {
+          error: {
+            name: 'Error',
+            message: 'Captured error',
+            stacktrace: userEvent.tags.error.stacktrace,
+            type: 2,
+          },
+        },
+      },
+    ]);
   });
 
   describe('dev mode', () => {

@@ -16,6 +16,11 @@ const pkgJson = require('../package');
 
 const serverlessSdk = require('./lib/sdk');
 
+const capturedEvents = [];
+serverlessSdk._eventEmitter.on('captured-event', (capturedEvent) =>
+  capturedEvents.push(capturedEvent)
+);
+
 const { traceSpans } = serverlessSdk;
 const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializationSpan } =
   traceSpans;
@@ -95,7 +100,7 @@ const reportTrace = () => {
       delete spanPayload.output;
       return spanPayload;
     }),
-    events: [],
+    events: capturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
   });
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
@@ -155,6 +160,7 @@ module.exports = (originalHandler, options = {}) => {
           delete awsLambdaSpan.endTime;
           awsLambdaSpan.tags.reset();
           awsLambdaSpan.subSpans.clear();
+          capturedEvents.length = 0;
           isRootSpanReset = true;
         };
         try {
