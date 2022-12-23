@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.0...@serverless/sdk-schema@0.14.1) (2022-12-23)
+
+### Features
+
+- Add Warning Tags to Event Schema ([#333](https://github.com/serverless/console/issues/333)) ([94c9c5f](https://github.com/serverless/console/commit/94c9c5f91a9ce9378596edff4c4df009cfc9b274))
+
 ### [0.14.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.13.2...@serverless/sdk-schema@0.14.0) (2022-12-07)
 
 ### ⚠ BREAKING CHANGES
