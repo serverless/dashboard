@@ -8,7 +8,7 @@ In other cases it can be required (or imported) from `@serverless/aws-lambda-sdk
 
 ### `serverlessSdk.traceSpans`
 
-_For detailed info on spans check [trace-spans.md](./trace-spans.md)_
+_For detailed info on spans check [trace-span.md](./trace-span.md)_
 
 - `awsLambda` - Root AWS lambda span
 - `awsLambdaInitialization` - Initialization span
