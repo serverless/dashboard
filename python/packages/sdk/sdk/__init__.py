@@ -1,14 +1,5 @@
-from __future__ import annotations
-
-from typing_extensions import Final
-from typing import List
-
-from .sdk.base import ServerlessSdk
+from typing import Final
+from pkg_resources import get_distribution
 
 
-# public exports
-__all__: Final[List[str]] = [
-    "serverlessSdk",
-]
-
-serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
+__version__: Final[str]
