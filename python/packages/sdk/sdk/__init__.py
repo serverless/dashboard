@@ -6,9 +6,10 @@ from os import environ
 from pkg_resources import get_distribution
 
 
-# only export `serverlessSdk`
+# public exports
 __all__: Final[List[str]] = [
   'serverlessSdk',
+  'Options',
 ]
 
 _distribution = get_distribution(__package__ or __name__)
