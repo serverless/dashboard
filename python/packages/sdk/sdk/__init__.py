@@ -1,12 +1,12 @@
 from typing_extensions import Final
-from typing import List, Optional
+from typing import List, Optional, Collection
 from dataclasses import dataclass
 from os import environ
 
 from pkg_resources import get_distribution
 
 
-# public exports
+# only export `serverlessSdk`
 __all__: Final[List[str]] = [
   'serverlessSdk',
 ]
@@ -23,7 +23,7 @@ class Options:
   orgId: Optional[str] = None
 
 
-class _ServerlessSdk:
+class ServerlessSdk:
   name: Final[str] = __name__
   version: Final[str] = __version__
 
@@ -36,4 +36,4 @@ class _ServerlessSdk:
     self.orgId = environ[SLS_ORG_ID] or options.orgId
 
 
-serverlessSdk: Final[_ServerlessSdk] = _ServerlessSdk()
+serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
