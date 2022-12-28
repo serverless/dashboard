@@ -35,7 +35,7 @@ class ServerlessSdk:
   orgId: Optional[str] = None
 
   def _initialize(self, options: Options = Options()):
-    self.orgId = environ,get(SLS_ORG_ID, default=options.orgId)
+    self.orgId = environ.get(SLS_ORG_ID, default=options.orgId)
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
