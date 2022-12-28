@@ -1,13 +1,39 @@
-
-from __future__ import annotations
 from typing_extensions import Final
-from typing import Dict, List, Optional
+from typing import List, Optional, Collection
+from dataclasses import dataclass
 from os import environ
 
-from importlib_metadata import version, packages_distributions
+from pkg_resources import get_distribution
 
 
-# public exports
+# only export `serverlessSdk`
 __all__: Final[List[str]] = [
-    "serverlessSdk",
+  'serverlessSdk',
 ]
+
+__version__: Final[str] = ...
+__name__: Final[str] = ...
+
+
+SLS_ORG_ID: Final[str] = 'SLS_ORG_ID'
+
+
+@dataclass
+class Options:
+  orgId: Optional[str] = None
+
+
+class ServerlessSdk:
+  name: Final[str] = __name__
+  version: Final[str] = __version__
+
+  traceSpans: Final = ...
+  instrumentation: Final = ...
+
+  orgId: Optional[str] = None
+
+  def _initialize(self, options: Options = Options()):
+    self.orgId = environ[SLS_ORG_ID] or options.orgId
+
+
+serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
