@@ -1,5 +1,5 @@
 from typing_extensions import Final
-from typing import List, Optional, Collection
+from typing import List, Optional
 from dataclasses import dataclass
 from os import environ
 
@@ -11,8 +11,10 @@ __all__: Final[List[str]] = [
   'serverlessSdk',
 ]
 
-__version__: Final[str] = ...
-__name__: Final[str] = ...
+_distribution = get_distribution(__package__ or __name__)
+
+__version__: Final[str] = _distribution.version
+__name__: Final[str] = _distribution.project_name
 
 
 SLS_ORG_ID: Final[str] = 'SLS_ORG_ID'
