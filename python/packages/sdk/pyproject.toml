@@ -9,7 +9,7 @@ description = "Serverless SDK for Python"
 authors = [{ name = "serverlessinc" }]
 dependencies = [
   "typing-extensions>=4.4.0",
-  "importlib_metadata"
+  "importlib_metadata>=5.2.0"
 ]
 
 requires-python = ">=3.7"
