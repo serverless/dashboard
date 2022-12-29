@@ -40,7 +40,7 @@ def test_has_instrumentation(sdk: ServerlessSdk):
   assert hasattr(sdk, 'instrumentation')
 
 
-def test_has_initialize_method(sdk: ServerlessSdk):
+def test_has_initialize_method_with_args(sdk: ServerlessSdk):
   assert hasattr(sdk, '_initialize')
   assert isinstance(sdk._initialize, MethodType)
 
