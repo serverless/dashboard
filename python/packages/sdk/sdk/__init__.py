@@ -8,8 +8,8 @@ from importlib_metadata import version, packages_distributions
 
 # public exports
 __all__: Final[List[str]] = [
-  'serverlessSdk',
-  'Options',
+    "serverlessSdk",
+    "Options",
 ]
 
 FIRST: Final[int] = 0
@@ -22,25 +22,25 @@ __name__: Final[str] = _distribution[FIRST]
 __version__: Final[str] = version(__name__)
 
 
-SLS_ORG_ID: Final[str] = 'SLS_ORG_ID'
+SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
 
 @dataclass
 class Options:
-  orgId: Optional[str] = None
+    orgId: Optional[str] = None
 
 
 class ServerlessSdk:
-  name: Final[str] = __name__
-  version: Final[str] = __version__
+    name: Final[str] = __name__
+    version: Final[str] = __version__
 
-  traceSpans: Final = ...
-  instrumentation: Final = ...
+    traceSpans: Final = ...
+    instrumentation: Final = ...
 
-  orgId: Optional[str] = None
+    orgId: Optional[str] = None
 
-  def _initialize(self, options: Options = Options()):
-    self.orgId = environ.get(SLS_ORG_ID, default=options.orgId)
+    def _initialize(self, options: Options = Options()):
+        self.orgId = environ.get(SLS_ORG_ID, default=options.orgId)
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
