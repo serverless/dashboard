@@ -1,4 +1,4 @@
-from typing import TypeAlias
+from typing_extensions import TypeAlias
 
 import pytest
 
@@ -8,14 +8,14 @@ ServerlessSdk: TypeAlias = 'ServerlessSdk'
 
 @pytest.fixture
 def sdk() -> ServerlessSdk:
-  from ..sdk import serverlessSdk
+  from .. import serverlessSdk
 
   return serverlessSdk
 
 
 def test_can_import_serverless_sdk():
   try:
-    from ..sdk import serverlessSdk
+    from .. import serverlessSdk
 
   except ImportError:
     raise AssertionError("Cannot import `serverlessSdk`")
@@ -44,7 +44,7 @@ def test_has_initialize_method(sdk: ServerlessSdk):
 
 
 def test_initialize_supports_options(sdk: ServerlessSdk):
-  from ..sdk import Options
+  from .. import Options
 
   org_id = 'test'
   options = Options(orgId=org_id)
@@ -56,7 +56,7 @@ def test_initialize_supports_options(sdk: ServerlessSdk):
 
 def test_initialize_favors_env_var(sdk: ServerlessSdk):
   from os import environ
-  from ..sdk import Options
+  from .. import Options
 
   options = Options(orgId='opts')
 
