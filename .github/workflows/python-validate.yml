@@ -40,3 +40,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.7'
+
+          # ensure project dependencies are cached
+          cache: 'pip'
