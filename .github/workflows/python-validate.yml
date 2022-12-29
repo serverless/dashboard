@@ -42,4 +42,6 @@ jobs:
           python-version: '3.7'
 
           # ensure project dependencies are cached
+          # NOTE: When using only `pyproject.toml` for dependencies,
+          #  see https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
           cache: 'pip'
