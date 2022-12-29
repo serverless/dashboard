@@ -45,3 +45,9 @@ jobs:
           # NOTE: When using only `pyproject.toml` for dependencies,
           #  see https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
           cache: 'pip'
+
+      - name: Install SDK project and dependencies
+        if: steps.cacheNodeModules.outputs.cache-hit != 'true'
+        run: |
+          cd python/packages/sdk
+          python3 -m pip install --editable .
