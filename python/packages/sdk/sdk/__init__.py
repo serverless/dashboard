@@ -1,9 +1,9 @@
 from typing_extensions import Final
-from typing import List, Optional
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 from os import environ
 
-from pkg_resources import get_distribution
+from importlib_metadata import version, packages_distributions
 
 
 # public exports
@@ -12,10 +12,14 @@ __all__: Final[List[str]] = [
   'Options',
 ]
 
-_distribution = get_distribution(__package__ or __name__)
+FIRST: Final[int] = 0
 
-__version__: Final[str] = _distribution.version
-__name__: Final[str] = _distribution.project_name
+_packages: Final[Dict[str, List[str]]] = packages_distributions()
+_pkg_name: Final[str] = __name__ or __package__
+_distribution: Final[List[str]] = _packages[_pkg_name]
+
+__name__: Final[str] = _distribution[FIRST]
+__version__: Final[str] = version(__name__)
 
 
 SLS_ORG_ID: Final[str] = 'SLS_ORG_ID'
