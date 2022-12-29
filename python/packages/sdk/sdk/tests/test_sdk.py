@@ -1,5 +1,8 @@
+from typing import List
+
 from typing_extensions import TypeAlias
 from types import MethodType
+import inspect
 
 import pytest
 
@@ -40,15 +43,16 @@ def test_has_instrumentation(sdk: ServerlessSdk):
   assert hasattr(sdk, 'instrumentation')
 
 
-def test_has_initialize_method_with_args(sdk: ServerlessSdk):
+def test_has_initialize_method_with_params(sdk: ServerlessSdk):
   assert hasattr(sdk, '_initialize')
   assert isinstance(sdk._initialize, MethodType)
 
-  code = sdk._initialize.__code__
+  # check if method takes `options` param
+  signature = inspect.signature(sdk._initialize)
+  params = signature.parameters
 
-  # takes `options` argument
-  assert code.co_argcount >= 2
-  assert 'options' in code.co_varnames
+  assert len(params) >= 1
+  assert 'options' in params
 
 
 def test_initialize_supports_options(sdk: ServerlessSdk):
