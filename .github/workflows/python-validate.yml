@@ -83,3 +83,10 @@ jobs:
 
           python3 -m pip install black
           python3 -m black --check sdk
+
+      - name: Check code with linter
+        run: |
+          cd python/packages/sdk
+
+          python3 -m pip install ruff
+          python3 -m ruff sdk
