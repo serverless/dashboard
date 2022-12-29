@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 
-const createCapturedErrorEvent = require('../../../create-error-captured-event');
+const createCapturedErrorEvent = require('../../../lib/create-error-captured-event');
 
 describe('lib/create-captured-error-event.test.js', () => {
   it('should capture error', () => {

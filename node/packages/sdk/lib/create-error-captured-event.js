@@ -3,7 +3,7 @@
 const util = require('util');
 const isObject = require('type/object/is');
 const isError = require('type/error/is');
-const CapturedEvent = require('./lib/captured-event');
+const CapturedEvent = require('./captured-event');
 
 const resolveNonErrorName = (value) => {
   if (isObject(value)) return 'object';
