@@ -16,5 +16,6 @@ requires-python = ">=3.7"
 
 [project.optional-dependencies]
 tests = [
-  "pytest>=7.2.0"
+  "pytest>=7.2.0",
+  "black>=22.12.0"
 ]
