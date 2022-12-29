@@ -35,3 +35,8 @@ jobs:
               - 'python/packages/sdk-schema/**'
             proto:
               - 'proto/**'
+
+      - name: Install Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
