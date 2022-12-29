@@ -45,6 +45,8 @@ jobs:
           # When using only `pyproject.toml` for dependencies, see:
           #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
           cache: 'pip'
+          cache-dependency-path: |
+            **/pyproject.toml
 
       - name: Install SDK project and dependencies
         run: |
