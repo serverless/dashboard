@@ -8,3 +8,8 @@ on:
       - proto/**
 
 jobs:
+  linuxPython37:
+    name: "[Linux] Python 3.7: Lint, Formatting & Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+
