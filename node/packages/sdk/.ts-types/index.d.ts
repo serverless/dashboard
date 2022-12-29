@@ -30,6 +30,12 @@ interface Sdk {
       tags?: Record<string, boolean | number | string | Date | Array | Null>;
     }
   ): undefined;
+  captureWarning(
+    message: string,
+    options?: {
+      tags?: Record<string, boolean | number | string | Date | Array | Null>;
+    }
+  ): undefined;
 }
 
 export default Sdk;

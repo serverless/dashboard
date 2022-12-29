@@ -19,4 +19,12 @@ describe('index.test.js', () => {
     expect(capturedEvent.tags.get('error.message')).to.equal('My error');
     expect(capturedEvent.customTags.get('user.tag')).to.equal('somevalue');
   });
+  it('should expose .captureWarning', () => {
+    let capturedEvent;
+    serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
+    serverlessSdk.captureWarning('Warning message', { tags: { 'user.tag': 'warningvalue' } });
+
+    expect(capturedEvent.tags.get('warning.message')).to.equal('Warning message');
+    expect(capturedEvent.customTags.get('user.tag')).to.equal('warningvalue');
+  });
 });

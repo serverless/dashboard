@@ -31,3 +31,11 @@ Record captured error
 - `error` - Captured error
 - `options`:
   - `tags` _(object)_ - User tags object. Tag names can contain only lowercase alphanumeric tokens separated with dot. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
+
+### `.captureWarning(message[, options])`
+
+Record warning
+
+- `message` - Warning message
+- `options`:
+  - `tags` _(object)_ - User tags object. Tag names can contain only lowercase alphanumeric tokens separated with dot. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
