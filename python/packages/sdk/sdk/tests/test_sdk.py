@@ -1,5 +1,3 @@
-from typing import List
-
 from typing_extensions import TypeAlias
 from types import MethodType
 import inspect
