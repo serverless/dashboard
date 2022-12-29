@@ -1,0 +1,10 @@
+name: "Python: Validate"
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - python/**
+      - proto/**
+
+jobs:
