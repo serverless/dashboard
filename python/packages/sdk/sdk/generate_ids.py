@@ -1,5 +1,6 @@
-from typing import Final, List
+from typing import List
 from secrets import token_hex
+from typing_extensions import Final
 
 from .base import TraceId
 
