@@ -1,10 +1,10 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from time import time_ns
 
 from typing_extensions import Final, Self
 from backports.cached_property import cached_property  # available in Python >=3.8
 
-from .base import DateStr, Nanoseconds, TraceId
+from .base import Nanoseconds, TraceId, ValidTags
 from .generate_ids import generate_id
 from .get_ensure_resource_name import get_ensure_resource_name
 
@@ -12,11 +12,6 @@ from .get_ensure_resource_name import get_ensure_resource_name
 __all__: Final[List[str]] = [
     "TraceSpan",
 ]
-
-
-Tag = Union[str, int, float, DateStr, bool]
-Tags = List[Tag]
-ValidTags = Union[Tag, Tags]
 
 
 class TraceSpan:
