@@ -5,6 +5,7 @@ from backports.cached_property import cached_property  # available in Python >=3
 
 from .base import TraceId
 from .generate_ids import generate_id
+from .get_ensure_resource_name import get_ensure_resource_name
 
 
 __all__: Final[List[str]] = [
@@ -13,13 +14,11 @@ __all__: Final[List[str]] = [
 
 
 class TraceSpan:
-    id: TraceId
-    traceId: TraceId
     parentSpan: Self
     name: str
 
     def __init__(self, name: str):
-        self.name = name
+        self.name = get_ensure_resource_name(name)
 
     @cached_property
     def id(self) -> TraceId:
