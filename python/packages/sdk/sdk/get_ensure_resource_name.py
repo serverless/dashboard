@@ -8,7 +8,7 @@ from js_regex import compile
 RE: Final[str] = \
     r"^[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$"
 
-RE_C: Final[Pattern[str]] = compile(RE)
+RE_C: Final[Pattern] = compile(RE)
 
 
 def is_valid_name(name: str) -> bool:
