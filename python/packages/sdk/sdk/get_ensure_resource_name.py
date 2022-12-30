@@ -15,3 +15,16 @@ def is_valid_name(name: str) -> bool:
     match = RE_C.match(name)
 
     return bool(match)
+
+
+def get_ensure_resource_name(name: str) -> str:
+    if not isinstance(name, str):
+        raise TypeError(f"Invalid captured event name: Expected string, received {name}")
+
+    if is_valid_name(name):
+        return name
+
+    raise ValueError(
+        'Invalid captured event name: Name should contain dot separated tokens that follow '
+        f'"[a-z][a-z0-9]*" pattern. Received: {name}'
+    )
