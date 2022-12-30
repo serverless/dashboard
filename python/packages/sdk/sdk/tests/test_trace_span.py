@@ -1,4 +1,4 @@
-def can_import_trace_span():
+def test_can_import_trace_span():
     try:
         from ..trace_span import TraceSpan
 
