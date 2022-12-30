@@ -9,5 +9,8 @@ __all__: Final[List[str]] = [
 ]
 
 
-def generate_id(count: int) -> TraceId:
+DEFAULT_BYTES: Final[int] = 16
+
+
+def generate_id(count: int = DEFAULT_BYTES) -> TraceId:
     return token_hex(count)
