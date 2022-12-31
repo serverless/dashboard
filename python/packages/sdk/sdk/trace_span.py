@@ -39,7 +39,7 @@ class TraceSpan:
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
         default_start = time_ns()
 
-        if not isinstance(start_time, Nanoseconds):
+        if start_time is not None and not isinstance(start_time, Nanoseconds):
             raise TypeError(f"`startTime` must be an integer.")
 
         self.startTime = start_time or default_start
