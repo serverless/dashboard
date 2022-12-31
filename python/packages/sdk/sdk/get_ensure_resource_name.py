@@ -1,6 +1,7 @@
+from __future__ import annotations
+from typing_extensions import Final
 from re import Pattern
 
-from typing_extensions import Final
 from js_regex import compile
 
 

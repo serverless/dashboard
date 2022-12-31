@@ -1,7 +1,9 @@
+from __future__ import annotations
+
+from typing_extensions import Final, Self
 from typing import Dict, List, Optional
 from time import time_ns
 
-from typing_extensions import Final, Self
 from backports.cached_property import cached_property  # available in Python >=3.8
 
 from .base import Nanoseconds, TraceId, ValidTags
