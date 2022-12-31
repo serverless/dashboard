@@ -39,14 +39,10 @@ class TraceSpan:
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
         default_start = time_ns()
 
-        if start_time is None:
-            self.startTime = default_start
-
-        elif not isinstance(start_time, Nanoseconds):
+        if not isinstance(start_time, Nanoseconds):
             raise TypeError(f"`startTime` must be an integer.")
 
-        else:
-            self.startTime = start_time or default_start
+        self.startTime = start_time or default_start
 
     @cached_property
     def id(self) -> TraceId:
