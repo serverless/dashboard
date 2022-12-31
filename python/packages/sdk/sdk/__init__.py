@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+from __future__ import annotations
 
 from typing_extensions import Final
 from typing import Dict, List, Optional
+from dataclasses import dataclass
 from os import environ
 
-from importlib_metadata import version, packages_distributions
+from importlib_metadata import version, packages_distributions  # available in Python >=3.8
 
 
 # public exports
