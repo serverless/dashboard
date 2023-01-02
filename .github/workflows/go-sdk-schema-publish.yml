@@ -1,0 +1,33 @@
+name: "Go: Publish buf.build/serverless/sdk-schema"
+
+on:
+  push:
+    tags:
+      - "@serverless/sdk-schema@[0-9]+.[0-9]+.[0-9]+"
+
+defaults:
+  run:
+    working-directory: proto
+jobs:
+  publishNewGoSdkSchemaVersion:
+    name: Publish new version
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: Buf Lint
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
+          buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: Buf Push
+        uses: bufbuild/buf-push-action@v1
+        with:
+          buf_token: ${{ secrets.BUF_TOKEN }}
+          input: "proto"
