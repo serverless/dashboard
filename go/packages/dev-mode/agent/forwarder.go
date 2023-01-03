@@ -364,7 +364,6 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 	payloads, metadata := CollectRequestResponseData(logs, requestId, accountId)
 	if len(payloads) != 0 {
 		for index, payload := range payloads {
-			lib.Info("ReqRes Data: ", string(payload))
 			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
 			var devModePayload schema.RequestResponse
 			reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
@@ -419,7 +418,6 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 				}
 
 				finalPayload, _ := proto.Marshal(&finalProtoPayload)
-				lib.Info("Sending ReqRes Data: ", string(finalPayload))
 				makeAPICall(finalPayload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
 			} else {
 				lib.Info("Proto Error", reqResErr)
