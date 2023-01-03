@@ -62,6 +62,9 @@ serverlessSdk._initialize = (options = {}) => {
   serverlessSdk._settings.disableExpressMonitoring = Boolean(
     process.env.SLS_DISABLE_EXPRESS_MONITORING || options.disableExpressMonitoring
   );
+  serverlessSdk._settings.disableNodeConsoleMonitoring = Boolean(
+    process.env.SLS_DISABLE_NODE_CONSOLE_MONITORING || options.disableNodeConsoleMonitoring
+  );
   serverlessSdk._settings.traceMaxCapturedBodySizeKb =
     coerceToNaturalNumber(process.env.SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB) ||
     coerceToNaturalNumber(options.traceMaxCapturedBodySizeKb) ||
@@ -76,6 +79,12 @@ serverlessSdk._initialize = (options = {}) => {
     // Auto generate AWS SDK request spans
     require('./lib/instrumentation/express').install();
   }
+
+  if (!settings.disableNodeConsoleMonitoring) {
+    // Auto capture `console.error` invocations
+    require('./lib/instrumentation/node-console').install();
+  }
+
   if (serverlessSdk._initializeExtension) serverlessSdk._initializeExtension(options);
 
   return serverlessSdk;

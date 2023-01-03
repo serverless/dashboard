@@ -45,5 +45,6 @@ export interface SdkOptions {
   disableHttpMonitoring?: boolean;
   disableRequestResponseMonitoring?: boolean;
   disableExpressMonitoring?: boolean;
+  disableNodeConsoleMonitoring?: boolean;
   traceMaxCapturedBodySizeKb?: number;
 }
