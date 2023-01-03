@@ -431,3 +431,61 @@ func TestStartDoneInvoke(t *testing.T) {
 	extensionShutdown(requestId)
 	wg.Wait()
 }
+
+func TestInvokeWithInitError(t *testing.T) {
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	go func() {
+		ext := Extension{
+			Client: &mockSTSClient{},
+		}
+		ext.ExternalExtension()
+		wg.Done()
+	}()
+
+	// First invocation
+	requestId := uuid.New().String()
+	extensionReady()
+	extensionInvoke(requestId)
+	// extensionPlatformStart(requestId)
+
+	messages := []string{"1 invocation", "2 invocation"}
+	postLogs(fmt.Sprintf(`[
+		{
+			"type": "function",
+			"record": "%s"
+		},
+		{
+			"type": "function",
+			"record": "%s"
+		}
+	]`, messages[0], messages[1]))
+
+	time.Sleep(1 * time.Second)
+	extensionPlatformRuntimeDone(requestId)
+	extensionShutdown(requestId)
+	validationData := getValidations(false)
+
+	// Validate we received the request id we thought we would
+	if validationData.RequestId != requestId {
+		t.Errorf("Expected requestId %s Received %s", requestId, validationData.RequestId)
+	}
+
+	// // Validate we received the logs we thought we would
+	for _, payload := range validationData.Logs {
+		var protoPayload schema.LogPayload
+		err := proto.Unmarshal(payload.Payload, &protoPayload)
+		if err != nil {
+			t.Errorf("Unable to unmarshal log payload")
+		}
+		if protoPayload.SlsTags.Service != functionName {
+			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
+		}
+		for index, event := range protoPayload.LogEvents {
+			if event.Body != messages[index] {
+				t.Errorf("Expected log message %s Received %s", event.Body, messages[index])
+			}
+		}
+	}
+	wg.Wait()
+}

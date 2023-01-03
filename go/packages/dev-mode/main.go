@@ -73,7 +73,6 @@ func (e *Extension) ExternalExtension() {
 	logQueue := queue.New(INITIAL_QUEUE_SIZE)
 	// Helper function to empty the log queue
 	var receivedRuntimeDone bool = false
-	var receivedInitRuntimeDone bool = false
 	var requestId string = ""
 	var traceId string = ""
 	// Save init report duration so we can send it as part of the req dev mode payload on the init_duration_ms
@@ -89,14 +88,13 @@ func (e *Extension) ExternalExtension() {
 	// Save the res payload from the SDK so we can send it out at runtime done so we can include the
 	// runtime_duration_ms & runtime_response_latency_ms that is included in the runtime done event
 	flushLogQueue := func(force bool) {
-		for !(logQueue.Empty() && (force || receivedRuntimeDone) && receivedInitRuntimeDone) {
+		for !(logQueue.Empty() && (force || receivedRuntimeDone)) {
 			logs, err := logQueue.Get(1)
 			if err != nil {
 				logger.Error(printPrefix, zap.Error(err))
 				return
 			}
 			logsStr := fmt.Sprintf("%v", logs[0])
-			receivedInitRuntimeDone = receivedInitRuntimeDone || strings.Contains(logsStr, string(logsapi.InitRuntimeDone))
 			receivedRuntimeDone = strings.Contains(logsStr, string(logsapi.RuntimeDone)) || receivedRuntimeDone
 			lib.Info(logsStr)
 			var arr []agent.LogItem
