@@ -73,6 +73,7 @@ func (e *Extension) ExternalExtension() {
 	logQueue := queue.New(INITIAL_QUEUE_SIZE)
 	// Helper function to empty the log queue
 	var receivedRuntimeDone bool = false
+	var receivedInitRuntimeDone bool = false
 	var requestId string = ""
 	var traceId string = ""
 	// Save init report duration so we can send it as part of the req dev mode payload on the init_duration_ms
@@ -88,13 +89,14 @@ func (e *Extension) ExternalExtension() {
 	// Save the res payload from the SDK so we can send it out at runtime done so we can include the
 	// runtime_duration_ms & runtime_response_latency_ms that is included in the runtime done event
 	flushLogQueue := func(force bool) {
-		for !(logQueue.Empty() && (force || receivedRuntimeDone)) {
+		for !(logQueue.Empty() && (force || receivedRuntimeDone) && receivedInitRuntimeDone) {
 			logs, err := logQueue.Get(1)
 			if err != nil {
 				logger.Error(printPrefix, zap.Error(err))
 				return
 			}
 			logsStr := fmt.Sprintf("%v", logs[0])
+			receivedInitRuntimeDone = receivedInitRuntimeDone || strings.Contains(logsStr, string(logsapi.InitRuntimeDone))
 			receivedRuntimeDone = strings.Contains(logsStr, string(logsapi.RuntimeDone)) || receivedRuntimeDone
 			lib.Info(logsStr)
 			var arr []agent.LogItem
@@ -121,6 +123,8 @@ func (e *Extension) ExternalExtension() {
 				}
 			}
 
+			runtimeDoneLog := agent.FindRuntimeDone(arr)
+
 			// Save Res Report and skip
 			// else we send res report to backend and continue
 			if responseLog == nil {
@@ -130,7 +134,7 @@ func (e *Extension) ExternalExtension() {
 					continue
 				}
 			} else if receivedRuntimeDone {
-				value := agent.FindRuntimeDone(arr)
+				value := runtimeDoneLog
 				arr = append(arr, agent.LogItem{
 					Time:     responseLog.Time,
 					LogType:  responseLog.LogType,
@@ -146,6 +150,19 @@ func (e *Extension) ExternalExtension() {
 			// Find the trace id so we can attach it to incoming logs
 			if traceId == "" && os.Getenv("SLS_ORG_ID") != "" {
 				traceId = agent.FindTraceId(arr)
+			}
+
+			if runtimeDoneLog != nil {
+				record := runtimeDoneLog.Record.(map[string]interface{})
+				rId := record["requestId"].(string)
+				finalStatus := record["status"].(string)
+				if requestId == "" {
+					requestId = rId
+				}
+				// TraceId will never come because there was a runtime error
+				if finalStatus == "error" && traceId == "" && hasInternalExtension {
+					traceId = rId
+				}
 			}
 
 			if traceId == "" && hasInternalExtension {
