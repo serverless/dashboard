@@ -91,6 +91,15 @@ func FindInitReport(logs []LogItem) *LogItem {
 	return nil
 }
 
+func FindPlatformStart(logs []LogItem) *LogItem {
+	for _, log := range logs {
+		if log.LogType == "platform.start" {
+			return &log
+		}
+	}
+	return nil
+}
+
 func FindRuntimeDone(logs []LogItem) *LogItem {
 	for _, log := range logs {
 		if log.LogType == "platform.runtimeDone" {
@@ -183,11 +192,17 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 	return payload
 }
 
-func CollectRequestResponseData(logs []LogItem) ([][]byte, []*LogItem) {
+func CollectRequestResponseData(logs []LogItem, requestId string, accountId string) ([][]byte, []*LogItem) {
 	messages := make([][]byte, 0)
 	metadata := make([]*LogItem, 0)
+	hasPlatformStart := FindPlatformStart(logs)
+	hasRuntimeDone := FindRuntimeDone(logs)
+	wrapper := os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
+	hasInternalExtension := wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
+	foundReqRes := false
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
+			foundReqRes = true
 			jsonString, _ := json.Marshal(log.Metadata)
 			meta := LogItem{}
 			json.Unmarshal(jsonString, &meta)
@@ -195,6 +210,106 @@ func CollectRequestResponseData(logs []LogItem) ([][]byte, []*LogItem) {
 			messages = append(messages, []byte(log.Record.(string)))
 		}
 	}
+
+	// Generate the req event if the SDK is not enabled and if we receive the platform.start event.
+	if !foundReqRes && hasPlatformStart != nil && !hasInternalExtension {
+		isHistorical := false
+		body := ""
+		payloadType := "aws-lambda-request"
+		reqTime, _ := time.Parse("2006-01-02T15:04:05.000Z", hasPlatformStart.Time)
+		epoch := uint64(reqTime.UnixNano())
+		orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
+		region := os.Getenv("AWS_REGION")
+		functionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
+		slsTagPlatform := "lambda"
+		reqProto := &schema.RequestResponse{
+			SlsTags: &tags.SlsTags{
+				OrgId: orgId,
+				Sdk: &tags.SdkTags{
+					Name:    "@serverless/external-extension",
+					Version: "N/A",
+				},
+				Platform: &slsTagPlatform,
+				Region:   &region,
+				Service:  functionName,
+			},
+			IsHistorical: &isHistorical,
+			Body:         &body,
+			RequestId:    &requestId,
+			SpanId:       []byte(requestId),
+			Origin:       schema.RequestResponse_ORIGIN_REQUEST,
+			Timestamp:    &epoch,
+			Type:         &payloadType,
+			TraceId:      []byte(requestId),
+			Tags: &tags.Tags{
+				Aws: &tags.AwsTags{
+					AccountId:    &accountId,
+					Region:       &region,
+					RequestId:    &requestId,
+					ResourceName: &functionName,
+				},
+				OrgId: &orgId,
+				Sdk: &tags.SdkTags{
+					Name:    "@serverless/external-extension",
+					Version: "N/A",
+				},
+			},
+		}
+		reqData, err := proto.Marshal(reqProto)
+		if err == nil {
+			messages = append(messages, []byte(base64.StdEncoding.EncodeToString(reqData)))
+		}
+	}
+	// Generate the res event - if we receive the runtime done event and have not received the res event
+	if !foundReqRes && hasRuntimeDone != nil {
+		isHistorical := false
+		body := ""
+		payloadType := "aws-lambda-response"
+		reqTime, _ := time.Parse("2006-01-02T15:04:05.000Z", hasRuntimeDone.Time)
+		epoch := uint64(reqTime.UnixNano())
+		orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
+		region := os.Getenv("AWS_REGION")
+		functionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
+		slsTagPlatform := "lambda"
+		reqProto := &schema.RequestResponse{
+			SlsTags: &tags.SlsTags{
+				OrgId: orgId,
+				Sdk: &tags.SdkTags{
+					Name:    "@serverless/external-extension",
+					Version: "N/A",
+				},
+				Platform: &slsTagPlatform,
+				Region:   &region,
+				Service:  functionName,
+			},
+			IsHistorical: &isHistorical,
+			Body:         &body,
+			RequestId:    &requestId,
+			SpanId:       []byte(requestId),
+			Origin:       schema.RequestResponse_ORIGIN_RESPONSE,
+			Timestamp:    &epoch,
+			Type:         &payloadType,
+			TraceId:      []byte(requestId),
+			Tags: &tags.Tags{
+				Aws: &tags.AwsTags{
+					AccountId:    &accountId,
+					Region:       &region,
+					RequestId:    &requestId,
+					ResourceName: &functionName,
+				},
+				OrgId: &orgId,
+				Sdk: &tags.SdkTags{
+					Name:    "@serverless/external-extension",
+					Version: "N/A",
+				},
+			},
+		}
+		reqData, err := proto.Marshal(reqProto)
+		if err == nil {
+			messages = append(messages, []byte(base64.StdEncoding.EncodeToString(reqData)))
+		}
+	}
+
 	return messages, metadata
 }
 
@@ -246,7 +361,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 	region := os.Getenv("AWS_REGION")
 
 	// Send reqRes payloads
-	payloads, metadata := CollectRequestResponseData(logs)
+	payloads, metadata := CollectRequestResponseData(logs, requestId, accountId)
 	if len(payloads) != 0 {
 		for index, payload := range payloads {
 			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
@@ -257,7 +372,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 				// Attach metadata from the Lambda Telemetry API
 				// to the finalPayload
 				var telemetry *schema.LambdaTelemetry
-				if metadata[index] != nil {
+				if len(metadata) > index {
 					meta := metadata[index]
 					// Update the response payload so that it uses the
 					// time from the platform.runtimeDone event
@@ -304,6 +419,8 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 
 				finalPayload, _ := proto.Marshal(&finalProtoPayload)
 				makeAPICall(finalPayload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
+			} else {
+				lib.Info("Proto Error", reqResErr)
 			}
 		}
 	}

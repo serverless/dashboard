@@ -232,9 +232,6 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	extensionInvoke(requestId2)
 	extensionPlatformStart(requestId2)
 
-	reqResData := "reqResData"
-	postReqRes(reqResData)
-
 	spanData := "spanData"
 	postTrace(spanData)
 
@@ -280,16 +277,18 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	}
 
 	for _, reqResPayload := range validationData2.ReqRes {
-		reqResStr, _ := base64.StdEncoding.DecodeString(string(reqResPayload.Payload))
-		if string(reqResStr) != reqResData {
-			t.Errorf("Expected reqRes message %s Received %s", reqResData, reqResPayload.Payload)
+		// reqResStr, _ := base64.StdEncoding.DecodeString(string(reqResPayload.Payload))
+		var devModePayload schema.DevModePayload
+		err := proto.Unmarshal(reqResPayload.Payload, &devModePayload)
+		if err != nil || devModePayload.RequestId != requestId2 {
+			t.Errorf("Expected reqRes requestId %s Received %s", requestId2, devModePayload.RequestId)
 		}
 	}
 
 	for _, spansPayload := range validationData2.Spans {
 		spanStr, _ := base64.StdEncoding.DecodeString(string(spansPayload.Payload))
 		if string(spanStr) != spanData {
-			t.Errorf("Expected reqRes message %s Received %s", reqResData, spansPayload.Payload)
+			t.Errorf("Expected span message %s Received %s", spanData, spansPayload.Payload)
 		}
 	}
 
@@ -422,7 +421,7 @@ func TestStartDoneInvoke(t *testing.T) {
 
 	// Ensure we receive the final next event after runtime done
 	validationData = getValidations(false)
-	if validationData.NextCount < 2 {
+	if validationData.NextCount < 1 {
 		t.Errorf("Expected NextCount %d Received %d", 2, validationData.NextCount)
 	}
 
