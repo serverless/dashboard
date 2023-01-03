@@ -1316,8 +1316,10 @@ describe('integration', function () {
           isCustomResponse: true,
           test: ({ invocationsData }) => {
             for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
-              const { spans } = trace;
+              const { spans, events } = trace;
+              let awsLambdaInvocationSpan;
               if (index === 0) {
+                awsLambdaInvocationSpan = spans[2];
                 expect(spans.map(({ name }) => name)).to.deep.equal([
                   'aws.lambda',
                   'aws.lambda.initialization',
@@ -1325,6 +1327,7 @@ describe('integration', function () {
                   'user.span',
                 ]);
               } else {
+                awsLambdaInvocationSpan = spans[1];
                 expect(spans.map(({ name }) => name)).to.deep.equal([
                   'aws.lambda',
                   'aws.lambda.invocation',
@@ -1335,6 +1338,26 @@ describe('integration', function () {
               expect(payload.name).to.equal(pkgJson.name);
               expect(payload.version).to.equal(pkgJson.version);
               expect(payload.rootSpanName).to.equal('aws.lambda');
+
+              const userEvent = events[0];
+              expect(events).to.deep.equal([
+                {
+                  id: userEvent.id,
+                  traceId: awsLambdaInvocationSpan.traceId,
+                  spanId: awsLambdaInvocationSpan.id,
+                  timestampUnixNano: userEvent.timestampUnixNano,
+                  eventName: userEvent.eventName,
+                  customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
+                  tags: {
+                    error: {
+                      name: 'Error',
+                      message: 'Captured error',
+                      stacktrace: userEvent.tags.error.stacktrace,
+                      type: 2,
+                    },
+                  },
+                },
+              ]);
             }
           },
         },

@@ -14,7 +14,8 @@ const ensureString = require('type/string/ensure');
 const d = require('d');
 const lazy = require('d/lazy');
 const TraceSpan = require('./lib/trace-span');
-const createErrorCapturedEvent = require('./create-error-captured-event');
+const createErrorCapturedEvent = require('./lib/create-error-captured-event');
+const createWarningCapturedEvent = require('./lib/create-warning-captured-event');
 const pkgJson = require('./package');
 
 const serverlessSdk = module.exports;
@@ -33,6 +34,9 @@ Object.defineProperties(
 serverlessSdk.createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 serverlessSdk.captureError = (error, options = {}) => {
   createErrorCapturedEvent(error, options);
+};
+serverlessSdk.captureWarning = (message, options = {}) => {
+  createWarningCapturedEvent(message, options);
 };
 
 // Private
