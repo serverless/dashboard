@@ -82,6 +82,7 @@ _Note: instrumentation is enabled via environment specific SDK instance, relying
 
 - [HTTP(s) requests](docs/instrumentation/http.md)
 - [express app](docs/instrumentation/express-app.md)
+- [Node.js console](docs/instrumentation/node-console.md)
 
 ### API
 
