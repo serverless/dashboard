@@ -3,6 +3,8 @@ from typing_extensions import Final, Type, TypeAlias
 from types import MethodType
 import inspect
 
+from . import get_params
+
 import pytest
 
 
@@ -72,3 +74,33 @@ def test_has_parent_span(trace_span: TraceSpan):
 
 def test_has_tags(trace_span: TraceSpan):
     assert hasattr(trace_span, 'tags')
+
+
+def test_has_close_method(trace_span: TraceSpan):
+    assert hasattr(trace_span, 'close')
+    assert isinstance(trace_span.close, MethodType)
+
+    params = get_params(trace_span.close)
+
+    assert len(params) >= 1
+    assert 'close' in params
+
+
+def test_has_to_protobuf_object_method(trace_span: TraceSpan):
+    assert hasattr(trace_span, 'toProtobufObject')
+    assert isinstance(trace_span.toProtobufObject, MethodType)
+
+    params = get_params(trace_span.toProtobufObject)
+
+    assert len(params) <= 1
+
+
+def test_has_create_trace_span_method(trace_span: TraceSpan):
+    assert hasattr(trace_span, 'createTraceSpan')
+    assert isinstance(trace_span.createTraceSpan, MethodType)
+
+    params = get_params(trace_span.createTraceSpan)
+
+    assert len(params) >= 2
+    assert 'name' in params
+    assert 'options' in params
