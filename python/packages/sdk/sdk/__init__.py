@@ -26,11 +26,6 @@ __version__: Final[str] = version(__name__)
 SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
 
-@dataclass
-class Options:
-    orgId: Optional[str] = None
-
-
 class ServerlessSdk:
     name: Final[str] = __name__
     version: Final[str] = __version__
@@ -40,8 +35,8 @@ class ServerlessSdk:
 
     orgId: Optional[str] = None
 
-    def _initialize(self, options: Options = Options()):
-        self.orgId = environ.get(SLS_ORG_ID, default=options.orgId)
+    def _initialize(self, org_id: Optional[str] = None):
+        self.orgId = environ.get(SLS_ORG_ID, default=org_id)
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
