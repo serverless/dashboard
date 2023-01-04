@@ -14,13 +14,10 @@ module.exports.install = () => {
   const original = { error: nodeConsole.error };
 
   nodeConsole.error = function (...args) {
-    try {
-      const error = args.find(isError);
-      if (!error) return;
-      serverlessSdk.captureError(error);
-    } finally {
-      original.error.apply(this, args);
-    }
+    original.error.apply(this, args);
+    const error = args.find(isError);
+    if (!error) return;
+    serverlessSdk.captureError(error);
   };
 
   uninstall = () => {
