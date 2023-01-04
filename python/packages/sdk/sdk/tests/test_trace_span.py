@@ -1,11 +1,10 @@
 from __future__ import annotations
 from typing_extensions import Final, Type, TypeAlias
 from types import MethodType
-import inspect
-
-from . import get_params
 
 import pytest
+
+from . import get_params
 
 
 TEST_NAME: Final[str] = 'Test Span'

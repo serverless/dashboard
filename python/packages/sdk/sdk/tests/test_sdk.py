@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 from typing_extensions import TypeAlias
 from types import MethodType
-import inspect
-
-from . import get_params
 
 import pytest
+
+from . import get_params
 
 
 ServerlessSdk: TypeAlias = "ServerlessSdk"
