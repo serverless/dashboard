@@ -234,7 +234,6 @@ func saveSpans(c *gin.Context) {
 func sendLogs(c *gin.Context) {
 	// Wait for logs URI
 	for {
-		fmt.Println("validations log uri", validations.LogURI)
 		if validations.LogURI != "" {
 			break
 		}
