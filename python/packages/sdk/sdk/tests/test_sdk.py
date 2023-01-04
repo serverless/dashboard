@@ -46,34 +46,29 @@ def test_has_initialize_method_with_params(sdk: ServerlessSdk):
     assert hasattr(sdk, "_initialize")
     assert isinstance(sdk._initialize, MethodType)
 
-    # check if method takes `options` param
+    # check if method takes `org_id` param
     signature = inspect.signature(sdk._initialize)
     params = signature.parameters
 
     assert len(params) >= 1
-    assert "options" in params
+    assert "org_id" in params
 
 
-def test_initialize_supports_options(sdk: ServerlessSdk):
-    from .. import Options
+def test_initialize_supports_org_id(sdk: ServerlessSdk):
+    org_id: str = "test"
 
-    org_id = "test"
-    options = Options(orgId=org_id)
-    assert options.orgId == org_id
-
-    sdk._initialize(options)
-    assert sdk.orgId == options.orgId
+    sdk._initialize(org_id=org_id)
+    assert sdk.orgId == org_id
 
 
 def test_initialize_favors_env_var(sdk: ServerlessSdk):
     from os import environ
-    from .. import Options
 
-    options = Options(orgId="opts")
+    org_id: str = "test"
 
     env: str = "env"
     environ["SLS_ORG_ID"] = env
 
-    sdk._initialize(options)
-    assert sdk.orgId != options.orgId
+    sdk._initialize(org_id=org_id)
+    assert sdk.orgId != org_id
     assert sdk.orgId == env
