@@ -65,8 +65,8 @@ def test_initialize_favors_env_var(sdk: ServerlessSdk):
     from os import environ
 
     org_id: str = "test"
-
     env: str = "env"
+
     environ["SLS_ORG_ID"] = env
 
     sdk._initialize(org_id=org_id)
