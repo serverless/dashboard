@@ -182,7 +182,6 @@ func (e *Extension) ExternalExtension() {
 			// Send to dev mode if we have requestId and traceId
 			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID, traceId)
 		}
-
 		// Force send logs at end of loop
 		if len(deferredLogs) > 0 {
 			agent.ForwardLogs(deferredLogs, requestId, AWS_ACCOUNT_ID, traceId)
