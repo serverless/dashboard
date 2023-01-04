@@ -3,6 +3,8 @@ from typing_extensions import TypeAlias
 from types import MethodType
 import inspect
 
+from . import get_params
+
 import pytest
 
 
@@ -47,8 +49,7 @@ def test_has_initialize_method_with_params(sdk: ServerlessSdk):
     assert isinstance(sdk._initialize, MethodType)
 
     # check if method takes `org_id` param
-    signature = inspect.signature(sdk._initialize)
-    params = signature.parameters
+    params = get_params(sdk._initialize)
 
     assert len(params) >= 1
     assert "org_id" in params
