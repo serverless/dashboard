@@ -81,7 +81,7 @@ serverlessSdk._initialize = (options = {}) => {
   }
 
   if (!settings.disableNodeConsoleMonitoring) {
-    // Auto capture `console.error` invocations
+    // Auto capture `console.error` and `console.warning` invocations
     require('./lib/instrumentation/node-console').install();
   }
 
