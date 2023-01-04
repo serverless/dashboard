@@ -841,7 +841,7 @@ describe('internal-extension/index.test.js', () => {
     let payloads = [];
 
     const resolvePayloadsSummary = () => {
-      const payloadsSummary = { requestResponses: [], traceSpans: [] };
+      const payloadsSummary = { requestResponses: [], traceSpans: [], traceEvents: [] };
       for (const [type, payload] of payloads) {
         switch (type) {
           case 'request-response':
@@ -850,6 +850,9 @@ describe('internal-extension/index.test.js', () => {
           case 'trace':
             payloadsSummary.traceSpans.push(
               ...payload.spans.map(({ name, input, output }) => ({ name, input, output }))
+            );
+            payloadsSummary.traceEvents.push(
+              ...payload.events.map(({ eventName }) => ({ eventName }))
             );
             break;
           default:
@@ -939,6 +942,25 @@ describe('internal-extension/index.test.js', () => {
           { name: 'aws.lambda.invocation', input: undefined, output: undefined },
           { name: 'aws.lambda', input: undefined, output: undefined },
         ],
+        traceEvents: [],
+      });
+    });
+
+    it('should report captured events', async () => {
+      await handleInvocation('sdk', {
+        isCustomReponse: true,
+        payload: { isTriggeredByUnitTest: true },
+      });
+
+      expect(resolvePayloadsSummary()).to.deep.equal({
+        requestResponses: [{ origin: 1 }, { origin: 2 }],
+        traceSpans: [
+          { name: 'aws.lambda.initialization', input: undefined, output: undefined },
+          { name: 'user.span', input: undefined, output: undefined },
+          { name: 'aws.lambda.invocation', input: undefined, output: undefined },
+          { name: 'aws.lambda', input: undefined, output: undefined },
+        ],
+        traceEvents: [{ eventName: 'telemetry.error.generated.v1' }],
       });
     });
 
@@ -952,6 +974,7 @@ describe('internal-extension/index.test.js', () => {
           { name: 'aws.lambda.invocation', input: undefined, output: undefined },
           { name: 'aws.lambda', input: undefined, output: undefined },
         ],
+        traceEvents: [],
       });
     });
   });
