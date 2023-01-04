@@ -1,13 +1,10 @@
-from __future__ import annotations
-
 import inspect
-from typing import Callable, Dict
+from inspect import Parameter
+from types import MappingProxyType
+from typing import Callable
 
-from typing_extensions import TypeAlias
 
-
-ServerlessSdk: TypeAlias = "ServerlessSdk"
-Params = Dict[str, inspect.Parameter]
+Params = MappingProxyType[str, Parameter]
 
 
 def get_params(func: Callable) -> Params:
