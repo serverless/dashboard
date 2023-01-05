@@ -2,6 +2,7 @@ from __future__ import annotations
 from types import MethodType
 
 from . import ServerlessSdk, get_params
+from ..base import SLS_ORG_ID
 
 
 def test_can_import_serverless_sdk():
@@ -54,7 +55,7 @@ def test_initialize_favors_env_var(sdk: ServerlessSdk):
     org_id: str = "test"
     env: str = "env"
 
-    environ["SLS_ORG_ID"] = env
+    environ[SLS_ORG_ID] = env
 
     sdk._initialize(org_id=org_id)
     assert sdk.orgId != org_id
