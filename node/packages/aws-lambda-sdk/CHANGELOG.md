@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.12.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.6...@serverless/aws-lambda-sdk@0.12.0) (2023-01-05)
+
+### ⚠ BREAKING CHANGES
+
+- `global.serverlessSdk` was removed. `@serverless/aws-lambda-sdk` and `@serverless/sdk` are now exposed in node path and can be required or imported naturally
+
+### Features
+
+- Expose `@serverless/sdk` in path instead of realying on a global ([8f4ff07](https://github.com/serverless/console/commit/8f4ff0741df73c8e6d0b3afa3ec20e3d915fdb9b))
+- Report captured events with a trace payload ([5437bd7](https://github.com/serverless/console/commit/5437bd72e7ee8c2df6618bb953e9f4bc79c1948e))
+- Send captured events to dev mode ([dfb7991](https://github.com/serverless/console/commit/dfb799116cfef18e262840546bceec5cd7e2303b))
+
+### Bug Fixes
+
+- Ensure to reset root span also in case of errors ([1d8277c](https://github.com/serverless/console/commit/1d8277cfc87cccd90213e06e51eea0530edcb729))
+- Initialize original handler at AWS intended processing point ([60db9bf](https://github.com/serverless/console/commit/60db9bfffee7358ee30009b4637d69c0aaa439e8))
+
+### Maintenance Improvements
+
+- Centralize SDK resolution ([2f8b39c](https://github.com/serverless/console/commit/2f8b39c5920736d7576c9162bb553f48798c74ba))
+- Depend on `@serverless/sdk` ([57e3621](https://github.com/serverless/console/commit/57e3621ae68ff544d4b14610baeae04e87dac8dc))
+- Do not send Node's console originated events to dev extension ([d3a2e41](https://github.com/serverless/console/commit/d3a2e411f1513cf0474546a53dc60b733307e7dd))
+
 ### [0.11.6](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.5...@serverless/aws-lambda-sdk@0.11.6) (2022-12-19)
 
 ### Bug Fixes
