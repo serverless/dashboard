@@ -73,11 +73,21 @@ const create = async (testConfig, coreConfig) => {
 
 const ensureIsActive = async (testConfig) => {
   await wait(100);
-  const {
-    Configuration: { State: state },
-  } = await awsRequest(Lambda, 'getFunction', {
-    FunctionName: testConfig.configuration.FunctionName,
-  });
+  let state;
+  try {
+    state = (
+      await awsRequest(Lambda, 'getFunction', {
+        FunctionName: testConfig.configuration.FunctionName,
+      })
+    ).Configuration.State;
+  } catch (error) {
+    if (error.name === 'ResourceNotFoundException') {
+      log.notice('Function %s not found, retrying after delay', testConfig.name);
+      await ensureIsActive(testConfig);
+      return;
+    }
+    throw error;
+  }
   if (state !== 'Active') await ensureIsActive(testConfig);
 };
 
