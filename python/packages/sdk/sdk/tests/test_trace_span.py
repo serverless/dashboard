@@ -94,12 +94,3 @@ def test_has_to_protobuf_object_method(trace_span: TraceSpan):
     assert len(params) <= 1
 
 
-def test_has_create_trace_span_method(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'createTraceSpan')
-    assert isinstance(trace_span.createTraceSpan, MethodType)
-
-    params = get_params(trace_span.createTraceSpan)
-
-    assert len(params) >= 2
-    assert 'name' in params
-    assert 'options' in params
