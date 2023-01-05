@@ -49,6 +49,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     }
     require('@serverless/sdk/lib/instrumentation/http').uninstall();
     require('@serverless/sdk/lib/instrumentation/express').uninstall();
+    require('@serverless/sdk/lib/instrumentation/node-console').uninstall();
     require('../../../lib/instrumentation/aws-sdk').uninstall();
     delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
     const serverlessSdk = require('../../../');
@@ -815,21 +816,62 @@ describe('internal-extension/index.test.js', () => {
     expect(result.version).to.equal(pkgJson.version);
     expect(result.rootSpanName).to.equal('aws.lambda');
 
-    const userEvent = events[0];
-    expect(events).to.deep.equal([
+    const normalizeEvent = (event) => {
+      event = { ...event };
+      expect(Buffer.isBuffer(event.id)).to.be.true;
+      expect(typeof event.timestampUnixNano).to.equal('number');
+      if (event.tags.error) delete event.tags.error.stacktrace;
+      delete event.id;
+      delete event.timestampUnixNano;
+      return event;
+    };
+    const { traceId, spanId } = events[0];
+    expect(events.map(normalizeEvent)).to.deep.equal([
       {
-        id: userEvent.id,
-        traceId: spans[0].traceId,
-        spanId: spans[2].id,
-        timestampUnixNano: userEvent.timestampUnixNano,
-        eventName: userEvent.eventName,
+        traceId,
+        spanId,
+        eventName: 'telemetry.error.generated.v1',
         customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': 1 }),
         tags: {
           error: {
             name: 'Error',
             message: 'Captured error',
-            stacktrace: userEvent.tags.error.stacktrace,
             type: 2,
+          },
+        },
+      },
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.error.generated.v1',
+        customTags: JSON.stringify({}),
+        tags: {
+          error: {
+            name: 'Error',
+            message: 'Consoled error',
+            type: 2,
+          },
+        },
+      },
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.warning.generated.v1',
+        customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': 1 }),
+        tags: {
+          warning: {
+            message: 'Captured warning',
+          },
+        },
+      },
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.warning.generated.v1',
+        customTags: JSON.stringify({}),
+        tags: {
+          warning: {
+            message: 'Consoled warning 12 true',
           },
         },
       },
@@ -945,7 +987,6 @@ describe('internal-extension/index.test.js', () => {
         traceEvents: [],
       });
     });
-
     it('should report captured events', async () => {
       await handleInvocation('sdk', {
         isCustomReponse: true,
@@ -960,7 +1001,12 @@ describe('internal-extension/index.test.js', () => {
           { name: 'aws.lambda.invocation', input: undefined, output: undefined },
           { name: 'aws.lambda', input: undefined, output: undefined },
         ],
-        traceEvents: [{ eventName: 'telemetry.error.generated.v1' }],
+        traceEvents: [
+          { eventName: 'telemetry.error.generated.v1' },
+          { eventName: 'telemetry.error.generated.v1' },
+          { eventName: 'telemetry.warning.generated.v1' },
+          { eventName: 'telemetry.warning.generated.v1' },
+        ],
       });
     });
 
