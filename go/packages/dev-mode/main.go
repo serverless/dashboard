@@ -121,6 +121,8 @@ func (e *Extension) ExternalExtension() {
 				}
 			}
 
+			runtimeDoneLog := agent.FindRuntimeDone(arr)
+
 			// Save Res Report and skip
 			// else we send res report to backend and continue
 			if responseLog == nil {
@@ -130,7 +132,7 @@ func (e *Extension) ExternalExtension() {
 					continue
 				}
 			} else if receivedRuntimeDone {
-				value := agent.FindRuntimeDone(arr)
+				value := runtimeDoneLog
 				arr = append(arr, agent.LogItem{
 					Time:     responseLog.Time,
 					LogType:  responseLog.LogType,
@@ -146,6 +148,19 @@ func (e *Extension) ExternalExtension() {
 			// Find the trace id so we can attach it to incoming logs
 			if traceId == "" && os.Getenv("SLS_ORG_ID") != "" {
 				traceId = agent.FindTraceId(arr)
+			}
+
+			if runtimeDoneLog != nil {
+				record := runtimeDoneLog.Record.(map[string]interface{})
+				rId := record["requestId"].(string)
+				finalStatus := record["status"].(string)
+				if requestId == "" {
+					requestId = rId
+				}
+				// TraceId will never come because there was a runtime error
+				if finalStatus == "error" && traceId == "" && hasInternalExtension {
+					traceId = rId
+				}
 			}
 
 			if traceId == "" && hasInternalExtension {
@@ -167,7 +182,6 @@ func (e *Extension) ExternalExtension() {
 			// Send to dev mode if we have requestId and traceId
 			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID, traceId)
 		}
-
 		// Force send logs at end of loop
 		if len(deferredLogs) > 0 {
 			agent.ForwardLogs(deferredLogs, requestId, AWS_ACCOUNT_ID, traceId)
