@@ -36,5 +36,8 @@ class ServerlessSdk:
     def _initialize(self, org_id: Optional[str] = None):
         self.orgId = environ.get(SLS_ORG_ID, default=org_id)
 
+    def createTraceSpan(self, name: str, **options):
+        pass
+
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
