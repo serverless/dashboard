@@ -1,21 +1,7 @@
 from __future__ import annotations
-
-from typing_extensions import TypeAlias
 from types import MethodType
 
-import pytest
-
-from . import get_params
-
-
-ServerlessSdk: TypeAlias = "ServerlessSdk"
-
-
-@pytest.fixture
-def sdk() -> ServerlessSdk:
-    from .. import serverlessSdk
-
-    return serverlessSdk
+from . import ServerlessSdk, get_params
 
 
 def test_can_import_serverless_sdk():
@@ -73,3 +59,14 @@ def test_initialize_favors_env_var(sdk: ServerlessSdk):
     sdk._initialize(org_id=org_id)
     assert sdk.orgId != org_id
     assert sdk.orgId == env
+
+
+def test_has_create_trace_span_method(sdk: ServerlessSdk):
+    assert hasattr(sdk, 'createTraceSpan')
+    assert isinstance(sdk.createTraceSpan, MethodType)
+
+    params = get_params(sdk.createTraceSpan)
+
+    assert len(params) >= 2
+    assert 'name' in params
+    assert 'options' in params
