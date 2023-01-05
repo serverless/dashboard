@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/serverless/console/compare/@serverless/sdk@0.2.0...@serverless/sdk@0.2.1) (2023-01-05)
+
+### Features
+
+- `serverless.captureWarning` utility ([f559a2e](https://github.com/serverless/console/commit/f559a2ed11301cdb6b7f9a9577ff22f804eac881))
+- Instrument `console.error` ([0647848](https://github.com/serverless/console/commit/0647848572a0c5a8405fe29c289487bda2d476d5))
+- Instrument `console.warn` ([9088bbe](https://github.com/serverless/console/commit/9088bbe1ba8e18649d0d5cce9867090275ef7a3f))
+
+### Maintenance Improvements
+
+- Differentiate events sourced from `console.*` calls ([bea40aa](https://github.com/serverless/console/commit/bea40aa8f7fd234c70f0b9e7e59c1c9b8304190a))
+- Fix location of `createErrorCapturedEvent` module ([07210b1](https://github.com/serverless/console/commit/07210b121957658b6f854a82dd6a652e1401bcb3))
+- Simplify `console.error` args handling ([8d3d254](https://github.com/serverless/console/commit/8d3d254a046b8ed65251526b11a994393c871257))
+
 ## [0.2.0](https://github.com/serverless/console/compare/@serverless/sdk@0.1.0...@serverless/sdk@0.2.0) (2022-12-22)
 
 ### ⚠ BREAKING CHANGES
