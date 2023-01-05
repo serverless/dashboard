@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-from inspect import Parameter
 from types import MappingProxyType
 from typing import Callable
 from typing_extensions import TypeAlias
@@ -10,7 +9,7 @@ import pytest
 
 
 ServerlessSdk: TypeAlias = "ServerlessSdk"
-Params = MappingProxyType[str, Parameter]
+Params = MappingProxyType[str, inspect.Parameter]
 
 
 def get_params(func: Callable) -> Params:
