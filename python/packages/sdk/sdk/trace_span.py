@@ -20,6 +20,7 @@ class TraceSpan:
     parentSpan: Self
     name: str
     startTime: Nanoseconds
+    endTime: Optional[Nanoseconds]
     input: str
     output: str
     tags: Dict[str, ValidTags]
@@ -53,3 +54,9 @@ class TraceSpan:
         parent = self.parentSpan
 
         return parent.traceId if parent else generate_id()
+
+    def close(self, end_time: Optional[Nanoseconds]):
+        if self.endTime is not None:
+            raise Exception("TraceSpan already closed.")
+
+        self.endTime = end_time or time_ns()
