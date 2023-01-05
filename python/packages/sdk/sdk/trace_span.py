@@ -59,4 +59,4 @@ class TraceSpan:
         if self.endTime is not None:
             raise Exception("TraceSpan already closed.")
 
-        self.endTime = end_time or time_ns()
+        self.endTime = time_ns() if end_time is None else end_time
