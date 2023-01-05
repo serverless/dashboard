@@ -34,9 +34,7 @@ module.exports = async (distFilename) => {
         await runEsbuild(
           path.resolve(path.resolve(internalDir, 'index.js')),
           '--bundle',
-          '--platform=node',
-          '--external:@serverless/aws-lambda-sdk',
-          '--external:../'
+          '--platform=node'
         )
       );
       zip.addFile(
@@ -46,7 +44,7 @@ module.exports = async (distFilename) => {
           '--bundle',
           '--platform=node',
           '--external:@serverless/aws-lambda-sdk',
-          '--external:../../'
+          '--external:../'
         )
       );
       zip.addFile(
