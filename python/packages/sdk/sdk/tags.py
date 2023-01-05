@@ -5,9 +5,9 @@ from js_regex import compile
 
 
 RE: Final[str] = (
-    r'/^[a-z][a-z0-9]*'
-    r'(?:_[a-z][a-z0-9]*)*'
-    r'(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/'
+    r"/^[a-z][a-z0-9]*"
+    r"(?:_[a-z][a-z0-9]*)*"
+    r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/"
 )
 
 
@@ -22,9 +22,7 @@ def is_valid_name(name: str) -> bool:
 
 def ensure_tag_name(name: str) -> str:
     if not isinstance(name, str):
-        raise TypeError(
-            f"Invalid trace span tag: Expected string, received {name}"
-        )
+        raise TypeError(f"Invalid trace span tag: Expected string, received {name}")
 
     if is_valid_name(name):
         return name

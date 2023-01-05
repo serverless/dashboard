@@ -62,11 +62,11 @@ def test_initialize_favors_env_var(sdk: ServerlessSdk):
 
 
 def test_has_create_trace_span_method(sdk: ServerlessSdk):
-    assert hasattr(sdk, 'createTraceSpan')
+    assert hasattr(sdk, "createTraceSpan")
     assert isinstance(sdk.createTraceSpan, MethodType)
 
     params = get_params(sdk.createTraceSpan)
 
     assert len(params) >= 2
-    assert 'name' in params
-    assert 'options' in params
+    assert "name" in params
+    assert "options" in params
