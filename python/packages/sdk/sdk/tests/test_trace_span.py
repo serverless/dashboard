@@ -92,5 +92,3 @@ def test_has_to_protobuf_object_method(trace_span: TraceSpan):
     params = get_params(trace_span.toProtobufObject)
 
     assert len(params) <= 1
-
-
