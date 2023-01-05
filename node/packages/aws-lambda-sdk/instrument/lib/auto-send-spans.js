@@ -54,6 +54,7 @@ serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => {
 });
 
 serverlessSdk._eventEmitter.on('captured-event', (capturedEvent) => {
+  if (capturedEvent._origin === 'nodeConsole') return;
   pendingCapturedEvents.push(capturedEvent);
   scheduleEventually();
 });
