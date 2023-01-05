@@ -2,6 +2,8 @@
 
 const isError = require('type/error/is');
 const util = require('util');
+const createErrorCapturedEvent = require('../create-error-captured-event');
+const createWarningCapturedEvent = require('../create-warning-captured-event');
 
 const nodeConsole = console;
 
@@ -30,12 +32,12 @@ module.exports.install = () => {
     original.error.apply(this, args);
     const error = args.find(isError);
     if (!error) return;
-    serverlessSdk.captureError(error);
+    createErrorCapturedEvent(error)._origin = 'nodeConsole';
   };
 
   nodeConsole.warn = function (...args) {
     original.warn.apply(this, args);
-    serverlessSdk.captureWarning(resolveWarnMesssage(args));
+    createWarningCapturedEvent(resolveWarnMesssage(args))._origin = 'nodeConsole';
   };
 
   uninstall = () => {
@@ -49,5 +51,3 @@ module.exports.uninstall = () => {
   isInstalled = false;
   uninstall();
 };
-
-const serverlessSdk = require('../..');
