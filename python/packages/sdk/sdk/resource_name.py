@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing_extensions import Final
+
 from re import Pattern
 
-from .exceptions import InvalidName, InvalidTraceSpanName, InvalidType
-
 from js_regex import compile
+from typing_extensions import Final
+
+from .exceptions import InvalidTraceSpanName
 
 
 # from https://github.com/serverless/console/blob/main/node/packages/sdk/lib/get-ensure-resource-name.js#L7
