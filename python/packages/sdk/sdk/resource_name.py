@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing_extensions import Final
 from re import Pattern
 
+from .exceptions import InvalidName, InvalidType
+
 from js_regex import compile
 
 
@@ -21,16 +23,16 @@ def is_valid_name(name: str) -> bool:
     return bool(match)
 
 
-def get_ensure_resource_name(name: str) -> str:
+def get_resource_name(name: str) -> str:
     if not isinstance(name, str):
-        raise TypeError(
+        raise InvalidName(
             f"Invalid captured event name: Expected string, received {name}"
         )
 
     if is_valid_name(name):
         return name
 
-    raise ValueError(
+    raise InvalidType(
         "Invalid captured event name: Name should contain dot separated tokens that follow "
         f'"[a-z][a-z0-9]*" pattern. Received: {name}'
     )
