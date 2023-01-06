@@ -22,6 +22,6 @@ TraceId = str
 Nanoseconds = int
 DateStr = str
 
-Tag = Union[str, int, float, DateStr, bool]
-Tags = List[Tag]
-ValidTags = Union[Tag, Tags]
+TagType = Union[str, int, float, DateStr, bool]
+TagList = List[TagType]
+ValidTags = Union[TagType, TagList]
