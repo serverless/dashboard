@@ -64,7 +64,7 @@ def test_has_input(trace_span: TraceSpan):
 
 
 def test_has_output(trace_span: TraceSpan):
-    assert hasattr(trace_span, "traceId")
+    assert hasattr(trace_span, "output")
 
 
 def test_has_parent_span(trace_span: TraceSpan):
@@ -92,3 +92,12 @@ def test_has_to_protobuf_object_method(trace_span: TraceSpan):
     params = get_params(trace_span.toProtobufObject)
 
     assert len(params) <= 1
+
+
+def test_can_set_output(trace_span: TraceSpan):
+    assert trace_span.output == TEST_OUTPUT
+
+    new_output: str = "New Output"
+    trace_span.output = new_output
+
+    assert trace_span.output == new_output
