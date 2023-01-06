@@ -8,7 +8,7 @@ from backports.cached_property import cached_property  # available in Python >=3
 
 from .base import Nanoseconds, TraceId, ValidTags
 from .generate_ids import generate_id
-from .get_ensure_resource_name import get_ensure_resource_name
+from .resource_name import get_resource_name
 
 
 __all__: Final[List[str]] = [
@@ -21,20 +21,20 @@ class TraceSpan:
     name: str
     startTime: Nanoseconds
     endTime: Optional[Nanoseconds]
-    input: str
-    output: str
+    input: Optional[str]
+    output: Optional[str]
     tags: Dict[str, ValidTags]
 
     def __init__(
         self,
         name: str,
-        input: str,
-        output: str,
+        input: Optional[str] = None,
+        output: Optional[str] = None,
         start_time: Optional[Nanoseconds] = None,
     ):
-        self.name = get_ensure_resource_name(name)
+        self.name = get_resource_name(name)
         self.input = input
-        self.output = output
+        self._output: str = output
         self._set_start_time(start_time)
 
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
@@ -54,6 +54,17 @@ class TraceSpan:
         parent = self.parentSpan
 
         return parent.traceId if parent else generate_id()
+
+    @property
+    def output(self) -> str:
+        return self._output
+
+    @output.setter
+    def output(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError(f"`output` must be a string.")
+
+        self._output = value
 
     def close(self, end_time: Optional[Nanoseconds]):
         if self.endTime is not None:
