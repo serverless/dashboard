@@ -22,3 +22,8 @@ class InvalidTraceSpanTagName(InvalidName):
 
 class InvalidTraceSpanName(InvalidName):
     pass
+
+
+class DuplicateTraceSpanName(InvalidName):
+    pass
+

@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing_extensions import Final, Self
-from typing import Dict, List, Optional
 from time import time_ns
+from typing import List, Optional
 
 from backports.cached_property import cached_property  # available in Python >=3.8
+from typing_extensions import Final, Self
 
-from .base import Nanoseconds, TraceId, ValidTags
+from .base import Nanoseconds, TraceId
 from .generate_ids import generate_id
 from .resource_name import get_resource_name
+from .tags import Tags
 
 
 __all__: Final[List[str]] = [
@@ -23,7 +24,7 @@ class TraceSpan:
     endTime: Optional[Nanoseconds]
     input: Optional[str]
     output: Optional[str]
-    tags: Dict[str, ValidTags]
+    tags: Tags
 
     def __init__(
         self,
@@ -31,11 +32,16 @@ class TraceSpan:
         input: Optional[str] = None,
         output: Optional[str] = None,
         start_time: Optional[Nanoseconds] = None,
+        tags: Optional[Tags] = None
     ):
         self.name = get_resource_name(name)
         self.input = input
         self._output: str = output
         self._set_start_time(start_time)
+        self.tags = Tags()
+
+        if tags is not None:
+            self.tags.update(tags)
 
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
         default_start = time_ns()

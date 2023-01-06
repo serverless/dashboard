@@ -1,13 +1,13 @@
 from datetime import datetime
-from re import Pattern
-from typing import Tuple, cast
 from math import inf
+from re import Pattern
+from typing import Dict, Tuple
 
 from js_regex import compile
 from typing_extensions import Final, get_args
 
-from .base import Tag
-from .exceptions import InvalidTraceSpanTagName, InvalidTraceSpanTagValue
+from .base import TagType, ValidTags
+from .exceptions import DuplicateTraceSpanName, InvalidTraceSpanTagName, InvalidTraceSpanTagValue
 
 
 RE: Final[str] = (
@@ -16,6 +16,25 @@ RE: Final[str] = (
     r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/"
 )
 RE_C: Final[Pattern] = compile(RE)
+
+
+class Tags(Dict[str, ValidTags]):
+    def __setitem__(self, key: str, value: ValidTags):
+        name = ensure_tag_name(value)
+        value = ensure_tag_value(name, value)
+
+        if name not in self:
+            super().__setitem__(name, value)
+
+        current: ValidTags = self[name]
+
+        if isinstance(current, list):
+            if value != current:
+                return
+
+        raise DuplicateTraceSpanName(
+            f"Cannot set tag: Tag {name} is already set"
+        )
 
 
 def is_valid_name(name: str) -> bool:
@@ -33,7 +52,7 @@ def is_date(value: str) -> bool:
         return False
 
 
-def ensure_tag_name(attr: str, name: str) -> str:
+def ensure_tag_name(attr: str, name: str) -> ValidTags:
     if not isinstance(name, str):
         raise InvalidTraceSpanTagName(
             f"Invalid trace span tag {attr}: Expected string, received {name}"
@@ -49,8 +68,8 @@ def ensure_tag_name(attr: str, name: str) -> str:
     )
 
 
-def ensure_tag_value(attr: str, value: str) -> str:
-    valid_types: Tuple[type] = get_args(Tag)  # type: ignore
+def ensure_tag_value(attr: str, value: str) -> Tags:
+    valid_types: Tuple[type] = get_args(TagType)  # type: ignore
     valid_types = (*valid_types, list)  # type: ignore
 
     if not isinstance(value, valid_types):
