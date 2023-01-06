@@ -9,4 +9,3 @@ def test_generate_id():
     assert len(new_id) == 32
     assert len(new_bytes) == 16
     assert new_bytes.decode("utf-8") == new_id
-
