@@ -5,7 +5,6 @@ from typing import Callable
 from typing_extensions import TypeAlias
 import inspect
 
-
 import pytest
 
 
