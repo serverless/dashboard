@@ -32,12 +32,12 @@ module.exports.install = () => {
     original.error.apply(this, args);
     const error = args.find(isError);
     if (!error) return;
-    createErrorCapturedEvent(error)._origin = 'nodeConsole';
+    createErrorCapturedEvent(error, { _origin: 'nodeConsole' });
   };
 
   nodeConsole.warn = function (...args) {
     original.warn.apply(this, args);
-    createWarningCapturedEvent(resolveWarnMesssage(args))._origin = 'nodeConsole';
+    createWarningCapturedEvent(resolveWarnMesssage(args), { _origin: 'nodeConsole' });
   };
 
   uninstall = () => {

@@ -13,5 +13,6 @@ module.exports = (message, options = {}) => {
     timestamp,
     customTags: options.tags,
     tags: { 'warning.message': message },
+    _origin: options._origin,
   });
 };
