@@ -11,8 +11,6 @@ RE: Final[str] = (
     r"(?:_[a-z][a-z0-9]*)*"
     r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/"
 )
-
-
 RE_C: Final[Pattern] = compile(RE)
 
 
@@ -22,14 +20,15 @@ def is_valid_name(name: str) -> bool:
     return bool(match)
 
 
-def ensure_tag_name(name: str) -> str:
+def ensure_tag_name(attr: str, name: str) -> str:
     if not isinstance(name, str):
-        raise InvalidType(f"Invalid trace span tag: Expected string, received {name}")
+        raise InvalidType(f"Invalid trace span tag {attr}: Expected string, received {name}")
 
     if is_valid_name(name):
         return name
 
     raise InvalidName(
-        "Invalid captured event name: Name should contain dot separated tokens that follow "
-        f'"[a-z][a-z0-9]*" pattern. Received: {name}'
+        f"Invalid trace span tag {attr}: {attr.capitalize()} "
+        f"should contain dot separated tokens that follow "
+        f'"[a-z][a-z0-9_]*" pattern. Received {name}'
     )
