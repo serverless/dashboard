@@ -3,6 +3,8 @@ from re import Pattern
 
 from js_regex import compile
 
+from .exceptions import InvalidName, InvalidType
+
 
 RE: Final[str] = (
     r"/^[a-z][a-z0-9]*"
@@ -22,12 +24,12 @@ def is_valid_name(name: str) -> bool:
 
 def ensure_tag_name(name: str) -> str:
     if not isinstance(name, str):
-        raise TypeError(f"Invalid trace span tag: Expected string, received {name}")
+        raise InvalidType(f"Invalid trace span tag: Expected string, received {name}")
 
     if is_valid_name(name):
         return name
 
-    raise ValueError(
+    raise InvalidName(
         "Invalid captured event name: Name should contain dot separated tokens that follow "
         f'"[a-z][a-z0-9]*" pattern. Received: {name}'
     )
