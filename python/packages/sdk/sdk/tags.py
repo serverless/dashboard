@@ -25,6 +25,7 @@ class Tags(Dict[str, ValidTags]):
 
         if name not in self:
             super().__setitem__(name, value)
+            return
 
         current: ValidTags = self[name]
 
