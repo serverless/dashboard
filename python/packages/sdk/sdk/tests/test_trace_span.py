@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing_extensions import Final, Type, TypeAlias
+from typing_extensions import Final, TypeAlias
 from types import MethodType
 
 import pytest
