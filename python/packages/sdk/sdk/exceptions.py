@@ -1,5 +1,6 @@
 class SdkException(Exception):
     """Base class for all serverless exceptions."""
+
     pass
 
 
@@ -21,4 +22,3 @@ class InvalidTraceSpanTagName(InvalidName):
 
 class InvalidTraceSpanName(InvalidName):
     pass
-

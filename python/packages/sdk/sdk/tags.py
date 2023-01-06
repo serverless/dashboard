@@ -1,9 +1,10 @@
-from typing_extensions import Final
 from re import Pattern
 
 from js_regex import compile
+from typing_extensions import Final
 
-from .exceptions import InvalidName, InvalidType
+from .base import Tag
+from .exceptions import InvalidTraceSpanTagName, InvalidTraceSpanTagValue
 
 
 RE: Final[str] = (
@@ -22,13 +23,24 @@ def is_valid_name(name: str) -> bool:
 
 def ensure_tag_name(attr: str, name: str) -> str:
     if not isinstance(name, str):
-        raise InvalidType(f"Invalid trace span tag {attr}: Expected string, received {name}")
+        raise InvalidTraceSpanTagName(
+            f"Invalid trace span tag {attr}: Expected string, received {name}"
+        )
 
     if is_valid_name(name):
         return name
 
-    raise InvalidName(
+    raise InvalidTraceSpanTagName(
         f"Invalid trace span tag {attr}: {attr.capitalize()} "
         f"should contain dot separated tokens that follow "
         f'"[a-z][a-z0-9_]*" pattern. Received {name}'
     )
+
+
+def ensure_tag_value(attr: str, value: str) -> str:
+    if not isinstance(value, Tag):
+        raise InvalidTraceSpanTagValue(
+            f"Invalid trace span tag value for {attr}: Expected string, received {value}"
+        )
+
+    return value

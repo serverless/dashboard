@@ -5,7 +5,7 @@ from ..exceptions import InvalidTraceSpanName
 from ..resource_name import get_resource_name, is_valid_name
 
 
-VALID_NAME: Final[str] = 'This.is.a._valid.name123'
+VALID_NAME: Final[str] = "This.is.a._valid.name123"
 INVALID_NAME: Final[str] = "This isn't a valid name"
 
 
