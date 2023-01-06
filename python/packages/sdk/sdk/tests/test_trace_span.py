@@ -7,9 +7,9 @@ import pytest
 from . import get_params
 
 
-TEST_NAME: Final[str] = 'Test Span'
-TEST_INPUT: Final[str] = 'Test Input'
-TEST_OUTPUT: Final[str] = 'Test Output'
+TEST_NAME: Final[str] = "Test Span"
+TEST_INPUT: Final[str] = "Test Input"
+TEST_OUTPUT: Final[str] = "Test Output"
 TEST_START_TIME: Final[int] = 1_000_000
 
 
@@ -44,49 +44,49 @@ def test_can_import_trace_span():
 
 
 def test_has_id(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'id')
+    assert hasattr(trace_span, "id")
 
 
 def test_has_trace_id(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'traceId')
+    assert hasattr(trace_span, "traceId")
 
 
 def test_has_name(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'name')
+    assert hasattr(trace_span, "name")
 
 
 def test_has_start_time(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'startTime')
+    assert hasattr(trace_span, "startTime")
 
 
 def test_has_input(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'input')
+    assert hasattr(trace_span, "input")
 
 
 def test_has_output(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'traceId')
+    assert hasattr(trace_span, "traceId")
 
 
 def test_has_parent_span(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'parentSpan')
+    assert hasattr(trace_span, "parentSpan")
 
 
 def test_has_tags(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'tags')
+    assert hasattr(trace_span, "tags")
 
 
 def test_has_close_method(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'close')
+    assert hasattr(trace_span, "close")
     assert isinstance(trace_span.close, MethodType)
 
     params = get_params(trace_span.close)
 
     assert len(params) >= 1
-    assert 'close' in params
+    assert "close" in params
 
 
 def test_has_to_protobuf_object_method(trace_span: TraceSpan):
-    assert hasattr(trace_span, 'toProtobufObject')
+    assert hasattr(trace_span, "toProtobufObject")
     assert isinstance(trace_span.toProtobufObject, MethodType)
 
     params = get_params(trace_span.toProtobufObject)
