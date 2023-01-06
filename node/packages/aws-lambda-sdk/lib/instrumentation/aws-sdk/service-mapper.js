@@ -1,5 +1,50 @@
 'use strict';
 
+const dynamodbConfig = {
+  params: (
+    traceSpan,
+    {
+      TableName: tableName,
+      GlobalTableName: globalTableName,
+      ConsistentRead: consistentRead,
+      Limit: limit,
+      AttributesToGet: attributesToGet,
+      ProjectionExpression: projectionExpression,
+      IndexName: indexName,
+      ScanIndexForward: scanIndexForward,
+      Select: select,
+      KeyConditionExpression: keyConditionExpression,
+      FilterExpression: filterExpression,
+      Segment: segment,
+      TotalSegments: totalSegments,
+      ExclusiveStartKey: exclusiveStartKey,
+    }
+  ) => {
+    const tags = {};
+    if (tableName) tags.table_name = tableName;
+    else if (globalTableName) tags.table_name = globalTableName;
+    if (consistentRead) tags.consistent_read = consistentRead;
+    if (limit) tags.limit = limit;
+    tags.attributes_to_get = attributesToGet || [];
+    if (projectionExpression) tags.projection = projectionExpression;
+    if (indexName) tags.index_name = indexName;
+    if (scanIndexForward) tags.scan_forward = scanIndexForward;
+    if (select) tags.select = select;
+    if (filterExpression) tags.filter = filterExpression;
+    if (keyConditionExpression) tags.key_condition = keyConditionExpression;
+    if (segment) tags.segment = segment;
+    if (totalSegments) tags.total_segments = totalSegments;
+    if (exclusiveStartKey) tags.exclusive_start_key = JSON.stringify(exclusiveStartKey);
+    traceSpan.tags.setMany(tags, { prefix: 'aws.sdk.dynamodb' });
+  },
+  responseData: (traceSpan, { Count: count, ScannedCount: scannedCount }) => {
+    const tags = {};
+    if (count) tags.count = count;
+    if (scannedCount) tags.scanned_count = scannedCount;
+    traceSpan.tags.setMany(tags, { prefix: 'aws.sdk.dynamodb' });
+  },
+};
+
 module.exports = new Map([
   [
     'sns',
@@ -57,51 +102,6 @@ module.exports = new Map([
       },
     },
   ],
-  [
-    'dynamodb',
-    {
-      params: (
-        traceSpan,
-        {
-          TableName: tableName,
-          GlobalTableName: globalTableName,
-          ConsistentRead: consistentRead,
-          Limit: limit,
-          AttributesToGet: attributesToGet,
-          ProjectionExpression: projectionExpression,
-          IndexName: indexName,
-          ScanIndexForward: scanIndexForward,
-          Select: select,
-          KeyConditionExpression: keyConditionExpression,
-          FilterExpression: filterExpression,
-          Segment: segment,
-          TotalSegments: totalSegments,
-          ExclusiveStartKey: exclusiveStartKey,
-        }
-      ) => {
-        const tags = {};
-        if (tableName) tags.table_name = tableName;
-        else if (globalTableName) tags.table_name = globalTableName;
-        if (consistentRead) tags.consistent_read = consistentRead;
-        if (limit) tags.limit = limit;
-        tags.attributes_to_get = attributesToGet || [];
-        if (projectionExpression) tags.projection = projectionExpression;
-        if (indexName) tags.index_name = indexName;
-        if (scanIndexForward) tags.scan_forward = scanIndexForward;
-        if (select) tags.select = select;
-        if (filterExpression) tags.filter = filterExpression;
-        if (keyConditionExpression) tags.key_condition = keyConditionExpression;
-        if (segment) tags.segment = segment;
-        if (totalSegments) tags.total_segments = totalSegments;
-        if (exclusiveStartKey) tags.exclusive_start_key = JSON.stringify(exclusiveStartKey);
-        traceSpan.tags.setMany(tags, { prefix: 'aws.sdk.dynamodb' });
-      },
-      responseData: (traceSpan, { Count: count, ScannedCount: scannedCount }) => {
-        const tags = {};
-        if (count) tags.count = count;
-        if (scannedCount) tags.scanned_count = scannedCount;
-        traceSpan.tags.setMany(tags, { prefix: 'aws.sdk.dynamodb' });
-      },
-    },
-  ],
+  ['dynamodb', dynamodbConfig],
+  ['dynamodbdocument', dynamodbConfig],
 ]);
