@@ -1,6 +1,7 @@
 from typing_extensions import Final
 import pytest
 
+from ..exceptions import InvalidTraceSpanName
 from ..resource_name import get_resource_name, is_valid_name
 
 
@@ -16,12 +17,12 @@ def test_is_valid_name():
 def test_get_resource_name():
     assert get_resource_name(VALID_NAME) == VALID_NAME
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidTraceSpanName):
         get_resource_name(INVALID_NAME)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidTraceSpanName):
         get_resource_name(None)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidTraceSpanName):
         as_bytes: bytes = VALID_NAME.encode()
         get_resource_name(as_bytes)

@@ -10,3 +10,15 @@ class InvalidName(SdkException, ValueError):
 class InvalidType(SdkException, TypeError):
     pass
 
+
+class InvalidTraceSpanTagValue(InvalidType):
+    pass
+
+
+class InvalidTraceSpanTagName(InvalidName):
+    pass
+
+
+class InvalidTraceSpanName(InvalidName):
+    pass
+
