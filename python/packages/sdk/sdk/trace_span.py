@@ -7,6 +7,7 @@ from backports.cached_property import cached_property  # available in Python >=3
 from typing_extensions import Final, Self
 
 from .base import Nanoseconds, TraceId
+from .exceptions import ClosureOnClosedSpan, FutureSpanStartTime, InvalidType
 from .generate_ids import generate_id
 from .resource_name import get_resource_name
 from .tags import Tags
@@ -36,8 +37,12 @@ class TraceSpan:
     ):
         self.name = get_resource_name(name)
         self.input = input
-        self._output: str = output
+        self.output = output
+
         self._set_start_time(start_time)
+        self._set_tags(tags)
+
+    def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()
 
         if tags is not None:
@@ -47,7 +52,10 @@ class TraceSpan:
         default_start = time_ns()
 
         if start_time is not None and not isinstance(start_time, Nanoseconds):
-            raise TypeError(f"`startTime` must be an integer.")
+            raise InvalidType(f"`startTime` must be an integer.")
+
+        if start_time > default_start:
+            raise FutureSpanStartTime('Cannot intialize span: Start time cannot be set in the future')
 
         self.startTime = start_time or default_start
 
@@ -68,12 +76,12 @@ class TraceSpan:
     @output.setter
     def output(self, value: str):
         if not isinstance(value, str):
-            raise TypeError(f"`output` must be a string.")
+            raise InvalidType(f"`output` must be a string.")
 
         self._output = value
 
     def close(self, end_time: Optional[Nanoseconds]):
         if self.endTime is not None:
-            raise Exception("TraceSpan already closed.")
+            raise ClosureOnClosedSpan("TraceSpan already closed.")
 
         self.endTime = time_ns() if end_time is None else end_time
