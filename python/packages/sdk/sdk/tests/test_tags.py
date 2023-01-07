@@ -1,3 +1,4 @@
+from datetime import datetime
 from math import inf, nan
 from typing import Tuple, Any
 
@@ -39,9 +40,9 @@ VALID_VALUES: Final[Tuple[ValidTags, ...]] = (
     -10.0,
     True,
     False,
-    "2023-01-01",
+    datetime.now(),
     [1, 2, 3],
-    [1, 2.0, "three", True, False, "2023-01-01"],
+    [1, 2.0, "three", True, False, datetime.now()],
 )
 
 
