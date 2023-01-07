@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from time import time_ns
 from typing import List, Optional
+from contextvars import ContextVar
 
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
 
 from .base import Nanoseconds, TraceId
-from .exceptions import ClosureOnClosedSpan, FutureSpanStartTime, InvalidType
+from .exceptions import ClosureOnClosedSpan, FutureSpanStartTime, InvalidType, UnreachableTrace
 from .generate_ids import generate_id
 from .resource_name import get_resource_name
 from .tags import Tags
@@ -16,6 +17,9 @@ from .tags import Tags
 __all__: Final[List[str]] = [
     "TraceSpan",
 ]
+
+
+TraceSpanContext = ContextVar[Optional['TraceSpan']]
 
 
 class TraceSpan:
@@ -41,6 +45,22 @@ class TraceSpan:
 
         self._set_start_time(start_time)
         self._set_tags(tags)
+        self._set_parent_span()
+
+    def _set_parent_span(self):
+        global root_span
+
+        if root_span is None:
+            root_span = self
+            self.parentSpan = None
+
+        elif root_span.endTime is not None:
+            raise UnreachableTrace('Cannot initialize span: Trace is closed')
+
+        self.parentSpan = TraceSpan.resolveCurrentSpan()
+
+        while self.parentSpan.endTime:
+            self.parentSpan = self.parentSpan.parentSpan or root_span
 
     def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()
@@ -55,7 +75,7 @@ class TraceSpan:
             raise InvalidType(f"`startTime` must be an integer.")
 
         if start_time > default_start:
-            raise FutureSpanStartTime('Cannot intialize span: Start time cannot be set in the future')
+            raise FutureSpanStartTime('Cannot initialize span: Start time cannot be set in the future')
 
         self.startTime = start_time or default_start
 
@@ -80,8 +100,18 @@ class TraceSpan:
 
         self._output = value
 
+    @staticmethod
+    def resolveCurrentSpan() -> Optional[TraceSpan]:
+        parent = rootContext.get()
+
+        return parent or root_span or None
+
     def close(self, end_time: Optional[Nanoseconds]):
         if self.endTime is not None:
             raise ClosureOnClosedSpan("TraceSpan already closed.")
 
         self.endTime = time_ns() if end_time is None else end_time
+
+
+rootContext: Final[TraceSpanContext] = ContextVar("rootContext", default=None)
+root_span: Optional['TraceSpan'] = None

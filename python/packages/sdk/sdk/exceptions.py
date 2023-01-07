@@ -38,3 +38,7 @@ class PastSpanEndTime(InvalidValue):
 class ClosureOnClosedSpan(SdkException):
     pass
 
+
+class UnreachableTrace(SdkException):
+    pass
+
