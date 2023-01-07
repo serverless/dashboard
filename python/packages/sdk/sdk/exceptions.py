@@ -1,5 +1,6 @@
 class SdkException(Exception):
     """Base class for all Serverless SDK exceptions."""
+
     pass
 
 
@@ -41,4 +42,3 @@ class ClosureOnClosedSpan(SdkException):
 
 class UnreachableTrace(SdkException):
     pass
-
