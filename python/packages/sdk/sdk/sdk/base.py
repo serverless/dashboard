@@ -7,6 +7,7 @@ from typing_extensions import Final
 
 from ..base import Nanoseconds, SLS_ORG_ID, __version__
 from ..span.trace import TraceSpan
+from ..span.tags import Tags
 
 
 __all__: Final[List[str]] = [
@@ -32,5 +33,6 @@ class ServerlessSdk:
         input: str,
         output: str,
         start_time: Optional[Nanoseconds] = None,
+        tags: Optional[Tags] = None,
     ) -> TraceSpan:
-        return TraceSpan(name, input, output, start_time)
+        return TraceSpan(name, input, output, start_time, tags)
