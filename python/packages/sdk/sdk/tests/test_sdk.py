@@ -80,3 +80,11 @@ def test_has_create_trace_span_method(sdk: ServerlessSdk):
 
     assert len(params) >= len(args)
     assert all(arg in params for arg in args)
+
+
+def test_create_trace_span_returns_trace_span(sdk: ServerlessSdk):
+    from ..span.trace import TraceSpan
+
+    span = sdk.createTraceSpan("name", "input", "output")
+
+    assert isinstance(span, TraceSpan)

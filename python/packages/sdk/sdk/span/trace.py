@@ -101,7 +101,7 @@ class TraceSpan:
         if start_time is not None and not isinstance(start_time, Nanoseconds):
             raise InvalidType(f"`startTime` must be an integer.")
 
-        if start_time > default_start:
+        if start_time is not None and start_time > default_start:
             raise FutureSpanStartTime(
                 "Cannot initialize span: Start time cannot be set in the future"
             )
