@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Dict, List, Union
 
 from importlib_metadata import packages_distributions, version
@@ -23,6 +24,6 @@ TraceId = str
 Nanoseconds = int
 DateStr = str
 
-TagType = Union[str, int, float, DateStr, bool]
+TagType = Union[str, int, float, DateStr, bool, datetime]
 TagList = List[TagType]
 ValidTags = Union[TagType, TagList]

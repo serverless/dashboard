@@ -71,7 +71,7 @@ def ensure_tag_name(attr: str, name: str) -> ValidTags:
     )
 
 
-def ensure_tag_value(attr: str, value: str) -> Tags:
+def ensure_tag_value(attr: str, value: str) -> ValidTags:
     valid_types: Tuple[type] = get_args(TagType)  # type: ignore
     valid_types = (*valid_types, list)  # type: ignore
 
@@ -80,6 +80,9 @@ def ensure_tag_value(attr: str, value: str) -> Tags:
             f"Invalid trace span tag value for {attr}: "
             f"Expected {valid_types}, received {value}"
         )
+
+    if isinstance(value, datetime):
+        return value.isoformat()
 
     if isinstance(value, str) and is_date(value):
         return value
