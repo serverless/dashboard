@@ -48,7 +48,7 @@ def is_valid_name(name: str) -> bool:
 
 def is_date(value: str) -> bool:
     try:
-        datetime.strptime(value, "%Y-%m-%d")
+        datetime.fromisoformat(value)
         return True
 
     except ValueError:
