@@ -28,6 +28,10 @@ __all__: Final[List[str]] = [
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
 
+root_ctx: Final[TraceSpanContext] = ContextVar("root_ctx", default=None)
+root_span = None  # type: Optional[TraceSpan]
+
+
 class TraceSpanBuf(BaseModel):
     id: bytes
     trace_id: bytes
@@ -70,7 +74,7 @@ class TraceSpan:
 
     @staticmethod
     def resolveCurrentSpan() -> Optional[TraceSpan]:
-        parent = rootContext.get()
+        parent = root_ctx.get()
 
         return parent or root_span or None
 
@@ -155,7 +159,3 @@ class TraceSpan:
             # is_historical=None,
             # type=None,
         )
-
-
-rootContext: Final[TraceSpanContext] = ContextVar("rootContext", default=None)
-root_span = None  # type: Optional[TraceSpan]
