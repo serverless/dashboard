@@ -37,6 +37,7 @@ class TraceSpanBuf(BaseModel):
     end_time_unix_nano: int
     tags: Tags
     input: Optional[str]
+    output: Optional[str]
     timestamp: Optional[int]
     is_historical: Optional[bool]
     type: Optional[str]
@@ -131,7 +132,7 @@ class TraceSpan:
 
         self._output = value
 
-    def close(self, end_time: Optional[Nanoseconds]):
+    def close(self, end_time: Optional[Nanoseconds] = None):
         default: Nanoseconds = time_ns()
 
         if self.endTime is not None:
@@ -149,6 +150,7 @@ class TraceSpan:
             end_time_unix_nano=self.endTime,
             tags=self.tags,
             input=self.input,
+            output=self.output,
             # timestamp=time_ns(),
             # is_historical=None,
             # type=None,
