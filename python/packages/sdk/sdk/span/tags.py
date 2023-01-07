@@ -24,7 +24,7 @@ RE_C: Final[Pattern] = compile(RE)
 
 class Tags(Dict[str, ValidTags]):
     def __setitem__(self, key: str, value: ValidTags):
-        name = ensure_tag_name(value)
+        name = ensure_tag_name(key, key)
         value = ensure_tag_value(name, value)
 
         if name not in self:
