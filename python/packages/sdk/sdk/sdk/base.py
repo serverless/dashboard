@@ -5,8 +5,8 @@ from typing import List, Optional
 
 from typing_extensions import Final
 
-from .base import Nanoseconds, SLS_ORG_ID, __version__
-from .trace_span import TraceSpan
+from ..base import Nanoseconds, SLS_ORG_ID, __version__
+from ..span.trace import TraceSpan
 
 
 __all__: Final[List[str]] = [

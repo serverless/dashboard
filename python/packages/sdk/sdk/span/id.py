@@ -4,7 +4,7 @@ from typing import List
 from secrets import token_hex
 from typing_extensions import Final
 
-from .base import TraceId
+from ..base import TraceId
 
 
 __all__: Final[List[str]] = [

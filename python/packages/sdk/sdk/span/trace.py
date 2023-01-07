@@ -7,15 +7,15 @@ from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
 
-from .base import Nanoseconds, TraceId
-from .exceptions import (
+from ..base import Nanoseconds, TraceId
+from ..exceptions import (
     ClosureOnClosedSpan,
     FutureSpanStartTime,
     InvalidType,
     UnreachableTrace,
 )
-from .generate_ids import generate_id
-from .resource_name import get_resource_name
+from .id import generate_id
+from .name import get_resource_name
 from .tags import Tags
 
 

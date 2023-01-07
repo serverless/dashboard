@@ -2,7 +2,7 @@ from typing_extensions import Final
 import pytest
 
 from ..exceptions import InvalidTraceSpanName
-from ..resource_name import get_resource_name, is_valid_name
+from ..span.name import get_resource_name, is_valid_name
 
 
 VALID_NAME: Final[str] = "This.is.a._valid.name123"

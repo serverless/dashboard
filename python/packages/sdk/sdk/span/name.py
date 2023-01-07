@@ -5,7 +5,7 @@ from re import Pattern
 from js_regex import compile
 from typing_extensions import Final
 
-from .exceptions import InvalidTraceSpanName
+from ..exceptions import InvalidTraceSpanName
 
 
 # from https://github.com/serverless/console/blob/main/node/packages/sdk/lib/get-ensure-resource-name.js#L7

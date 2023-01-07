@@ -6,8 +6,8 @@ from typing import Dict, Tuple
 from js_regex import compile
 from typing_extensions import Final, get_args
 
-from .base import TagType, ValidTags
-from .exceptions import (
+from ..base import TagType, ValidTags
+from ..exceptions import (
     DuplicateTraceSpanName,
     InvalidTraceSpanTagName,
     InvalidTraceSpanTagValue,
