@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 from datetime import datetime
-from math import inf, nan
+from math import inf
 from re import Pattern
-from typing import Dict, Iterable, List, Mapping, Tuple
-from itertools import chain
+from typing import Dict, Tuple
 
 from js_regex import compile
 from typing_extensions import Final, get_args
@@ -18,16 +15,16 @@ from ..exceptions import (
 
 
 RE: Final[str] = (
-    r"^[a-z][a-z0-9]*"
+    r"/^[a-z][a-z0-9]*"
     r"(?:_[a-z][a-z0-9]*)*"
-    r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$"
+    r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/"
 )
 RE_C: Final[Pattern] = compile(RE)
 
 
 class Tags(Dict[str, ValidTags]):
     def __setitem__(self, key: str, value: ValidTags):
-        name = ensure_tag_name(key, key)
+        name = ensure_tag_name(value)
         value = ensure_tag_value(name, value)
 
         if name not in self:
@@ -42,21 +39,6 @@ class Tags(Dict[str, ValidTags]):
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
-    def update(self, mapping: Mapping, **kwargs) -> None:
-        items: Iterable[Tuple[str, ValidTags]]
-
-        if mapping and hasattr(mapping, "items"):
-            items = mapping.items()
-
-        elif mapping:
-            items = chain(mapping, kwargs.items())
-
-        else:
-            items = kwargs.items()  # type: ignore
-
-        for key, value in items:
-            self[key] = value
-
 
 def is_valid_name(name: str) -> bool:
     match = RE_C.match(name)
@@ -66,7 +48,7 @@ def is_valid_name(name: str) -> bool:
 
 def is_date(value: str) -> bool:
     try:
-        datetime.fromisoformat(value)
+        datetime.strptime(value, "%Y-%m-%d")
         return True
 
     except ValueError:
@@ -89,18 +71,14 @@ def ensure_tag_name(attr: str, name: str) -> ValidTags:
     )
 
 
-def ensure_tag_value(attr: str, value: str) -> ValidTags:
+def ensure_tag_value(attr: str, value: str) -> Tags:
     valid_types: Tuple[type] = get_args(TagType)  # type: ignore
     valid_types = (*valid_types, list)  # type: ignore
 
     if not isinstance(value, valid_types):
         raise InvalidTraceSpanTagValue(
-            f"Invalid trace span tag value for {attr}: "
-            f"Expected {valid_types}, received {value}"
+            f"Invalid trace span tag value for {attr}: Expected string, received {value}"
         )
-
-    if isinstance(value, datetime):
-        return value.isoformat()
 
     if isinstance(value, str) and is_date(value):
         return value
@@ -109,26 +87,22 @@ def ensure_tag_value(attr: str, value: str) -> ValidTags:
         return value
 
     elif isinstance(value, (int, float)):
-        invalid = inf, -inf, nan
-
-        if value in invalid:
+        if value is inf:
             raise InvalidTraceSpanTagValue(
                 f"Invalid trace span tag value for {attr}: "
                 f"Number must be finite. Received: {value}"
             )
-
         return value
 
     elif isinstance(value, bool):
         return value
 
-    if isinstance(value, List):
-        valid: bool = all(ensure_tag_value("tags", item) is not None for item in value)
+    if isinstance(value, list):
+        valid: bool = all(ensure_tag_value("tags", item) for item in value)
 
         if valid:
             return value
 
     raise InvalidTraceSpanTagValue(
-        f"Invalid trace span tag value for {attr}: "
-        f"Expected {valid_types}, received {value}"
+        f"Invalid trace span tag value for {attr}: Expected string, received {value}"
     )

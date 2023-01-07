@@ -1,4 +1,4 @@
-from ..generate_ids import generate_id
+from ..span.id import generate_id
 
 
 def test_generate_id():

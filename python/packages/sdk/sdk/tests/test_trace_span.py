@@ -18,14 +18,14 @@ TraceSpan: TypeAlias = "TraceSpan"
 
 @pytest.fixture
 def trace_span() -> TraceSpan:
-    from ..trace_span import TraceSpan
+    from ..span.trace import TraceSpan
 
     return TraceSpan
 
 
 @pytest.fixture
 def trace_span() -> TraceSpan:
-    from ..trace_span import TraceSpan
+    from ..span.trace import TraceSpan
 
     return TraceSpan(
         name=TEST_NAME,
@@ -37,7 +37,7 @@ def trace_span() -> TraceSpan:
 
 def test_can_import_trace_span():
     try:
-        from ..trace_span import TraceSpan
+        from ..span import TraceSpan
 
     except ImportError as e:
         raise AssertionError("Cannot import TraceSpan") from e
