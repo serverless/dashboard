@@ -1,7 +1,7 @@
 from datetime import datetime
-from math import inf
+from math import inf, nan
 from re import Pattern
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from js_regex import compile
 from typing_extensions import Final, get_args
@@ -15,9 +15,9 @@ from ..exceptions import (
 
 
 RE: Final[str] = (
-    r"/^[a-z][a-z0-9]*"
+    r"^[a-z][a-z0-9]*"
     r"(?:_[a-z][a-z0-9]*)*"
-    r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/"
+    r"(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$"
 )
 RE_C: Final[Pattern] = compile(RE)
 
@@ -88,18 +88,21 @@ def ensure_tag_value(attr: str, value: str) -> Tags:
         return value
 
     elif isinstance(value, (int, float)):
-        if value is inf:
+        invalid = inf, -inf, nan
+
+        if value in invalid:
             raise InvalidTraceSpanTagValue(
                 f"Invalid trace span tag value for {attr}: "
                 f"Number must be finite. Received: {value}"
             )
+
         return value
 
     elif isinstance(value, bool):
         return value
 
-    if isinstance(value, list):
-        valid: bool = all(ensure_tag_value("tags", item) for item in value)
+    if isinstance(value, List):
+        valid: bool = all(ensure_tag_value("tags", item) is not None for item in value)
 
         if valid:
             return value
