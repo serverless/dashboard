@@ -7,7 +7,11 @@ from js_regex import compile
 from typing_extensions import Final, get_args
 
 from .base import TagType, ValidTags
-from .exceptions import DuplicateTraceSpanName, InvalidTraceSpanTagName, InvalidTraceSpanTagValue
+from .exceptions import (
+    DuplicateTraceSpanName,
+    InvalidTraceSpanTagName,
+    InvalidTraceSpanTagValue,
+)
 
 
 RE: Final[str] = (
@@ -33,9 +37,7 @@ class Tags(Dict[str, ValidTags]):
             if value != current:
                 return
 
-        raise DuplicateTraceSpanName(
-            f"Cannot set tag: Tag {name} is already set"
-        )
+        raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
 
 def is_valid_name(name: str) -> bool:
@@ -96,7 +98,7 @@ def ensure_tag_value(attr: str, value: str) -> Tags:
         return value
 
     if isinstance(value, list):
-        valid: bool = all(ensure_tag_value('tags', item) for item in value)
+        valid: bool = all(ensure_tag_value("tags", item) for item in value)
 
         if valid:
             return value
