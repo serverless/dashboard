@@ -1,8 +1,17 @@
 from __future__ import annotations
 from types import MethodType
 
+import pytest
+
 from . import ServerlessSdk, get_params
 from ..base import SLS_ORG_ID
+
+
+@pytest.fixture
+def sdk() -> ServerlessSdk:
+    from .. import serverlessSdk
+
+    return serverlessSdk
 
 
 def test_can_import_serverless_sdk():
@@ -66,8 +75,8 @@ def test_has_create_trace_span_method(sdk: ServerlessSdk):
     assert hasattr(sdk, "createTraceSpan")
     assert isinstance(sdk.createTraceSpan, MethodType)
 
+    args = ["name", "input", "output", "start_time", "tags"]
     params = get_params(sdk.createTraceSpan)
 
-    assert len(params) >= 2
-    assert "name" in params
-    assert "options" in params
+    assert len(params) >= len(args)
+    assert all(arg in params for arg in args)
