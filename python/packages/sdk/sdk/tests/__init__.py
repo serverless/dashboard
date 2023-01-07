@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from types import MappingProxyType
-from typing import Callable
-from typing_extensions import TypeAlias
 import inspect
+from typing import Callable, Dict
 
-import pytest
+from typing_extensions import TypeAlias
 
 
 ServerlessSdk: TypeAlias = "ServerlessSdk"
-Params = MappingProxyType[str, inspect.Parameter]
+Params = Dict[str, inspect.Parameter]
 
 
 def get_params(func: Callable) -> Params:
@@ -18,8 +16,3 @@ def get_params(func: Callable) -> Params:
     return signature.parameters
 
 
-@pytest.fixture
-def sdk() -> ServerlessSdk:
-    from .. import serverlessSdk
-
-    return serverlessSdk
