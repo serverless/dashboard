@@ -7,7 +7,7 @@ import pytest
 from . import get_params
 
 
-TEST_NAME: Final[str] = "Test Span"
+TEST_NAME: Final[str] = "test.span"
 TEST_INPUT: Final[str] = "Test Input"
 TEST_OUTPUT: Final[str] = "Test Output"
 TEST_START_TIME: Final[int] = 1_000_000
@@ -37,17 +37,19 @@ def trace_span() -> TraceSpan:
 
 def test_can_import_trace_span():
     try:
-        from ..span import TraceSpan
+        from ..span.trace import TraceSpan
 
     except ImportError as e:
         raise AssertionError("Cannot import TraceSpan") from e
 
 
 def test_has_id(trace_span: TraceSpan):
+    _ = trace_span.id
     assert hasattr(trace_span, "id")
 
 
 def test_has_trace_id(trace_span: TraceSpan):
+    _ = trace_span.traceId
     assert hasattr(trace_span, "traceId")
 
 
@@ -82,7 +84,7 @@ def test_has_close_method(trace_span: TraceSpan):
     params = get_params(trace_span.close)
 
     assert len(params) >= 1
-    assert "close" in params
+    assert "end_time" in params
 
 
 def test_has_to_protobuf_object_method(trace_span: TraceSpan):
