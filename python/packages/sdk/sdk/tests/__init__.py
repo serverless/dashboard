@@ -14,5 +14,3 @@ def get_params(func: Callable) -> Params:
     signature = inspect.signature(func)
 
     return signature.parameters
-
-
