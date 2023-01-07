@@ -46,9 +46,9 @@ class TraceSpan:
     parentSpan: Self
     name: str
     startTime: Nanoseconds
-    endTime: Optional[Nanoseconds]
-    input: Optional[str]
-    output: Optional[str]
+    endTime: Optional[Nanoseconds] = None
+    input: Optional[str] = None
+    output: Optional[str] = None
     tags: Tags
 
     def __init__(
@@ -115,6 +115,9 @@ class TraceSpan:
     def traceId(self) -> TraceId:
         parent = self.parentSpan
 
+        if parent is self:
+            return generate_id()
+
         return parent.traceId if parent else generate_id()
 
     @property
@@ -153,4 +156,4 @@ class TraceSpan:
 
 
 rootContext: Final[TraceSpanContext] = ContextVar("rootContext", default=None)
-root_span: Optional["TraceSpan"] = None
+root_span = None  # type: Optional[TraceSpan]
