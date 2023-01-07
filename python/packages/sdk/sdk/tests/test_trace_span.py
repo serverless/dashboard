@@ -87,6 +87,22 @@ def test_has_close_method(trace_span: TraceSpan):
     assert "end_time" in params
 
 
+def test_can_close(trace_span: TraceSpan):
+    assert trace_span.endTime is None
+    trace_span.close()
+
+    assert trace_span.endTime is not None
+
+
+def test_cannot_close_twice(trace_span: TraceSpan):
+    from ..exceptions import ClosureOnClosedSpan
+
+    trace_span.close()
+
+    with pytest.raises(ClosureOnClosedSpan):
+        trace_span.close()
+
+
 def test_has_to_protobuf_object_method(trace_span: TraceSpan):
     assert hasattr(trace_span, "toProtobufObject")
     assert isinstance(trace_span.toProtobufObject, MethodType)
@@ -100,7 +116,6 @@ def test_to_protobuf_object_method_returns_obj(trace_span: TraceSpan):
     from ..span.trace import TraceSpanBuf
 
     trace_span.close()
-
     obj = trace_span.toProtobufObject()
 
     assert isinstance(obj, TraceSpanBuf)
@@ -115,9 +130,14 @@ def test_to_protobuf_object_method_returns_obj(trace_span: TraceSpan):
 
 
 def test_can_set_output(trace_span: TraceSpan):
+    from ..exceptions import InvalidType
+
     assert trace_span.output == TEST_OUTPUT
 
     new_output: str = "New Output"
     trace_span.output = new_output
 
     assert trace_span.output == new_output
+
+    with pytest.raises(InvalidType):
+        trace_span.output = 1
