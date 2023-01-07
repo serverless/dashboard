@@ -18,6 +18,10 @@ TraceSpan: TypeAlias = "TraceSpan"
 
 @pytest.fixture
 def trace_span() -> TraceSpan:
+    return get_trace_span()
+
+
+def get_trace_span():
     from ..span.trace import TraceSpan
 
     return TraceSpan(
@@ -37,8 +41,11 @@ def test_can_import_trace_span():
 
 
 def test_has_id(trace_span: TraceSpan):
-    _ = trace_span.id
+    _id = trace_span.id
+
     assert hasattr(trace_span, "id")
+    assert isinstance(trace_span.id, str)
+    assert trace_span.id == _id
 
 
 def test_has_trace_id(trace_span: TraceSpan):
@@ -64,6 +71,13 @@ def test_has_output(trace_span: TraceSpan):
 
 def test_has_parent_span(trace_span: TraceSpan):
     assert hasattr(trace_span, "parentSpan")
+    assert trace_span.parentSpan is not None
+
+    new = get_trace_span()
+
+    assert new.traceId == trace_span.traceId
+    assert new.parentSpan is trace_span.parentSpan
+    assert new.id != trace_span.id
 
 
 def test_has_tags(trace_span: TraceSpan):
