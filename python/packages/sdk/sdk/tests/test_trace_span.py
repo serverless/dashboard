@@ -112,14 +112,16 @@ def test_to_protobuf_object_method_returns_obj(trace_span: TraceSpan):
     obj = trace_span.toProtobufObject()
 
     assert isinstance(obj, TraceSpanBuf)
-    assert obj.id.decode() == trace_span.id
-    assert obj.trace_id.decode() == trace_span.traceId
+
     assert obj.name == trace_span.name
     assert obj.start_time_unix_nano == trace_span.startTime
     assert obj.input == trace_span.input
     assert obj.output == trace_span.output
-    assert obj.parent_span_id.decode() == trace_span.parentSpan.id
     assert obj.tags == trace_span.tags
+
+    assert obj.id.decode() == trace_span.id
+    assert obj.trace_id.decode() == trace_span.traceId
+    assert obj.parent_span_id.decode() == trace_span.parentSpan.id
 
 
 def test_can_set_output(trace_span: TraceSpan):
