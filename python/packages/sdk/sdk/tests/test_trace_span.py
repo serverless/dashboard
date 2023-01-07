@@ -20,13 +20,6 @@ TraceSpan: TypeAlias = "TraceSpan"
 def trace_span() -> TraceSpan:
     from ..span.trace import TraceSpan
 
-    return TraceSpan
-
-
-@pytest.fixture
-def trace_span() -> TraceSpan:
-    from ..span.trace import TraceSpan
-
     return TraceSpan(
         name=TEST_NAME,
         input=TEST_INPUT,
