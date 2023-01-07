@@ -5,6 +5,7 @@ from typing import List, Optional
 from contextvars import ContextVar
 
 from backports.cached_property import cached_property  # available in Python >=3.8
+from pydantic import BaseModel
 from typing_extensions import Final, Self
 
 from ..base import Nanoseconds, TraceId
@@ -25,6 +26,20 @@ __all__: Final[List[str]] = [
 
 
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
+
+
+class TraceSpanBuf(BaseModel):
+    id: bytes
+    trace_id: bytes
+    parent_span_id: Optional[bytes]
+    name: str
+    start_time_unix_nano: int
+    end_time_unix_nano: int
+    tags: Tags
+    input: Optional[str]
+    timestamp: Optional[int]
+    is_historical: Optional[bool]
+    type: Optional[str]
 
 
 class TraceSpan:
@@ -51,6 +66,12 @@ class TraceSpan:
         self._set_start_time(start_time)
         self._set_tags(tags)
         self._set_parent_span()
+
+    @staticmethod
+    def resolveCurrentSpan() -> Optional[TraceSpan]:
+        parent = rootContext.get()
+
+        return parent or root_span or None
 
     def _set_parent_span(self):
         global root_span
@@ -107,12 +128,6 @@ class TraceSpan:
 
         self._output = value
 
-    @staticmethod
-    def resolveCurrentSpan() -> Optional[TraceSpan]:
-        parent = rootContext.get()
-
-        return parent or root_span or None
-
     def close(self, end_time: Optional[Nanoseconds]):
         default: Nanoseconds = time_ns()
 
@@ -120,6 +135,21 @@ class TraceSpan:
             raise ClosureOnClosedSpan("TraceSpan already closed.")
 
         self.endTime = default if end_time is None else end_time
+
+    def toProtobufObject(self) -> TraceSpanBuf:
+        return TraceSpanBuf(
+            id=self.id,
+            trace_id=self.traceId,
+            parent_span_id=self.parentSpan.id if self.parentSpan else None,
+            name=self.name,
+            start_time_unix_nano=self.startTime,
+            end_time_unix_nano=self.endTime,
+            tags=self.tags,
+            input=self.input,
+            # timestamp=time_ns(),
+            # is_historical=None,
+            # type=None,
+        )
 
 
 rootContext: Final[TraceSpanContext] = ContextVar("rootContext", default=None)
