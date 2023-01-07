@@ -77,7 +77,8 @@ def ensure_tag_value(attr: str, value: str) -> Tags:
 
     if not isinstance(value, valid_types):
         raise InvalidTraceSpanTagValue(
-            f"Invalid trace span tag value for {attr}: Expected string, received {value}"
+            f"Invalid trace span tag value for {attr}: "
+            f"Expected {valid_types}, received {value}"
         )
 
     if isinstance(value, str) and is_date(value):
@@ -104,5 +105,6 @@ def ensure_tag_value(attr: str, value: str) -> Tags:
             return value
 
     raise InvalidTraceSpanTagValue(
-        f"Invalid trace span tag value for {attr}: Expected string, received {value}"
+        f"Invalid trace span tag value for {attr}: "
+        f"Expected {valid_types}, received {value}"
     )
