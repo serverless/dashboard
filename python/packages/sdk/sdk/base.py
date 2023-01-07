@@ -10,7 +10,8 @@ FIRST: Final[int] = 0
 SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
 _packages: Final[Dict[str, List[str]]] = packages_distributions()
-_pkg_name: Final[str] = __name__ or __package__
+_pkg_name: str = __name__ or __package__
+_pkg_name, *_ = _pkg_name.split(".")
 _distribution: Final[List[str]] = _packages[_pkg_name]
 
 # module metadata
