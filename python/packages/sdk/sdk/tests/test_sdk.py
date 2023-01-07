@@ -75,7 +75,7 @@ def test_has_create_trace_span_method(sdk: ServerlessSdk):
     assert hasattr(sdk, "createTraceSpan")
     assert isinstance(sdk.createTraceSpan, MethodType)
 
-    args = ["name", "input", "output", "start_time", "tags"]
+    args = "name", "input", "output", "start_time", "tags"
     params = get_params(sdk.createTraceSpan)
 
     assert len(params) >= len(args)
