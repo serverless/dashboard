@@ -39,12 +39,12 @@ class TraceSpanBuf(BaseModel):
     trace_id: bytes
     parent_span_id: Optional[bytes]
     name: str
-    start_time_unix_nano: int
-    end_time_unix_nano: int
+    start_time_unix_nano: Nanoseconds
+    end_time_unix_nano: Nanoseconds
     tags: Tags
     input: Optional[str]
     output: Optional[str]
-    timestamp: Optional[int]
+    timestamp: Optional[Nanoseconds]
     is_historical: Optional[bool]
     type: Optional[str]
 
