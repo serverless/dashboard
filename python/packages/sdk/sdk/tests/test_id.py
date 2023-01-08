@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from ..span.id import generate_id
 
 
