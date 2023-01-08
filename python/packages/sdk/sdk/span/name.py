@@ -34,6 +34,7 @@ def get_resource_name(name: str) -> str:
         return name
 
     raise InvalidTraceSpanName(
-        "Invalid captured event name: Name should contain dot separated tokens that follow "
+        "Invalid captured event name: "
+        "Name should contain dot separated tokens that follow "
         f'"[a-z][a-z0-9]*" pattern. Received: {name}'
     )
