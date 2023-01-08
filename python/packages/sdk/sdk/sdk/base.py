@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from typing_extensions import Final
 
-from ..base import Nanoseconds, SLS_ORG_ID, __version__
+from ..base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from ..span.trace import TraceSpan
 from ..span.tags import Tags
 
