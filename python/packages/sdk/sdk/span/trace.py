@@ -101,6 +101,7 @@ class TraceSpan:
             raise UnreachableTrace("Cannot initialize span: Trace is closed")
 
     def _set_parent_span(self):
+        global root_span
         self.parentSpan = TraceSpan.resolveCurrentSpan()
 
         while self.parentSpan.endTime:
