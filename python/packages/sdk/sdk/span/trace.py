@@ -103,7 +103,7 @@ class TraceSpan:
         default_start = time_ns()
 
         if start_time is not None and not isinstance(start_time, Nanoseconds):
-            raise InvalidType(f"`startTime` must be an integer.")
+            raise InvalidType("`startTime` must be an integer.")
 
         if start_time is not None and start_time > default_start:
             raise FutureSpanStartTime(
@@ -132,7 +132,7 @@ class TraceSpan:
     @output.setter
     def output(self, value: str):
         if not isinstance(value, str):
-            raise InvalidType(f"`output` must be a string.")
+            raise InvalidType("`output` must be a string.")
 
         self._output = value
 
