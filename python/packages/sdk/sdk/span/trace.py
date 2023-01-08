@@ -28,11 +28,13 @@ __all__: Final[List[str]] = [
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
 
-root_ctx: Final[TraceSpanContext] = ContextVar("root_ctx", default=None)
+ctx: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 root_span = None  # type: Optional[TraceSpan]
 
 
 class TraceSpanBuf(BaseModel):
+    """Type-validated intermediate protobuf representation of a TraceSpan"""
+
     id: bytes
     trace_id: bytes
     parent_span_id: Optional[bytes]
@@ -70,15 +72,25 @@ class TraceSpan:
 
         self._set_start_time(start_time)
         self._set_tags(tags)
-        self._set_parent_span()
+        self._set_spans()
 
     @staticmethod
     def resolveCurrentSpan() -> Optional[TraceSpan]:
-        parent = root_ctx.get()
+        global root_span
+        span = TraceSpan._get_span()
 
-        return parent or root_span or None
+        return span or root_span or None
 
-    def _set_parent_span(self):
+    @staticmethod
+    def _get_span() -> Optional[TraceSpan]:
+        return ctx.get(None)
+
+    def _set_spans(self):
+        self._set_root_span()
+        self._set_parent_span()
+        self._set_ctx()
+
+    def _set_root_span(self):
         global root_span
 
         if root_span is None:
@@ -88,10 +100,14 @@ class TraceSpan:
         elif root_span.endTime is not None:
             raise UnreachableTrace("Cannot initialize span: Trace is closed")
 
+    def _set_parent_span(self):
         self.parentSpan = TraceSpan.resolveCurrentSpan()
 
         while self.parentSpan.endTime:
             self.parentSpan = self.parentSpan.parentSpan or root_span
+
+    def _set_ctx(self):
+        ctx.set(self)
 
     def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()
@@ -137,12 +153,16 @@ class TraceSpan:
         self._output = value
 
     def close(self, end_time: Optional[Nanoseconds] = None):
+        global root_span
         default: Nanoseconds = time_ns()
 
         if self.endTime is not None:
             raise ClosureOnClosedSpan("TraceSpan already closed.")
 
         self.endTime = default if end_time is None else end_time
+
+        if self is root_span:
+            ctx.set(None)
 
     def toProtobufObject(self) -> TraceSpanBuf:
         return TraceSpanBuf(

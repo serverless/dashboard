@@ -76,7 +76,7 @@ def test_has_parent_span(trace_span: TraceSpan):
     new = get_trace_span()
 
     assert new.traceId == trace_span.traceId
-    assert new.parentSpan is trace_span.parentSpan
+    assert new.parentSpan is trace_span
     assert new.id != trace_span.id
 
 
