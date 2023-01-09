@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.3](https://github.com/serverless/console/compare/@serverless/sdk@0.2.2...@serverless/sdk@0.2.3) (2023-01-09)
+
+### Bug Fixes
+
+- Adjusted typescript implementation for sdk ([#360](https://github.com/serverless/console/issues/360)) ([e8a7066](https://github.com/serverless/console/commit/e8a7066b7c02833a00d38aa8b8456d0e26b417a9))
+
 ### [0.2.2](https://github.com/serverless/console/compare/@serverless/sdk@0.2.1...@serverless/sdk@0.2.2) (2023-01-09)
 
 ### Bug Fixes
