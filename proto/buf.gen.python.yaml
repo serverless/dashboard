@@ -1,0 +1,6 @@
+version: v1
+plugins:
+  - plugin: buf.build/protocolbuffers/pyi
+    out: ../python/packages/sdk-schema/sdk_schema
+  - plugin: buf.build/protocolbuffers/python
+    out: ../python/packages/sdk-schema/sdk_schema
