@@ -39,6 +39,9 @@ message Event {
     // This is expected to be a JSON object in string format.
     optional string custom_tags = 6;
 
+    // The optional custom fingerprint that will override our default fingerprinting approach
+    optional string custom_fingerprint = 7;
+
     // A message containing any number of Tagsets.
     serverless.instrumentation.tags.v1.Tags tags = 15;
 }
