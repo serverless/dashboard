@@ -878,6 +878,88 @@ describe('internal-extension/index.test.js', () => {
     ]);
   });
 
+  it('should expose working SDK in ESM context', async () => {
+    const {
+      trace: { input: trace },
+      result,
+    } = await handleInvocation('esm-sdk/index', {
+      isCustomReponse: true,
+      payload: { isTriggeredByUnitTest: true },
+    });
+
+    const { spans, events } = trace;
+
+    expect(spans.map(({ name }) => name)).to.deep.equal([
+      'aws.lambda',
+      'aws.lambda.initialization',
+      'aws.lambda.invocation',
+      'user.span',
+    ]);
+    expect(result.name).to.equal(pkgJson.name);
+    expect(result.version).to.equal(pkgJson.version);
+    expect(result.rootSpanName).to.equal('aws.lambda');
+
+    const normalizeEvent = (event) => {
+      event = { ...event };
+      expect(Buffer.isBuffer(event.id)).to.be.true;
+      expect(typeof event.timestampUnixNano).to.equal('number');
+      if (event.tags.error) delete event.tags.error.stacktrace;
+      delete event.id;
+      delete event.timestampUnixNano;
+      return event;
+    };
+    const { traceId, spanId } = events[0];
+    expect(events.map(normalizeEvent)).to.deep.equal([
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.error.generated.v1',
+        customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': 1 }),
+        tags: {
+          error: {
+            name: 'Error',
+            message: 'Captured error',
+            type: 2,
+          },
+        },
+      },
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.error.generated.v1',
+        customTags: JSON.stringify({}),
+        tags: {
+          error: {
+            name: 'Error',
+            message: 'Consoled error',
+            type: 2,
+          },
+        },
+      },
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.warning.generated.v1',
+        customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': 1 }),
+        tags: {
+          warning: {
+            message: 'Captured warning',
+          },
+        },
+      },
+      {
+        traceId,
+        spanId,
+        eventName: 'telemetry.warning.generated.v1',
+        customTags: JSON.stringify({}),
+        tags: {
+          warning: {
+            message: 'Consoled warning 12 true',
+          },
+        },
+      },
+    ]);
+  });
   describe('dev mode', () => {
     let server;
     let payloads = [];
