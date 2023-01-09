@@ -2,7 +2,8 @@
 requires = [
     "setuptools>=65.6.3",
     "wheel",
-    "grpcio-tools"
+    "grpcio-tools>=1.51.1,<2.0.0",
+    "poethepoet>=0.17.1,<1.0.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -13,9 +14,13 @@ description = "The protobuf generated Serverless SDK Schema"
 authors = [{ name = "serverlessinc" }]
 dependencies = [
     "protobuf >= 4.21.12",
-    "betterproto[compiler]",
-    "grpcio-tools",
-
+    "betterproto[compiler]>=2.0.0b5,<3.0.0", # This version supports proto3 optional fields
+    "grpcio-tools>=1.51.1,<2.0.0",
 ]
 
 requires-python = ">=3.7"
+
+[tool.poe.tasks]
+build = "bash ./scripts/build.sh"
+install = "bash ./scripts/install.sh"
+test = "python3 -m pytest"
