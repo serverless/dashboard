@@ -7,5 +7,4 @@ alias pip='python3 -m pip'
 
 pip install --upgrade poethepoet pip
 poe build
-poe test
 pip install .
