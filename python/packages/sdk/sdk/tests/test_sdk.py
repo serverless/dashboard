@@ -33,7 +33,7 @@ def test_has_version(sdk: ServerlessSdk):
 
 
 def test_has_tracespans(sdk: ServerlessSdk):
-    assert hasattr(sdk, "traceSpans")
+    assert hasattr(sdk, "trace_spans")
 
 
 def test_has_instrumentation(sdk: ServerlessSdk):
@@ -55,7 +55,7 @@ def test_initialize_supports_org_id(sdk: ServerlessSdk):
     org_id: str = "test"
 
     sdk._initialize(org_id=org_id)
-    assert sdk.orgId == org_id
+    assert sdk.org_id == org_id
 
 
 def test_initialize_favors_env_var(sdk: ServerlessSdk):
@@ -67,16 +67,16 @@ def test_initialize_favors_env_var(sdk: ServerlessSdk):
     environ[SLS_ORG_ID] = env
 
     sdk._initialize(org_id=org_id)
-    assert sdk.orgId != org_id
-    assert sdk.orgId == env
+    assert sdk.org_id != org_id
+    assert sdk.org_id == env
 
 
 def test_has_create_trace_span_method(sdk: ServerlessSdk):
-    assert hasattr(sdk, "createTraceSpan")
-    assert isinstance(sdk.createTraceSpan, MethodType)
+    assert hasattr(sdk, "create_trace_span")
+    assert isinstance(sdk.create_trace_span, MethodType)
 
     args = "name", "input", "output", "start_time", "tags"
-    params = get_params(sdk.createTraceSpan)
+    params = get_params(sdk.create_trace_span)
 
     assert len(params) >= len(args)
     assert all(arg in params for arg in args)
@@ -85,6 +85,6 @@ def test_has_create_trace_span_method(sdk: ServerlessSdk):
 def test_create_trace_span_returns_trace_span(sdk: ServerlessSdk):
     from ..span.trace import TraceSpan
 
-    span = sdk.createTraceSpan("name", "input", "output")
+    span = sdk.create_trace_span("name", "input", "output")
 
     assert isinstance(span, TraceSpan)

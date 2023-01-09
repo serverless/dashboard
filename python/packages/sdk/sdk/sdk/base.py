@@ -19,15 +19,15 @@ class ServerlessSdk:
     name: Final[str] = __name__
     version: Final[str] = __version__
 
-    traceSpans: Final = ...
+    trace_spans: Final = ...
     instrumentation: Final = ...
 
-    orgId: Optional[str] = None
+    org_id: Optional[str] = None
 
     def _initialize(self, org_id: Optional[str] = None):
-        self.orgId = environ.get(SLS_ORG_ID, default=org_id)
+        self.org_id = environ.get(SLS_ORG_ID, default=org_id)
 
-    def createTraceSpan(
+    def create_trace_span(
         self,
         name: str,
         input: str,

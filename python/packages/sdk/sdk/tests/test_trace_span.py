@@ -49,8 +49,8 @@ def test_has_id(trace_span: TraceSpan):
 
 
 def test_has_trace_id(trace_span: TraceSpan):
-    _ = trace_span.traceId
-    assert hasattr(trace_span, "traceId")
+    _ = trace_span.trace_id
+    assert hasattr(trace_span, "trace_id")
 
 
 def test_has_name(trace_span: TraceSpan):
@@ -58,7 +58,7 @@ def test_has_name(trace_span: TraceSpan):
 
 
 def test_has_start_time(trace_span: TraceSpan):
-    assert hasattr(trace_span, "startTime")
+    assert hasattr(trace_span, "start_time")
 
 
 def test_has_input(trace_span: TraceSpan):
@@ -70,13 +70,13 @@ def test_has_output(trace_span: TraceSpan):
 
 
 def test_has_parent_span(trace_span: TraceSpan):
-    assert hasattr(trace_span, "parentSpan")
-    assert trace_span.parentSpan is not None
+    assert hasattr(trace_span, "parent_span")
+    assert trace_span.parent_span is not None
 
     new = get_trace_span()
 
-    assert new.traceId == trace_span.traceId
-    assert new.parentSpan is trace_span
+    assert new.trace_id == trace_span.trace_id
+    assert new.parent_span is trace_span
     assert new.id != trace_span.id
 
 
@@ -95,10 +95,10 @@ def test_has_close_method(trace_span: TraceSpan):
 
 
 def test_can_close(trace_span: TraceSpan):
-    assert trace_span.endTime is None
+    assert trace_span.end_time is None
     trace_span.close()
 
-    assert trace_span.endTime is not None
+    assert trace_span.end_time is not None
 
 
 def test_cannot_close_twice(trace_span: TraceSpan):
@@ -111,10 +111,10 @@ def test_cannot_close_twice(trace_span: TraceSpan):
 
 
 def test_has_to_protobuf_object_method(trace_span: TraceSpan):
-    assert hasattr(trace_span, "toProtobufObject")
-    assert isinstance(trace_span.toProtobufObject, MethodType)
+    assert hasattr(trace_span, "to_protobuf_object")
+    assert isinstance(trace_span.to_protobuf_object, MethodType)
 
-    params = get_params(trace_span.toProtobufObject)
+    params = get_params(trace_span.to_protobuf_object)
 
     assert len(params) <= 1
 
@@ -123,19 +123,19 @@ def test_to_protobuf_object_method_returns_obj(trace_span: TraceSpan):
     from ..span.trace import TraceSpanBuf
 
     trace_span.close()
-    obj = trace_span.toProtobufObject()
+    obj = trace_span.to_protobuf_object()
 
     assert isinstance(obj, TraceSpanBuf)
 
     assert obj.name == trace_span.name
-    assert obj.start_time_unix_nano == trace_span.startTime
+    assert obj.start_time_unix_nano == trace_span.start_time
     assert obj.input == trace_span.input
     assert obj.output == trace_span.output
     assert obj.tags == trace_span.tags
 
     assert obj.id.decode() == trace_span.id
-    assert obj.trace_id.decode() == trace_span.traceId
-    assert obj.parent_span_id.decode() == trace_span.parentSpan.id
+    assert obj.trace_id.decode() == trace_span.trace_id
+    assert obj.parent_span_id.decode() == trace_span.parent_span.id
 
 
 def test_can_set_output(trace_span: TraceSpan):
