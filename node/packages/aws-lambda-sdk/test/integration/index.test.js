@@ -229,7 +229,12 @@ describe('integration', function () {
       while (dynamodbSpans[0].name === 'aws.sdk.dynamodb.describetable') {
         dynamodbSpans.shift();
       }
-      const [dynamodbPutItemSpan, dynamodbQuerySpan, dynamodbDeleteSpan] = dynamodbSpans;
+      const [
+        dynamodbPutItemSpan,
+        dynamodbQuerySpan,
+        dynamodbDocumentClientSpan,
+        dynamodbDeleteSpan,
+      ] = dynamodbSpans;
       // Put item
       expect(dynamodbPutItemSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(dynamodbPutItemSpan.name).to.equal('aws.sdk.dynamodb.putitem');
@@ -248,6 +253,23 @@ describe('integration', function () {
       expect(sdkTags.region).to.equal(process.env.AWS_REGION);
       expect(sdkTags.signatureVersion).to.equal('v4');
       expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('query');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
+      // Query with document client
+      expect(dynamodbDocumentClientSpan.parentSpanId.toString()).to.equal(
+        invocationSpan.id.toString()
+      );
+      const expectedSpanName = /aws-sdk-v2/.test(testConfig.configuration.FunctionName)
+        ? 'aws.sdk.dynamodb.query'
+        : 'aws.sdk.dynamodbdocument.query';
+      expect(dynamodbDocumentClientSpan.name).to.equal(expectedSpanName);
+      sdkTags = dynamodbDocumentClientSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodbdocument');
       expect(sdkTags.operation).to.equal('query');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');

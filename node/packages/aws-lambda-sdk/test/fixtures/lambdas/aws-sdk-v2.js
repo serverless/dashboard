@@ -8,6 +8,7 @@ const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const sqs = new SQS();
 const sns = new SNS();
 const dynamoDb = new DynamoDB();
+const dynamodbDocumentClient = new DynamoDB.DocumentClient();
 const sts = new STS();
 
 let invocationCount = 0;
@@ -62,6 +63,14 @@ module.exports.handler = async () => {
         KeyConditionExpression: '#id = :id',
         ExpressionAttributeNames: { '#id': 'id' },
         ExpressionAttributeValues: { ':id': { S: 'test' } },
+      })
+      .promise();
+    await dynamodbDocumentClient
+      .query({
+        TableName: tableName,
+        KeyConditionExpression: '#id = :id',
+        ExpressionAttributeNames: { '#id': 'id' },
+        ExpressionAttributeValues: { ':id': 'test' },
       })
       .promise();
     await dynamoDb.deleteTable({ TableName: tableName }).promise();

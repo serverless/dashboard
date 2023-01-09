@@ -3,7 +3,15 @@
 const { SQS } = require('@aws-sdk/client-sqs');
 const { SNS } = require('@aws-sdk/client-sns');
 const { STS } = require('@aws-sdk/client-sts');
-const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+const { DynamoDB, DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+
+const dynamodbClient = new DynamoDBClient({});
+const dynamodbDocumentClient = DynamoDBDocumentClient.from(dynamodbClient, {
+  marshallOptions: {
+    removeUndefinedValues: true,
+  },
+});
 
 const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -61,6 +69,14 @@ module.exports.handler = async () => {
       ExpressionAttributeNames: { '#id': 'id' },
       ExpressionAttributeValues: { ':id': { S: 'test' } },
     });
+    await dynamodbDocumentClient.send(
+      new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: '#id = :id',
+        ExpressionAttributeNames: { '#id': 'id' },
+        ExpressionAttributeValues: { ':id': 'test' },
+      })
+    );
     await dynamoDb.deleteTable({ TableName: tableName });
 
     return 'ok';
