@@ -1,5 +1,9 @@
 [build-system]
-requires = ["setuptools>=65.6.3", "wheel"]
+requires = [
+    "setuptools>=65.6.3",
+    "wheel",
+    "grpcio-tools"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +12,10 @@ version = "0.0.1"
 description = "The protobuf generated Serverless SDK Schema"
 authors = [{ name = "serverlessinc" }]
 dependencies = [
-    "protobuf >= 4.21.12"
+    "protobuf >= 4.21.12",
+    "betterproto[compiler]",
+    "grpcio-tools",
+
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.7"
