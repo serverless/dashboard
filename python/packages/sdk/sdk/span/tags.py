@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from math import inf, nan
 from re import Pattern
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Mapping, Tuple
+from itertools import chain
 
 from js_regex import compile
 from typing_extensions import Final, get_args
@@ -40,6 +41,21 @@ class Tags(Dict[str, ValidTags]):
                 return
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
+
+    def update(self, mapping: Mapping, **kwargs) -> None:
+        items: Iterable[Tuple[str, ValidTags]]
+
+        if mapping and hasattr(mapping, "items"):
+            items = mapping.items()
+
+        elif mapping:
+            items = chain(mapping, kwargs.items())
+
+        else:
+            items = kwargs.items()  # type: ignore
+
+        for key, value in items:
+            self[key] = value
 
 
 def is_valid_name(name: str) -> bool:
