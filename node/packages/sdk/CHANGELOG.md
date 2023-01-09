@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.2](https://github.com/serverless/console/compare/@serverless/sdk@0.2.1...@serverless/sdk@0.2.2) (2023-01-09)
+
+### Bug Fixes
+
+- Ensure `_origin` on created events before they're emited ([#353](https://github.com/serverless/console/issues/353)) ([9c6bef2](https://github.com/serverless/console/commit/9c6bef28c57c41cb838ee0c95733809882f7150d))
+
 ### [0.2.1](https://github.com/serverless/console/compare/@serverless/sdk@0.2.0...@serverless/sdk@0.2.1) (2023-01-05)
 
 ### Features
