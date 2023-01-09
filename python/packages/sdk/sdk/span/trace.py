@@ -24,6 +24,8 @@ __all__: Final[List[str]] = [
     "TraceSpan",
 ]
 
+NO_SPAN: Final = None
+
 
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
@@ -75,15 +77,15 @@ class TraceSpan:
         self._set_spans()
 
     @staticmethod
-    def resolveCurrentSpan() -> Optional[TraceSpan]:
+    def resolve_current_span() -> Optional[TraceSpan]:
         global root_span
         span = TraceSpan._get_span()
 
-        return span or root_span or None
+        return span or root_span or NO_SPAN
 
     @staticmethod
     def _get_span() -> Optional[TraceSpan]:
-        return ctx.get(None)
+        return ctx.get(NO_SPAN)
 
     def _set_spans(self):
         self._set_root_span()
@@ -93,16 +95,16 @@ class TraceSpan:
     def _set_root_span(self):
         global root_span
 
-        if root_span is None:
+        if root_span is NO_SPAN:
             root_span = self
-            self.parent_span = None
+            self.parent_span = NO_SPAN
 
-        elif root_span.end_time is not None:
+        elif root_span.end_time is not NO_SPAN:
             raise UnreachableTrace("Cannot initialize span: Trace is closed")
 
     def _set_parent_span(self):
         global root_span
-        self.parent_span = TraceSpan.resolveCurrentSpan()
+        self.parent_span = TraceSpan.resolve_current_span()
 
         while self.parent_span.end_time:
             self.parent_span = self.parent_span.parent_span or root_span
