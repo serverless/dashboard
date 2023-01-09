@@ -19,7 +19,7 @@ export interface Sdk {
     options?: {
       startTime?: bigint;
       immediateDescendants?: string[];
-      tags?: Record<string, boolean | number | string | Date | Array<any> | null>;
+      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
       input?: string;
       output?: string;
       onCloseByRoot?: Function;
@@ -28,13 +28,13 @@ export interface Sdk {
   captureError(
     error: Error,
     options?: {
-      tags?: Record<string, boolean | number | string | Date | Array<any> | null>;
+      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
     }
   ): undefined;
   captureWarning(
     message: string,
     options?: {
-      tags?: Record<string, boolean | number | string | Date | Array<any> | null>;
+      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
     }
   ): undefined;
 }
