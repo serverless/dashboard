@@ -16,6 +16,7 @@ description = "The protobuf generated Serverless SDK Schema"
 authors = [{ name = "serverlessinc" }]
 dependencies = [
     "protobuf >= 4.21.12",
+    "typing-extensions>=4.4.0", # included in Python 3.8 - 3.11
 ]
 
 requires-python = ">=3.7"
