@@ -162,8 +162,8 @@ class TraceSpan:
 
         self.endTime = default if end_time is None else end_time
 
-        if self is root_span:
-            ctx.set(None)
+        # if self is root_span:
+        #     ctx.set(None)
 
     def toProtobufObject(self) -> TraceSpanBuf:
         return TraceSpanBuf(
