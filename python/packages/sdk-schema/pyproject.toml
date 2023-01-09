@@ -17,6 +17,9 @@ authors = [{ name = "serverlessinc" }]
 dependencies = [
     "protobuf >= 4.21.12",
     "typing-extensions>=4.4.0", # included in Python 3.8 - 3.11
+    "betterproto[compiler]>=2.0.0b5,<3.0.0", # This version supports proto3 optional fields
+    "grpcio-tools>=1.51.1,<2.0.0",
+    "poethepoet>=0.17.1,<1.0.0",
 ]
 
 requires-python = ">=3.7"
