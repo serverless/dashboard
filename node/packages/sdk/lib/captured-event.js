@@ -39,6 +39,7 @@ class CapturedEvent {
       name: 'options.customTags',
     });
     if (customTags) this.customTags.setMany(customTags);
+    if (options._origin) this._origin = options._origin;
     this.traceSpan = TraceSpan.resolveCurrentSpan();
     emitter.emit('captured-event', this);
   }
