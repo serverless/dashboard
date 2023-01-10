@@ -1,0 +1,78 @@
+name: "Python: Validate"
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - python/**
+      - proto/**
+
+jobs:
+  linuxPython37:
+    name: "[Linux] Python 3.7: Lint, Formatting & Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 30
+
+      - name: Retrieve last main commit (for `git diff` purposes)
+        run: |
+          git checkout -b pr
+          git fetch --prune --depth=30 origin +refs/heads/main:refs/remotes/origin/main
+          git checkout main
+          git checkout pr
+
+      - name: Resolve path filters
+        uses: dorny/paths-filter@v2
+        id: pathChanges
+        with:
+          filters: |
+            sdk:
+              - 'python/packages/sdk/**'
+            sdkSchema:
+              - 'python/packages/sdk-schema/**'
+            proto:
+              - 'proto/**'
+
+      - name: Install Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
+
+          # ensure project dependencies are cached
+          # When using only `pyproject.toml` for dependencies, see:
+          #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
+          cache: 'pip'
+          cache-dependency-path: |
+            **/pyproject.toml
+
+      - name: Install SDK project and dependencies
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          cd python/packages/sdk
+
+          python3 -m pip install --editable .
+
+      - name: Validate code formatting
+        run: |
+          cd python/packages/sdk
+
+          python3 -m pip install black
+          python3 -m black --check sdk
+
+      - name: Check code with linter
+        run: |
+          cd python/packages/sdk
+
+          python3 -m pip install ruff
+          python3 -m ruff sdk
+
+      - name: Run unit tests
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          cd python/packages/sdk
+
+          python3 -m pip install pytest
+          python3 -m pytest

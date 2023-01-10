@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65.6.3", "wheel>=0.38.4"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "serverless-sdk"
+version = "0.0.0"
+description = "Serverless SDK for Python"
+authors = [{ name = "serverlessinc" }]
+dependencies = [
+  "typing-extensions>=4.4.0",
+  "importlib_metadata>=5.2.0"
+]
+
+requires-python = ">=3.7"
+
+[project.optional-dependencies]
+tests = [
+  "pytest>=7.2.0",
+  "black>=22.12.0",
+  "ruff>=0.0.199"
+]
+
+
+[tool.ruff]
+ignore = ["F401"]
+#fix = true
