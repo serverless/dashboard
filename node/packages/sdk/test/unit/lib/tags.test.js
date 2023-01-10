@@ -12,12 +12,14 @@ describe('lib/tags.test.js', () => {
     tags.set('num', 23);
     tags.set('strings', ['foo', 'bar']);
     tags.set('numbers', [1, 2]);
+    tags.set('AlPh.-_012ds', 'name test');
     expect(Array.from(tags)).to.deep.equal([
       ['bool', true],
       ['string', 'string'],
       ['num', 23],
       ['strings', ['foo', 'bar']],
       ['numbers', [1, 2]],
+      ['AlPh.-_012ds', 'name test'],
     ]);
   });
 
