@@ -54,13 +54,6 @@ jobs:
 
           python3 -m pip install --editable .
 
-      - name: Run unit tests
-        run: |
-          cd python/packages/sdk
-
-          python3 -m pip install pytest
-          python3 -m pytest
-
       - name: Validate code formatting
         run: |
           cd python/packages/sdk
@@ -74,3 +67,10 @@ jobs:
 
           python3 -m pip install ruff
           python3 -m ruff sdk
+
+      - name: Run unit tests
+        run: |
+          cd python/packages/sdk
+
+          python3 -m pip install pytest
+          python3 -m pytest
