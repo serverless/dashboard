@@ -48,7 +48,9 @@ describe('lib/captured-event.test.js', () => {
     it('should resolve current trace span', () =>
       expect(capturedEvent.traceSpan).to.equal(rootSpan));
 
-    it('should expose tags ', () => expect(capturedEvent.tags).to.be.instanceOf(Tags));
+    it('should expose tags', () => expect(capturedEvent.tags).to.be.instanceOf(Tags));
+
+    it('should expose custom tags', () => expect(capturedEvent.customTags).to.be.instanceOf(Tags));
 
     it('should expose custom tags ', () => expect(capturedEvent.customTags).to.be.instanceOf(Tags));
 
