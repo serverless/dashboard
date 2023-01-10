@@ -7,7 +7,10 @@ const createCapturedErrorEvent = require('../../../lib/create-error-captured-eve
 describe('lib/create-captured-error-event.test.js', () => {
   it('should capture error', () => {
     const error = new Error('Test error');
-    const event = createCapturedErrorEvent(error, { tags: { 'my.tag': 'whatever' } });
+    const event = createCapturedErrorEvent(error, {
+      tags: { 'my.tag': 'whatever' },
+      fingerprint: 'foo',
+    });
     expect(event.tags.toJSON()).to.deep.equal({
       'error.name': error.name,
       'error.message': error.message,
@@ -17,6 +20,7 @@ describe('lib/create-captured-error-event.test.js', () => {
     expect(event.customTags.toJSON()).to.deep.equal({
       'my.tag': 'whatever',
     });
+    expect(event.customFingerprint).to.deep.equal('foo');
   });
 
   it('should capture non error object', () => {

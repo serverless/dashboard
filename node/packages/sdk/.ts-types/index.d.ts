@@ -28,12 +28,14 @@ export interface Sdk {
   captureError(
     error: Error,
     options?: {
+      fingerprint?: string;
       tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
     }
   ): undefined;
   captureWarning(
     message: string,
     options?: {
+      fingerprint?: string;
       tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
     }
   ): undefined;

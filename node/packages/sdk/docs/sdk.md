@@ -31,6 +31,7 @@ Record captured error
 - `error` - Captured error
 - `options`:
   - `tags` _(object)_ - User tags object. Tag names can contain only lowercase alphanumeric tokens separated with dot. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
+  - `fingerprint` _(string)_ - Console UI groups common errors by the _fingerprint_, which by default is derived from the error stack trace. This can be overriden by passing custom `fingeprint` value
 
 ### `.captureWarning(message[, options])`
 
@@ -38,4 +39,6 @@ Record warning
 
 - `message` - Warning message
 - `options`:
+
   - `tags` _(object)_ - User tags object. Tag names can contain only lowercase alphanumeric tokens separated with dot. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
+  - `fingerprint` _(string)_ - Console UI groups common warnings by the _fingerprint_, which by default is derived from its message. This can be overriden by passing custom `fingeprint` value

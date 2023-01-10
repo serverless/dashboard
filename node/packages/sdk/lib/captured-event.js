@@ -1,6 +1,7 @@
 'use strict';
 
 const ensureBigInt = require('type/big-int/ensure');
+const ensureString = require('type/string/ensure');
 const isObject = require('type/object/is');
 const ensurePlainObject = require('type/plain-object/ensure');
 const d = require('d');
@@ -39,6 +40,10 @@ class CapturedEvent {
       name: 'options.customTags',
     });
     if (customTags) this.customTags.setMany(customTags);
+    this.customFingerprint = ensureString(options.customFingerprint, {
+      isOptional: true,
+      name: 'options.fingerprint',
+    });
     if (options._origin) this._origin = options._origin;
     this.traceSpan = TraceSpan.resolveCurrentSpan();
     emitter.emit('captured-event', this);
@@ -51,6 +56,7 @@ class CapturedEvent {
       name: this.name,
       timestamp: resolveEpochTimestampString(this.timestamp),
       tags: Object.fromEntries(this.tags),
+      customFingerprint: this.customFingerprint || undefined,
       customTags: Object.fromEntries(this.customTags),
     };
   }
@@ -61,6 +67,7 @@ class CapturedEvent {
       spanId: this.traceSpan ? Buffer.from(this.traceSpan.id) : undefined,
       timestampUnixNano: toProtobufEpochTimestamp(this.timestamp),
       eventName: this.name,
+      customFingerprint: this.customFingerprint || undefined,
       customTags: JSON.stringify(Object.fromEntries(this.customTags)),
       tags: toProtobufTags(this.tags),
     };

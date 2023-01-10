@@ -18,6 +18,7 @@ module.exports = (error, options = {}) => {
   const capturedEvent = new CapturedEvent('telemetry.error.generated.v1', {
     timestamp,
     customTags: options.tags,
+    customFingerprint: options.fingerprint,
     _origin: options._origin,
   });
 
