@@ -12,6 +12,7 @@ module.exports = (message, options = {}) => {
   return new CapturedEvent('telemetry.warning.generated.v1', {
     timestamp,
     customTags: options.tags,
+    customFingerprint: options.fingerprint,
     tags: { 'warning.message': message },
     _origin: options._origin,
   });

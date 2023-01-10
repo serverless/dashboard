@@ -34,6 +34,7 @@ describe('lib/captured-event.test.js', () => {
         timestamp,
         tags: { 'internal.tag': 'internal.value' },
         customTags: { 'user.tag': 'user.value' },
+        customFingerprint: 'foo',
       });
     });
 
@@ -64,6 +65,8 @@ describe('lib/captured-event.test.js', () => {
       expect(customCapturedEvent.customTags.toJSON()).to.be.deep.equal({
         'user.tag': 'user.value',
       }));
+    it('should support "customFingerprint" input', () =>
+      expect(customCapturedEvent.customFingerprint).to.equal('foo'));
 
     it('should stringify to JSON', () => {
       const jsonValue = JSON.parse(JSON.stringify(customCapturedEvent));
@@ -78,6 +81,7 @@ describe('lib/captured-event.test.js', () => {
         timestamp: jsonValue.timestamp,
         tags: { 'internal.tag': 'internal.value' },
         customTags: { 'user.tag': 'user.value' },
+        customFingerprint: 'foo',
       });
     });
 
@@ -94,6 +98,7 @@ describe('lib/captured-event.test.js', () => {
           internal: { tag: 'internal.value' },
         },
         customTags: JSON.stringify({ 'user.tag': 'user.value' }),
+        customFingerprint: 'foo',
       });
     });
   });
