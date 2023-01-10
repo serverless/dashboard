@@ -49,6 +49,7 @@ jobs:
             **/pyproject.toml
 
       - name: Install SDK project and dependencies
+        if: steps.pathChanges.outputs.sdk == 'true'
         run: |
           cd python/packages/sdk
 
