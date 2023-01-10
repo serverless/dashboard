@@ -8,9 +8,7 @@ const isDate = require('type/date/is');
 const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 
-const isValidTagName = RegExp.prototype.test.bind(
-  /^[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/
-);
+const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]+$/);
 
 const ensureTagName = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_TAG_NAME';
@@ -22,11 +20,9 @@ const ensureTagName = (() => {
     if (isValidTagName(value)) return value;
     return resolveException(inputValue, null, {
       errorCode,
-      errorMessage:
-        `Invalid trace span tag ${propertyName}: ${capitalize.call(
-          propertyName
-        )} should contain dot separated tokens that follow ` +
-        '"[a-z][a-z0-9_]*" pattern. Received "%v"',
+      errorMessage: `Invalid trace span tag ${propertyName}: ${capitalize.call(
+        propertyName
+      )}. Only alphanumeric, '-', '_' and '.' characters are allowed. Received "%v"`,
     });
   };
 })();
