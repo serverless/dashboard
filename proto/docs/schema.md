@@ -627,6 +627,7 @@ have access to the telemetry API so it will not be included in all regions.
 | timestamp_unix_nano | [fixed64](#fixed64) |  | The timestamp of when the Event happened in nanoseconds from EPOCH. |
 | event_name | [string](#string) |  | The name that is used internal in the Serverless platform to identify the event. |
 | custom_tags | [string](#string) | optional | The optional customTags that can be attached to an event when published. This is expected to be a JSON object in string format. |
+| custom_fingerprint | [string](#string) | optional | The optional custom fingerprint that will override our default fingerprinting approach |
 | tags | [serverless.instrumentation.tags.v1.Tags](#serverless-instrumentation-tags-v1-Tags) |  | A message containing any number of Tagsets. |
 
 
