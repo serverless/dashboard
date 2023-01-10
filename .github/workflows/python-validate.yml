@@ -61,7 +61,7 @@ jobs:
 
           python3 -m pip install black pyproject-fmt
           python3 -m black --check sdk
-          python3 -m pyproject_fmt pyproject.toml
+          python3 -m pyproject_fmt --indent 4 pyproject.toml
 
       - name: Check code with linter
         run: |
