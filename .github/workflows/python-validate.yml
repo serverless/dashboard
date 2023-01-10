@@ -69,6 +69,7 @@ jobs:
           python3 -m ruff sdk
 
       - name: Run unit tests
+        if: steps.pathChanges.outputs.sdk == 'true'
         run: |
           cd python/packages/sdk
 
