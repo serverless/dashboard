@@ -105,5 +105,5 @@ jobs:
         run: |
           cd python/packages/sdk-schema
 
-          python3 -m pip install poethepoet
+          python3 -m pip install poethepoet pytest
           python3 -m poethepoet test
