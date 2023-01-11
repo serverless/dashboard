@@ -36,6 +36,8 @@
 - [serverless/instrumentation/tags/v1/warning.proto](#serverless_instrumentation_tags_v1_warning-proto)
     - [WarningTags](#serverless-instrumentation-tags-v1-WarningTags)
   
+    - [WarningTags.WarningType](#serverless-instrumentation-tags-v1-WarningTags-WarningType)
+  
 - [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
     - [DevModePayload](#serverless-instrumentation-v1-DevModePayload)
     - [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry)
@@ -536,12 +538,26 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | message | [string](#string) |  | The Warning Message |
+| type | [WarningTags.WarningType](#serverless-instrumentation-tags-v1-WarningTags-WarningType) | optional |  |
 
 
 
 
 
  
+
+
+<a name="serverless-instrumentation-tags-v1-WarningTags-WarningType"></a>
+
+### WarningTags.WarningType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| WARNING_TYPE_UNSPECIFIED | 0 | Warning type not set |
+| WARNING_TYPE_USER | 1 | Warning explicitly reported by user |
+| WARNING_TYPE_SDK | 2 | Warning reported internally by the SDK |
+
 
  
 
