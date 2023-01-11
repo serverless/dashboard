@@ -1,6 +1,5 @@
 import TraceSpan from './lib/trace-span';
 import ExpressAppInstrument from './instrumentation/express-app';
-import sdk from './../index';
 
 export interface TraceSpans {}
 
@@ -8,7 +7,7 @@ export interface Instrumentation {
   expressApp: ExpressAppInstrument;
 }
 
-export interface Sdk {
+interface Sdk {
   name: string;
   version: string;
   orgId: string;
@@ -41,6 +40,8 @@ export interface Sdk {
   ): undefined;
 }
 
+export default Sdk;
+
 export interface SdkOptions {
   orgId?: string;
   disableHttpMonitoring?: boolean;
@@ -49,5 +50,3 @@ export interface SdkOptions {
   disableNodeConsoleMonitoring?: boolean;
   traceMaxCapturedBodySizeKb?: number;
 }
-
-export default sdk;
