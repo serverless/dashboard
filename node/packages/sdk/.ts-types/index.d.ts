@@ -7,43 +7,37 @@ export interface Instrumentation {
   expressApp: ExpressAppInstrument;
 }
 
-export function createTraceSpan(
-  name: string,
-  options?: {
-    startTime?: bigint;
-    immediateDescendants?: string[];
-    tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
-    input?: string;
-    output?: string;
-    onCloseByRoot?: Function;
-  }
-): TraceSpan;
-
-export function captureError(
-  error: Error,
-  options?: {
-    fingerprint?: string;
-    tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
-  }
-): undefined;
-
-export function captureWarning(
-  message: string,
-  options?: {
-    fingerprint?: string;
-    tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
-  }
-): undefined;
-
 export interface Sdk {
   name: string;
   version: string;
   orgId: string;
   traceSpans: TraceSpans;
   instrumentation: Instrumentation;
-  createTraceSpan: typeof createTraceSpan;
-  captureError: typeof captureError;
-  captureWarning: typeof captureWarning;
+  createTraceSpan(
+    name: string,
+    options?: {
+      startTime?: bigint;
+      immediateDescendants?: string[];
+      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
+      input?: string;
+      output?: string;
+      onCloseByRoot?: Function;
+    }
+  ): TraceSpan;
+  captureError(
+    error: Error,
+    options?: {
+      fingerprint?: string;
+      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
+    }
+  ): undefined;
+  captureWarning(
+    message: string,
+    options?: {
+      fingerprint?: string;
+      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
+    }
+  ): undefined;
 }
 
 export interface SdkOptions {
@@ -54,3 +48,5 @@ export interface SdkOptions {
   disableNodeConsoleMonitoring?: boolean;
   traceMaxCapturedBodySizeKb?: number;
 }
+declare const sdk: Sdk;
+export default sdk;
