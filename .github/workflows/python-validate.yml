@@ -107,4 +107,3 @@ jobs:
 
           python3 -m pip install poethepoet
           python3 -m poethepoet test
-
