@@ -59,8 +59,9 @@ jobs:
         run: |
           cd python/packages/sdk
 
-          python3 -m pip install black
-          python3 -m black --check .
+          python3 -m pip install black pyproject-fmt
+          python3 -m black --check sdk
+          python3 -m pyproject_fmt --indent 4 pyproject.toml
 
       - name: Check code with linter
         run: |
@@ -106,3 +107,4 @@ jobs:
 
           python3 -m pip install poethepoet
           python3 -m poethepoet test
+

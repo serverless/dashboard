@@ -164,9 +164,6 @@ class TraceSpan:
 
         self.end_time = default if end_time is None else end_time
 
-        # if self is root_span:
-        #     ctx.set(None)
-
     def to_protobuf_object(self) -> TraceSpanBuf:
         return TraceSpanBuf(
             id=self.id,
@@ -178,7 +175,4 @@ class TraceSpan:
             tags=self.tags,
             input=self.input,
             output=self.output,
-            # timestamp=time_ns(),
-            # is_historical=None,
-            # type=None,
         )
