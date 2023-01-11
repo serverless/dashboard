@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.4](https://github.com/serverless/console/compare/@serverless/sdk@0.2.3...@serverless/sdk@0.2.4) (2023-01-11)
+
+### Features
+
+- Support custom fingerprints ([b29b1e5](https://github.com/serverless/console/commit/b29b1e5bb430a8909dc77d536602b8986c904d3b))
+
 ### [0.2.3](https://github.com/serverless/console/compare/@serverless/sdk@0.2.2...@serverless/sdk@0.2.3) (2023-01-09)
 
 ### Bug Fixes
