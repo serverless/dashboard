@@ -118,4 +118,4 @@ jobs:
         run: |
           cd ./proto
           python3 -m pip install "betterproto[compiler]"
-          buf generate
+          buf generate --template=buf.gen.python.yaml 
