@@ -861,6 +861,7 @@ describe('internal-extension/index.test.js', () => {
         tags: {
           warning: {
             message: 'Captured warning',
+            type: 1,
           },
         },
       },
@@ -872,6 +873,7 @@ describe('internal-extension/index.test.js', () => {
         tags: {
           warning: {
             message: 'Consoled warning 12 true',
+            type: 1,
           },
         },
       },

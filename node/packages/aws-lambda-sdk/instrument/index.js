@@ -146,7 +146,7 @@ module.exports = (originalHandler, options = {}) => {
       if (invocationId > 1) awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
       const awsLambdaInvocationSpan = (traceSpans.awsLambdaInvocation =
-        serverlessSdk.createTraceSpan('aws.lambda.invocation', { startTime: requestStartTime }));
+        serverlessSdk._createTraceSpan('aws.lambda.invocation', { startTime: requestStartTime }));
       resolveEventTags(event);
       if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
         serverlessSdk._deferredTelemetryRequests.push(reportRequest(event, context));
