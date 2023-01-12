@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.13.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.12.0...@serverless/aws-lambda-sdk@0.13.0) (2023-01-12)
+
+### ⚠ BREAKING CHANGES
+
+- Upgrade to `@serverless/sdk` v0.3. `serverlessSdk.captureTraceSpan` is no longer available
+
+### Features
+
+- Upgrade to `@serverless/sdk` v0.3 ([e415fbc](https://github.com/serverless/console/commit/e415fbcdb8b80cd0c0fb6bffe754d4f654bf66ca))
+- Report internal warnings with structured logs ([63d046a](https://github.com/serverless/console/commit/63d046a033565d1196d2d1ae89fbae81e938e226))
+- Ensure DynamoDB tags on AWS SDK spans that cover DynamoDbDocument service ([#354](https://github.com/serverless/console/issues/354)) ([1b49f9e](https://github.com/serverless/console/commit/1b49f9e9affecfcf469dc469bb43470bdedcfc41))
+
 ## [0.12.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.11.6...@serverless/aws-lambda-sdk@0.12.0) (2023-01-05)
 
 ### ⚠ BREAKING CHANGES
