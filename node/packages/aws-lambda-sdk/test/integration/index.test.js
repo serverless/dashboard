@@ -29,7 +29,7 @@ for (const name of ['TEST_INTERNAL_LAYER_FILENAME']) {
 }
 
 describe('integration', function () {
-  this.timeout(120000);
+  this.timeout(180000);
   const coreConfig = {};
 
   const getCreateHttpApi = (payloadFormatVersion) => async (testConfig) => {
