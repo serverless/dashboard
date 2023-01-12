@@ -10,9 +10,6 @@ declare class TraceSpan {
   input?: string;
   output?: string;
 
-  close(): TraceSpan;
-  closeContext(): undefined;
-  destroy(): undefined;
   toJSON(): Object;
 }
 

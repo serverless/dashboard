@@ -26,9 +26,7 @@ _CJS:_
 const serverlessSdk = require('@serverless/sdk');
 
 // ...
-const customTraceSpan = serverlessSdk.createTraceSpan('custom.tracespan');
-// ...
-customTraceSpan.close();
+serverlessSdk.captureError(new Error('Unexpected'));
 ```
 
 _ESM:_
@@ -37,9 +35,7 @@ _ESM:_
 import serverlessSdk from '@serverless/sdk';
 
 // ...
-const customTraceSpan = serverlessSdk.createTraceSpan('custom.tracespan');
-// ...
-customTraceSpan.close();
+serverlessSdk.captureError(new Error('Unexpected'));
 ```
 
 ### Setup
