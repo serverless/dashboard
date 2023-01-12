@@ -259,17 +259,17 @@ describe('integration', function () {
       expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
       // Query with document client
+      const dynamoDbServiceName = testConfig.configuration.FunctionName.includes('aws-sdk-v2')
+        ? 'dynamodb'
+        : 'dynamodbdocument';
       expect(dynamodbDocumentClientSpan.parentSpanId.toString()).to.equal(
         invocationSpan.id.toString()
       );
-      const expectedSpanName = /aws-sdk-v2/.test(testConfig.configuration.FunctionName)
-        ? 'aws.sdk.dynamodb.query'
-        : 'aws.sdk.dynamodbdocument.query';
-      expect(dynamodbDocumentClientSpan.name).to.equal(expectedSpanName);
+      expect(dynamodbDocumentClientSpan.name).to.equal(`aws.sdk.${dynamoDbServiceName}.query`);
       sdkTags = dynamodbDocumentClientSpan.tags.aws.sdk;
       expect(sdkTags.region).to.equal(process.env.AWS_REGION);
       expect(sdkTags.signatureVersion).to.equal('v4');
-      expect(sdkTags.service).to.equal('dynamodbdocument');
+      expect(sdkTags.service).to.equal(dynamoDbServiceName);
       expect(sdkTags.operation).to.equal('query');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
