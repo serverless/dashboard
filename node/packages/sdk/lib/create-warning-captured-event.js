@@ -13,7 +13,7 @@ module.exports = (message, options = {}) => {
     timestamp,
     customTags: options.tags,
     customFingerprint: options.fingerprint,
-    tags: { 'warning.message': message },
+    tags: { 'warning.message': message, 'warning.type': options.type || 1 },
     _origin: options._origin,
   });
 };
