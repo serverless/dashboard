@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/serverless/console/compare/@serverless/sdk@0.2.4...@serverless/sdk@0.3.0) (2023-01-12)
+
+### ⚠ BREAKING CHANGES
+
+- `sdk.createTraceSpan` is removed. The functionality of creating custom spans is not considered part of public API at the time being (a new method for that will be introduced in one of the following releases)
+
+### Features
+
+- Make `createTraceSpan` private ([017ef10](https://github.com/serverless/console/commit/017ef109c1f6ad23adb6b020121b41a4ca539d35))
+- Dedicated handling for structured warnings issued by the SDK ([1d38f5f](https://github.com/serverless/console/commit/1d38f5f59e435139ad7fac3c27f30e861cc3fdf2))
+- Relax tag name format restriction ([414108f](https://github.com/serverless/console/commit/414108f57dbeb7189c000fb20bc0ac177e85bbfb))
+- Log error instead of throwing on invalid capturedEvent user input ([b958948](https://github.com/serverless/console/commit/b958948fa7396a3e26a16606b2bcd98c652bb4fa))
+
+### Maintenance Improvements
+
+- Fixed typings file ([#369](https://github.com/serverless/console/issues/369)) ([2deeb4b](https://github.com/serverless/console/commit/2deeb4b49b196eadde6ca85fc87f7fb9c00f453c))
+- Revert problematic TS addition ([ad88aab](https://github.com/serverless/console/commit/ad88aab5c2ff39429ddbe56804c34192e1b3b4d0))
+
 ### [0.2.4](https://github.com/serverless/console/compare/@serverless/sdk@0.2.3...@serverless/sdk@0.2.4) (2023-01-11)
 
 ### Features
