@@ -42,11 +42,14 @@ module.exports.install = (Sdk) => {
     let wasCompleted = false;
     this.on('complete', (response) => {
       if (wasCompleted) {
-        process.stderr.write(
-          'Serverless SDK Warning: Detected doubled handling for same AWS SDK request. ' +
+        console.warn({
+          source: 'serverlessSdk',
+          message:
+            'Detected doubled handling for same AWS SDK request. ' +
             'It may happen if for the same request both callback and promise resolution ' +
-            'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n'
-        );
+            'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n',
+          code: 'AWS_SDK_DOUBLE_RESOLUTION',
+        });
         return;
       }
       wasCompleted = true;
