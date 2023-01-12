@@ -15,5 +15,6 @@ module.exports = {
         packageDir: [projectDir, path.resolve(projectDir, 'packages/aws-lambda-sdk')],
       },
     ],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
   },
 };

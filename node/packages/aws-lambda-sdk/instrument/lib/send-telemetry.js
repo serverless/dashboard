@@ -33,10 +33,14 @@ module.exports = limit(10, async (name, body) => {
         },
         (response) => {
           if (response.statusCode !== 200) {
-            process.stderr.write(
-              'Serverless SDK Warning: Cannot propagate telemetry, ' +
-                `server responded with "${response.statusCode}" status code\n`
-            );
+            console.warn({
+              source: 'serverlessSdk',
+              message:
+                'Cannot propagate telemetry, ' +
+                `server responded with "${response.statusCode}" status code\n`,
+              code: 'DEV_MODE_SERVER_REJECTION',
+              httpStatusCode: response.statusCode,
+            });
           }
           response.on('data', () => {});
           response.on('end', resolve);
@@ -48,7 +52,11 @@ module.exports = limit(10, async (name, body) => {
       request.end();
     });
   } catch (error) {
-    process.stderr.write(`Serverless SDK Warning: Cannot propagate telemetry: ${error.message}\n`);
+    console.warn({
+      source: 'serverlessSdk',
+      message: `Cannot propagate telemetry: ${error.message}\n`,
+      code: 'DEV_MODE_SERVER_ERROR',
+    });
   } finally {
     if (requestSocket) requestSocket.unref();
   }
