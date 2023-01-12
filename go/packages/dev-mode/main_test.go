@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -212,6 +213,13 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		for index, event := range protoPayload.LogEvents {
 			if event.Body != messages[index] {
 				t.Errorf("Expected log message %s Received %s", event.Body, messages[index])
+			}
+			if index == 1 {
+				event2SeqId, _ := strconv.ParseInt(*event.Tags.Aws.SequenceId, 10, 64)
+				event1SeqId, _ := strconv.ParseInt(*protoPayload.LogEvents[index-1].Tags.Aws.SequenceId, 10, 64)
+				if event2SeqId < event1SeqId {
+					t.Errorf("Expected log message sequenceId to be an increasing value. Event 2 SequenceId %d. Event 1 SequenceId %d", event2SeqId, event1SeqId)
+				}
 			}
 		}
 	}
