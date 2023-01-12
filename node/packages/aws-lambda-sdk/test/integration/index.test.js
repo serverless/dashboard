@@ -1405,6 +1405,7 @@ describe('integration', function () {
                   tags: {
                     warning: {
                       message: 'Captured warning',
+                      type: 1,
                     },
                   },
                 },
@@ -1416,6 +1417,7 @@ describe('integration', function () {
                   tags: {
                     warning: {
                       message: 'Consoled warning 12 true',
+                      type: 1,
                     },
                   },
                 },

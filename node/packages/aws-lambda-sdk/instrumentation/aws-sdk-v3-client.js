@@ -28,14 +28,17 @@ module.exports.install = (client) => {
       const awsRequestMiddleware = (next, context) => async (args) => {
         const operationName = context.commandName.slice(0, -'Command'.length).toLowerCase();
         const tagMapper = serviceMapper.get(serviceName);
-        const traceSpan = serverlessSdk.createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
-          tags: {
-            'aws.sdk.service': serviceName,
-            'aws.sdk.operation': operationName,
-            'aws.sdk.signature_version': 'v4',
-          },
-          input: shouldMonitorRequestResponse ? JSON.stringify(args.input) : null,
-        });
+        const traceSpan = serverlessSdk._createTraceSpan(
+          `aws.sdk.${serviceName}.${operationName}`,
+          {
+            tags: {
+              'aws.sdk.service': serviceName,
+              'aws.sdk.operation': operationName,
+              'aws.sdk.signature_version': 'v4',
+            },
+            input: shouldMonitorRequestResponse ? JSON.stringify(args.input) : null,
+          }
+        );
         if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
         const deferredRegion = client.config
           .region()

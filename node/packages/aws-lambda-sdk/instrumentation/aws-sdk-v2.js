@@ -29,7 +29,7 @@ module.exports.install = (Sdk) => {
     const tagMapper = serviceMapper.get(serviceName);
     const operationName = this.operation.toLowerCase();
     const params = this.params;
-    const traceSpan = serverlessSdk.createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
+    const traceSpan = serverlessSdk._createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
       tags: {
         'aws.sdk.region': this.service.config.region,
         'aws.sdk.signature_version': this.service.config.signatureVersion,
