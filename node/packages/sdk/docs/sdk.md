@@ -2,15 +2,27 @@
 
 ## Properties and methods of the `serverlessSdk`
 
+### `.name`
+
+Name of the used SDK package. By default `@serverless/sdk`, but if environment extension is used, it's overriden (to e.g. `@serverless/aws-lambda-sdk`)
+
+### `.version`
+
+Package version
+
+### `.orgId`
+
+Authenticated Serverless Console organization id
+
 ### `.traceSpans`
 
 Dictionary of common spans created in context of given environment
 
-### `serverlessSdk.instrumentation`
+### `.instrumentation`
 
 Most of the instrumentation is setup automatically, still there are scenarios when it's difficult to ensure that (e.g. when target modules are imported as ESM, or come from bundles). In such case instrumentation need to be set manually. In context of `@serverless/sdk` following instrumentation extensions are provided:
 
-- `.expressApp.install(express)` - Instrument Express. See [instrumentatiom/express-app](instrumentation/express-app.md)
+- `.instrumentation.expressApp.install(express)` - Instrument Express. See [instrumentatiom/express-app](instrumentation/express-app.md)
 
 ### `.captureError(error[, options])`
 
