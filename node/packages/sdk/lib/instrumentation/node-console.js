@@ -1,6 +1,7 @@
 'use strict';
 
 const isError = require('type/error/is');
+const isPlainObject = require('type/plain-object/is');
 const util = require('util');
 const createErrorCapturedEvent = require('../create-error-captured-event');
 const createWarningCapturedEvent = require('../create-warning-captured-event');
@@ -37,7 +38,11 @@ module.exports.install = () => {
 
   nodeConsole.warn = function (...args) {
     original.warn.apply(this, args);
-    createWarningCapturedEvent(resolveWarnMesssage(args), { _origin: 'nodeConsole' });
+    if (isPlainObject(args[0]) && args[0].source === 'serverlessSdk') {
+      createWarningCapturedEvent(args[0].message, { _origin: 'nodeConsole', type: 2 });
+    } else {
+      createWarningCapturedEvent(resolveWarnMesssage(args), { _origin: 'nodeConsole' });
+    }
   };
 
   uninstall = () => {
