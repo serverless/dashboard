@@ -205,7 +205,7 @@ const deleteRole = async () => {
     await awsRequest(IAM, 'detachRolePolicy', { RoleName: basename, PolicyArn: policyArn });
     log.notice('Detached IAM policy %s from %s', policyArn, basename);
   } catch (error) {
-    if (error.Code !== 'NoSuchEntity') throw error;
+    if (error.Error.Code !== 'NoSuchEntity') throw error;
   }
   await Promise.all([
     awsRequest(IAM, 'deleteRole', { RoleName: basename }).then(
@@ -213,7 +213,7 @@ const deleteRole = async () => {
         log.notice('Deleted IAM role %s', basename);
       },
       (error) => {
-        if (error.Code === 'NoSuchEntity') return;
+        if (error.Error.Code === 'NoSuchEntity') return;
         throw error;
       }
     ),
@@ -222,7 +222,7 @@ const deleteRole = async () => {
         log.notice('Deleted IAM policy %s', policyArn);
       },
       (error) => {
-        if (error.Code === 'NoSuchEntity') return;
+        if (error.Error.Code === 'NoSuchEntity') return;
         throw error;
       }
     ),
