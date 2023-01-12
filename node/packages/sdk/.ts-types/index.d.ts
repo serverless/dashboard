@@ -1,4 +1,3 @@
-import TraceSpan from './lib/trace-span';
 import ExpressAppInstrument from './instrumentation/express-app';
 
 export interface TraceSpans {}
@@ -13,17 +12,6 @@ export interface Sdk {
   orgId: string;
   traceSpans: TraceSpans;
   instrumentation: Instrumentation;
-  createTraceSpan(
-    name: string,
-    options?: {
-      startTime?: bigint;
-      immediateDescendants?: string[];
-      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
-      input?: string;
-      output?: string;
-      onCloseByRoot?: Function;
-    }
-  ): TraceSpan;
   captureError(
     error: Error,
     options?: {

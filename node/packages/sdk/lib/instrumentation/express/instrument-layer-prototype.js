@@ -17,7 +17,7 @@ module.exports.install = (layerPrototype) => {
 
   layerPrototype.handle_request = function handle(req, res, next) {
     if (!expressSpansMap.has(req)) {
-      const expressSpan = serverlessSdk.createTraceSpan('express');
+      const expressSpan = serverlessSdk._createTraceSpan('express');
       const openedSpans = new Set();
       const expressRouteData = { expressSpan, openedSpans };
       expressSpansMap.set(req, expressRouteData);
@@ -51,7 +51,7 @@ module.exports.install = (layerPrototype) => {
         ? 'express.middleware.router'
         : `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`;
     })();
-    const middlewareSpan = serverlessSdk.createTraceSpan(middlewareSpanName);
+    const middlewareSpan = serverlessSdk._createTraceSpan(middlewareSpanName);
     openedSpans.add(middlewareSpan);
     if (this.path && (!expressRouteData.path || expressRouteData.path.length < this.path.length)) {
       expressRouteData.path = this.path;
@@ -77,7 +77,7 @@ module.exports.install = (layerPrototype) => {
   // eslint-disable-next-line camelcase
   layerPrototype.handle_error = function handle_error(error, req, res, next) {
     const { openedSpans } = expressSpansMap.get(req);
-    const middlewareSpan = serverlessSdk.createTraceSpan(
+    const middlewareSpan = serverlessSdk._createTraceSpan(
       `express.middleware.error.${generateMiddlewareName(this.name) || 'unknown'}`
     );
     openedSpans.add(middlewareSpan);

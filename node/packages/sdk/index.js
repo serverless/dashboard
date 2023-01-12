@@ -31,7 +31,6 @@ Object.defineProperties(
     expressApp: d('cew', () => require('./instrumentation/express-app')),
   })
 );
-serverlessSdk.createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 serverlessSdk.captureError = (error, options = {}) => {
   createErrorCapturedEvent(error, options);
 };
@@ -90,6 +89,7 @@ serverlessSdk._initialize = (options = {}) => {
   return serverlessSdk;
 };
 
+serverlessSdk._createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 serverlessSdk._isDebugMode = Boolean(process.env.SLS_SDK_DEBUG);
 serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);

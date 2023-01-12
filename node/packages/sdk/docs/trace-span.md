@@ -1,7 +1,5 @@
 # TraceSpan
 
-_New trace span can be created via [`serverlessSdk.createTraceSpan`](./sdk.md#serverlesssdkcreatetracespanname-options)._
-
 ## Properties
 
 ### `name` _(string)_
@@ -49,43 +47,6 @@ Eventual span input body
 Eventual span output body
 
 ## Methods
-
-### `close([options])`
-
-Closes span and all sub spans.
-
-Supported options:
-
-- `endTime` - Externally recorded _end time_. If not provided, it's resolved automatically. Cannot be earlier than `startTime` and cannot be set in a future
-
-### `closeContext`
-
-After creating a span, this needs to be called if, after a certain point, we do not want to attribute the following logic to the span context
-
-e.g.:
-
-```javascript
-const fooSpan = serverlessSdk.createTraceSpan('foo');
-runFoo();
-// Ensure "bar" trace span is not a sub span of "foo"
-fooSpan.closeContext();
-const barSpan = serverlessSdk.createTraceSpan('bar');
-runBar();
-```
-
-### `destroy()`
-
-Permanently removes the span from the trace. Useful if we created span, but logic it was supposed to describe failed to initialize,, e.g.:
-
-```javascript
-const fooSpan = serverlessSdk.createTraceSpan('foo');
-try {
-  runFoo().finally(() => fooSpan.close());
-} catch (error) {
-  fooSpan.destroy();
-  throw error;
-}
-```
 
 #### `toJSON()`
 
