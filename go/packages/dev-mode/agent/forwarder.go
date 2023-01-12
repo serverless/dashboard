@@ -157,7 +157,7 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 		SlsTags:   &slsTags,
 		LogEvents: messages,
 	}
-	for _, log := range logs {
+	for i, log := range logs {
 		if log.LogType == "function" {
 			t, _ := time.Parse(time.RFC3339, log.Time)
 			if !strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.") {
@@ -167,6 +167,7 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 				logStream := os.Getenv("AWS_LAMBDA_LOG_STREAM_NAME")
 				orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
 				rec := log.Record.(string)
+				sequenceId := fmt.Sprintf("%v", time.Now().UnixNano()+int64(i))
 				messages = append(messages, &schema.LogEvent{
 					Body:      rec,
 					Timestamp: uint64(t.UnixMilli()),
@@ -177,10 +178,11 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 					TraceId:        &traceId,
 					Tags: &tags.Tags{
 						Aws: &tags.AwsTags{
-							LogGroup:  &logGroup,
-							LogStream: &logStream,
-							AccountId: &accountId,
-							RequestId: &requestId,
+							LogGroup:   &logGroup,
+							LogStream:  &logStream,
+							SequenceId: &sequenceId,
+							AccountId:  &accountId,
+							RequestId:  &requestId,
 						},
 						OrgId: &orgId,
 					},
