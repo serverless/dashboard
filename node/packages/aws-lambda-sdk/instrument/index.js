@@ -113,6 +113,8 @@ const resolveOutcomeEnumValue = (value) => {
       return 1;
     case 'error:handled':
       return 5;
+    case 'error:unhandled':
+      return 3;
     default:
       throw new Error(`Unexpected outcome value: ${value}`);
   }
@@ -129,11 +131,12 @@ const closeTrace = async (outcome, outcomeResult) => {
     capturedEvents.length = 0;
     isRootSpanReset = true;
   };
+  const isErrorOutcome = outcome.startsWith('error:');
   try {
     const responseStartTime = process.hrtime.bigint();
 
     awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));
-    if (outcome === 'error:handled') {
+    if (isErrorOutcome) {
       const errorMessage =
         (outcomeResult && outcomeResult.message) || coerceToString(outcomeResult);
       if (errorMessage) {
@@ -150,14 +153,18 @@ const closeTrace = async (outcome, outcomeResult) => {
     }
 
     const endTime = process.hrtime.bigint();
-    if (!serverlessSdk._settings.disableRequestResponseMonitoring && outcome !== 'error:handled') {
+    if (!serverlessSdk._settings.disableRequestResponseMonitoring && !isErrorOutcome) {
       serverlessSdk._deferredTelemetryRequests.push(
         reportResponse(outcomeResult, invocationContextAccessor.value, endTime)
       );
     }
+    if (!traceSpans.awsLambdaInitialization.endTime) {
+      traceSpans.awsLambdaInitialization.close({ endTime });
+    }
     if (traceSpans.awsLambdaInvocation) traceSpans.awsLambdaInvocation.close({ endTime });
     awsLambdaSpan.close({ endTime });
-    reportTrace();
+    // Trace report requires requestId, which we don't have if handler crashed at initialization
+    if (invocationContextAccessor.value) reportTrace();
     flushSpans();
     clearRootSpan();
 
@@ -177,6 +184,16 @@ const closeTrace = async (outcome, outcomeResult) => {
     if (!isRootSpanReset) clearRootSpan();
   }
 };
+
+const wrapUnhandledErrorListener = (eventName) => {
+  const [awsListener] = process.listeners(eventName);
+  process.off(eventName, awsListener);
+  process.on(eventName, (error) => {
+    closeTrace('error:unhandled', error).finally(() => process.nextTick(() => awsListener(error)));
+  });
+};
+wrapUnhandledErrorListener('uncaughtException');
+wrapUnhandledErrorListener('unhandledRejection');
 
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
@@ -245,7 +262,17 @@ module.exports = (originalHandler, options = {}) => {
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }
-    const eventualResult = originalHandler(event, context, wrappedCallback);
+    const eventualResult = (() => {
+      try {
+        return originalHandler(event, context, wrappedCallback);
+      } catch (error) {
+        // Propagate as uncaught exception
+        process.nextTick(() => {
+          throw error;
+        });
+        return null;
+      }
+    })();
     if (!eventualResult) return eventualResult;
     if (typeof eventualResult.then !== 'function') return eventualResult;
     return Promise.resolve(eventualResult)

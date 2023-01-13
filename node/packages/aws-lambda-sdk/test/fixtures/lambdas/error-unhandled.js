@@ -1,6 +1,3 @@
 'use strict';
 
-module.exports.handler = () =>
-  setTimeout(() => {
-    throw new Error('Unhandled');
-  });
+module.exports.handler = () => setTimeout(() => Promise.reject(new Error('Stop')));

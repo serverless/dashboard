@@ -2,4 +2,4 @@
 
 await new Promise((resolve) => setTimeout(resolve));
 
-throw new Error('Unhandled');
+throw new Error('Stop');
