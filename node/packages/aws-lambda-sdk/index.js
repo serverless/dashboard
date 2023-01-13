@@ -8,8 +8,7 @@ module.exports = serverlessSdk;
 // Public
 serverlessSdk.name = pkgJson.name;
 serverlessSdk.version = pkgJson.version;
-serverlessSdk.traceSpans.root =
-  serverlessSdk.traceSpans.awsLambda = require('./trace-spans/aws-lambda');
+serverlessSdk.traceSpans.awsLambda = require('./trace-spans/aws-lambda');
 serverlessSdk.traceSpans.awsLambdaInitialization = require('./trace-spans/aws-lambda-initialization');
 
 serverlessSdk.instrumentation.awsSdkV2 = require('./instrumentation/aws-sdk-v2');
