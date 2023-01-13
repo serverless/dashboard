@@ -100,14 +100,6 @@ jobs:
           python3 -m pip install ruff
           python3 -m ruff .
 
-      - name: Run SDK Schema unit tests
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
-        run: |
-          cd python/packages/sdk-schema
-
-          python3 -m pip install poethepoet pytest
-          python3 -m poethepoet test
-
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
@@ -127,3 +119,11 @@ jobs:
           cd ./proto
           python3 -m pip install "betterproto[compiler]"
           buf generate --template=buf.gen.python.yaml 
+
+      - name: Run SDK Schema unit tests
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install poethepoet pytest
+          python3 -m poethepoet test
