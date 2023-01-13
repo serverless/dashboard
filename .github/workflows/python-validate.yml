@@ -57,15 +57,15 @@ jobs:
 
       - name: Validate code formatting
         run: |
-          cd python/packages/sdk
+          cd python/packages
 
           python3 -m pip install black pyproject-fmt
-          python3 -m black --check sdk
+          python3 -m black --check .
           python3 -m pyproject_fmt --indent 4 pyproject.toml
 
       - name: Check code with linter
         run: |
-          cd python/packages/sdk
+          cd python/packages
 
           python3 -m pip install ruff
           python3 -m ruff .
