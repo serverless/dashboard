@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.13.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.13.0...@serverless/aws-lambda-sdk@0.13.1) (2023-01-13)
+
+### Features
+
+- Report traces at unhandled exceptions in invocation phase ([eadeaee](https://github.com/serverless/console/commit/eadeaeedb04390c101a7b2f0d9eae2acd317e0d1))
+- Upgrade to `@serverless/sdk` v0.3.1 (Introduce `servelressSdk.setTag`) ([78c5532](https://github.com/serverless/console/commit/78c5532b13588f27d84b3a2acdfc9b0e1987fd4f))
+
+### Maintenance Improvements
+
+- Support trace closure at initialization phase ([48262d0](https://github.com/serverless/console/commit/48262d0962889fe9fb5eae75b8c329fb00551f5e))
+
 ## [0.13.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.12.0...@serverless/aws-lambda-sdk@0.13.0) (2023-01-12)
 
 ### ⚠ BREAKING CHANGES
