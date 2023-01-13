@@ -114,7 +114,15 @@ jobs:
         with:
           github_token: ${{ github.token }}
 
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
+          github_token: ${{ github.token }}
+
       - name: Build Protobufs
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd ./proto
           python3 -m pip install "betterproto[compiler]"
