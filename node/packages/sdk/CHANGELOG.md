@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/serverless/console/compare/@serverless/sdk@0.3.0...@serverless/sdk@0.3.1) (2023-01-13)
+
+### Features
+
+- `serverlessSdk.setTag` ([c546bcd](https://github.com/serverless/console/commit/c546bcd85bc8ee6d77926ad655c2696eea270ef1))
+- Automatically resolve `.traceSpans.root` ([99eb5e2](https://github.com/serverless/console/commit/99eb5e2f20cd60c3e99c75d7e33e70845ef7f9b2))
+
 ## [0.3.0](https://github.com/serverless/console/compare/@serverless/sdk@0.2.4...@serverless/sdk@0.3.0) (2023-01-12)
 
 ### ⚠ BREAKING CHANGES
