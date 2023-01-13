@@ -25,11 +25,9 @@ class StringifiableSet extends Set {
 
 const asyncLocalStorage = new AsyncLocalStorage();
 
-let rootSpan;
-
 class TraceSpan {
   static resolveCurrentSpan() {
-    return asyncLocalStorage.getStore() || rootSpan || null;
+    return asyncLocalStorage.getStore() || TraceSpan.rootSpan || null;
   }
 
   constructor(name, options = {}) {
@@ -61,17 +59,19 @@ class TraceSpan {
     if (tags) this.tags.setMany(tags);
     if (options.input != null) this.input = options.input;
     if (options.output != null) this.output = options.output;
-    if (!rootSpan) {
-      rootSpan = this;
+    if (!TraceSpan.rootSpan) {
+      TraceSpan.rootSpan = this;
       this.parentSpan = null;
     } else {
-      if (rootSpan.endTime) {
+      if (TraceSpan.rootSpan.endTime) {
         throw Object.assign(new Error('Cannot intialize span: Trace is closed'), {
           code: 'UNREACHABLE_TRACE',
         });
       }
       this.parentSpan = TraceSpan.resolveCurrentSpan();
-      while (this.parentSpan.endTime) this.parentSpan = this.parentSpan.parentSpan || rootSpan;
+      while (this.parentSpan.endTime) {
+        this.parentSpan = this.parentSpan.parentSpan || TraceSpan.rootSpan;
+      }
     }
 
     asyncLocalStorage.enterWith(this);
@@ -88,13 +88,13 @@ class TraceSpan {
   }
   closeContext() {
     if (asyncLocalStorage.getStore() !== this) return;
-    if (this === rootSpan) {
+    if (this === TraceSpan.rootSpan) {
       asyncLocalStorage.enterWith(this);
       return;
     }
     const openParentSpan = (function self(span) {
       if (!span.endTime) return span;
-      return span.parentSpan ? self(span.parentSpan) : rootSpan;
+      return span.parentSpan ? self(span.parentSpan) : TraceSpan.rootSpan;
     })(this.parentSpan);
     asyncLocalStorage.enterWith(openParentSpan);
   }
@@ -121,7 +121,7 @@ class TraceSpan {
       }
     }
     this.endTime = targetEndTime || defaultEndTime;
-    if (this === rootSpan) {
+    if (this === TraceSpan.rootSpan) {
       const leftoverSpans = [];
       for (const subSpan of this.spans) {
         if (subSpan.endTime) continue;

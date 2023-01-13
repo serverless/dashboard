@@ -23,7 +23,11 @@ const serverlessSdk = module.exports;
 // Public
 serverlessSdk.name = pkgJson.name;
 serverlessSdk.version = pkgJson.version;
-serverlessSdk.traceSpans = {};
+serverlessSdk.traceSpans = {
+  get root() {
+    return TraceSpan.rootSpan;
+  },
+};
 serverlessSdk.instrumentation = {};
 Object.defineProperties(
   serverlessSdk.instrumentation,
