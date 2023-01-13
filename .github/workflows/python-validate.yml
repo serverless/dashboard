@@ -86,7 +86,7 @@ jobs:
           python3 -m pip install ruff
           python3 -m ruff .
 
-      - name: Run unit tests
+      - name: Run SDK unit tests
         if: steps.pathChanges.outputs.sdk == 'true'
         run: |
           cd python/packages/sdk
