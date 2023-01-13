@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.3](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.2...@serverless/sdk-schema@0.14.3) (2023-01-13)
+
+### Features
+
+- Define `Span.custom_tags` for custom user tags ([38338ee](https://github.com/serverless/console/commit/38338ee6c6dd11a41288220f204c4f738d680a36))
+
 ## [0.14.2](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.1...@serverless/sdk-schema@0.14.2) (2023-01-11)
 
 ### Features
