@@ -539,6 +539,42 @@ describe('integration', function () {
       },
     ],
     [
+      'error-uncaught',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'error-uncaught-immediate',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'error-unhandled',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
       'api-endpoint',
       {
         variants: new Map([
@@ -1444,6 +1480,19 @@ describe('integration', function () {
     }
   });
 
+  const resolveOutcomeEnumValue = (value) => {
+    switch (value) {
+      case 'success':
+        return 1;
+      case 'error:handled':
+        return 5;
+      case 'error:unhandled':
+        return 3;
+      default:
+        throw new Error(`Unexpected outcome value: ${value}`);
+    }
+  };
+
   for (const testConfig of testVariantsConfig) {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
@@ -1451,7 +1500,11 @@ describe('integration', function () {
       log.debug('%s test result: %o', testConfig.name, testResult);
       const { expectedOutcome } = testConfig;
       const { invocationsData } = testResult;
-      if (expectedOutcome === 'success' || expectedOutcome === 'error:handled') {
+      if (
+        expectedOutcome === 'success' ||
+        expectedOutcome === 'error:handled' ||
+        expectedOutcome === 'error:unhandled'
+      ) {
         if (
           expectedOutcome === 'success' &&
           !testConfig.isAsyncInvocation &&
@@ -1468,7 +1521,7 @@ describe('integration', function () {
           },
         ] of invocationsData.entries()) {
           const lambdaSpan = spans[0];
-          if (index === 0) {
+          if (index === 0 || expectedOutcome === 'error:unhandled') {
             expect(spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.initialization',
@@ -1498,10 +1551,10 @@ describe('integration', function () {
           expect(lambdaSpan.tags.aws.lambda.name).to.equal(testConfig.configuration.FunctionName);
           expect(lambdaSpan.tags.aws.lambda).to.have.property('requestId');
           expect(lambdaSpan.tags.aws.lambda).to.have.property('version');
-          if (expectedOutcome === 'success') {
-            expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(1);
-          } else {
-            expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(5);
+          expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(
+            resolveOutcomeEnumValue(expectedOutcome)
+          );
+          if (expectedOutcome !== 'success') {
             expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionMessage');
             expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionStacktrace');
           }
