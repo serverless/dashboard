@@ -128,6 +128,7 @@ describe('lib/trace-span.test.js', () => {
   it('should stringify to JSON', () => {
     const childSpan = new TraceSpan('child');
     childSpan.tags.set('foo', 12);
+    childSpan.customTags.set('elo', 'marko');
     childSpan.close();
     const jsonValue = JSON.parse(JSON.stringify(childSpan));
     // Validate bigint valid values
@@ -141,6 +142,7 @@ describe('lib/trace-span.test.js', () => {
       startTime: jsonValue.startTime,
       endTime: jsonValue.endTime,
       tags: { foo: 12 },
+      customTags: { elo: 'marko' },
     });
   });
 
@@ -156,6 +158,7 @@ describe('lib/trace-span.test.js', () => {
     childSpan.tags.set('some.number', 123);
     childSpan.tags.set('some.strings', ['foo', 'bar']);
     childSpan.tags.set('some.numbers', [12, 23]);
+    childSpan.customTags.set('elo', 'marko');
     childSpan.close();
     const protoJson = childSpan.toProtobufObject();
     expect(protoJson).to.deep.equal({
@@ -178,6 +181,7 @@ describe('lib/trace-span.test.js', () => {
           numbers: [new Long(12, 0, true), new Long(23, 0, true)],
         },
       },
+      customTags: '{"elo":"marko"}',
     });
     expect(Long.isLong(protoJson.startTimeUnixNano)).to.be.true;
     expect(Long.isLong(protoJson.endTimeUnixNano)).to.be.true;

@@ -26,6 +26,7 @@ export interface Sdk {
       tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
     }
   ): undefined;
+  setTag(name: string, value: boolean | number | string | Date | Array<unknown> | null): undefined;
 }
 
 export interface SdkOptions {

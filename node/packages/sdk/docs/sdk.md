@@ -41,3 +41,10 @@ Record warning
 - `options`:
   - `tags` _(object)_ - User tags object. Tag names can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
   - `fingerprint` _(string)_ - Console UI groups common warnings by the _fingerprint_, which by default is derived from its message. This can be overriden by passing custom `fingeprint` value
+
+### `.setTag(name, value)`
+
+Set custom (user defined) tag on root span
+
+- `name` _(string)_ - Tag name, can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters
+- `value` (any) - Tag value. Can be _string_, _boolean_, _number_, _Date_ or _Array_ containing any values of prior listed types
