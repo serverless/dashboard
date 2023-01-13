@@ -41,6 +41,12 @@ serverlessSdk.captureError = (error, options = {}) => {
 serverlessSdk.captureWarning = (message, options = {}) => {
   createWarningCapturedEvent(message, options);
 };
+serverlessSdk.setTag = (name, value) => {
+  if (!serverlessSdk.traceSpans.root) {
+    throw new Error('Cannot set tag with no root trace span being initialized');
+  }
+  serverlessSdk.traceSpans.root.customTags.set(name, value);
+};
 
 // Private
 const settings = (serverlessSdk._settings = {});

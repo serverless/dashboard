@@ -17,6 +17,8 @@ const generateId = require('./generate-id');
 const resolveEpochTimestampString = require('./resolve-epoch-timestamp-string');
 const toProtobufEpochTimestamp = require('./to-protobuf-epoch-timestamp');
 
+const objHasOwnProperty = Object.prototype.hasOwnProperty;
+
 class StringifiableSet extends Set {
   toJSON() {
     return Array.from(this);
@@ -157,6 +159,7 @@ class TraceSpan {
       input: this.input || undefined,
       output: this.output || undefined,
       tags: this.tags,
+      customTags: objHasOwnProperty.call(this, 'customTags') ? this.customTags : undefined,
     };
   }
   toProtobufObject() {
@@ -170,6 +173,9 @@ class TraceSpan {
       input: this.input || undefined,
       output: this.output || undefined,
       tags: toProtobufTags(this.tags),
+      customTags: objHasOwnProperty.call(this, 'customTags')
+        ? JSON.stringify(this.customTags)
+        : undefined,
     };
   }
   get spans() {
@@ -205,6 +211,7 @@ Object.defineProperties(
     id: d(() => generateId()),
     subSpans: d(() => new Set()),
     tags: d(() => new Tags()),
+    customTags: d(() => new Tags()),
   })
 );
 
