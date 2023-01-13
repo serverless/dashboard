@@ -23,6 +23,7 @@ const path = require('path');
   // eslint-disable-next-line import/no-unresolved
   return require('@serverless/aws-lambda-sdk');
 })()._initialize();
+const instrument = require('../instrument');
 
 // 2. Initialize original handler
 const nodeVersionMajor = Number(process.version.split('.')[0].slice(1));
@@ -81,7 +82,6 @@ const resolveHandlerObject = (resolvedHandlerModule) => {
   if (typeof handlerFunction !== 'function') throw resolveHandlerNotFoundError('is not a function');
 
   try {
-    const instrument = require('../instrument');
     return { handler: instrument(handlerFunction) };
   } catch (error) {
     process._rawDebug(
