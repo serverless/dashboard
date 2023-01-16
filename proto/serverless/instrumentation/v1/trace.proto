@@ -74,4 +74,9 @@ message Span {
     // The optional custom tags to be set by the user
     // This is expected to be a JSON object in string format.
     optional string custom_tags = 13;
+
+    // Optional list of event fingerprints related to the span.
+    // This will most likely always be populated by ingest when looking at the events
+    // attached to the TracePayload
+    repeated string fingerprints = 14;
 }
