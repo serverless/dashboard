@@ -7,6 +7,7 @@ const doNotInstrumentFollowingHttpRequest =
 const instrumentedClients = new WeakMap();
 
 const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
+const safeStringify = require('../lib/instrumentation/aws-sdk/safe-stringify');
 
 module.exports.install = (client) => {
   ensureObject(client, { errorMessage: '%v is not an instance of AWS SDK v3 client' });
@@ -36,7 +37,7 @@ module.exports.install = (client) => {
               'aws.sdk.operation': operationName,
               'aws.sdk.signature_version': 'v4',
             },
-            input: shouldMonitorRequestResponse ? JSON.stringify(args.input) : null,
+            input: shouldMonitorRequestResponse ? safeStringify(args.input) : null,
           }
         );
         if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
@@ -68,7 +69,7 @@ module.exports.install = (client) => {
           throw error;
         } else {
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
-          if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.output);
+          if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.output);
           if (tagMapper && tagMapper.responseData) {
             tagMapper.responseData(traceSpan, response.output);
           }
