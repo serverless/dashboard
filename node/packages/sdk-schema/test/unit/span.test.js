@@ -33,6 +33,7 @@ const testTracePayload = {
       name: 'test',
       startTimeUnixNano: longValue,
       endTimeUnixNano: longValue,
+      fingerprints: [],
       tags: {
         aws: {
           lambda: {
