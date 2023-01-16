@@ -35,6 +35,8 @@ jobs:
               - 'python/packages/sdk-schema/**'
             proto:
               - 'proto/**'
+            packages:
+              - 'python/packages/**'
 
       - name: Install Python 3.7
         uses: actions/setup-python@v4
@@ -56,24 +58,74 @@ jobs:
           python3 -m pip install --editable .
 
       - name: Validate code formatting
+        if: steps.pathChanges.outputs.packages == 'true'
         run: |
-          cd python/packages/sdk
+          cd python/packages
 
-          python3 -m pip install black pyproject-fmt
-          python3 -m black --check sdk
-          python3 -m pyproject_fmt --indent 4 pyproject.toml
+          python3 -m pip install black
+          python3 -m black --check .
+
+      - name: Validate metadata formatting
+        if: steps.pathChanges.outputs.packages == 'true'
+        run: |
+          cd python/packages
+          
+          python3 -m pip install pyproject-fmt
+          
+          for directory in */; do
+            if [ -f "$directory/pyproject.toml" ]; then
+              python3 -m pyproject_fmt --indent 4 $directory/pyproject.toml
+            fi
+          done
 
       - name: Check code with linter
+        if: steps.pathChanges.outputs.packages == 'true'
         run: |
-          cd python/packages/sdk
+          cd python/packages
 
           python3 -m pip install ruff
-          python3 -m ruff sdk
+          python3 -m ruff .
 
-      - name: Run unit tests
+      - name: Run SDK unit tests
         if: steps.pathChanges.outputs.sdk == 'true'
         run: |
           cd python/packages/sdk
 
           python3 -m pip install pytest
           python3 -m pytest
+
+      - name: Install SDK Schema
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install poethepoet
+          python3 -m poethepoet install
+
+      - name: Buf Setup
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
+          github_token: ${{ github.token }}
+
+      - name: Build Protobufs
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          cd ./proto
+          python3 -m pip install "betterproto[compiler]"
+          buf generate --template=buf.gen.python.yaml 
+
+      - name: Run SDK Schema unit tests
+        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install poethepoet pytest
+          python3 -m poethepoet test

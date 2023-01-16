@@ -1,0 +1,5 @@
+version: v1
+plugins:
+  - name: python_betterproto
+    strategy: all
+    out: ../python/packages/sdk-schema/sdk_schema/schema

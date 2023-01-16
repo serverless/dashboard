@@ -1,14 +1,40 @@
 [build-system]
-requires = ["setuptools>=65.6.3", "wheel"]
 build-backend = "setuptools.build_meta"
+requires = [
+    "betterproto[compiler]<3.0.0,>=2.0.0b5", # This version supports proto3 optional fields
+    "grpcio-tools<2.0.0,>=1.51.1",
+    "poethepoet<1.0.0,>=0.17.1",
+    "protobuf>=4.21.12",
+    "setuptools>=65.6.3",
+    "wheel",
+]
 
 [project]
-name = "serverless-sdk-schema"
+name = "serverless_sdk_schema"
 version = "0.0.0"
 description = "The protobuf generated Serverless SDK Schema"
 authors = [{ name = "serverlessinc" }]
+requires-python = ">=3.7"
 dependencies = [
-    "protobuf >= 4.21.12"
+    "betterproto[compiler]<3.0.0,>=2.0.0b5", # This version supports proto3 optional fields
+    "grpcio-tools<2.0.0,>=1.51.1",
+    "poethepoet<1.0.0,>=0.17.1",
+    "protobuf>=4.21.12",
+    "typing-extensions>=4.4", # included in Python 3.8 - 3.11
+]
+[project.optional-dependencies]
+tests = [
+    "black>=22.12",
+    "pytest>=7.2",
+    "ruff>=0.0.199",
 ]
 
-requires-python = ">=3.8"
+
+[tool.ruff]
+ignore = ["F401"]
+
+
+[tool.poe.tasks]
+build = "bash ./scripts/build.sh"
+install = "bash ./scripts/install.sh"
+test = "python3 -m pytest"
