@@ -160,6 +160,7 @@ class TraceSpan {
       output: this.output || undefined,
       tags: this.tags,
       customTags: objHasOwnProperty.call(this, 'customTags') ? this.customTags : undefined,
+      fingerprints: [],
     };
   }
   toProtobufObject() {
@@ -176,6 +177,7 @@ class TraceSpan {
       customTags: objHasOwnProperty.call(this, 'customTags')
         ? JSON.stringify(this.customTags)
         : undefined,
+      fingerprints: [],
     };
   }
   get spans() {
