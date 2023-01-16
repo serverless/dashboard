@@ -5,6 +5,7 @@ const ensureConstructor = require('type/constructor/ensure');
 const doNotInstrumentFollowingHttpRequest =
   require('@serverless/sdk/lib/instrumentation/http').ignoreFollowingRequest;
 const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
+const safeStringify = require('../lib/instrumentation/aws-sdk/safe-stringify');
 
 const instrumentedSdks = new WeakMap();
 
@@ -36,7 +37,7 @@ module.exports.install = (Sdk) => {
         'aws.sdk.service': serviceName,
         'aws.sdk.operation': operationName,
       },
-      input: shouldMonitorRequestResponse ? JSON.stringify(params) : null,
+      input: shouldMonitorRequestResponse ? safeStringify(params) : null,
     });
     if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
     let wasCompleted = false;
@@ -57,7 +58,7 @@ module.exports.install = (Sdk) => {
       if (response.error) {
         traceSpan.tags.set('aws.sdk.error', response.error.message);
       } else {
-        if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.data);
+        if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.data);
         if (tagMapper && tagMapper.responseData) tagMapper.responseData(traceSpan, response.data);
       }
       if (!traceSpan.endTime) traceSpan.close();
