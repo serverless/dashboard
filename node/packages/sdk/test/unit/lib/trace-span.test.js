@@ -143,6 +143,7 @@ describe('lib/trace-span.test.js', () => {
       endTime: jsonValue.endTime,
       tags: { foo: 12 },
       customTags: { elo: 'marko' },
+      fingerprints: [],
     });
   });
 
@@ -170,6 +171,7 @@ describe('lib/trace-span.test.js', () => {
       endTimeUnixNano: protoJson.endTimeUnixNano,
       input: 'some input',
       output: 'some output',
+      fingerprints: [],
       tags: {
         toptag: '1',
         top: { nested: '2', deep: { nested: '3' } },
