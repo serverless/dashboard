@@ -43,7 +43,15 @@ serverlessSdk.captureWarning = (message, options = {}) => {
 };
 serverlessSdk.setTag = (name, value) => {
   if (!serverlessSdk.traceSpans.root) {
-    throw new Error('Cannot set tag with no root trace span being initialized');
+    console.warn({
+      source: 'serverlessSdk',
+      message:
+        'Cannot set tag with no root trace span being initialized. ' +
+        'Lack of root span signals that Serverless SDK was most likely not initialized ' +
+        '(given environment is not being instrumented)',
+      code: 'NO_ROOT_TRACE_SPAN',
+    });
+    return;
   }
   serverlessSdk.traceSpans.root.customTags.set(name, value);
 };
