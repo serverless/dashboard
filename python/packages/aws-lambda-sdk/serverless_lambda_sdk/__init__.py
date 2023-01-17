@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-try:
-    from serverless_sdk import serverlessSdk
-
-except ImportError as e:
-    serverlessSdk = None
+from serverless_sdk import serverlessSdk
 
 
 __all__ = [
