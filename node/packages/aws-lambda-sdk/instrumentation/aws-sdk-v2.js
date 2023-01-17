@@ -22,6 +22,13 @@ module.exports.install = (Sdk) => {
   const shouldMonitorRequestResponse =
     serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring;
   const originalRunTo = Sdk.Request.prototype.runTo;
+  const originalPresign = Sdk.Request.prototype.presign;
+  Sdk.Request.prototype.presign = function presign(expires, callback) {
+    // Presign only pre-configures request url but does not issue real AWS SDK request.
+    // Ensure to not instrument such requests
+    this.runTo = originalRunTo;
+    return originalPresign.call(this, expires, callback);
+  };
   Sdk.Request.prototype.runTo = function runTo(state, done) {
     // identifier
     const serviceName =
