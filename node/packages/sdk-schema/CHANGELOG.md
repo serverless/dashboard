@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.3](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.2...@serverless/sdk-schema@0.14.3) (2023-01-13)
+
+### Features
+
+- Define `Span.custom_tags` for custom user tags ([38338ee](https://github.com/serverless/console/commit/38338ee6c6dd11a41288220f204c4f738d680a36))
+
+## [0.14.2](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.1...@serverless/sdk-schema@0.14.2) (2023-01-11)
+
+### Features
+
+- `WarningTags.type` ([0cbd622](https://github.com/serverless/console/commit/0cbd622ee357967d1a44b5a546f3c6b70996e88e))
+- Define `Event.custom_fingerprint` ([306362a](https://github.com/serverless/console/commit/306362ade4abcc33dcc7e6f4d808e5790822c6ad))
+
 ## [0.14.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.0...@serverless/sdk-schema@0.14.1) (2022-12-23)
 
 ### Features

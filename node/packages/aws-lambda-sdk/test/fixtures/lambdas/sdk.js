@@ -12,7 +12,7 @@ module.exports.handler = async (event) => {
     if (sdk !== sdkMirror) throw new Error('SDK exports mismatch');
   }
 
-  sdk.createTraceSpan('user.span').close();
+  sdk._createTraceSpan('user.span').close();
 
   sdk.captureError(new Error('Captured error'), {
     tags: { 'user.tag': 'example', 'invocationid': invocationId },
@@ -23,6 +23,8 @@ module.exports.handler = async (event) => {
   sdk.captureWarning('Captured warning', {
     tags: { 'user.tag': 'example', 'invocationid': invocationId },
   });
+
+  sdk.setTag('user.tag', 'example');
 
   console.warn('Consoled warning', 12, true);
   return {

@@ -5,6 +5,7 @@ const ensureConstructor = require('type/constructor/ensure');
 const doNotInstrumentFollowingHttpRequest =
   require('@serverless/sdk/lib/instrumentation/http').ignoreFollowingRequest;
 const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
+const safeStringify = require('../lib/instrumentation/aws-sdk/safe-stringify');
 
 const instrumentedSdks = new WeakMap();
 
@@ -21,6 +22,13 @@ module.exports.install = (Sdk) => {
   const shouldMonitorRequestResponse =
     serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring;
   const originalRunTo = Sdk.Request.prototype.runTo;
+  const originalPresign = Sdk.Request.prototype.presign;
+  Sdk.Request.prototype.presign = function presign(expires, callback) {
+    // Presign only pre-configures request url but does not issue real AWS SDK request.
+    // Ensure to not instrument such requests
+    this.runTo = originalRunTo;
+    return originalPresign.call(this, expires, callback);
+  };
   Sdk.Request.prototype.runTo = function runTo(state, done) {
     // identifier
     const serviceName =
@@ -29,24 +37,27 @@ module.exports.install = (Sdk) => {
     const tagMapper = serviceMapper.get(serviceName);
     const operationName = this.operation.toLowerCase();
     const params = this.params;
-    const traceSpan = serverlessSdk.createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
+    const traceSpan = serverlessSdk._createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
       tags: {
         'aws.sdk.region': this.service.config.region,
         'aws.sdk.signature_version': this.service.config.signatureVersion,
         'aws.sdk.service': serviceName,
         'aws.sdk.operation': operationName,
       },
-      input: shouldMonitorRequestResponse ? JSON.stringify(params) : null,
+      input: shouldMonitorRequestResponse ? safeStringify(params) : null,
     });
     if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
     let wasCompleted = false;
     this.on('complete', (response) => {
       if (wasCompleted) {
-        process.stderr.write(
-          'Serverless SDK Warning: Detected doubled handling for same AWS SDK request. ' +
+        console.warn({
+          source: 'serverlessSdk',
+          message:
+            'Detected doubled handling for same AWS SDK request. ' +
             'It may happen if for the same request both callback and promise resolution ' +
-            'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n'
-        );
+            'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n',
+          code: 'AWS_SDK_DOUBLE_RESOLUTION',
+        });
         return;
       }
       wasCompleted = true;
@@ -54,7 +65,7 @@ module.exports.install = (Sdk) => {
       if (response.error) {
         traceSpan.tags.set('aws.sdk.error', response.error.message);
       } else {
-        if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.data);
+        if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.data);
         if (tagMapper && tagMapper.responseData) tagMapper.responseData(traceSpan, response.data);
       }
       if (!traceSpan.endTime) traceSpan.close();

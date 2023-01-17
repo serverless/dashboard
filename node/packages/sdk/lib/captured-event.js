@@ -14,6 +14,7 @@ const toProtobufTags = require('./to-protobuf-tags');
 const emitter = require('./emitter');
 const Tags = require('./tags');
 const TraceSpan = require('./trace-span');
+const ServerlessSdkError = require('./error');
 
 class CapturedEvent {
   constructor(name, options = {}) {
@@ -39,11 +40,16 @@ class CapturedEvent {
       isOptional: true,
       name: 'options.customTags',
     });
-    if (customTags) this.customTags.setMany(customTags);
-    this.customFingerprint = ensureString(options.customFingerprint, {
-      isOptional: true,
-      name: 'options.fingerprint',
-    });
+    try {
+      if (customTags) this.customTags.setMany(customTags);
+      this.customFingerprint = ensureString(options.customFingerprint, {
+        isOptional: true,
+        name: 'options.fingerprint',
+        Error: ServerlessSdkError,
+      });
+    } catch (error) {
+      console.error(error);
+    }
     if (options._origin) this._origin = options._origin;
     this.traceSpan = TraceSpan.resolveCurrentSpan();
     emitter.emit('captured-event', this);

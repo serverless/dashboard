@@ -113,10 +113,87 @@ const resolveOutcomeEnumValue = (value) => {
       return 1;
     case 'error:handled':
       return 5;
+    case 'error:unhandled':
+      return 3;
     default:
       throw new Error(`Unexpected outcome value: ${value}`);
   }
 };
+
+const closeTrace = async (outcome, outcomeResult) => {
+  let isRootSpanReset = false;
+  const clearRootSpan = () => {
+    delete awsLambdaSpan.traceId;
+    delete awsLambdaSpan.id;
+    delete awsLambdaSpan.endTime;
+    awsLambdaSpan.tags.reset();
+    awsLambdaSpan.subSpans.clear();
+    capturedEvents.length = 0;
+    isRootSpanReset = true;
+  };
+  const isErrorOutcome = outcome.startsWith('error:');
+  try {
+    const responseStartTime = process.hrtime.bigint();
+
+    awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));
+    if (isErrorOutcome) {
+      const errorMessage =
+        (outcomeResult && outcomeResult.message) || coerceToString(outcomeResult);
+      if (errorMessage) {
+        awsLambdaSpan.tags.set(
+          'aws.lambda.error_exception_message',
+          errorMessage.length > 1000 ? `${errorMessage.slice(0, 1000)}[…]` : errorMessage
+        );
+        if (isError(outcomeResult) && outcomeResult.stack) {
+          awsLambdaSpan.tags.set('aws.lambda.error_exception_stacktrace', outcomeResult.stack);
+        }
+      }
+    } else {
+      resolveResponseTags(outcomeResult);
+    }
+
+    const endTime = process.hrtime.bigint();
+    if (!serverlessSdk._settings.disableRequestResponseMonitoring && !isErrorOutcome) {
+      serverlessSdk._deferredTelemetryRequests.push(
+        reportResponse(outcomeResult, invocationContextAccessor.value, endTime)
+      );
+    }
+    if (!traceSpans.awsLambdaInitialization.endTime) {
+      traceSpans.awsLambdaInitialization.close({ endTime });
+    }
+    if (traceSpans.awsLambdaInvocation) traceSpans.awsLambdaInvocation.close({ endTime });
+    awsLambdaSpan.close({ endTime });
+    // Trace report requires requestId, which we don't have if handler crashed at initialization
+    if (invocationContextAccessor.value) reportTrace();
+    flushSpans();
+    clearRootSpan();
+
+    await Promise.all(serverlessSdk._deferredTelemetryRequests);
+    serverlessSdk._deferredTelemetryRequests.length = 0;
+    serverlessSdk._debugLog(
+      'Overhead duration: Internal response:',
+      `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
+    );
+  } catch (error) {
+    process._rawDebug(
+      'Fatal Serverless SDK Error: ' +
+        'Please report at https://github.com/serverless/console/issues: ' +
+        'Response handling failed: ',
+      error && (error.stack || error)
+    );
+    if (!isRootSpanReset) clearRootSpan();
+  }
+};
+
+const wrapUnhandledErrorListener = (eventName) => {
+  const [awsListener] = process.listeners(eventName);
+  process.off(eventName, awsListener);
+  process.on(eventName, (error) => {
+    closeTrace('error:unhandled', error).finally(() => process.nextTick(() => awsListener(error)));
+  });
+};
+wrapUnhandledErrorListener('uncaughtException');
+wrapUnhandledErrorListener('unhandledRejection');
 
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
@@ -135,95 +212,30 @@ module.exports = (originalHandler, options = {}) => {
     const requestStartTime = process.hrtime.bigint();
     let wrappedCallback;
     let contextDone;
-    let closeInvocation;
+
     let originalDone;
+    let isResolved = false;
+    const invocationId = ++currentInvocationId;
     try {
       serverlessSdk._debugLog('Invocation: start');
       invocationContextAccessor.set(context);
-      let isResolved = false;
-      let responseStartTime;
-      const invocationId = ++currentInvocationId;
       if (invocationId > 1) awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
-      const awsLambdaInvocationSpan = (traceSpans.awsLambdaInvocation =
-        serverlessSdk.createTraceSpan('aws.lambda.invocation', { startTime: requestStartTime }));
+      traceSpans.awsLambdaInvocation = serverlessSdk._createTraceSpan('aws.lambda.invocation', {
+        startTime: requestStartTime,
+      });
       resolveEventTags(event);
       if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
         serverlessSdk._deferredTelemetryRequests.push(reportRequest(event, context));
       }
 
-      closeInvocation = async (outcome, outcomeResult) => {
-        let isRootSpanReset = false;
-        const clearRootSpan = () => {
-          delete awsLambdaSpan.traceId;
-          delete awsLambdaSpan.id;
-          delete awsLambdaSpan.endTime;
-          awsLambdaSpan.tags.reset();
-          awsLambdaSpan.subSpans.clear();
-          capturedEvents.length = 0;
-          isRootSpanReset = true;
-        };
-        try {
-          if (invocationId !== currentInvocationId) return;
-          if (isResolved) return;
-          responseStartTime = process.hrtime.bigint();
-          isResolved = true;
-
-          awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));
-          if (outcome === 'error:handled') {
-            const errorMessage =
-              (outcomeResult && outcomeResult.message) || coerceToString(outcomeResult);
-            if (errorMessage) {
-              awsLambdaSpan.tags.set(
-                'aws.lambda.error_exception_message',
-                errorMessage.length > 1000 ? `${errorMessage.slice(0, 1000)}[…]` : errorMessage
-              );
-              if (isError(outcomeResult) && outcomeResult.stack) {
-                awsLambdaSpan.tags.set(
-                  'aws.lambda.error_exception_stacktrace',
-                  outcomeResult.stack
-                );
-              }
-            }
-          } else {
-            resolveResponseTags(outcomeResult);
-          }
-
-          const endTime = process.hrtime.bigint();
-          if (
-            !serverlessSdk._settings.disableRequestResponseMonitoring &&
-            outcome !== 'error:handled'
-          ) {
-            serverlessSdk._deferredTelemetryRequests.push(
-              reportResponse(outcomeResult, context, endTime)
-            );
-          }
-          awsLambdaInvocationSpan.close({ endTime });
-          awsLambdaSpan.close({ endTime });
-          reportTrace();
-          flushSpans();
-          clearRootSpan();
-
-          await Promise.all(serverlessSdk._deferredTelemetryRequests);
-          serverlessSdk._deferredTelemetryRequests.length = 0;
-          serverlessSdk._debugLog(
-            'Overhead duration: Internal response:',
-            `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
-          );
-        } catch (error) {
-          process._rawDebug(
-            'Fatal Serverless SDK Error: ' +
-              'Please report at https://github.com/serverless/console/issues: ' +
-              'Response handling failed: ',
-            error && (error.stack || error)
-          );
-          if (!isRootSpanReset) clearRootSpan();
-        }
-      };
       const wrapAwsCallback =
         (someAwsCallback) =>
         (...args) => {
-          closeInvocation(
+          if (invocationId !== currentInvocationId) return;
+          if (isResolved) return;
+          isResolved = true;
+          closeTrace(
             args[0] == null ? 'success' : 'error:handled',
             args[0] == null ? args[1] : args[0]
           ).then(() => someAwsCallback(...args), someAwsCallback);
@@ -250,17 +262,33 @@ module.exports = (originalHandler, options = {}) => {
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }
-    const eventualResult = originalHandler(event, context, wrappedCallback);
+    const eventualResult = (() => {
+      try {
+        return originalHandler(event, context, wrappedCallback);
+      } catch (error) {
+        // Propagate as uncaught exception
+        process.nextTick(() => {
+          throw error;
+        });
+        return null;
+      }
+    })();
     if (!eventualResult) return eventualResult;
     if (typeof eventualResult.then !== 'function') return eventualResult;
     return Promise.resolve(eventualResult)
       .then(
         async (result) => {
-          await closeInvocation('success', result);
+          if (invocationId !== currentInvocationId) return result;
+          if (isResolved) return result;
+          isResolved = true;
+          await closeTrace('success', result);
           return result;
         },
         async (error) => {
-          await closeInvocation('error:handled', error);
+          if (invocationId !== currentInvocationId) throw error;
+          if (isResolved) throw error;
+          isResolved = true;
+          await closeTrace('error:handled', error);
           throw error;
         }
       )

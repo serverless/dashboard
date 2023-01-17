@@ -1,3 +1,3 @@
 'use strict';
 
-throw new Error('Initialization');
+throw new Error('Stop');

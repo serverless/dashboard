@@ -1,6 +1,4 @@
-import TraceSpan from './lib/trace-span';
 import ExpressAppInstrument from './instrumentation/express-app';
-import sdk from './../index';
 
 export interface TraceSpans {}
 
@@ -14,17 +12,6 @@ export interface Sdk {
   orgId: string;
   traceSpans: TraceSpans;
   instrumentation: Instrumentation;
-  createTraceSpan(
-    name: string,
-    options?: {
-      startTime?: bigint;
-      immediateDescendants?: string[];
-      tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
-      input?: string;
-      output?: string;
-      onCloseByRoot?: Function;
-    }
-  ): TraceSpan;
   captureError(
     error: Error,
     options?: {
@@ -39,6 +26,7 @@ export interface Sdk {
       tags?: Record<string, boolean | number | string | Date | Array<unknown> | null>;
     }
   ): undefined;
+  setTag(name: string, value: boolean | number | string | Date | Array<unknown> | null): undefined;
 }
 
 export interface SdkOptions {
@@ -49,5 +37,5 @@ export interface SdkOptions {
   disableNodeConsoleMonitoring?: boolean;
   traceMaxCapturedBodySizeKb?: number;
 }
-
+declare const sdk: Sdk;
 export default sdk;

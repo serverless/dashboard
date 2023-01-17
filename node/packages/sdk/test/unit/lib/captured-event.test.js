@@ -101,5 +101,17 @@ describe('lib/captured-event.test.js', () => {
         customFingerprint: 'foo',
       });
     });
+
+    it('should not throw on invalid user input', () => {
+      // eslint-disable-next-line no-new
+      new CapturedEvent('test.custom', {
+        customTags: { 'fooo': {}, 'W$#&^@#&$': 'raz' },
+        customFingerprint: {},
+      });
+      // eslint-disable-next-line no-new
+      new CapturedEvent('test.custom', {
+        customFingerprint: {},
+      });
+    });
   });
 });

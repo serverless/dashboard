@@ -23,7 +23,11 @@ const serverlessSdk = module.exports;
 // Public
 serverlessSdk.name = pkgJson.name;
 serverlessSdk.version = pkgJson.version;
-serverlessSdk.traceSpans = {};
+serverlessSdk.traceSpans = {
+  get root() {
+    return TraceSpan.rootSpan;
+  },
+};
 serverlessSdk.instrumentation = {};
 Object.defineProperties(
   serverlessSdk.instrumentation,
@@ -31,12 +35,25 @@ Object.defineProperties(
     expressApp: d('cew', () => require('./instrumentation/express-app')),
   })
 );
-serverlessSdk.createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 serverlessSdk.captureError = (error, options = {}) => {
   createErrorCapturedEvent(error, options);
 };
 serverlessSdk.captureWarning = (message, options = {}) => {
   createWarningCapturedEvent(message, options);
+};
+serverlessSdk.setTag = (name, value) => {
+  if (!serverlessSdk.traceSpans.root) {
+    console.warn({
+      source: 'serverlessSdk',
+      message:
+        'Cannot set tag with no root trace span being initialized. ' +
+        'Lack of root span signals that Serverless SDK was most likely not initialized ' +
+        '(given environment is not being instrumented)',
+      code: 'NO_ROOT_TRACE_SPAN',
+    });
+    return;
+  }
+  serverlessSdk.traceSpans.root.customTags.set(name, value);
 };
 
 // Private
@@ -90,6 +107,7 @@ serverlessSdk._initialize = (options = {}) => {
   return serverlessSdk;
 };
 
+serverlessSdk._createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 serverlessSdk._isDebugMode = Boolean(process.env.SLS_SDK_DEBUG);
 serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);

@@ -12,6 +12,7 @@ describe('lib/create-captured-warning-event.test.js', () => {
     });
     expect(event.tags.toJSON()).to.deep.equal({
       'warning.message': 'Warning message',
+      'warning.type': 1,
     });
     expect(event.customTags.toJSON()).to.deep.equal({
       'my.tag': 'whatever',

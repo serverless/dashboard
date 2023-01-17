@@ -29,7 +29,7 @@ for (const name of ['TEST_INTERNAL_LAYER_FILENAME']) {
 }
 
 describe('integration', function () {
-  this.timeout(120000);
+  this.timeout(180000);
   const coreConfig = {};
 
   const getCreateHttpApi = (payloadFormatVersion) => async (testConfig) => {
@@ -259,17 +259,17 @@ describe('integration', function () {
       expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
       // Query with document client
+      const dynamoDbServiceName = testConfig.configuration.FunctionName.includes('aws-sdk-v2')
+        ? 'dynamodb'
+        : 'dynamodbdocument';
       expect(dynamodbDocumentClientSpan.parentSpanId.toString()).to.equal(
         invocationSpan.id.toString()
       );
-      const expectedSpanName = /aws-sdk-v2/.test(testConfig.configuration.FunctionName)
-        ? 'aws.sdk.dynamodb.query'
-        : 'aws.sdk.dynamodbdocument.query';
-      expect(dynamodbDocumentClientSpan.name).to.equal(expectedSpanName);
+      expect(dynamodbDocumentClientSpan.name).to.equal(`aws.sdk.${dynamoDbServiceName}.query`);
       sdkTags = dynamodbDocumentClientSpan.tags.aws.sdk;
       expect(sdkTags.region).to.equal(process.env.AWS_REGION);
       expect(sdkTags.signatureVersion).to.equal('v4');
-      expect(sdkTags.service).to.equal('dynamodbdocument');
+      expect(sdkTags.service).to.equal(dynamoDbServiceName);
       expect(sdkTags.operation).to.equal('query');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
@@ -536,6 +536,42 @@ describe('integration', function () {
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
         config: { expectedOutcome: 'error:handled' },
+      },
+    ],
+    [
+      'error-uncaught',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'error-uncaught-immediate',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'error-unhandled',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
       },
     ],
     [
@@ -1360,6 +1396,7 @@ describe('integration', function () {
               expect(payload.name).to.equal(pkgJson.name);
               expect(payload.version).to.equal(pkgJson.version);
               expect(payload.rootSpanName).to.equal('aws.lambda');
+              expect(JSON.parse(spans[0].customTags)).to.deep.equal({ 'user.tag': 'example' });
 
               const normalizeEvent = (event) => {
                 event = { ...event };
@@ -1405,6 +1442,7 @@ describe('integration', function () {
                   tags: {
                     warning: {
                       message: 'Captured warning',
+                      type: 1,
                     },
                   },
                 },
@@ -1416,6 +1454,7 @@ describe('integration', function () {
                   tags: {
                     warning: {
                       message: 'Consoled warning 12 true',
+                      type: 1,
                     },
                   },
                 },
@@ -1442,6 +1481,19 @@ describe('integration', function () {
     }
   });
 
+  const resolveOutcomeEnumValue = (value) => {
+    switch (value) {
+      case 'success':
+        return 1;
+      case 'error:handled':
+        return 5;
+      case 'error:unhandled':
+        return 3;
+      default:
+        throw new Error(`Unexpected outcome value: ${value}`);
+    }
+  };
+
   for (const testConfig of testVariantsConfig) {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
@@ -1449,7 +1501,11 @@ describe('integration', function () {
       log.debug('%s test result: %o', testConfig.name, testResult);
       const { expectedOutcome } = testConfig;
       const { invocationsData } = testResult;
-      if (expectedOutcome === 'success' || expectedOutcome === 'error:handled') {
+      if (
+        expectedOutcome === 'success' ||
+        expectedOutcome === 'error:handled' ||
+        expectedOutcome === 'error:unhandled'
+      ) {
         if (
           expectedOutcome === 'success' &&
           !testConfig.isAsyncInvocation &&
@@ -1466,7 +1522,7 @@ describe('integration', function () {
           },
         ] of invocationsData.entries()) {
           const lambdaSpan = spans[0];
-          if (index === 0) {
+          if (index === 0 || expectedOutcome === 'error:unhandled') {
             expect(spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([
               'aws.lambda',
               'aws.lambda.initialization',
@@ -1496,10 +1552,10 @@ describe('integration', function () {
           expect(lambdaSpan.tags.aws.lambda.name).to.equal(testConfig.configuration.FunctionName);
           expect(lambdaSpan.tags.aws.lambda).to.have.property('requestId');
           expect(lambdaSpan.tags.aws.lambda).to.have.property('version');
-          if (expectedOutcome === 'success') {
-            expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(1);
-          } else {
-            expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(5);
+          expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(
+            resolveOutcomeEnumValue(expectedOutcome)
+          );
+          if (expectedOutcome !== 'success') {
             expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionMessage');
             expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionStacktrace');
           }

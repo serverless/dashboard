@@ -7,6 +7,7 @@ const doNotInstrumentFollowingHttpRequest =
 const instrumentedClients = new WeakMap();
 
 const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
+const safeStringify = require('../lib/instrumentation/aws-sdk/safe-stringify');
 
 module.exports.install = (client) => {
   ensureObject(client, { errorMessage: '%v is not an instance of AWS SDK v3 client' });
@@ -28,14 +29,17 @@ module.exports.install = (client) => {
       const awsRequestMiddleware = (next, context) => async (args) => {
         const operationName = context.commandName.slice(0, -'Command'.length).toLowerCase();
         const tagMapper = serviceMapper.get(serviceName);
-        const traceSpan = serverlessSdk.createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
-          tags: {
-            'aws.sdk.service': serviceName,
-            'aws.sdk.operation': operationName,
-            'aws.sdk.signature_version': 'v4',
-          },
-          input: shouldMonitorRequestResponse ? JSON.stringify(args.input) : null,
-        });
+        const traceSpan = serverlessSdk._createTraceSpan(
+          `aws.sdk.${serviceName}.${operationName}`,
+          {
+            tags: {
+              'aws.sdk.service': serviceName,
+              'aws.sdk.operation': operationName,
+              'aws.sdk.signature_version': 'v4',
+            },
+            input: shouldMonitorRequestResponse ? safeStringify(args.input) : null,
+          }
+        );
         if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
         const deferredRegion = client.config
           .region()
@@ -64,8 +68,12 @@ module.exports.install = (client) => {
           if (!traceSpan.endTime) traceSpan.close();
           throw error;
         } else {
+          if (!response.output.$metadata.requestId) {
+            traceSpan.destroy(); // Not a real AWS request (e.g. S3 presigned URL)
+            return response;
+          }
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
-          if (shouldMonitorRequestResponse) traceSpan.output = JSON.stringify(response.output);
+          if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.output);
           if (tagMapper && tagMapper.responseData) {
             tagMapper.responseData(traceSpan, response.output);
           }

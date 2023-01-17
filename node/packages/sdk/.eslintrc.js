@@ -15,5 +15,6 @@ module.exports = {
         packageDir: [projectDir, path.resolve(projectDir, 'packages/sdk')],
       },
     ],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
   },
 };

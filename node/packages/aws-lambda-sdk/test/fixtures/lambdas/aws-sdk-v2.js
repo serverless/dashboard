@@ -1,10 +1,11 @@
 'use strict';
 
 // eslint-disable-next-line import/no-unresolved
-const { SQS, SNS, DynamoDB, STS } = require('aws-sdk');
+const { S3, SQS, SNS, DynamoDB, STS } = require('aws-sdk');
 
 const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const s3 = new S3();
 const sqs = new SQS();
 const sns = new SNS();
 const dynamoDb = new DynamoDB();
@@ -19,6 +20,10 @@ module.exports.handler = async () => {
 
     // STS (any service tracing
     await sts.getCallerIdentity().promise();
+
+    // s3.getSignedUrlPromise won't issue a real HTTP request
+    // It's injected to confirm no trace span will be created for it
+    await s3.getSignedUrlPromise('putObject', { Bucket: 'test', Key: 'test', Expires: 500 });
 
     // SQS
     const queueName = `${process.env.AWS_LAMBDA_FUNCTION_NAME}-${invocationCount}.fifo`;

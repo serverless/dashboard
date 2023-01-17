@@ -154,7 +154,7 @@ const install = (protocol, httpModule) => {
       if (originalCb) originalCb(response);
     });
 
-    const traceSpan = serverlessSdk.createTraceSpan(`node.${protocol}.request`, {
+    const traceSpan = serverlessSdk._createTraceSpan(`node.${protocol}.request`, {
       startTime,
       onCloseByRoot: () => {
         if (responseReadableState && responseReadableState.flowing === false) {

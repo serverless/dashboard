@@ -815,6 +815,7 @@ describe('internal-extension/index.test.js', () => {
     expect(result.name).to.equal(pkgJson.name);
     expect(result.version).to.equal(pkgJson.version);
     expect(result.rootSpanName).to.equal('aws.lambda');
+    expect(JSON.parse(spans[0].customTags)).to.deep.equal({ 'user.tag': 'example' });
 
     const normalizeEvent = (event) => {
       event = { ...event };
@@ -861,6 +862,7 @@ describe('internal-extension/index.test.js', () => {
         tags: {
           warning: {
             message: 'Captured warning',
+            type: 1,
           },
         },
       },
@@ -872,6 +874,7 @@ describe('internal-extension/index.test.js', () => {
         tags: {
           warning: {
             message: 'Consoled warning 12 true',
+            type: 1,
           },
         },
       },

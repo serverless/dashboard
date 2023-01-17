@@ -70,4 +70,8 @@ message Span {
 
     // Type is used to determine the kind of document that is being send via a livestream
     optional string type = 12;
+
+    // The optional custom tags to be set by the user
+    // This is expected to be a JSON object in string format.
+    optional string custom_tags = 13;
 }

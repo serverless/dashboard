@@ -2,11 +2,23 @@
 
 const { expect } = require('chai');
 
+const requireUncached = require('ncjsm/require-uncached');
+
 describe('index.test.js', () => {
   let serverlessSdk;
+  let rootSpan;
   before(() => {
-    serverlessSdk = require('../../');
+    requireUncached(() => {
+      const TraceSpan = require('../../lib/trace-span');
+      serverlessSdk = require('../../');
+      rootSpan = new TraceSpan('test');
+    });
   });
+  after(() => {
+    rootSpan.close();
+    delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
+  });
+  before(() => {});
   it('should expose `.traceSpans`', () =>
     expect(serverlessSdk.traceSpans).to.be.instanceOf(Object));
   it('should expose .instrumentation.expressApp', () =>
@@ -26,5 +38,10 @@ describe('index.test.js', () => {
 
     expect(capturedEvent.tags.get('warning.message')).to.equal('Warning message');
     expect(capturedEvent.customTags.get('user.tag')).to.equal('warningvalue');
+  });
+
+  it('should expose .setTag', () => {
+    serverlessSdk.setTag('tag', 'value');
+    expect(rootSpan.customTags.get('tag')).to.equal('value');
   });
 });

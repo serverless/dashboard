@@ -142,3 +142,4 @@ jobs:
 
           python3 -m pip install pytest strenum
           python3 -m pytest
+

@@ -7,10 +7,9 @@ const ensurePlainObject = require('type/plain-object/ensure');
 const isDate = require('type/date/is');
 const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
+const ServerlessSdkError = require('./error');
 
-const isValidTagName = RegExp.prototype.test.bind(
-  /^[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*(?:\.[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*)*$/
-);
+const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]+$/);
 
 const ensureTagName = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_TAG_NAME';
@@ -18,15 +17,15 @@ const ensureTagName = (() => {
     const value = ensureString(inputValue, {
       errorCode,
       errorMessage: `Invalid trace span tag ${propertyName}: Expected string, received "%v"`,
+      Error: ServerlessSdkError,
     });
     if (isValidTagName(value)) return value;
     return resolveException(inputValue, null, {
       errorCode,
-      errorMessage:
-        `Invalid trace span tag ${propertyName}: ${capitalize.call(
-          propertyName
-        )} should contain dot separated tokens that follow ` +
-        '"[a-z][a-z0-9_]*" pattern. Received "%v"',
+      errorMessage: `Invalid trace span tag ${propertyName}: ${capitalize.call(
+        propertyName
+      )}. Only alphanumeric, '-', '_' and '.' characters are allowed. Received "%v"`,
+      Error: ServerlessSdkError,
     });
   };
 })();
@@ -41,6 +40,7 @@ const ensureTagValue = (() => {
         errorMessage:
           `Invalid trace span tag value for "${tagName}": ` +
           'Number must be finite, received "%v"',
+        Error: ServerlessSdkError,
       });
     }
     if (typeof inputValue === 'boolean') return inputValue;
@@ -59,6 +59,7 @@ const ensureTagValue = (() => {
               errorMessage:
                 `Invalid trace span tag value for "${tagName}": ` +
                 'Number must be finite, received "%v"',
+              Error: ServerlessSdkError,
             });
           }
         } else if (isDate(inputValue)) {
@@ -70,6 +71,7 @@ const ensureTagValue = (() => {
             errorMessage:
               `Invalid trace span tag value for "${tagName}": ` +
               'Unrecognized value type in array:"%v"',
+            Error: ServerlessSdkError,
           });
         }
         return resolveException(inputValue, null, {
@@ -77,6 +79,7 @@ const ensureTagValue = (() => {
           errorMessage:
             `Invalid trace span tag value for "${tagName}": ` +
             'Array cannot have mixed type values:"%v"',
+          Error: ServerlessSdkError,
         });
       });
     }
@@ -85,6 +88,7 @@ const ensureTagValue = (() => {
       errorMessage:
         `Invalid trace span tag value for "${tagName}": ` +
         'Value must be either boolean, number, string, date or array of same values. Received "%v"',
+      Error: ServerlessSdkError,
     });
   };
 })();
@@ -107,22 +111,38 @@ module.exports = class Tags extends Map {
       } else if (value === currentValue) {
         return this;
       }
-      throw Object.assign(new Error(`Cannot set tag: Tag "${inputName}" is already set`), {
-        code: 'DUPLICATE_TRACE_SPAN_TAG_NAME',
-      });
+      throw Object.assign(
+        new ServerlessSdkError(`Cannot set tag: Tag "${inputName}" is already set`),
+        {
+          code: 'DUPLICATE_TRACE_SPAN_TAG_NAME',
+        }
+      );
     }
     return super.set(name, value);
   }
   setMany(tags, options = {}) {
-    ensurePlainObject(tags, { name: 'tags' });
+    ensurePlainObject(tags, { name: 'tags', Error: ServerlessSdkError });
     if (!isObject(options)) options = {};
-    const prefix = ensureString(options.prefix, { isOptional: true, name: 'options.prefix' });
+    const prefix = ensureString(options.prefix, {
+      isOptional: true,
+      name: 'options.prefix',
+      Error: ServerlessSdkError,
+    });
     if (prefix) ensureTagName(prefix, 'prefix');
+    const errors = [];
     for (const [name, value] of Object.entries(tags)) {
       if (value == null) continue;
-      this.set(`${prefix ? `${prefix}.` : ''}${name}`, value);
+      try {
+        this.set(`${prefix ? `${prefix}.` : ''}${name}`, value);
+      } catch (error) {
+        errors.push(error);
+      }
     }
-    return this;
+    if (!errors.length) return this;
+    if (errors.length === 1) throw errors[0];
+    throw new ServerlessSdkError(
+      `Cannot set Tags:\n\t- ${errors.map(({ message }) => message).join('\n\t- ')}`
+    );
   }
   toJSON() {
     return Object.fromEntries(this);

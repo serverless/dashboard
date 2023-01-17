@@ -7,4 +7,17 @@ option go_package = ".;protoc";
 message WarningTags {
     // The Warning Message
     string message = 1;
+
+    enum WarningType {
+      // Warning type not set
+      WARNING_TYPE_UNSPECIFIED = 0;
+
+      // Warning explicitly reported by user
+      WARNING_TYPE_USER = 1;
+
+      // Warning reported internally by the SDK
+      WARNING_TYPE_SDK = 2;
+  }
+
+  optional WarningType type = 2;
 }
