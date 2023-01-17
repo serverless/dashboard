@@ -39,8 +39,6 @@ jobs:
               - 'python/packages/sdk/**'
             sdkSchema:
               - 'python/packages/sdk-schema/**'
-            lambdaSdk:
-              - 'python/packages/aws-lambda-sdk/**'
             proto:
               - 'proto/**'
 
