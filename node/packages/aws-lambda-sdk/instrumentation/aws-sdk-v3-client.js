@@ -68,6 +68,10 @@ module.exports.install = (client) => {
           if (!traceSpan.endTime) traceSpan.close();
           throw error;
         } else {
+          if (!response.output.$metadata.requestId) {
+            traceSpan.destroy(); // Not a real AWS request (e.g. S3 presigned URL)
+            return response;
+          }
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
           if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.output);
           if (tagMapper && tagMapper.responseData) {
