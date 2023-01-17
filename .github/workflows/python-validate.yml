@@ -135,6 +135,9 @@ jobs:
       - name: Run AWS Lambda SDK unit tests
         if: steps.pathChanges.outputs.lambdaSdkSchema == 'true'
         run: |
+          cd python/packages/sdk
+          python3 -m pip install -e .
+
           cd python/packages/aws-lambda-sdk
 
           python3 -m pip install pytest strenum
