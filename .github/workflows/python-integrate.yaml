@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       pathChangedSdk: ${{ steps.pathChanges.outputs.sdk}}
-      pathChangedSdkSchema: ${{ steps.pathChanges.outputs.sdkSchema}}
       pathChangedProto: ${{ steps.pathChanges.outputs.proto }}
     steps:
       - name: Checkout repository
