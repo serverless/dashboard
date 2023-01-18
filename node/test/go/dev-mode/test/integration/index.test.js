@@ -82,7 +82,6 @@ describe('Integration', function () {
               // Since we are sending spans as they are complete I need to change this to a variable length
               // but we should always have at least 1
               expect(traces.length >= 1).to.equal(true);
-              // For whatever reason the traces are being written in a bad wire format? 🤔
               const devModeData = Buffer.from(traces[0].trim(), 'base64');
               const devModePayload = devModeProto.DevModePayload.decode(devModeData);
               expect(devModePayload.payload.trace.events.length).to.equal(2);
