@@ -1,9 +1,9 @@
-name: "Python: Publish python/serverless-sdk"
+name: "Python: Publish python/serverless_sdk"
 
 on:
   push:
     tags:
-      - "python/serverless-sdk@[0-9]+.[0-9]+.[0-9]+"
+      - "python/serverless_sdk@[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   publishNewSdkVersion:
