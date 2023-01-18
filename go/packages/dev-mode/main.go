@@ -49,8 +49,6 @@ func (e *Extension) ExternalExtension() {
 	printPrefix := fmt.Sprintf("[%s]", extensionName)
 	extensionClient := extension.NewClient(os.Getenv("AWS_LAMBDA_RUNTIME_API"))
 
-	// Print environment variables
-
 	// Get account id from sts
 	getAccountId(e.Client)
 
