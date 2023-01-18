@@ -50,7 +50,6 @@ func (e *Extension) ExternalExtension() {
 	extensionClient := extension.NewClient(os.Getenv("AWS_LAMBDA_RUNTIME_API"))
 
 	// Print environment variables
-	lib.Info(os.Environ())
 
 	// Get account id from sts
 	getAccountId(e.Client)
