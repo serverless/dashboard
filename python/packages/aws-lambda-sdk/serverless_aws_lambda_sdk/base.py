@@ -6,7 +6,9 @@ from strenum import StrEnum
 from typing_extensions import Concatenate, Final, ParamSpec, Self
 
 
-NEW_HANDLER: Final[str] = "/opt/sls-sdk-python/wrapper.handler"
+NEW_HANDLER: Final[
+    str
+] = "/opt/serverless_aws_lambda_sdk/internal_extension/wrapper.handler"
 PYTHON_EXTS: Final[Tuple[str, ...]] = (".py", ".pyc", ".pyo", ".pyd")
 
 

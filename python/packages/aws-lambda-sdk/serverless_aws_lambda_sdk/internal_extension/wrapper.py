@@ -29,13 +29,6 @@ __all__: Final[List[str]] = [
 ]
 
 
-ORIGIN: Final[Optional[str]] = environ.get(Env.ORIGIN_HANDLER)
-
-if ORIGIN:
-    environ[Env.HANDLER] = ORIGIN
-    del environ[Env.ORIGIN_HANDLER]
-
-HANDLER: Final[Optional[str]] = environ.get(Env.HANDLER)
 LAMBDA_RUNTIME_DIR: Final[Optional[str]] = environ.get(Env.LAMBDA_RUNTIME_DIR)
 
 
@@ -66,7 +59,7 @@ def import_from_path(path: str) -> Optional[ModuleType]:
         return None
 
 
-def get_handler_module(handler: str = HANDLER) -> ModuleType:
+def get_handler_module(handler: str) -> ModuleType:
     if LAMBDA_RUNTIME_DIR and LAMBDA_RUNTIME_DIR not in sys.path:
         sys.path.append(LAMBDA_RUNTIME_DIR)
 
@@ -98,9 +91,7 @@ def get_handler_module(handler: str = HANDLER) -> ModuleType:
         raise handler_not_found(mod_name, "is undefined or not exported") from e
 
 
-def get_handler_from_module(
-    handler_module: ModuleType, handler: str = HANDLER
-) -> Handler:
+def get_handler_from_module(handler_module: ModuleType, handler: str) -> Handler:
     *_, function_name = handler.split(".")
 
     try:
@@ -124,22 +115,33 @@ def instrument_safe(user_handler: Handler) -> Handler:
         return user_handler
 
 
-def get_instrumented_handler_via_name(handler: str = HANDLER) -> Handler:
+def get_instrumented_handler_via_name(handler: str) -> Handler:
     user_handler = get_handler_via_module_import(handler)
 
     return instrument_safe(user_handler)
 
 
-def get_instrumented_handler_via_path(handler: str = HANDLER) -> Handler:
+def get_instrumented_handler_via_path(handler: str) -> Handler:
     handler_module = get_handler_module(handler)
     user_handler = get_handler_from_module(handler_module)
 
     return instrument_safe(user_handler)
 
 
+def get_original_handler_and_reset_vars() -> str:
+    origin = environ.get(Env.ORIGIN_HANDLER)
+
+    if origin:
+        environ[Env.HANDLER] = origin
+        del environ[Env.ORIGIN_HANDLER]
+
+    handler = environ.get(Env.HANDLER)
+    return handler
+
+
 def get_instrumented_handler(handler: Optional[str] = None) -> Handler:
     if handler is None:
-        handler = environ.get(Env.HANDLER)
+        handler = get_original_handler_and_reset_vars()
 
     if not handler:
         raise HandlerNotFound(f"{Env.HANDLER} is not set.")
@@ -161,4 +163,4 @@ def get_instrumented_handler(handler: Optional[str] = None) -> Handler:
         raise handler_not_found(handler, "is undefined or not exported") from e
 
 
-handler = get_instrumented_handler()
+handler: Final[Handler] = get_instrumented_handler()
