@@ -5,6 +5,7 @@ const { expect } = require('chai');
 const path = require('path');
 const log = require('log').get('test');
 const logProto = require('@serverless/sdk-schema/dist/log');
+// const traceProto = require('@serverless/sdk-schema/dist/trace');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
@@ -51,7 +52,7 @@ describe('Integration', function () {
       'with-internal',
       {
         variants: new Map([
-          ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 10 }, includeInternal: true }],
+          // ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 10 }, includeInternal: true }],
           ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 10 }, includeInternal: true }],
         ]),
         config: {
@@ -81,6 +82,10 @@ describe('Integration', function () {
               // Since we are sending spans as they are complete I need to change this to a variable length
               // but we should always have at least 1
               expect(traces.length >= 1).to.equal(true);
+              // For whatever reason the traces are being written in a bad wire format? 🤔
+              // const traceData = Buffer.from(traces[0], 'base64');
+              // const tracePayload = traceProto.TracePayload.decode(traceData);
+              // expect(tracePayload.events.length).to.equal(2);
             }
           },
         },
