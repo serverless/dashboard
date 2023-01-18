@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.4](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.3...@serverless/sdk-schema@0.14.4) (2023-01-18)
+
+### Features
+
+- Define `TracePayload.custom_tags` ([21056f6](https://github.com/serverless/console/commit/21056f60abf3329dac9e364e4a2d8a7e0f318e08))
+
 ## [0.14.3](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.2...@serverless/sdk-schema@0.14.3) (2023-01-13)
 
 ### Features
