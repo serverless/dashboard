@@ -52,7 +52,7 @@ describe('Integration', function () {
       'with-internal',
       {
         variants: new Map([
-          // ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 10 }, includeInternal: true }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 10 }, includeInternal: true }],
           ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 10 }, includeInternal: true }],
         ]),
         config: {
