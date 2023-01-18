@@ -53,7 +53,11 @@ serverlessSdk.setTag = (name, value) => {
     });
     return;
   }
-  serverlessSdk.traceSpans.root.customTags.set(name, value);
+  try {
+    serverlessSdk.traceSpans.root.customTags.set(name, value);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 // Private
