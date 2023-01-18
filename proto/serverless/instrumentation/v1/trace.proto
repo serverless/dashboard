@@ -24,6 +24,10 @@ message TracePayload {
     // number of Events in a single payload. It is the responsibility of the
     // Event producers to limit the size of paylaods based on their own requirements.
     repeated serverless.instrumentation.v1.Event events = 4;
+
+    // The optional custom trace tags to be set by the user
+    // This is expected to be a JSON object in string format.
+    optional string custom_tags = 5;
 }
 
 message Span {
