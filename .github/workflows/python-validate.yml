@@ -33,7 +33,7 @@ jobs:
               - 'python/packages/sdk/**'
             sdkSchema:
               - 'python/packages/sdk-schema/**'
-            lambdaSdkSchema:
+            awsLambdaSdk:
               - 'python/packages/aws-lambda-sdk/**'
             proto:
               - 'proto/**'
@@ -133,7 +133,7 @@ jobs:
           python3 -m poethepoet test
 
       - name: Run AWS Lambda SDK unit tests
-        if: steps.pathChanges.outputs.lambdaSdkSchema == 'true'
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd python/packages/sdk
           python3 -m pip install .
