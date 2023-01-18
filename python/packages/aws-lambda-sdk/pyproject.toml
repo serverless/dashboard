@@ -6,7 +6,7 @@ requires = [
 ]
 
 [project]
-name = "serverless_lambda_sdk"
+name = "serverless_aws_lambda_sdk"
 version = "0.0.0"
 description = "Serverless Lambda SDK for Python"
 authors = [{ name = "serverlessinc" }]
