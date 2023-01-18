@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+import sys
+import os
+
+
+def main():
+    import serverless_aws_lambda_sdk.internal_extension
+
+    _, *args = sys.argv
+    command = " ".join(args)
+    os.system(command)
+
+
+if __name__ == "__main__":
+    main()

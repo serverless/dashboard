@@ -25,6 +25,7 @@ else:
 
 __all__: Final[List[str]] = [
     "get_instrumented_handler",
+    "handler",
 ]
 
 
@@ -158,3 +159,6 @@ def get_instrumented_handler(handler: Optional[str] = None) -> Handler:
     except Exception as e:
         logging.error(f"Failed to import handler {handler}: {e}")
         raise handler_not_found(handler, "is undefined or not exported") from e
+
+
+handler = get_instrumented_handler()
