@@ -5,7 +5,7 @@ const { expect } = require('chai');
 const path = require('path');
 const log = require('log').get('test');
 const logProto = require('@serverless/sdk-schema/dist/log');
-// const traceProto = require('@serverless/sdk-schema/dist/trace');
+const devModeProto = require('@serverless/sdk-schema/dist/dev_mode');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
@@ -83,9 +83,9 @@ describe('Integration', function () {
               // but we should always have at least 1
               expect(traces.length >= 1).to.equal(true);
               // For whatever reason the traces are being written in a bad wire format? 🤔
-              // const traceData = Buffer.from(traces[0], 'base64');
-              // const tracePayload = traceProto.TracePayload.decode(traceData);
-              // expect(tracePayload.events.length).to.equal(2);
+              const devModeData = Buffer.from(traces[0].trim(), 'base64');
+              const devModePayload = devModeProto.DevModePayload.decode(devModeData);
+              expect(devModePayload.payload.trace.events.length).to.equal(2);
             }
           },
         },

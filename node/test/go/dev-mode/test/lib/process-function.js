@@ -25,7 +25,7 @@ const create = async (testConfig, coreConfig) => {
   const { configuration, includeInternal } = testConfig;
   const resultConfiguration = {
     Role: coreConfig.roleArn,
-    Runtime: 'nodejs16.x',
+    Runtime: 'nodejs18.x',
     MemorySize: 1024,
     Code: {
       ZipFile: await resolveDirZipBuffer(fixturesDirname),
