@@ -1,0 +1,39 @@
+name: "Python: Publish python/serverless_sdk"
+
+on:
+  push:
+    tags:
+      - "python/serverless_sdk@[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publishNewSdkVersion:
+    name: Publish new version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Python and Pip
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
+
+          # ensure project dependencies are cached
+          # When using only `pyproject.toml` for dependencies, see:
+          #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
+          cache: 'pip'
+          cache-dependency-path: |
+            **/pyproject.toml
+
+      - name: Install main project dependencies
+        run: |
+          cd python/packages/sdk
+          python3 -m pip install .
+
+      - name: Publish New Version
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.PYPI_AUTH_TOKEN }}
+        run: |
+          cd ./python/packages/sdk
+
+          python3 -m pip install --upgrade build twine wheel
+          python3 -m build --wheel --sdist .
+          twine upload dist/*.tar.gz dist/*.whl
