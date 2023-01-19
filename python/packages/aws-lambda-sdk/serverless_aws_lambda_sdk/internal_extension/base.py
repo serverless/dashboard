@@ -30,6 +30,8 @@ LAMBDA_TASK_ROOT: Final[Optional[str]] = environ.get(Env.LAMBDA_TASK_ROOT)
 SLS_ORG_ID: Final[Optional[str]] = environ.get(Env.SLS_ORG_ID)
 SLS_SDK_DEBUG: Final[Optional[str]] = environ.get(Env.SLS_SDK_DEBUG)
 
+DEFAULT_TASK_ROOT: Final[str] = '/var/task'
+
 
 cache = lru_cache(maxsize=1)
 
@@ -71,6 +73,10 @@ def get_module_path(handler: str = HANDLER) -> Optional[Path]:
     handler_module_name, *_ = handler_basename.split(".")
 
     task_root = Path(LAMBDA_TASK_ROOT)
+
+    if not task_root.exists():
+        task_root = Path(DEFAULT_TASK_ROOT)
+
     handler_module_dir = (task_root / handler_dir.name).resolve()
     handler_module = (handler_module_dir / handler_module_name).resolve()
 
