@@ -10,10 +10,10 @@ from ..base import Env, Handler
 from ..internal_extension.wrapper import get_instrumented_handler
 
 
-EXAMPLE_MODULE: Final[str] = "serverless_lambda_sdk.tests.example"
+EXAMPLE_MODULE: Final[str] = "serverless_aws_lambda_sdk.tests.example"
 
 HANDLER: Final[str] = f"{EXAMPLE_MODULE}.handler"
-HANDLER_PATH: Final[str] = "serverless_lambda_sdk/tests/example.handler"
+HANDLER_PATH: Final[str] = "serverless_aws_lambda_sdk/tests/example.handler"
 CLS_HANDLER: Final[str] = f"{EXAMPLE_MODULE}.callable_obj"
 ENV_HANDLER: Final[str] = f"{EXAMPLE_MODULE}.env_handler"
 
