@@ -4,7 +4,7 @@ shopt -s extglob globstar
 
 export PROTO_PATH="../../../proto"
 export PROTOS=( "$PROTO_PATH"/**/*.proto )
-export LIB='serverless_sdk_schema/schema'
+export LIB='sdk_schema/schema'
 
 mkdir -p "$LIB"
 
