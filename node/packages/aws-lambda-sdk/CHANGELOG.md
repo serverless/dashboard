@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.13.1...@serverless/aws-lambda-sdk@0.14.0) (2023-01-19)
+
+### ⚠ BREAKING CHANGES
+
+- Outcome error meta is no longer provided with outcome error tags on `aws.lambda` root span.
+  Instead it's transported with captured event which shares same timestamp with `aws.lambda` root span end time
+- Global custom tags are exposed on TracePayload instead of the root span
+
+### Features
+
+- Propagate all captured events to `dev mode` ([e19b41e](https://github.com/serverless/console/commit/e19b41e9f9152999cb99e00fbf325f405f6b60a7))
+
+### Bug Fixes
+
+- Ensure to not instrument requests signing ([ebf90ca](https://github.com/serverless/console/commit/ebf90cabc340b11068b8addeec94a16a5a9d04b1))
+- Handle gently non JSON compliant AWS SDK input and output ([321a8f5](https://github.com/serverless/console/commit/321a8f569a2406ff83966bff3df987c3b6c35264))
+
+### Maintenance Improvements
+
+- Expose custom tags directly on trace instead of root span ([91786ae](https://github.com/serverless/console/commit/91786aee5b5891252788c318ad983efcf35e83ca))
+- Remove `responseStartTime` in favor of `endTime` ([33618d6](https://github.com/serverless/console/commit/33618d68362a166307255326dcdba969b893dbf1))
+- Report outcome error data with event instead of root span tags ([87766c9](https://github.com/serverless/console/commit/87766c9e66363ee9942c5398e52b0c754c7ba408))
+
 ### [0.13.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.13.0...@serverless/aws-lambda-sdk@0.13.1) (2023-01-13)
 
 ### Features
