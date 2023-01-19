@@ -78,7 +78,9 @@ def get_handler_module(handler: str) -> ModuleType:
         module_file = get_module_path(handler)
 
         if not module_file:
-            raise FileNotFoundError("Couldn't find Lambda function's module.")
+            raise FileNotFoundError(
+                f"Couldn't find Lambda function's module: {handler}={module_file}."
+            )
 
         spec = spec_from_file_location(handler, module_file)
         module = module_from_spec(spec)
