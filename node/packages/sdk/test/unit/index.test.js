@@ -44,7 +44,7 @@ describe('index.test.js', () => {
 
   it('should expose .setTag', () => {
     serverlessSdk.setTag('tag', 'value');
-    expect(rootSpan.customTags.get('tag')).to.equal('value');
+    expect(serverlessSdk._customTags.get('tag')).to.equal('value');
   });
 
   it('should not crash on invalid .setTag input', () => {
