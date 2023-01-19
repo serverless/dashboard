@@ -53,7 +53,7 @@ jobs:
             **/pyproject.toml
 
       - name: Install SDK project and dependencies
-        if: steps.pathChanges.outputs.sdk == 'true'
+        if: steps.pathChanges.outputs.sdk == 'true' || steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd python/packages/sdk
 
@@ -97,7 +97,7 @@ jobs:
           python3 -m pytest
 
       - name: Install SDK Schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
           cd python/packages/sdk-schema
 
