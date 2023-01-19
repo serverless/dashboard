@@ -1006,6 +1006,8 @@ describe('internal-extension/index.test.js', () => {
         ],
         traceEvents: [
           { eventName: 'telemetry.error.generated.v1' },
+          { eventName: 'telemetry.error.generated.v1' },
+          { eventName: 'telemetry.warning.generated.v1' },
           { eventName: 'telemetry.warning.generated.v1' },
         ],
       });
