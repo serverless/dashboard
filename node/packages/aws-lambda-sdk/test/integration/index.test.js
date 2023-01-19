@@ -1374,7 +1374,7 @@ describe('integration', function () {
           isCustomResponse: true,
           test: ({ invocationsData }) => {
             for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
-              const { spans, events } = trace;
+              const { spans, events, customTags } = trace;
               let awsLambdaInvocationSpan;
               if (index === 0) {
                 awsLambdaInvocationSpan = spans[2];
@@ -1396,7 +1396,7 @@ describe('integration', function () {
               expect(payload.name).to.equal(pkgJson.name);
               expect(payload.version).to.equal(pkgJson.version);
               expect(payload.rootSpanName).to.equal('aws.lambda');
-              expect(JSON.parse(spans[0].customTags)).to.deep.equal({ 'user.tag': 'example' });
+              expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': 'example' });
 
               const normalizeEvent = (event) => {
                 event = { ...event };
