@@ -12,6 +12,8 @@ description = "Serverless AWS Lambda SDK for Python"
 authors = [{ name = "serverlessinc" }]
 requires-python = ">=3.7"
 dependencies = [
+    "serverless_sdk",
+    "serverless_sdk_schema",
     "strenum>=0.4.9",
     "typing-extensions>=4.4", # included in Python 3.8 - 3.11
 ]
