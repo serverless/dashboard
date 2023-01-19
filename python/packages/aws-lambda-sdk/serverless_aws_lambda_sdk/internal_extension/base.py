@@ -30,7 +30,7 @@ LAMBDA_TASK_ROOT: Final[Optional[str]] = environ.get(Env.LAMBDA_TASK_ROOT)
 SLS_ORG_ID: Final[Optional[str]] = environ.get(Env.SLS_ORG_ID)
 SLS_SDK_DEBUG: Final[Optional[str]] = environ.get(Env.SLS_SDK_DEBUG)
 
-DEFAULT_TASK_ROOT: Final[str] = '/var/task'
+DEFAULT_TASK_ROOT: Final[str] = "/var/task"
 
 
 cache = lru_cache(maxsize=1)
