@@ -4,12 +4,6 @@ import os
 
 
 def main():
-    try:
-        import serverless_aws_lambda_sdk.internal_extension
-
-    except ImportError:
-        import internal_extension
-
     _, *args = sys.argv
     command = " ".join(args)
     os.system(command)
