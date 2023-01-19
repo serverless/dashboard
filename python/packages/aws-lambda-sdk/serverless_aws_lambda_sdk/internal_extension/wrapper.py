@@ -32,24 +32,6 @@ __all__: Final[List[str]] = [
 LAMBDA_RUNTIME_DIR: Final[Optional[str]] = environ.get(Env.LAMBDA_RUNTIME_DIR)
 
 
-# 1. Initialize SDK instrumentation
-def get_sdk(init: bool = False, *args, **kwargs) -> ServerlessSdk:
-    try:
-        from aws_lambda_sdk import serverlessSdk
-
-        sdk = serverlessSdk
-
-    except ImportError:
-        from .. import serverlessSdk
-
-        sdk = serverlessSdk
-
-    if init:
-        sdk._initialize(*args, **kwargs)
-
-    return sdk
-
-
 def import_from_path(path: str) -> Optional[ModuleType]:
     try:
         return import_module(path)
@@ -147,9 +129,6 @@ def get_instrumented_handler(handler: Optional[str] = None) -> Handler:
 
     if not handler:
         raise HandlerNotFound(f"{Env.HANDLER} is not set.")
-
-    sdk = get_sdk(init=True)
-    assert sdk
 
     try:
         return get_instrumented_handler_via_name(handler)
