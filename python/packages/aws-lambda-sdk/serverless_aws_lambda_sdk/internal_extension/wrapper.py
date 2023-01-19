@@ -14,8 +14,13 @@ from typing_extensions import Final, TypeAlias, TYPE_CHECKING
 
 from .base import get_module_path
 from ..base import Env, Handler
-from ..exceptions import BuiltInModuleConflict, HandlerNotFound, ImportModuleError, UserCodeSyntaxError, \
-    handler_not_found
+from ..exceptions import (
+    BuiltInModuleConflict,
+    HandlerNotFound,
+    ImportModuleError,
+    UserCodeSyntaxError,
+    handler_not_found,
+)
 from ..instrument import instrument
 
 if TYPE_CHECKING:
