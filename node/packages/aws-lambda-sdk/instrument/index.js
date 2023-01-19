@@ -138,8 +138,8 @@ const closeTrace = async (outcome, outcomeResult) => {
   };
 
   try {
+    const endTime = process.hrtime.bigint();
     const isErrorOutcome = outcome.startsWith('error:');
-    const responseStartTime = process.hrtime.bigint();
 
     awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));
     if (isErrorOutcome) {
@@ -158,7 +158,6 @@ const closeTrace = async (outcome, outcomeResult) => {
       resolveResponseTags(outcomeResult);
     }
 
-    const endTime = process.hrtime.bigint();
     if (!serverlessSdk._settings.disableRequestResponseMonitoring && !isErrorOutcome) {
       serverlessSdk._deferredTelemetryRequests.push(
         reportResponse(outcomeResult, invocationContextAccessor.value, endTime)
@@ -178,7 +177,7 @@ const closeTrace = async (outcome, outcomeResult) => {
     serverlessSdk._deferredTelemetryRequests.length = 0;
     serverlessSdk._debugLog(
       'Overhead duration: Internal response:',
-      `${Math.round(Number(process.hrtime.bigint() - responseStartTime) / 1000000)}ms`
+      `${Math.round(Number(process.hrtime.bigint() - endTime) / 1000000)}ms`
     );
   } catch (error) {
     process._rawDebug(
