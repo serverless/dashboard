@@ -1,10 +1,24 @@
 from __future__ import annotations
 
-from typing import Callable, Tuple, TypeVar
+from typing import Callable, Dict, List, Tuple, TypeVar
 
+from importlib_metadata import packages_distributions, version
 from strenum import StrEnum
 from typing_extensions import Concatenate, Final, ParamSpec, Self
 
+
+FIRST: Final[int] = 0
+
+_packages: Final[Dict[str, List[str]]] = packages_distributions()
+_pkg_name: str = __name__ or __package__
+_pkg_name, *_ = _pkg_name.split(".")
+_distribution: Final[List[str]] = _packages[_pkg_name]
+
+# module metadata
+__name__: Final[str] = _distribution[FIRST]
+__version__: Final[str] = version(__name__)
+
+NAME: Final[str] = __name__
 
 NEW_HANDLER: Final[
     str
