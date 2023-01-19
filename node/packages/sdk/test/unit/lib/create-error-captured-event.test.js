@@ -41,7 +41,7 @@ describe('lib/create-captured-error-event.test.js', () => {
     });
   });
 
-  it('should capture "undfined"', () => {
+  it('should capture "undefined"', () => {
     const event = createCapturedErrorEvent();
     expect(event.tags.toJSON()).to.deep.equal({
       'error.name': 'undefined',
