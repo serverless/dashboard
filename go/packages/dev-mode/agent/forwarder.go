@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"serverless/dev-mode-extension/lib"
 	"strings"
 	"time"
@@ -53,6 +54,9 @@ type RuntimeDoneRecord struct {
 	Spans     []TelemetrySpans `json:"spans"`
 	Metrics   MetricsObject    `json:"metrics"`
 }
+
+var wrapper = os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
+var hasInternalExtension = wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
 
 func FindRequestId(logs []LogItem) string {
 	var requestId string = ""
@@ -143,6 +147,36 @@ func FindReqData(logs []LogItem) *LogItem {
 	return nil
 }
 
+func IsDefaultConsoleMessage(record interface{}) bool {
+	message := fmt.Sprintf("%v", record)
+	arr := strings.Split(message, "\t")
+	// Not enough items in the list
+	// The first item is not a date timestamp
+	// The second item is not a request id
+	// The third item is not WARN or ERROR
+	if !hasInternalExtension || len(arr) < 4 || !IsValidDate(arr[0]) || !IsValidUUID(arr[1]) || !IsWarnOrError(arr[2]) {
+		return false
+	}
+	return true
+}
+
+func IsWarnOrError(logLevel string) bool {
+	if logLevel == "WARN" || logLevel == "ERROR" {
+		return true
+	}
+	return false
+}
+
+func IsValidDate(date string) bool {
+	_, isValid := time.Parse("2006-01-02T15:04:05.000Z", date)
+	return isValid == nil
+}
+
+func IsValidUUID(uuid string) bool {
+	r := regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
+	return r.MatchString(uuid)
+}
+
 func FormatLogs(logs []LogItem, requestId string, accountId string, traceId string) schema.LogPayload {
 	messages := make([]*schema.LogEvent, 0)
 	platform := "aws"
@@ -158,7 +192,7 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 		LogEvents: messages,
 	}
 	for i, log := range logs {
-		if log.LogType == "function" {
+		if log.LogType == "function" && !IsDefaultConsoleMessage(log.Record) {
 			t, _ := time.Parse(time.RFC3339, log.Time)
 			if !strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.") {
 				// Apparently these environment variables don't
@@ -199,8 +233,6 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 	metadata := make([]*LogItem, 0)
 	hasPlatformStart := FindPlatformStart(logs)
 	hasRuntimeDone := FindRuntimeDone(logs)
-	wrapper := os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
-	hasInternalExtension := wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
 	foundReqRes := false
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
