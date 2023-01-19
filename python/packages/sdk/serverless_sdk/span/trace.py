@@ -7,6 +7,7 @@ from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from pydantic import BaseModel
 from typing_extensions import Final, Self
+from humps import camelize
 
 from ..base import Nanoseconds, TraceId
 from ..exceptions import (
@@ -49,6 +50,10 @@ class TraceSpanBuf(BaseModel):
     timestamp: Optional[Nanoseconds]
     is_historical: Optional[bool]
     type: Optional[str]
+
+    class Config:
+        alias_generator = camelize
+        allow_population_by_field_name = True
 
 
 class TraceSpan:
@@ -150,7 +155,7 @@ class TraceSpan:
 
     @output.setter
     def output(self, value: str):
-        if not isinstance(value, str):
+        if value is not None and not isinstance(value, str):
             raise InvalidType("`output` must be a string.")
 
         self._output = value

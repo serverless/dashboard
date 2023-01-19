@@ -131,8 +131,9 @@ const closeTrace = async (outcome, outcomeResult) => {
     capturedEvents.length = 0;
     isRootSpanReset = true;
   };
-  const isErrorOutcome = outcome.startsWith('error:');
+
   try {
+    const isErrorOutcome = outcome.startsWith('error:');
     const responseStartTime = process.hrtime.bigint();
 
     awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));

@@ -16,6 +16,7 @@ dependencies = [
     "importlib_metadata>=5.2", # included in Python >=3.8
     "js-regex<1.1.0,>=1.0.1",
     "pydantic>=1.10.4",
+    "pyhumps>=3.8",
     "typing-extensions>=4.4", # included in Python 3.8 - 3.11
 ]
 [project.optional-dependencies]
