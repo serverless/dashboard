@@ -1518,7 +1518,7 @@ describe('integration', function () {
         for (const [
           index,
           {
-            trace: { spans, slsTags },
+            trace: { spans, slsTags, events },
           },
         ] of invocationsData.entries()) {
           const lambdaSpan = spans[0];
@@ -1556,8 +1556,11 @@ describe('integration', function () {
             resolveOutcomeEnumValue(expectedOutcome)
           );
           if (expectedOutcome !== 'success') {
-            expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionMessage');
-            expect(lambdaSpan.tags.aws.lambda).to.have.property('errorExceptionStacktrace');
+            const errorTags = events.find(
+              (event) => event.tags.error && event.tags.error.type === 1
+            ).tags.error;
+            expect(typeof errorTags.message).to.equal('string');
+            expect(typeof errorTags.stacktrace).to.equal('string');
           }
         }
       }

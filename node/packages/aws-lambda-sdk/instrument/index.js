@@ -3,8 +3,6 @@
 'use strict';
 
 const ensurePlainFunction = require('type/plain-function/ensure');
-const isError = require('type/error/is');
-const coerceToString = require('type/string/coerce');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
 const resolveEventTags = require('./lib/resolve-event-tags');
@@ -143,17 +141,7 @@ const closeTrace = async (outcome, outcomeResult) => {
 
     awsLambdaSpan.tags.set('aws.lambda.outcome', resolveOutcomeEnumValue(outcome));
     if (isErrorOutcome) {
-      const errorMessage =
-        (outcomeResult && outcomeResult.message) || coerceToString(outcomeResult);
-      if (errorMessage) {
-        awsLambdaSpan.tags.set(
-          'aws.lambda.error_exception_message',
-          errorMessage.length > 1000 ? `${errorMessage.slice(0, 1000)}[…]` : errorMessage
-        );
-        if (isError(outcomeResult) && outcomeResult.stack) {
-          awsLambdaSpan.tags.set('aws.lambda.error_exception_stacktrace', outcomeResult.stack);
-        }
-      }
+      serverlessSdk.captureError(outcomeResult, { _type: 'unhandled', _timestamp: endTime });
     } else {
       resolveResponseTags(outcomeResult);
     }

@@ -97,8 +97,11 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
 
   if (options.outcome === 'error') {
     expect(lambdaSpanTags.aws.lambda.outcome).to.equal(5);
-    expect(typeof lambdaSpanTags.aws.lambda.errorExceptionMessage).to.equal('string');
-    expect(typeof lambdaSpanTags.aws.lambda.errorExceptionStacktrace).to.equal('string');
+    const errorTags = outcome.trace.input.events.find(
+      (event) => event.tags.error && event.tags.error.type === 1
+    ).tags.error;
+    expect(typeof errorTags.message).to.equal('string');
+    expect(typeof errorTags.stacktrace).to.equal('string');
   } else {
     if (outcome.error) throw outcome.error;
     if (options.isApiEndpoint) expect(JSON.parse(outcome.result.body)).to.equal('ok');
