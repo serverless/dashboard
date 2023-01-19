@@ -20,15 +20,14 @@ VALID_NAMES: Final[Tuple[str, ...]] = (
     "validname",
     "a_b_c.d_e_f",
     "a_b_c1.d_e_f2",
+    "Valid.Name",
+    "Valid_name",
 )
 
 INVALID_NAMES: Final[Tuple[str, ...]] = (
     "invalid name",
     "invalid.name,_999",
-    "_invalid.name",
-    "Invalid.name",
-    "inValid.name",
-    "invalid.Name",
+    "?invalid.name",
 )
 
 
