@@ -72,7 +72,7 @@ def get_module_path(handler: str = HANDLER) -> Optional[Path]:
     handler_basename = handler.name
     handler_module_name, *_ = handler_basename.split(".")
 
-    task_root = Path(LAMBDA_TASK_ROOT)
+    task_root = Path(LAMBDA_TASK_ROOT).resolve()
 
     if not task_root.exists():
         task_root = Path(DEFAULT_TASK_ROOT)
