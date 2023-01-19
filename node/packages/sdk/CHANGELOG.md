@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/serverless/console/compare/@serverless/sdk@0.3.1...@serverless/sdk@0.4.0) (2023-01-19)
+
+### ⚠ BREAKING CHANGES
+
+- Root (global) tags are no longer stored on the root span. Instead they're stored on SDK directly and are expected to be considered as trace-wide tags
+
+### Bug Fixes
+
+- Ensure not to crash on invalid `serverless.setTag` input ([c5f28ff](https://github.com/serverless/console/commit/c5f28ff552fc023c24819e24ec90a88ff00d4d73))
+- Fix `expressApp` instrumentation endpoint ([11314b4](https://github.com/serverless/console/commit/11314b434b4d62f6e7dde25a9ca8a09e6f584fde))
+- Warn instead of throw when SDK is used without initialization ([fe64a4f](https://github.com/serverless/console/commit/fe64a4f53529285e89a64f7d50ec9528a3c4ce57))
+
+### Maintenance Improvements
+
+- Enable customization of event data via private options ([a5e8f36](https://github.com/serverless/console/commit/a5e8f365ad8e4e700ffb31e47a1f9bd7bba2af2c))
+- Store global tags on SDK directly (not on root span) ([9a72787](https://github.com/serverless/console/commit/9a727875ac4f694552d987a346473a09191104ce))
+
 ### [0.3.1](https://github.com/serverless/console/compare/@serverless/sdk@0.3.0...@serverless/sdk@0.3.1) (2023-01-13)
 
 ### Features
