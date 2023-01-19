@@ -13,6 +13,7 @@ const coerceToNaturalNumber = require('type/natural-number/coerce');
 const ensureString = require('type/string/ensure');
 const d = require('d');
 const lazy = require('d/lazy');
+const Tags = require('./lib/tags');
 const TraceSpan = require('./lib/trace-span');
 const createErrorCapturedEvent = require('./lib/create-error-captured-event');
 const createWarningCapturedEvent = require('./lib/create-warning-captured-event');
@@ -42,19 +43,8 @@ serverlessSdk.captureWarning = (message, options = {}) => {
   createWarningCapturedEvent(message, options);
 };
 serverlessSdk.setTag = (name, value) => {
-  if (!serverlessSdk.traceSpans.root) {
-    console.warn({
-      source: 'serverlessSdk',
-      message:
-        'Cannot set tag with no root trace span being initialized. ' +
-        'Lack of root span signals that Serverless SDK was most likely not initialized ' +
-        '(given environment is not being instrumented)',
-      code: 'NO_ROOT_TRACE_SPAN',
-    });
-    return;
-  }
   try {
-    serverlessSdk.traceSpans.root.customTags.set(name, value);
+    serverlessSdk._customTags.set(name, value);
   } catch (error) {
     console.error(error);
   }
@@ -118,3 +108,8 @@ serverlessSdk._debugLog = (...args) => {
 };
 
 serverlessSdk._eventEmitter = require('./lib/emitter');
+
+Object.defineProperties(
+  serverlessSdk,
+  lazy({ _customTags: d('cew', () => new Tags(), { flat: true }) })
+);

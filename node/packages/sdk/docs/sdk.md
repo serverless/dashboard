@@ -44,7 +44,7 @@ Record warning
 
 ### `.setTag(name, value)`
 
-Set custom (user defined) tag on root span
+Set custom (user defined) trace tag
 
 - `name` _(string)_ - Tag name, can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters
 - `value` (any) - Tag value. Can be _string_, _boolean_, _number_, _Date_ or _Array_ containing any values of prior listed types
