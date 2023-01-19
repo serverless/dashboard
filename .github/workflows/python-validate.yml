@@ -141,7 +141,7 @@ jobs:
       - name: Run AWS Lambda SDK unit tests
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         env:
-          _HANDLER: "example.handler"
+          _HANDLER: "serverless_aws_lambda_sdk.tests.example"
           LAMBDA_TASK_ROOT: "./python/packages/aws-lambda-sdk"
         run: |
           cd python/packages/aws-lambda-sdk
