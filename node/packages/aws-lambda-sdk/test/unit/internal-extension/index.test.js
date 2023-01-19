@@ -804,7 +804,7 @@ describe('internal-extension/index.test.js', () => {
       payload: { isTriggeredByUnitTest: true },
     });
 
-    const { spans, events } = trace;
+    const { spans, events, customTags } = trace;
 
     expect(spans.map(({ name }) => name)).to.deep.equal([
       'aws.lambda',
@@ -815,7 +815,7 @@ describe('internal-extension/index.test.js', () => {
     expect(result.name).to.equal(pkgJson.name);
     expect(result.version).to.equal(pkgJson.version);
     expect(result.rootSpanName).to.equal('aws.lambda');
-    expect(JSON.parse(spans[0].customTags)).to.deep.equal({ 'user.tag': 'example' });
+    expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': 'example' });
 
     const normalizeEvent = (event) => {
       event = { ...event };

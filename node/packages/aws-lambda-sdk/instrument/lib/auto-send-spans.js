@@ -2,6 +2,8 @@
 
 const serverlessSdk = require('./sdk');
 
+const objHasOwnProperty = Object.prototype.hasOwnProperty;
+
 serverlessSdk._deferredTelemetryRequests = [];
 
 if (!serverlessSdk._isDevMode) {
@@ -30,6 +32,9 @@ const sendData = () => {
     },
     spans: pendingSpans.map((span) => span.toProtobufObject()),
     events: pendingCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+    customTags: objHasOwnProperty.call(serverlessSdk, '_customTags')
+      ? JSON.stringify(serverlessSdk._customTags)
+      : undefined,
   };
   pendingSpans.length = 0;
   pendingCapturedEvents.length = 0;

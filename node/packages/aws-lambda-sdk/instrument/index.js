@@ -16,6 +16,8 @@ const pkgJson = require('../package');
 
 const serverlessSdk = require('./lib/sdk');
 
+const objHasOwnProperty = Object.prototype.hasOwnProperty;
+
 const capturedEvents = [];
 serverlessSdk._eventEmitter.on('captured-event', (capturedEvent) =>
   capturedEvents.push(capturedEvent)
@@ -101,6 +103,9 @@ const reportTrace = () => {
       return spanPayload;
     }),
     events: capturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+    customTags: objHasOwnProperty.call(serverlessSdk, '_customTags')
+      ? JSON.stringify(serverlessSdk._customTags)
+      : undefined,
   });
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
