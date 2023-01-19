@@ -11,6 +11,8 @@ describe('index.test.js', () => {
     requireUncached(() => {
       const TraceSpan = require('../../lib/trace-span');
       serverlessSdk = require('../../');
+      // Ensure to trigger unerlying lazy require
+      serverlessSdk.instrumentation.expressApp;
       rootSpan = new TraceSpan('test');
     });
   });
@@ -22,7 +24,7 @@ describe('index.test.js', () => {
   it('should expose `.traceSpans`', () =>
     expect(serverlessSdk.traceSpans).to.be.instanceOf(Object));
   it('should expose .instrumentation.expressApp', () =>
-    expect(typeof serverlessSdk.instrumentation.expressApp).to.equal('function'));
+    expect(typeof serverlessSdk.instrumentation.expressApp.install).to.equal('function'));
   it('should expose .captureError', () => {
     let capturedEvent;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
