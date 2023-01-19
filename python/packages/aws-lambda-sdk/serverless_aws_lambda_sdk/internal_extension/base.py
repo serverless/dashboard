@@ -92,41 +92,6 @@ def get_module_path(handler: str = HANDLER) -> Optional[Path]:
     return None
 
 
-def get_handler_via_module_import(handler: str = HANDLER) -> Handler:
-    """Based on logic from AWS Lambda Python runtime"""
-
-    try:
-        module_name, function_name = handler.rsplit(".", 1)
-
-    except ValueError as e:
-        raise HandlerNotFound(f"Bad handler '{handler}': {e}") from e
-
-    try:
-        name, *_ = module_name.split(".")
-
-        if name in sys.builtin_module_names:
-            raise BuiltInModuleConflict(
-                f"Cannot use built-in module {module_name} as a handler module"
-            )
-
-        path = module_name.replace("/", ".")
-        module = importlib.import_module(path)
-
-    except ImportError as e:
-        raise ImportModuleError(f"Unable to import module '{module_name}': {e}") from e
-
-    except SyntaxError as e:
-        raise UserCodeSyntaxError(f"Syntax error in module '{module_name}': {e}") from e
-
-    try:
-        return getattr(module, function_name)
-
-    except AttributeError as e:
-        raise HandlerNotFound(
-            f"Handler '{function_name}' missing on module '{module_name}'"
-        ) from e
-
-
 def set_handler_vars():
     environ[Env.ORIGIN_HANDLER] = HANDLER
     environ[Env.HANDLER] = NEW_HANDLER

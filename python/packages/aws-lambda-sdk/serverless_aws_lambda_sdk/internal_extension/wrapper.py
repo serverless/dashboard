@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import logging
 import sys
 from importlib import import_module
@@ -11,9 +12,10 @@ from typing import List, Optional
 
 from typing_extensions import Final, TypeAlias, TYPE_CHECKING
 
-from .base import get_handler_via_module_import, get_module_path
+from .base import get_module_path
 from ..base import Env, Handler
-from ..exceptions import HandlerNotFound, handler_not_found
+from ..exceptions import BuiltInModuleConflict, HandlerNotFound, ImportModuleError, UserCodeSyntaxError, \
+    handler_not_found
 from ..instrument import instrument
 
 if TYPE_CHECKING:
@@ -57,6 +59,41 @@ def import_from_path(path: str) -> Optional[ModuleType]:
     except Exception as e:
         logging.debug(f"Failed to import {path}: {e}")
         return None
+
+
+def get_handler_via_module_import(handler: str) -> Handler:
+    """Based on logic from AWS Lambda Python runtime"""
+
+    try:
+        module_name, function_name = handler.rsplit(".", 1)
+
+    except ValueError as e:
+        raise HandlerNotFound(f"Bad handler '{handler}': {e}") from e
+
+    try:
+        name, *_ = module_name.split(".")
+
+        if name in sys.builtin_module_names:
+            raise BuiltInModuleConflict(
+                f"Cannot use built-in module {module_name} as a handler module"
+            )
+
+        path = module_name.replace("/", ".")
+        module = importlib.import_module(path)
+
+    except ImportError as e:
+        raise ImportModuleError(f"Unable to import module '{module_name}': {e}") from e
+
+    except SyntaxError as e:
+        raise UserCodeSyntaxError(f"Syntax error in module '{module_name}': {e}") from e
+
+    try:
+        return getattr(module, function_name)
+
+    except AttributeError as e:
+        raise HandlerNotFound(
+            f"Handler '{function_name}' missing on module '{module_name}'"
+        ) from e
 
 
 def get_handler_module(handler: str) -> ModuleType:
