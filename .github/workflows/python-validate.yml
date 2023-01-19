@@ -132,13 +132,15 @@ jobs:
           python3 -m pip install poethepoet pytest
           python3 -m poethepoet test
 
+      - name: Install AWS Lambda SDK project and dependencies
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        run: |
+          cd python/packages/aws-lambda-sdk
+          python3 -m pip install .
+
       - name: Run AWS Lambda SDK unit tests
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |
-          cd python/packages/sdk
-          python3 -m pip install .
-          cd -
-
           cd python/packages/aws-lambda-sdk
           python3 -m pip install pytest strenum
           python3 -m pytest
