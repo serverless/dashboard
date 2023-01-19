@@ -12,7 +12,7 @@ const resolveNonErrorName = (value) => {
 };
 
 module.exports = (error, options = {}) => {
-  const timestamp = process.hrtime.bigint();
+  const timestamp = options._timestamp || process.hrtime.bigint();
   if (!isObject(options)) options = {};
 
   const capturedEvent = new CapturedEvent('telemetry.error.generated.v1', {
@@ -22,7 +22,7 @@ module.exports = (error, options = {}) => {
     _origin: options._origin,
   });
 
-  const tags = { type: 2 };
+  const tags = { type: options._type === 'unhandled' ? 1 : 2 };
   if (isError(error)) {
     tags.name = error.name;
     tags.message = error.message;
