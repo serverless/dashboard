@@ -32,7 +32,7 @@ serverlessSdk.instrumentation = {};
 Object.defineProperties(
   serverlessSdk.instrumentation,
   lazy({
-    expressApp: d('cew', () => require('./instrumentation/express-app')),
+    expressApp: d('cew', () => require('./instrumentation/express-app'), { flat: true }),
   })
 );
 serverlessSdk.captureError = (error, options = {}) => {
