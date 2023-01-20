@@ -6,7 +6,7 @@ const http = require('http');
 const isThenable = require('type/thenable/is');
 const requireUncached = require('ncjsm/require-uncached');
 const wait = require('timers-ext/promise/sleep');
-const normalizeObject = require('../../utils/normalize-proto-object');
+const normalizeObject = require('../../../../../test/utils/normalize-proto-object');
 const pkgJson = require('../../../package');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures');
