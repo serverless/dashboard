@@ -9,7 +9,7 @@ const wait = require('timers-ext/promise/sleep');
 const basename = require('./basename');
 const awsRequest = require('../../../../test/utils/aws-request');
 const normalizeProtoObject = require('../utils/normalize-proto-object');
-const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
+const resolveDirZipBuffer = require('../../../../test/utils/resolve-dir-zip-buffer');
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
