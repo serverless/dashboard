@@ -16,7 +16,7 @@ const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
 const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
 const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
-const awsRequest = require('../utils/aws-request');
+const awsRequest = require('../../../../test/utils/aws-request');
 const pkgJson = require('../../package');
 
 const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');

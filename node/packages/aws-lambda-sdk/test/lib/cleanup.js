@@ -9,7 +9,7 @@ const { SNS } = require('@aws-sdk/client-sns');
 const { STS } = require('@aws-sdk/client-sts');
 const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 const log = require('log').get('test');
-const awsRequest = require('../utils/aws-request');
+const awsRequest = require('../../../../test/utils/aws-request');
 const basename = require('./basename');
 
 const getAllFunctionNames = async (marker = undefined) => {

@@ -7,7 +7,7 @@ const { IAM } = require('@aws-sdk/client-iam');
 const { STS } = require('@aws-sdk/client-sts');
 const log = require('log').get('test');
 const buildLayer = require('../../scripts/lib/build');
-const awsRequest = require('../utils/aws-request');
+const awsRequest = require('../../../../test/utils/aws-request');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 const basename = require('./basename');
 
