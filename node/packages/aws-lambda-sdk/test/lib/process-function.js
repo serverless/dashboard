@@ -7,7 +7,7 @@ const { Lambda } = require('@aws-sdk/client-lambda');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
 const wait = require('timers-ext/promise/sleep');
 const basename = require('./basename');
-const awsRequest = require('../utils/aws-request');
+const awsRequest = require('../../../../test/utils/aws-request');
 const normalizeProtoObject = require('../utils/normalize-proto-object');
 const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
 
