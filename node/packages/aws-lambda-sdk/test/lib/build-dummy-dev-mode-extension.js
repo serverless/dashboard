@@ -11,4 +11,5 @@ const extensionDirname = path.resolve(__dirname, '../fixtures/dev-mode-extension
 module.exports = async () => {
   await mkdir(path.dirname(zipFilename), { intermediate: true, silent: true });
   await fsp.writeFile(zipFilename, await resolveDirZipBuffer(extensionDirname));
+  return zipFilename;
 };
