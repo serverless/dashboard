@@ -1,13 +1,32 @@
 'use strict';
 
+const path = require('path');
 const log = require('log').get('test');
+const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+const basename = require('../../lib/basename');
 const resolveTestVariantsConfig = require('../../../../../test/lib/resolve-test-variants-config');
-const processFunction = require('../../lib/process-function');
+const getProcessFunction = require('../../../../../test/lib/get-process-function');
 const cleanup = require('../../lib/cleanup');
 const { median, average } = require('../../utils/stats');
 
+const fixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
+
 module.exports = async (useCasesConfig, coreConfig) => {
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig, { multiplyBy: 5 });
+  const processFunction = await getProcessFunction(basename, coreConfig, {
+    TracePayload,
+    fixturesDirname,
+    baseLambdaConfiguration: {
+      Runtime: 'nodejs16.x',
+      Layers: [coreConfig.layerInternalArn],
+      Environment: {
+        Variables: {
+          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+        },
+      },
+    },
+  });
+
   for (const testConfig of testVariantsConfig) {
     testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
       // As we process result promises sequentially step by step in next turn, allowing them to
@@ -22,10 +41,10 @@ module.exports = async (useCasesConfig, coreConfig) => {
     for (const testConfig of testVariantsConfig) {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
-      const basename = testConfig.name.slice(0, -2);
-      const separatorIndex = basename.lastIndexOf('-');
-      const functionVariantName = basename.slice(0, separatorIndex);
-      const benchmarkVariantName = basename.slice(separatorIndex + 1);
+      const baseTestName = testConfig.name.slice(0, -2);
+      const separatorIndex = baseTestName.lastIndexOf('-');
+      const functionVariantName = baseTestName.slice(0, separatorIndex);
+      const benchmarkVariantName = baseTestName.slice(separatorIndex + 1);
       if (!resultsMap.has(functionVariantName)) resultsMap.set(functionVariantName, new Map());
       const functionVariantResultsMap = resultsMap.get(functionVariantName);
       if (!functionVariantResultsMap.has(benchmarkVariantName)) {
