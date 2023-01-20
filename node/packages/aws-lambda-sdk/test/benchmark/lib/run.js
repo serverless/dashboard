@@ -1,7 +1,7 @@
 'use strict';
 
 const log = require('log').get('test');
-const resolveTestVariantsConfig = require('../../lib/resolve-test-variants-config');
+const resolveTestVariantsConfig = require('../../../../../test/lib/resolve-test-variants-config');
 const processFunction = require('../../lib/process-function');
 const cleanup = require('../../lib/cleanup');
 const { median, average } = require('../../utils/stats');
