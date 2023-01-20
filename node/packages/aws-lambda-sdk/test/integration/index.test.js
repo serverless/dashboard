@@ -10,10 +10,12 @@ const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const { SQS } = require('@aws-sdk/client-sqs');
 const { SNS } = require('@aws-sdk/client-sns');
+const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
 const { default: fetch } = require('node-fetch');
+const basename = require('../lib/basename');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
-const processFunction = require('../lib/process-function');
+const getProcessFunction = require('../../../../test/lib/get-process-function');
 const resolveTestVariantsConfig = require('../../../../test/lib/resolve-test-variants-config');
 const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
 const awsRequest = require('../../../../test/utils/aws-request');
@@ -1470,6 +1472,19 @@ describe('integration', function () {
 
   before(async () => {
     await createCoreResources(coreConfig);
+    const processFunction = await getProcessFunction(basename, coreConfig, {
+      TracePayload,
+      fixturesDirname,
+      baseLambdaConfiguration: {
+        Runtime: 'nodejs18.x',
+        Layers: [coreConfig.layerInternalArn],
+        Environment: {
+          Variables: {
+            AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+          },
+        },
+      },
+    });
 
     for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({

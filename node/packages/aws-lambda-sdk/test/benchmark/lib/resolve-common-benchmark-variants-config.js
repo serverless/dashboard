@@ -7,7 +7,6 @@ module.exports = async (coreConfig, options) => {
       'bare',
       {
         configuration: {
-          Runtime: 'nodejs16.x',
           MemorySize: memorySize,
           Layers: [],
           Environment: { Variables: {} },
@@ -18,7 +17,6 @@ module.exports = async (coreConfig, options) => {
       'internal',
       {
         configuration: {
-          Runtime: 'nodejs16.x',
           MemorySize: memorySize,
         },
       },
@@ -27,7 +25,6 @@ module.exports = async (coreConfig, options) => {
       'external',
       {
         configuration: {
-          Runtime: 'nodejs16.x',
           MemorySize: memorySize,
           Layers: [coreConfig.layerExternalArn],
           Environment: {
@@ -40,7 +37,6 @@ module.exports = async (coreConfig, options) => {
       'internalAndExternal',
       {
         configuration: {
-          Runtime: 'nodejs16.x',
           MemorySize: memorySize,
           Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
           Environment: {
