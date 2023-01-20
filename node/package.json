@@ -46,6 +46,7 @@
     "eslint": "^8.32.0",
     "eslint-plugin-import": "^2.27.5",
     "essentials": "^1.2.0",
+    "ext": "^1.7.0",
     "fast-glob": "^3.2.12",
     "fs2": "^0.3.9",
     "git-list-updated": "^1.2.1",
