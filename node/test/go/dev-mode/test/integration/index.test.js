@@ -9,7 +9,7 @@ const devModeProto = require('@serverless/sdk-schema/dist/dev_mode');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const processFunction = require('../lib/process-function');
-const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
+const resolveTestVariantsConfig = require('../../../../lib/resolve-test-variants-config');
 
 for (const name of ['TEST_EXTERNAL_LAYER_FILENAME']) {
   // In tests, current working directory is mocked,
