@@ -1398,7 +1398,7 @@ describe('integration', function () {
               expect(payload.name).to.equal(pkgJson.name);
               expect(payload.version).to.equal(pkgJson.version);
               expect(payload.rootSpanName).to.equal('aws.lambda');
-              expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': 'example' });
+              expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': `example:${index + 1}` });
 
               const normalizeEvent = (event) => {
                 event = { ...event };

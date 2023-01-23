@@ -24,7 +24,7 @@ module.exports.handler = async (event) => {
     tags: { 'user.tag': 'example', 'invocationid': invocationId },
   });
 
-  sdk.setTag('user.tag', 'example');
+  sdk.setTag('user.tag', `example:${invocationId}`);
 
   console.warn('Consoled warning', 12, true);
   return {
