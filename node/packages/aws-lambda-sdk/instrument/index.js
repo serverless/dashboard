@@ -132,6 +132,7 @@ const closeTrace = async (outcome, outcomeResult) => {
     awsLambdaSpan.tags.reset();
     awsLambdaSpan.subSpans.clear();
     capturedEvents.length = 0;
+    if (objHasOwnProperty.call(serverlessSdk, '_customTags')) serverlessSdk._customTags.clear();
     isRootSpanReset = true;
   };
 
