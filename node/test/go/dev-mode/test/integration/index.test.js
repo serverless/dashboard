@@ -8,7 +8,8 @@ const logProto = require('@serverless/sdk-schema/dist/log');
 const devModeProto = require('@serverless/sdk-schema/dist/dev_mode');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
-const processFunction = require('../lib/process-function');
+const basename = require('../lib/basename');
+const getProcessFunction = require('../lib/get-process-function');
 const resolveTestVariantsConfig = require('../../../../lib/resolve-test-variants-config');
 
 for (const name of ['TEST_EXTERNAL_LAYER_FILENAME']) {
@@ -96,6 +97,7 @@ describe('Integration', function () {
 
   before(async () => {
     await createCoreResources(coreConfig);
+    const processFunction = await getProcessFunction(basename, coreConfig);
     for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to

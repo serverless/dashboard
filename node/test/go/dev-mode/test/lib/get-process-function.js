@@ -1,12 +1,9 @@
 'use strict';
 
-const ensurePlainObject = require('type/plain-object/ensure');
-const ensurePlainFunction = require('type/plain-function/ensure');
+const path = require('path');
 const log = require('log').get('test');
-const _ = require('lodash');
 const wait = require('timers-ext/promise/sleep');
-const normalizeProtoObject = require('../utils/normalize-proto-object');
-const resolveDirZipBuffer = require('../utils/resolve-dir-zip-buffer');
+const resolveDirZipBuffer = require('../../../../utils/resolve-dir-zip-buffer');
 const {
   create: baseCreate,
   ensureIsActive,
@@ -14,58 +11,47 @@ const {
   deleteFunction,
   retrieveAllEvents,
   reportPattern,
-} = require('./function-actions');
+} = require('../../../../lib/function-actions');
+
+const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 const handledOutcomes = new Set(['success', 'error:handled']);
 
-module.exports = async (basename, coreConfig, options) => {
-  const baseLambdaConfiguration = _.merge(
-    {
+module.exports = async (basename, coreConfig) => {
+  const create = baseCreate(async (testConfig) => {
+    const { configuration, includeInternal } = testConfig;
+    return {
       Role: coreConfig.roleArn,
+      Runtime: 'nodejs18.x',
       MemorySize: 1024,
-      Layers: [coreConfig.layerInternalArn],
+      Code: {
+        ZipFile: await resolveDirZipBuffer(fixturesDirname),
+      },
+      Layers: includeInternal
+        ? [coreConfig.layerExternalArn, coreConfig.layerInternalArn]
+        : [coreConfig.layerExternalArn],
       Environment: {
         Variables: {
-          SLS_ORG_ID: process.env.SLS_ORG_ID,
-          SLS_SDK_DEBUG: '1',
+          ...(includeInternal
+            ? {
+                AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+                SLS_ORG_ID: process.env.SLS_ORG_ID,
+              }
+            : {}),
+          SERVERLESS_PLATFORM_STAGE: 'dev',
+          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+          SLS_TEST_EXTENSION_LOG: '1',
         },
       },
-      Timeout: 15,
-    },
-    ensurePlainObject(options.baseLambdaConfiguration || {})
-  );
-
-  const { TracePayload } = options;
-  ensurePlainFunction(TracePayload.encode);
-
-  if (!baseLambdaConfiguration.Code) {
-    baseLambdaConfiguration.Code = { ZipFile: await resolveDirZipBuffer(options.fixturesDirname) };
-  }
-  const create = baseCreate(() => baseLambdaConfiguration, coreConfig);
+      ...configuration,
+    };
+  }, coreConfig);
 
   const retrieveReports = async (testConfig) => {
     let invocationsData;
     let processesData;
     do {
-      let events = await retrieveAllEvents(testConfig);
-      const eventGroups = new Map();
-      for (const event of events) {
-        const { logStreamName } = event;
-        if (!eventGroups.has(logStreamName)) eventGroups.set(logStreamName, []);
-        eventGroups.get(logStreamName).push(event);
-      }
-      if (eventGroups.size > 1) {
-        if (testConfig.ignoreMultipleInvocations) {
-          events = Array.from(eventGroups.values()).sort(
-            // Choose log stream with more events
-            (eventsA, eventsB) => eventsB.length - eventsA.length
-          )[0];
-        } else {
-          throw new Error(
-            `Unexpected count of lambda instances: ${Array.from(eventGroups.keys())}`
-          );
-        }
-      }
+      const events = await retrieveAllEvents(testConfig);
 
       let startEventsCount = 0;
       let reportEventsCount = 0;
@@ -83,9 +69,6 @@ module.exports = async (basename, coreConfig, options) => {
       log.debug('Events for %s: %o', testConfig.name, events);
       let currentInvocationData;
       let currentProcessData;
-      let startedMessage;
-      let startedMessageType;
-      let isExternalExtensionLoaded = false;
       const getCurrentInvocationData = () => {
         if (!currentInvocationData) {
           log.error(
@@ -98,100 +81,54 @@ module.exports = async (basename, coreConfig, options) => {
         return currentInvocationData;
       };
       for (const { message } of events) {
-        if (message.startsWith('⚡ SDK: External initialization')) {
-          isExternalExtensionLoaded = true;
+        if (message.startsWith('⚡ DEV-MODE: initialization')) {
           processesData.push(
-            (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
+            (currentProcessData = {
+              extensionOverheadDurations: {},
+              logs: [],
+              reqRes: [],
+              traces: [],
+            })
           );
           continue;
         }
-        if (!isExternalExtensionLoaded && message.startsWith('⚡ SDK: Wrapper initialization')) {
-          processesData.push(
-            (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
-          );
-          continue;
-        }
-        if (message.startsWith('⚡ SDK: Overhead duration: External initialization')) {
+        if (message.startsWith('⚡ DEV-MODE: Overhead duration: External initialization')) {
           currentProcessData.extensionOverheadDurations.externalInit = parseInt(
             message.slice(message.lastIndexOf(':') + 1),
             10
           );
           continue;
         }
-        if (message.startsWith('⚡ SDK: Overhead duration: Internal initialization')) {
-          currentProcessData.extensionOverheadDurations.internalInit = parseInt(
-            message.slice(message.lastIndexOf(':') + 1),
-            10
-          );
-          continue;
-        }
         if (message.startsWith('START RequestId: ')) {
-          currentInvocationData = { extensionOverheadDurations: {}, internalDurations: {} };
+          currentInvocationData = {
+            extensionOverheadDurations: {},
+            logs: [],
+            reqRes: [],
+            traces: [],
+          };
           continue;
         }
-        if (message.startsWith('⚡ SDK: Overhead duration: Internal request')) {
-          getCurrentInvocationData().extensionOverheadDurations.internalRequest = parseInt(
+        if (message.startsWith('⚡ DEV-MODE: Overhead duration: External request')) {
+          getCurrentInvocationData().extensionOverheadDurations.externalRequest = parseInt(
             message.slice(message.lastIndexOf(':') + 1),
             10
           );
           continue;
         }
-        if (message.startsWith('SERVERLESS_TELEMETRY.T.')) {
-          const payloadString = message.slice(message.indexOf('.T.') + 3);
-          if (payloadString.endsWith('\n')) {
-            const trace = normalizeProtoObject(
-              TracePayload.decode(Buffer.from(payloadString.trim(), 'base64'))
-            );
-            const [totalSpan] = trace.spans;
-            const [initializationSpan, invocationSpan] = (() => {
-              if (trace.spans[1].name === 'aws.lambda.initialization') {
-                return trace.spans.slice(1, 3);
-              }
-              return [null, trace.spans[1]];
-            })();
-
-            Object.assign(getCurrentInvocationData(), {
-              trace,
-              internalDurations: {
-                total: Math.round(
-                  (totalSpan.endTimeUnixNano - totalSpan.startTimeUnixNano) / 1000000
-                ),
-                initialization: initializationSpan
-                  ? Math.round(
-                      (initializationSpan.endTimeUnixNano - initializationSpan.startTimeUnixNano) /
-                        1000000
-                    )
-                  : null,
-                invocation: Math.round(
-                  (invocationSpan.endTimeUnixNano - invocationSpan.startTimeUnixNano) / 1000000
-                ),
-              },
-            });
-          } else {
-            startedMessage = payloadString;
-            startedMessageType = 'trace';
-          }
+        if (message.startsWith('⚡ DEV-MODE: Log###')) {
+          getCurrentInvocationData().logs.push(message.slice(message.lastIndexOf('###') + 3));
           continue;
         }
-        if (startedMessage) {
-          startedMessage += message;
-          if (startedMessage.endsWith('\n')) {
-            getCurrentInvocationData()[startedMessageType] = normalizeProtoObject(
-              TracePayload.decode(Buffer.from(startedMessage.trim(), 'base64'))
-            );
-            startedMessage = null;
-            continue;
-          }
-        }
-        if (message.startsWith('⚡ SDK: Overhead duration: Internal response')) {
-          getCurrentInvocationData().extensionOverheadDurations.internalResponse = parseInt(
-            message.slice(message.lastIndexOf(':') + 1),
-            10
-          );
+        if (message.startsWith('⚡ DEV-MODE: ReqRes###')) {
+          getCurrentInvocationData().reqRes.push(message.slice(message.lastIndexOf('###') + 3));
           continue;
         }
-        if (message.startsWith('⚡ SDK: Overhead duration: External invocation')) {
-          currentProcessData.extensionOverheadDurations.externalResponse = parseInt(
+        if (message.startsWith('⚡ DEV-MODE: Traces###')) {
+          getCurrentInvocationData().traces.push(message.slice(message.lastIndexOf('###') + 3));
+          continue;
+        }
+        if (message.startsWith('⚡ DEV-MODE: Extension overhead duration: External shutdown')) {
+          getCurrentInvocationData().extensionOverheadDurations.externalResponse = parseInt(
             message.slice(message.lastIndexOf(':') + 1),
             10
           );
@@ -200,9 +137,7 @@ module.exports = async (basename, coreConfig, options) => {
         if (message.startsWith('REPORT RequestId: ')) {
           if (!currentProcessData) {
             // With extensions not loaded we won't get "Extension overhead.." log
-            processesData.push(
-              (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
-            );
+            processesData.push((currentProcessData = { extensionOverheadDurations: {} }));
           }
           const reportMatch = message.match(reportPattern);
           if (!reportMatch) throw new Error(`Unexpected report string: ${message}`);
