@@ -218,6 +218,48 @@ module.exports = async (basename, coreConfig, options) => {
         }
         return currentInvocationData;
       };
+      const finalizePayload = (name, payloadString) => {
+        const { printedPayloads } = getCurrentInvocationData();
+        if (!printedPayloads[name]) printedPayloads[name] = [];
+        payloadString = payloadString.trim();
+        printedPayloads[name].push(payloadString);
+        switch (name) {
+          case 'T':
+            {
+              const trace = normalizeProtoObject(
+                TracePayload.decode(Buffer.from(payloadString, 'base64'))
+              );
+              const [totalSpan] = trace.spans;
+              const [initializationSpan, invocationSpan] = (() => {
+                if (trace.spans[1].name === 'aws.lambda.initialization') {
+                  return trace.spans.slice(1, 3);
+                }
+                return [null, trace.spans[1]];
+              })();
+
+              Object.assign(currentInvocationData, {
+                trace,
+                internalDurations: {
+                  total: Math.round(
+                    (totalSpan.endTimeUnixNano - totalSpan.startTimeUnixNano) / 1000000
+                  ),
+                  initialization: initializationSpan
+                    ? Math.round(
+                        (initializationSpan.endTimeUnixNano -
+                          initializationSpan.startTimeUnixNano) /
+                          1000000
+                      )
+                    : null,
+                  invocation: Math.round(
+                    (invocationSpan.endTimeUnixNano - invocationSpan.startTimeUnixNano) / 1000000
+                  ),
+                },
+              });
+            }
+            break;
+          default: // Do nothing
+        }
+      };
       for (const { message } of events) {
         if (message.startsWith('⚡ SDK: External initialization')) {
           isExternalExtensionLoaded = true;
@@ -247,7 +289,11 @@ module.exports = async (basename, coreConfig, options) => {
           continue;
         }
         if (message.startsWith('START RequestId: ')) {
-          currentInvocationData = { extensionOverheadDurations: {}, internalDurations: {} };
+          currentInvocationData = {
+            extensionOverheadDurations: {},
+            internalDurations: {},
+            printedPayloads: {},
+          };
           continue;
         }
         if (message.startsWith('⚡ SDK: Overhead duration: Internal request')) {
@@ -257,49 +303,22 @@ module.exports = async (basename, coreConfig, options) => {
           );
           continue;
         }
-        if (message.startsWith('SERVERLESS_TELEMETRY.T.')) {
-          const payloadString = message.slice(message.indexOf('.T.') + 3);
-          if (payloadString.endsWith('\n')) {
-            const trace = normalizeProtoObject(
-              TracePayload.decode(Buffer.from(payloadString.trim(), 'base64'))
-            );
-            const [totalSpan] = trace.spans;
-            const [initializationSpan, invocationSpan] = (() => {
-              if (trace.spans[1].name === 'aws.lambda.initialization') {
-                return trace.spans.slice(1, 3);
-              }
-              return [null, trace.spans[1]];
-            })();
-
-            Object.assign(getCurrentInvocationData(), {
-              trace,
-              internalDurations: {
-                total: Math.round(
-                  (totalSpan.endTimeUnixNano - totalSpan.startTimeUnixNano) / 1000000
-                ),
-                initialization: initializationSpan
-                  ? Math.round(
-                      (initializationSpan.endTimeUnixNano - initializationSpan.startTimeUnixNano) /
-                        1000000
-                    )
-                  : null,
-                invocation: Math.round(
-                  (invocationSpan.endTimeUnixNano - invocationSpan.startTimeUnixNano) / 1000000
-                ),
-              },
-            });
+        if (message.startsWith('SERVERLESS_TELEMETRY.')) {
+          const typeStartIndex = message.indexOf('.') + 1;
+          const messageType = message.slice(typeStartIndex, message.indexOf('.', typeStartIndex));
+          const messageString = message.slice('SERVERLESS_TELEMETRY..'.length + messageType.length);
+          if (messageString.endsWith('\n')) {
+            finalizePayload(messageType, messageString);
           } else {
-            startedMessage = payloadString;
-            startedMessageType = 'trace';
+            startedMessage = messageString;
+            startedMessageType = messageType;
           }
           continue;
         }
         if (startedMessage) {
           startedMessage += message;
           if (startedMessage.endsWith('\n')) {
-            getCurrentInvocationData()[startedMessageType] = normalizeProtoObject(
-              TracePayload.decode(Buffer.from(startedMessage.trim(), 'base64'))
-            );
+            finalizePayload(startedMessageType, startedMessage);
             startedMessage = null;
             continue;
           }
