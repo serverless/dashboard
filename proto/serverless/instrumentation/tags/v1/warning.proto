@@ -7,6 +7,8 @@ option go_package = ".;protoc";
 message WarningTags {
     // The Warning Message
     string message = 1;
+    // Stack trace listing where the warning was reported
+    optional string stacktrace = 3;
 
     enum WarningType {
       // Warning type not set
