@@ -538,6 +538,7 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | message | [string](#string) |  | The Warning Message |
+| stacktrace | [string](#string) | optional | Stack trace listing where the warning was reported |
 | type | [WarningTags.WarningType](#serverless-instrumentation-tags-v1-WarningTags-WarningType) | optional |  |
 
 
@@ -891,6 +892,7 @@ the function invocation.
 | timestamp | [fixed64](#fixed64) | optional | The timestamp that is created in ingestion as the search key |
 | is_historical | [bool](#bool) | optional | Is historical is addedd via ingestion so that we can tell the differnce between historical payloads and live streamed payloads |
 | type | [string](#string) | optional | Type is used to determine the kind of document that is being send via a livestream |
+| custom_tags | [string](#string) | optional | The optional custom tags to be set by the user This is expected to be a JSON object in string format. |
 
 
 
@@ -912,6 +914,7 @@ will make up the complete Trace.
 | sls_tags | [serverless.instrumentation.tags.v1.SlsTags](#serverless-instrumentation-tags-v1-SlsTags) |  |  |
 | spans | [Span](#serverless-instrumentation-v1-Span) | repeated | A list of Spans to be ingest. Ingest does not impose a limit on the number of Spans in a single payload. It is the responsibility of the Span producers to limit the size of payloads based on their own requirements. |
 | events | [Event](#serverless-instrumentation-v1-Event) | repeated | A list of Events to be ingested. Ingest does not impose a limit on the number of Events in a single payload. It is the responsibility of the Event producers to limit the size of paylaods based on their own requirements. |
+| custom_tags | [string](#string) | optional | The optional custom trace tags to be set by the user This is expected to be a JSON object in string format. |
 
 
 
