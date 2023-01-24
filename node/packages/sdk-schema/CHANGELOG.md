@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.5](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.4...@serverless/sdk-schema@0.14.5) (2023-01-24)
+
+### Features
+
+- Define `WarningTags.stacktrace` ([b04ae2c](https://github.com/serverless/console/commit/b04ae2c7e15058c7bf3f1001931e13000409a920))
+
 ### [0.14.4](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.3...@serverless/sdk-schema@0.14.4) (2023-01-18)
 
 ### Features
