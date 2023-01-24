@@ -35,7 +35,7 @@ module.exports = async (basename, coreConfig, options) => {
     ensurePlainObject(options.baseLambdaConfiguration || {})
   );
 
-  const { TracePayload } = options;
+  const { TracePayload, LogPayload, DevModePayload } = options;
   ensurePlainFunction(TracePayload.encode);
 
   if (!baseLambdaConfiguration.Code) {
@@ -133,6 +133,26 @@ module.exports = async (basename, coreConfig, options) => {
                     (invocationSpan.endTimeUnixNano - invocationSpan.startTimeUnixNano) / 1000000
                   ),
                 },
+              });
+            }
+            break;
+          case 'DD':
+            {
+              const devModePayload = normalizeProtoObject(
+                DevModePayload.decode(Buffer.from(payloadString, 'base64'))
+              );
+              Object.assign(currentInvocationData, {
+                devModePayloads: [...(currentInvocationData.devModePayloads || []), devModePayload],
+              });
+            }
+            break;
+          case 'DL':
+            {
+              const logPayload = normalizeProtoObject(
+                LogPayload.decode(Buffer.from(payloadString, 'base64'))
+              );
+              Object.assign(currentInvocationData, {
+                logPayloads: [...(currentInvocationData.logPayloads || []), logPayload],
               });
             }
             break;
