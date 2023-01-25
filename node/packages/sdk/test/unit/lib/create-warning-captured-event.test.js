@@ -3,6 +3,7 @@
 const { expect } = require('chai');
 
 const createCapturedWarningEvent = require('../../../lib/create-warning-captured-event');
+const normalizeTags = require('../../utils/normalize-captured-event-tags');
 
 describe('lib/create-captured-warning-event.test.js', () => {
   it('should capture warning', () => {
@@ -10,7 +11,7 @@ describe('lib/create-captured-warning-event.test.js', () => {
       tags: { 'my.tag': 'whatever' },
       fingerprint: 'foo',
     });
-    expect(event.tags.toJSON()).to.deep.equal({
+    expect(normalizeTags(event.tags, 'warning')).to.deep.equal({
       'warning.message': 'Warning message',
       'warning.type': 1,
     });

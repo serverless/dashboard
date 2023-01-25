@@ -4,6 +4,7 @@ const util = require('util');
 const isObject = require('type/object/is');
 const isError = require('type/error/is');
 const CapturedEvent = require('./captured-event');
+const resolveStackTraceString = require('./resolve-stack-trace-string');
 
 const resolveNonErrorName = (value) => {
   if (isObject(value)) return 'object';
@@ -26,11 +27,11 @@ module.exports = (error, options = {}) => {
   if (isError(error)) {
     tags.name = error.name;
     tags.message = error.message;
-    tags.stacktrace = error.stack;
   } else {
     tags.name = resolveNonErrorName(error);
     tags.message = typeof error === 'string' ? error : util.inspect(error);
   }
+  tags.stacktrace = resolveStackTraceString(error);
   capturedEvent.tags.setMany(tags, { prefix: 'error' });
 
   return capturedEvent;
