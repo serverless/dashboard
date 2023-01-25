@@ -11,7 +11,7 @@ const nodeConsole = console;
 let isInstalled = false;
 let uninstall;
 
-const resolveWarnMesssage = (args) => {
+const resolveMessage = (args) => {
   let message = '';
   const argsLength = args.length;
   if (!argsLength) return message;
@@ -31,9 +31,10 @@ module.exports.install = () => {
 
   nodeConsole.error = function (...args) {
     original.error.apply(this, args);
-    const error = args.find(isError);
-    if (!error) return;
-    createErrorCapturedEvent(error, { _origin: 'nodeConsole' });
+    createErrorCapturedEvent(
+      args.length === 1 && isError(args[0]) ? args[0] : resolveMessage(args),
+      { _origin: 'nodeConsole' }
+    );
   };
 
   nodeConsole.warn = function (...args) {
@@ -41,7 +42,7 @@ module.exports.install = () => {
     if (isPlainObject(args[0]) && args[0].source === 'serverlessSdk') {
       createWarningCapturedEvent(args[0].message, { _origin: 'nodeConsole', type: 2 });
     } else {
-      createWarningCapturedEvent(resolveWarnMesssage(args), { _origin: 'nodeConsole' });
+      createWarningCapturedEvent(resolveMessage(args), { _origin: 'nodeConsole' });
     }
   };
 

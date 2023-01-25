@@ -24,6 +24,18 @@ describe('lib/instrumentation/node-console.js', () => {
     expect(capturedEvent._origin).to.equal('nodeConsole');
   });
 
+  it('should instrument multi argument call of `console.error`', () => {
+    let capturedEvent;
+    serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
+    // eslint-disable-next-line no-console
+    console.error('Error was thrown:', new Error('My error'));
+
+    expect(capturedEvent.name).to.equal('telemetry.error.generated.v1');
+    expect(capturedEvent.tags.get('error.message').startsWith('Error was thrown: Error: My error'))
+      .to.be.true;
+    expect(capturedEvent._origin).to.equal('nodeConsole');
+  });
+
   it('should instrument `console.warn`', () => {
     let capturedEvent;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
