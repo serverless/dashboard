@@ -4,12 +4,17 @@ const { expect } = require('chai');
 
 const path = require('path');
 const log = require('log').get('test');
-const logProto = require('@serverless/sdk-schema/dist/log');
-const devModeProto = require('@serverless/sdk-schema/dist/dev_mode');
+const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+const { DevModePayload } = require('@serverless/sdk-schema/dist/dev_mode');
+const { LogPayload } = require('@serverless/sdk-schema/dist/log');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
-const processFunction = require('../lib/process-function');
-const resolveTestVariantsConfig = require('../lib/resolve-test-variants-config');
+const basename = require('../lib/basename');
+const getProcessFunction = require('../../../../lib/get-process-function');
+const resolveTestVariantsConfig = require('../../../../lib/resolve-test-variants-config');
+const resolveDirZipBuffer = require('../../../../utils/resolve-dir-zip-buffer');
+
+const fixturesDirname = path.resolve(__dirname, '../fixtures/lambdas');
 
 for (const name of ['TEST_EXTERNAL_LAYER_FILENAME']) {
   // In tests, current working directory is mocked,
@@ -22,25 +27,41 @@ describe('Integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
+  const internalConfiguration = {
+    configuration: {
+      Environment: {
+        Variables: {
+          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+          SLS_ORG_ID: process.env.SLS_ORG_ID,
+          SERVERLESS_PLATFORM_STAGE: 'dev',
+          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+          SLS_TEST_EXTENSION_LOG: '1',
+        },
+      },
+    },
+    deferredConfiguration: () => ({
+      Layers: [coreConfig.layerExternalArn, coreConfig.layerInternalArn],
+    }),
+  };
+
   const useCasesConfig = new Map([
     [
       '4s-logger',
       {
         variants: new Map([
-          ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 5 } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 5 } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x', Timeout: 5 } }],
         ]),
         config: {
           test: ({ invocationsData, testConfig }) => {
-            for (const [, logs] of invocationsData.map((data) => data.logs).entries()) {
-              expect(logs.length).to.equal(8);
-              const logData = Buffer.from(logs[0], 'base64');
-              const logPayload = logProto.LogPayload.decode(logData);
+            for (const { logPayloads } of invocationsData) {
+              expect(logPayloads.length).to.equal(8);
+              const logPayload = logPayloads[0];
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {
                 const body = logItem.body || '';
                 expect(
-                  `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
+                  `${testConfig.name.replace('-v18', '').replace('-v16', '')} ${index + 1}`
                 ).to.have.string(body.slice(body.lastIndexOf('\t') + 1).replace('\n', ''));
               });
             }
@@ -52,38 +73,55 @@ describe('Integration', function () {
       'with-internal',
       {
         variants: new Map([
-          ['v14', { configuration: { Runtime: 'nodejs14.x', Timeout: 10 }, includeInternal: true }],
-          ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 10 }, includeInternal: true }],
+          [
+            'v16',
+            {
+              ...internalConfiguration,
+              configuration: {
+                ...internalConfiguration.configuration,
+                Runtime: 'nodejs16.x',
+                Timeout: 5,
+              },
+            },
+          ],
+          [
+            'v18',
+            {
+              ...internalConfiguration,
+              configuration: { ...internalConfiguration.configuration, Timeout: 5 },
+            },
+          ],
         ]),
         config: {
           test: ({ invocationsData, testConfig }) => {
             // Ensure that the logs are coming through
-            for (const [, logs] of invocationsData.map((data) => data.logs).entries()) {
-              expect(logs.length).to.equal(1);
-              const logData = Buffer.from(logs[0], 'base64');
-              const logPayload = logProto.LogPayload.decode(logData);
+            for (const { logPayloads } of invocationsData) {
+              expect(logPayloads.length).to.equal(1);
+              const logPayload = logPayloads[0];
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {
                 const body = logItem.body || '';
                 const traceId = logItem.traceId || '';
                 expect(traceId).to.not.be.empty;
                 expect(
-                  `${testConfig.name.replace('-v14', '').replace('-v16', '')} ${index + 1}`
+                  `${testConfig.name.replace('-v18', '').replace('-v16', '')} ${index + 1}`
                 ).to.have.string(body.slice(body.lastIndexOf('\t') + 1).replace('\n', ''));
               });
             }
+
             // Replace with external + sdk integration results once the sdk is configured
             // to communicate with the external extension
-            for (const [, reqRes] of invocationsData.map((data) => data.reqRes).entries()) {
+            for (const {
+              printedPayloads: { DR: reqRes },
+            } of invocationsData) {
               expect(reqRes.length).to.equal(2);
             }
 
-            for (const [, traces] of invocationsData.map((data) => data.traces).entries()) {
+            for (const { devModePayloads } of invocationsData) {
               // Since we are sending spans as they are complete I need to change this to a variable length
               // but we should always have at least 1
-              expect(traces.length >= 1).to.equal(true);
-              const devModeData = Buffer.from(traces[0].trim(), 'base64');
-              const devModePayload = devModeProto.DevModePayload.decode(devModeData);
+              expect(devModePayloads.length >= 1).to.equal(true);
+              const devModePayload = devModePayloads[0];
               expect(devModePayload.payload.trace.events.length).to.equal(2);
             }
           },
@@ -96,8 +134,29 @@ describe('Integration', function () {
 
   before(async () => {
     await createCoreResources(coreConfig);
+    const processFunction = await getProcessFunction(basename, coreConfig, {
+      TracePayload,
+      LogPayload,
+      DevModePayload,
+      baseLambdaConfiguration: {
+        Role: coreConfig.roleArn,
+        Runtime: 'nodejs18.x',
+        MemorySize: 1024,
+        Code: {
+          ZipFile: await resolveDirZipBuffer(fixturesDirname),
+        },
+        Layers: [coreConfig.layerExternalArn],
+        Environment: {
+          Variables: {
+            SERVERLESS_PLATFORM_STAGE: 'dev',
+            SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+            SLS_TEST_EXTENSION_LOG: '1',
+          },
+        },
+      },
+    });
     for (const testConfig of testVariantsConfig) {
-      testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
+      testConfig.deferredResult = processFunction(testConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to
         // reject will generate unhandled rejection.
         // Therefore this scenario is converted to successuful { error } resolution
