@@ -35,7 +35,7 @@ module.exports = async (basename, coreConfig, options) => {
       },
       Timeout: 15,
     },
-    ensurePlainObject(options.baseLambdaConfiguration || {})
+    ensurePlainObject(options.baseLambdaConfiguration)
   );
 
   const { TracePayload, LogPayload, DevModePayload } = options;
@@ -169,7 +169,7 @@ module.exports = async (basename, coreConfig, options) => {
     let invocationsData;
     let processesData;
     do {
-      let events = await retrieveAllEvents(testConfig);
+      let events = await retrieveAllEvents();
       const eventGroups = new Map();
       for (const event of events) {
         const { logStreamName } = event;
