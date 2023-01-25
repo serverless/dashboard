@@ -3,6 +3,7 @@
 const isObject = require('type/object/is');
 const ensureString = require('type/string/ensure');
 const CapturedEvent = require('./captured-event');
+const resolveStackTraceString = require('./resolve-stack-trace-string');
 
 module.exports = (message, options = {}) => {
   const timestamp = process.hrtime.bigint();
@@ -13,7 +14,11 @@ module.exports = (message, options = {}) => {
     timestamp,
     customTags: options.tags,
     customFingerprint: options.fingerprint,
-    tags: { 'warning.message': message, 'warning.type': options.type || 1 },
+    tags: {
+      'warning.message': message,
+      'warning.type': options.type || 1,
+      'warning.stacktrace': resolveStackTraceString(),
+    },
     _origin: options._origin,
   });
 };

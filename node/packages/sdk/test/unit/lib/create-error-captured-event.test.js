@@ -3,6 +3,7 @@
 const { expect } = require('chai');
 
 const createCapturedErrorEvent = require('../../../lib/create-error-captured-event');
+const normalizeTags = require('../../utils/normalize-captured-event-tags');
 
 describe('lib/create-captured-error-event.test.js', () => {
   it('should capture error', () => {
@@ -11,10 +12,9 @@ describe('lib/create-captured-error-event.test.js', () => {
       tags: { 'my.tag': 'whatever' },
       fingerprint: 'foo',
     });
-    expect(event.tags.toJSON()).to.deep.equal({
+    expect(normalizeTags(event.tags, 'error')).to.deep.equal({
       'error.name': error.name,
       'error.message': error.message,
-      'error.stacktrace': error.stack,
       'error.type': 2,
     });
     expect(event.customTags.toJSON()).to.deep.equal({
@@ -25,7 +25,7 @@ describe('lib/create-captured-error-event.test.js', () => {
 
   it('should capture non error object', () => {
     const event = createCapturedErrorEvent({ foo: 'bar' });
-    expect(event.tags.toJSON()).to.deep.equal({
+    expect(normalizeTags(event.tags, 'error')).to.deep.equal({
       'error.name': 'object',
       'error.message': "{ foo: 'bar' }",
       'error.type': 2,
@@ -34,7 +34,7 @@ describe('lib/create-captured-error-event.test.js', () => {
 
   it('should capture primitive', () => {
     const event = createCapturedErrorEvent('some message');
-    expect(event.tags.toJSON()).to.deep.equal({
+    expect(normalizeTags(event.tags, 'error')).to.deep.equal({
       'error.name': 'string',
       'error.message': 'some message',
       'error.type': 2,
@@ -43,7 +43,7 @@ describe('lib/create-captured-error-event.test.js', () => {
 
   it('should capture "undefined"', () => {
     const event = createCapturedErrorEvent();
-    expect(event.tags.toJSON()).to.deep.equal({
+    expect(normalizeTags(event.tags, 'error')).to.deep.equal({
       'error.name': 'undefined',
       'error.message': 'undefined',
       'error.type': 2,
