@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.1](https://github.com/serverless/console/compare/@serverless/sdk@0.4.0...@serverless/sdk@0.4.1) (2023-01-26)
+
+### Features
+
+- Cover each `console.error` invocation with captured event ([c37ef74](https://github.com/serverless/console/commit/c37ef74094d8012570364572be69eaf633b44227))
+- Store stack trace with each captured error and warning ([eadaafa](https://github.com/serverless/console/commit/eadaafa7f8b3258996e5a16d826bada94fa7f85c))
+
 ## [0.4.0](https://github.com/serverless/console/compare/@serverless/sdk@0.3.1...@serverless/sdk@0.4.0) (2023-01-19)
 
 ### ⚠ BREAKING CHANGES
