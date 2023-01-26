@@ -18,7 +18,7 @@ module.exports.handler = async (event) => {
     tags: { 'user.tag': 'example', 'invocationid': invocationId },
   });
 
-  console.error('My error: ', new Error('Consoled error'));
+  console.error('My error:', new Error('Consoled error'));
 
   sdk.captureWarning('Captured warning', {
     tags: { 'user.tag': 'example', 'invocationid': invocationId },

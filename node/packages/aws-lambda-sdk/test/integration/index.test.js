@@ -1404,7 +1404,15 @@ describe('integration', function () {
                 event = { ...event };
                 expect(Buffer.isBuffer(event.id)).to.be.true;
                 expect(typeof event.timestampUnixNano).to.equal('number');
-                if (event.tags.error) delete event.tags.error.stacktrace;
+                if (event.tags.error) {
+                  delete event.tags.error.stacktrace;
+                  if (event.tags.error.message) {
+                    event.tags.error.message = event.tags.error.message.split('\n')[0];
+                  }
+                }
+                if (event.tags.warning) {
+                  delete event.tags.warning.stacktrace;
+                }
                 delete event.id;
                 delete event.timestampUnixNano;
                 return event;
@@ -1430,8 +1438,8 @@ describe('integration', function () {
                   customTags: JSON.stringify({}),
                   tags: {
                     error: {
-                      name: 'Error',
-                      message: 'Consoled error',
+                      name: 'string',
+                      message: 'My error: Error: Consoled error',
                       type: 2,
                     },
                   },
