@@ -121,10 +121,15 @@ serverlessSdk.setTag("userId", "bd86489cf036")
 ```
 
 Using the `setTag()` method will create Tags associated with the entire Trace.
-You'll be able to see the Tags on the Trace Details page in the Trace Explorer.
+You'll be able to see the Tags on the Trace Details page in the Trace Explorer
+and the Invocation Started/Stopped even on Dev Mode.
 
 All Tags set with `setTag()` are also inherited by all the Captured Errors and
 Captured Warnings. 
+
+Tag keys may only contain alphanumeric, `.`, `-`, and `_` characters. Tag values
+may contain any string value. Invalid tag keys will not throw errors, instead,
+an SDK error will be made available in Dev Mode and Trace Details.
 
 **Settings Tags with console.error and console.warn**
 
@@ -150,6 +155,8 @@ Tags can also be set on the individual error. If you previously set a Tag using
 `setTag()` then the Tags set on `captureError` will override the Tags on the
 Captured Error, while keeping the Tag on the trace unmodified.
 
+Tag keys on `captureError` are validated the same way as tag keys on `setTag()`.
+
 
 **Setting Tags on Captured Warnings**
 
@@ -159,3 +166,6 @@ serverlessSdk.captureWarning("warning message", {tags:{userId:"eb661c69405c"}})
 
 Tags can also be added on the individual Captured Warnings, just like Captured
 Errors.
+
+Tag keys on `captureWarning` are validated the same way as tag keys on
+`setTag()`.
