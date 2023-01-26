@@ -1,7 +1,7 @@
 {
   "name": "@serverless/aws-lambda-sdk",
   "repository": "serverless/console",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "author": "Serverless, Inc.",
   "dependencies": {
     "@serverless/sdk": "^0.4.1",
