@@ -4,8 +4,7 @@ _Disable with `SLS_DISABLE_EXPRESS_MONITORING` environment variable_
 
 If [`express`](https://expressjs.com/) framework (together with tools like [`serverless-http`](https://github.com/dougmoscrop/serverless-http)) is used to route incoming requests. Trace spans for it's middlewares are created
 
-Tracing is turned on automatically, assuming that `express` is loaded normally via Node.js `require`.
-If it comes bundled or imported via ESM import, then instrumentation needs to be turned on manually with following steps:
+Tracing is turned on automatically, assuming that `express` is loaded normally via Node.js `require`. If it comes bundled then instrumentation needs to be turned on manually with following steps:
 
 ```javascript
 import express from 'express';

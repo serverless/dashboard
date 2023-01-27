@@ -20,7 +20,7 @@ Dictionary of common spans created in context of given environment
 
 ### `.instrumentation`
 
-Most of the instrumentation is setup automatically, still there are scenarios when it's difficult to ensure that (e.g. when target modules are imported as ESM, or come from bundles). In such case instrumentation need to be set manually. In context of `@serverless/sdk` following instrumentation extensions are provided:
+Most of the instrumentation is setup automatically, still there are scenarios when it's difficult to ensure that (e.g. when target modules are bundled). In such case instrumentation need to be set manually. In context of `@serverless/sdk` following instrumentation extensions are provided:
 
 - `.instrumentation.expressApp.install(express)` - Instrument Express. See [instrumentatiom/express-app](instrumentation/express-app.md)
 
