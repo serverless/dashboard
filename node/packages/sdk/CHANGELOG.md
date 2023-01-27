@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.2](https://github.com/serverless/console/compare/@serverless/sdk@0.4.1...@serverless/sdk@0.4.2) (2023-01-27)
+
+### Bug Fixes
+
+- Fix manual `express` instrumentation ([0fefb5a](https://github.com/serverless/console/commit/0fefb5a202321369599db4cb0687e12f1e122c46))
+
 ### [0.4.1](https://github.com/serverless/console/compare/@serverless/sdk@0.4.0...@serverless/sdk@0.4.1) (2023-01-26)
 
 ### Features
