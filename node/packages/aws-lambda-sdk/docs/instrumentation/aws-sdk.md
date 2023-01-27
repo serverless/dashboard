@@ -6,7 +6,7 @@ All AWS SDK requests are traced.
 
 Tracing is turned on automatically for AWS SDK clients that are normally loaded via Node.js `require`.
 
-However if AWS SDK is bundled or imported via ESM import, then instrumentation needs to be turned on manually with following steps:
+However if AWS SDK is bundled then instrumentation needs to be turned on manually with following steps:
 
 ```javascript
 import AWS from 'aws-sdk';
