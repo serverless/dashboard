@@ -38,6 +38,11 @@ const sendData = () => {
   };
   pendingSpans.length = 0;
   pendingCapturedEvents.length = 0;
+  if (!invocationContextAccessor.value) {
+    // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
+    // which we don't have if handler crashed at initialization.
+    payload.spans = payload.spans.filter((span) => span.name !== 'aws.lambda');
+  }
   serverlessSdk._deferredTelemetryRequests.push(
     sendTelemetry('trace', traceProto.TracePayload.encode(payload).finish())
   );
