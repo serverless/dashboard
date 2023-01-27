@@ -27,6 +27,15 @@ viewed on the Trace Explorer Details and Dev Mode.
 
 **Install the package with:**
 
+When Tracing is enabled in Servelress Console, an  AWS Lambda Layer is added to
+your AWS Lambda function with the `@serverless/sdk` package. If you are running
+the handler with Tracing enabled on AWS Lambda only, then you can skip this
+step.
+
+If you will run this on AWS Lambda without Serverless Console Tracing enabled,
+or running it on a different runtime, like locally, then you'll need to add the
+`@serverless/sdk` package.
+
 ```javascript
 npm install @serverless/sdk --save
 # or
