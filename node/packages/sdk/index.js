@@ -87,7 +87,7 @@ serverlessSdk._initialize = (options = {}) => {
   }
 
   if (!settings.disableExpressMonitoring) {
-    // Auto generate AWS SDK request spans
+    // Auto generate express middleware spans
     require('./lib/instrumentation/express').install();
   }
 
