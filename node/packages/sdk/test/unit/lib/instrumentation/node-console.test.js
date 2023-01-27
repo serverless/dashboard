@@ -1,16 +1,22 @@
 'use strict';
 
 const { expect } = require('chai');
-const instrumentNodeConsole = require('../../../../lib/instrumentation/node-console');
+
+const requireUncached = require('ncjsm/require-uncached');
 
 describe('lib/instrumentation/node-console.js', () => {
   let serverlessSdk;
+  let instrumentNodeConsole;
   before(() => {
-    serverlessSdk = require('../../../../');
-    instrumentNodeConsole.install();
+    requireUncached(() => {
+      serverlessSdk = require('../../../../');
+      instrumentNodeConsole = require('../../../../lib/instrumentation/node-console');
+      instrumentNodeConsole.install();
+    });
   });
   after(() => {
     instrumentNodeConsole.uninstall();
+    delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
   });
 
   it('should instrument `console.error`', () => {

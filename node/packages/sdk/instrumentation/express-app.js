@@ -13,7 +13,7 @@ module.exports.install = (app) => {
     errorMessage: 'Passed argument is not an instance of express app',
   });
   app.lazyrouter();
-  const uninstall = instrumentLayerPrototype(Object.getPrototypeOf(app._router.stack[0]));
+  const uninstall = instrumentLayerPrototype.install(Object.getPrototypeOf(app._router.stack[0]));
   instrumentedApps.set(app, uninstall);
   return uninstall;
 };
