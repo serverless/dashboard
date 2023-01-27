@@ -157,7 +157,8 @@ const closeTrace = async (outcome, outcomeResult) => {
     }
     if (traceSpans.awsLambdaInvocation) traceSpans.awsLambdaInvocation.close({ endTime });
     awsLambdaSpan.close({ endTime });
-    // Trace report requires requestId, which we don't have if handler crashed at initialization
+    // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
+    // which we don't have if handler crashed at initialization
     if (invocationContextAccessor.value) reportTrace();
     flushSpans();
     clearRootSpan();
