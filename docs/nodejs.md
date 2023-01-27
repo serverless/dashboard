@@ -50,35 +50,6 @@ Serverless Console in order for the data to be ingested.
 
 [Enable Tracing, Logging, and Dev Mode](/console/docs/integrations/enable-monitoring-features)
 
-**Using a bundler**
-
-If you use a bundler, like esbuild, the AWS Lambda Layer for Serverless Console
-will not be able to auto-instrument traces and spans on your handler. To enable
-auto-instrumentation of spans and traces, you will need to manually add the
-AWS-specific auto-instrumentation library and initiate auto-instrumentation.
-
-First, install the `@serverless/aws-lambda-sdk` package locally. This replaces
-the need for the `@serverless/sdk` package, so you do not need both.
-
-```javascript
-npm install @serverless/aws-lambda-sdk --save
-# or
-yarn add @serverless/aws-lambda-sdk
-```
-
-```javascript
-const serverlessSdk = require("@serverless/aws-lambda-sdk");
-
-// Instrument AWS SDK v2
-serverlessSdk.instrumentation.awsSdkV2.install(AWS)
-
-// Instrument AWS SDK v3 client
-serverlessSdk.instrumentation.awsSdkV3Client.install(client)
-
-// instruments Express.js
-serverlessSdk.instrumentation.expressApp.install(express)
-```
-
 ## Usage
 
 The package does not require any configuration as the credentials are
