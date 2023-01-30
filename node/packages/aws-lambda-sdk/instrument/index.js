@@ -184,19 +184,23 @@ const closeTrace = async (outcome, outcomeResult) => {
   }
 };
 
-const wrapUnhandledErrorListener = (eventName) => {
-  const [awsListener] = process.listeners(eventName);
-  process.off(eventName, awsListener);
-  process.on(eventName, (error) => {
-    if (isCurrentInvocationResolved) {
-      awsListener(error);
-      return;
-    }
-    closeTrace('error:unhandled', error).finally(() => process.nextTick(() => awsListener(error)));
-  });
-};
-wrapUnhandledErrorListener('uncaughtException');
-wrapUnhandledErrorListener('unhandledRejection');
+if (!process.env.SLS_UNIT_TEST_RUN) {
+  const wrapUnhandledErrorListener = (eventName) => {
+    const [awsListener] = process.listeners(eventName);
+    process.off(eventName, awsListener);
+    process.on(eventName, (error) => {
+      if (isCurrentInvocationResolved) {
+        awsListener(error);
+        return;
+      }
+      closeTrace('error:unhandled', error).finally(() =>
+        process.nextTick(() => awsListener(error))
+      );
+    });
+  };
+  wrapUnhandledErrorListener('uncaughtException');
+  wrapUnhandledErrorListener('unhandledRejection');
+}
 
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
