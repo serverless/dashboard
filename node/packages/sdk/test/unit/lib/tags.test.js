@@ -37,12 +37,11 @@ describe('lib/tags.test.js', () => {
     ]);
   });
 
-  it('should reject setting with different value tag that alraedy exists', () => {
+  it('should reject, but handle silently, setting with different value tag that alraedy exists', () => {
     const tags = new Tags();
     tags.set('tag', true);
-    expect(() => tags.set('tag', 'again'))
-      .to.throw(Error)
-      .with.property('code', 'DUPLICATE_TRACE_SPAN_TAG_NAME');
+    tags.set('tag', 'again');
+    expect(tags.get('tag')).to.equal(true);
   });
 
   it('should ignore resetting tag with same value', () => {
