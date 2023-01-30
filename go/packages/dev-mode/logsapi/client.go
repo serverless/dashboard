@@ -16,17 +16,17 @@ import (
 
 const lambdaAgentIdentifierHeaderKey string = "Lambda-Extension-Identifier"
 
-// Client is the client used to subscribe to the Logs API
+// Client is the client used to subscribe to the Telemetry API
 type Client struct {
-	httpClient     *http.Client
-	logsApiBaseUrl string
+	httpClient          *http.Client
+	telemetryApiBaseUrl string
 }
 
 // NewClient returns a new Client with the given URL
-func NewClient(logsApiBaseUrl string) (*Client, error) {
+func NewClient(telemetryApiBaseUrl string) (*Client, error) {
 	return &Client{
-		httpClient:     &http.Client{},
-		logsApiBaseUrl: logsApiBaseUrl,
+		httpClient:          &http.Client{},
+		telemetryApiBaseUrl: telemetryApiBaseUrl,
 	}, nil
 }
 
@@ -49,30 +49,30 @@ const (
 	RuntimeDone SubEventType = "platform.runtimeDone"
 )
 
-// BufferingCfg is the configuration set for receiving logs from Logs API. Whichever of the conditions below is met first, the logs will be sent
+// BufferingCfg is the configuration set for receiving events from Telemetry API. Whichever of the conditions below is met first, the events will be sent
 type BufferingCfg struct {
 	// MaxItems is the maximum number of events to be buffered in memory. (default: 10000, minimum: 1000, maximum: 10000)
 	MaxItems uint32 `json:"maxItems"`
-	// MaxBytes is the maximum size in bytes of the logs to be buffered in memory. (default: 262144, minimum: 262144, maximum: 1048576)
+	// MaxBytes is the maximum size in bytes of the events to be buffered in memory. (default: 262144, minimum: 262144, maximum: 1048576)
 	MaxBytes uint32 `json:"maxBytes"`
 	// TimeoutMS is the maximum time (in milliseconds) for a batch to be buffered. (default: 1000, minimum: 100, maximum: 30000)
 	TimeoutMS uint32 `json:"timeoutMs"`
 }
 
-// URI is used to set the endpoint where the logs will be sent to
+// URI is used to set the endpoint where the events will be sent to
 type URI string
 
-// HttpMethod represents the HTTP method used to receive logs from Logs API
+// HttpMethod represents the HTTP method used to receive events from Telemetry API
 type HttpMethod string
 
 const (
-	//HttpPost is to receive logs through POST.
+	//HttpPost is to receive events through POST.
 	HttpPost HttpMethod = "POST"
-	//HttpPUT is to receive logs through PUT.
+	//HttpPUT is to receive events through PUT.
 	HttpPut HttpMethod = "PUT"
 )
 
-// HttpProtocol is used to specify the protocol when subscribing to Logs API for HTTP
+// HttpProtocol is used to specify the protocol when subscribing to Telemetry API for HTTP
 type HttpProtocol string
 
 const (
@@ -86,7 +86,7 @@ const (
 	JSON HttpEncoding = "JSON"
 )
 
-// Destination is the configuration for listeners who would like to receive logs with HTTP
+// Destination is the configuration for listeners who would like to receive events with HTTP
 type Destination struct {
 	Protocol   HttpProtocol `json:"protocol"`
 	URI        URI          `json:"URI"`
@@ -108,7 +108,7 @@ const (
 	TraceSchemaVersionLatest   = TraceSchemaVersion20220701
 )
 
-// SubscribeRequest is the request body that is sent to Logs API on subscribe
+// SubscribeRequest is the request body that is sent to Telemetry API on subscribe
 type SubscribeRequest struct {
 	SchemaVersion string       `json:"schemaVersion"`
 	EventTypes    []EventType  `json:"types"`
@@ -116,20 +116,15 @@ type SubscribeRequest struct {
 	Destination   Destination  `json:"destination"`
 }
 
-// SubscribeResponse is the response body that is received from Logs API on subscribe
+// SubscribeResponse is the response body that is received from Telemetry API on subscribe
 type SubscribeResponse struct {
 	body string
 }
 
-// Subscribe calls the Logs API to subscribe for the log events.
+// Subscribe calls the Telemetry API to subscribe for the log events.
 func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destination Destination, extensionId string) (*SubscribeResponse, error) {
-	telemetryEnabled := lib.IsTelemetryEnabledRegion()
-	schemaVersion := SchemaVersionLatest
-	url := fmt.Sprintf("%s/2020-08-15/logs", c.logsApiBaseUrl)
-	if telemetryEnabled {
-		url = fmt.Sprintf("%s/2022-07-01/telemetry", c.logsApiBaseUrl)
-		schemaVersion = TraceSchemaVersionLatest
-	}
+	url := fmt.Sprintf("%s/2022-07-01/telemetry", c.telemetryApiBaseUrl)
+	schemaVersion := TraceSchemaVersionLatest
 
 	data, err := json.Marshal(
 		&SubscribeRequest{
@@ -151,7 +146,7 @@ func (c *Client) Subscribe(types []EventType, bufferingCfg BufferingCfg, destina
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusAccepted {
-		lib.Error("WARNING!!! Logs API is not supported! Is this extension running in a local sandbox?")
+		lib.Error("WARNING!!! Telemetry API is not supported!")
 	} else if resp.StatusCode != http.StatusOK {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
