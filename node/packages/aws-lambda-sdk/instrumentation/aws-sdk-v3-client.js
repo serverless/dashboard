@@ -108,4 +108,4 @@ module.exports.uninstall = (client) => {
   if (uninstall) uninstall();
 };
 
-const serverlessSdk = global.serverlessSdk || require('../');
+const serverlessSdk = require('../');
