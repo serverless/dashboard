@@ -27,23 +27,28 @@ module.exports.install = (client) => {
     applyToStack: (stack) => {
       // Middleware added to mark start and end of an complete API call.
       const awsRequestMiddleware = (next, context) => async (args) => {
-        const operationName = context.commandName.slice(0, -'Command'.length).toLowerCase();
-        const tagMapper = serviceMapper.get(serviceName);
-        const traceSpan = serverlessSdk._createTraceSpan(
-          `aws.sdk.${serviceName}.${operationName}`,
-          {
+        let deferredRegion;
+        let traceSpan;
+        let tagMapper;
+        try {
+          const operationName = context.commandName.slice(0, -'Command'.length).toLowerCase();
+          tagMapper = serviceMapper.get(serviceName);
+          traceSpan = serverlessSdk._createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
             tags: {
               'aws.sdk.service': serviceName,
               'aws.sdk.operation': operationName,
               'aws.sdk.signature_version': 'v4',
             },
             input: shouldMonitorRequestResponse ? safeStringify(args.input) : null,
-          }
-        );
-        if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
-        const deferredRegion = client.config
-          .region()
-          .then((region) => traceSpan.tags.set('aws.sdk.region', region));
+          });
+          if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
+          deferredRegion = client.config
+            .region()
+            .then((region) => traceSpan.tags.set('aws.sdk.region', region));
+        } catch (error) {
+          serverlessSdk._reportSdkError(error);
+          return next(args);
+        }
 
         const nextDeferred = (() => {
           try {
@@ -76,7 +81,11 @@ module.exports.install = (client) => {
           traceSpan.tags.set('aws.sdk.request_id', response.output.$metadata.requestId);
           if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.output);
           if (tagMapper && tagMapper.responseData) {
-            tagMapper.responseData(traceSpan, response.output);
+            try {
+              tagMapper.responseData(traceSpan, response.output);
+            } catch (sdkError) {
+              serverlessSdk._reportSdkError(sdkError);
+            }
           }
           if (!traceSpan.endTime) traceSpan.close();
           return response;

@@ -23,7 +23,11 @@ const serverlessSdk = (() => {
   // eslint-disable-next-line import/no-unresolved
   return require('@serverless/aws-lambda-sdk');
 })();
-serverlessSdk._initialize();
+try {
+  serverlessSdk._initialize();
+} catch (error) {
+  serverlessSdk._reportSdkError(error);
+}
 const instrument = require('../instrument');
 
 // 2. Initialize original handler
