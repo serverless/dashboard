@@ -1,9 +1,21 @@
 'use strict';
 
 const Module = require('module');
+const reportSdkError = require('../../report-sdk-error');
 
 const installers = new Map();
 const uninstallers = new Map();
+
+const runInstall = (exports, relativeFilename, install) => {
+  let uninstall;
+  try {
+    uninstall = install(exports);
+  } catch (error) {
+    reportSdkError(error);
+    return;
+  }
+  uninstallers.get(relativeFilename).add(uninstall);
+};
 
 Module.prototype.load = ((originalLoad) =>
   function (filename) {
@@ -11,7 +23,7 @@ Module.prototype.load = ((originalLoad) =>
     for (const [relativeFilename, install] of installers.entries()) {
       if (filename.endsWith(relativeFilename)) {
         if (!uninstallers.has(relativeFilename)) uninstallers.set(relativeFilename, new Set());
-        uninstallers.get(relativeFilename).add(install(this.exports));
+        runInstall(this.exports, relativeFilename, install);
         return;
       }
     }
@@ -22,14 +34,20 @@ module.exports.register = (relativeFilename, install) => {
   for (const [filename, moduleData] of Object.entries(require.cache)) {
     if (filename.endsWith(relativeFilename)) {
       if (!uninstallers.has(relativeFilename)) uninstallers.set(relativeFilename, new Set());
-      uninstallers.get(relativeFilename).add(install(moduleData.exports));
+      runInstall(moduleData.exports, relativeFilename, install);
     }
   }
 };
 
 module.exports.unregister = (relativeFilename) => {
   if (uninstallers.has(relativeFilename)) {
-    for (const uninstall of uninstallers.get(relativeFilename)) uninstall();
+    for (const uninstall of uninstallers.get(relativeFilename)) {
+      try {
+        uninstall();
+      } catch (error) {
+        reportSdkError(error);
+      }
+    }
     uninstallers.delete(relativeFilename);
   }
   installers.delete(relativeFilename);

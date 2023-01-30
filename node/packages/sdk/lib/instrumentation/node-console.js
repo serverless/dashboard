@@ -5,6 +5,7 @@ const isPlainObject = require('type/plain-object/is');
 const util = require('util');
 const createErrorCapturedEvent = require('../create-error-captured-event');
 const createWarningCapturedEvent = require('../create-warning-captured-event');
+const reportSdkError = require('../report-sdk-error');
 
 const nodeConsole = console;
 
@@ -31,18 +32,26 @@ module.exports.install = () => {
 
   nodeConsole.error = function (...args) {
     original.error.apply(this, args);
-    createErrorCapturedEvent(
-      args.length === 1 && isError(args[0]) ? args[0] : resolveMessage(args),
-      { _origin: 'nodeConsole' }
-    );
+    try {
+      createErrorCapturedEvent(
+        args.length === 1 && isError(args[0]) ? args[0] : resolveMessage(args),
+        { _origin: 'nodeConsole' }
+      );
+    } catch (error) {
+      reportSdkError(error);
+    }
   };
 
   nodeConsole.warn = function (...args) {
     original.warn.apply(this, args);
-    if (isPlainObject(args[0]) && args[0].source === 'serverlessSdk') {
-      createWarningCapturedEvent(args[0].message, { _origin: 'nodeConsole', type: 2 });
-    } else {
-      createWarningCapturedEvent(resolveMessage(args), { _origin: 'nodeConsole' });
+    try {
+      if (isPlainObject(args[0]) && args[0].source === 'serverlessSdk') {
+        createWarningCapturedEvent(args[0].message, { _origin: 'nodeConsole', type: 2 });
+      } else {
+        createWarningCapturedEvent(resolveMessage(args), { _origin: 'nodeConsole' });
+      }
+    } catch (error) {
+      reportSdkError(error);
     }
   };
 
