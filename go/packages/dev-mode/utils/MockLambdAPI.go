@@ -96,7 +96,7 @@ func createLambdaServer(port int64) *http.Server {
 
 	router.POST("/2020-01-01/extension/register", registerEndpoint)
 	router.GET("/2020-01-01/extension/event/next", nextEndpoint)
-	router.PUT("/2020-08-15/logs", registerLogs)
+	router.PUT("/2022-07-01/telemetry", registerLogs)
 	router.POST("/logs", sendLogs)
 	router.POST("/save/forwarder", saveLogs)
 	router.POST("/save/forwarder/reqres", saveReqRes)
