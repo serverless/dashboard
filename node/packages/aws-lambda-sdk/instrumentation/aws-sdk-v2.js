@@ -63,7 +63,9 @@ module.exports.install = (Sdk) => {
       wasCompleted = true;
       if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
       if (response.error) {
-        traceSpan.tags.set('aws.sdk.error', response.error.message);
+        // Fallback to error.name, as there are cases when AWS SDK returns error with no message:
+        // https://github.com/aws/aws-sdk-js/issues/4330
+        traceSpan.tags.set('aws.sdk.error', response.error.message || response.error.name);
       } else {
         if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.data);
         if (tagMapper && tagMapper.responseData) tagMapper.responseData(traceSpan, response.data);
