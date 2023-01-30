@@ -65,6 +65,7 @@ module.exports.install = (client) => {
           if (error.$metadata && error.$metadata.requestId) {
             traceSpan.tags.set('aws.sdk.request_id', error.$metadata.requestId);
           }
+          traceSpan.tags.set('aws.sdk.error', error.message || error.name);
           if (!traceSpan.endTime) traceSpan.close();
           throw error;
         } else {
