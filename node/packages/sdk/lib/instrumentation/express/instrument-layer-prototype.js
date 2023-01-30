@@ -1,9 +1,7 @@
 'use strict';
 
 const instrumentedLayers = new WeakMap();
-
 const expressSpansMap = new WeakMap();
-
 const invalidNameCharsPatern = /[^0-9a-zA-Z]/g;
 const digitStartRe = /^\d+/;
 
