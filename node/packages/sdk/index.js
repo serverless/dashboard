@@ -45,9 +45,9 @@ serverlessSdk.captureWarning = (message, options = {}) => {
 };
 serverlessSdk.setTag = (name, value) => {
   try {
-    serverlessSdk._customTags.set(name, value);
+    serverlessSdk._customTags._set(name, value);
   } catch (error) {
-    console.error(error);
+    reportSdkError(error, { type: 'USER' });
   }
 };
 
