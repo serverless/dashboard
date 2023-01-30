@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.3](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.2...@serverless/aws-lambda-sdk@0.14.3) (2023-01-30)
+
+### Features
+
+- Prevent lambda crashes on internal SDK errors ([6f350a9](https://github.com/serverless/console/commit/6f350a9ca6cbbf1d318507a34a27ad9d10ffc93a))
+
+### Bug Fixes
+
+- Do not send root span without required tag to dev mode ([44b0e4e](https://github.com/serverless/console/commit/44b0e4e92ab3f1c8704978e182ae69ae52e01874))
+- Fix AWS SDK v3 request error reporting ([3dd663c](https://github.com/serverless/console/commit/3dd663c46151694c2a3e5ed4ed048465a9309d71))
+- Fix handling of uncommon AWS SDK error report ([64afe99](https://github.com/serverless/console/commit/64afe993f0717ccfc752e5ee23fdea20463dbc1d))
+- Fix invocation closure race condition ([13649b2](https://github.com/serverless/console/commit/13649b227e22ef600bf468215ca6d8fd59e77274))
+
+### Maintenance Improvements
+
+- Rely on newly introduced `reportSdkError` util ([e7d9cc0](https://github.com/serverless/console/commit/e7d9cc0529569a830ba72959e6f120fcb244b5f0))
+- Clear dead referrences to `global.serverlessSdk` ([048e72e](https://github.com/serverless/console/commit/048e72e916d80fefa212b89e998678631f0fff87))
+- Improve logic explanation ([96c39a6](https://github.com/serverless/console/commit/96c39a6c3d7b4b6bdf7c26fea338f17c962392fe))
+- Improve readability of inline comment ([e6a40a2](https://github.com/serverless/console/commit/e6a40a24434f9dc0c4ebbe07d8587e225ff57139))
+
 ### [0.14.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.1...@serverless/aws-lambda-sdk@0.14.2) (2023-01-26)
 
 ### Maintenance Improvements
