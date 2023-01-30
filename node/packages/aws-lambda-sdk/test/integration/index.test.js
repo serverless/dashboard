@@ -1104,7 +1104,7 @@ describe('integration', function () {
               },
             },
           ],
-          ['external', {}],
+          ['external', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -1117,6 +1117,7 @@ describe('integration', function () {
             'internal',
             {
               configuration: {
+                Runtime: 'nodejs18.x',
                 Code: {
                   ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws-sdk-v3.js')),
                 },
