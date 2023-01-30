@@ -227,6 +227,7 @@ module.exports.install = () => {
 };
 
 module.exports.ignoreFollowingRequest = () => {
+  if (!isInstalled) return;
   serverlessSdk._debugLog('ignore HTTP request', shouldIgnoreFollowingRequest, new Error().stack);
   shouldIgnoreFollowingRequest = true;
   process.nextTick(() => {
