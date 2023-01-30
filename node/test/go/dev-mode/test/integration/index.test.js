@@ -162,6 +162,40 @@ describe('Integration', function () {
         },
       },
     ],
+    [
+      'timeout-with-internal',
+      {
+        variants: new Map([
+          [
+            'v18',
+            {
+              ...internalConfiguration,
+              configuration: {
+                ...internalConfiguration.configuration,
+                Runtime: 'nodejs18.x',
+                Timeout: 3,
+              },
+              expectedOutcome: 'error:unhandled',
+              isCustomResponse: true,
+            },
+          ],
+        ]),
+        config: {
+          test: ({ invocationsData }) => {
+            for (const { reqResPayloads, devModePayloads } of invocationsData) {
+              // TraceId should match the one send via the dev mode payload
+              const traceId = devModePayloads[0].payload?.trace.spans[0].traceId.toString();
+              expect(reqResPayloads.length).to.equal(2);
+              const lastPayload = reqResPayloads[1];
+              const response = lastPayload.payload.requestResponse;
+              expect(response.tags.error.message).to.contain('Task timed out');
+              expect(response.tags.error.type).to.equal(1);
+              expect(response.traceId.toString()).to.equal(traceId);
+            }
+          },
+        },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
