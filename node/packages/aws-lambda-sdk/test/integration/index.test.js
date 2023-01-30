@@ -108,6 +108,7 @@ describe('integration', function () {
       const [
         invocationSpan,
         stsSpan,
+        lambdaErrorSpan,
         sqsCreateSpan,
         sqsSendSpan,
         sqsDeleteSpan,
@@ -129,6 +130,17 @@ describe('integration', function () {
       expect(sdkTags.operation).to.equal('getcalleridentity');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
+
+      // Lambda error span
+      expect(lambdaErrorSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(lambdaErrorSpan.name).to.equal('aws.sdk.lambda.getfunction');
+      sdkTags = lambdaErrorSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('lambda');
+      expect(sdkTags.operation).to.equal('getfunction');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.have.property('error');
 
       // SNS
       const queueName = `${testConfig.configuration.FunctionName}-${index + 1}.fifo`;
