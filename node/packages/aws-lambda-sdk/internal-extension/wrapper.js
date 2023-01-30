@@ -13,7 +13,7 @@ delete EvalError.$serverlessHandlerModuleInstruction;
 const path = require('path');
 
 // 1. Initialize SDK instrumentation
-(() => {
+const serverlessSdk = (() => {
   try {
     require.resolve('@serverless/aws-lambda-sdk');
   } catch {
@@ -22,7 +22,8 @@ const path = require('path');
 
   // eslint-disable-next-line import/no-unresolved
   return require('@serverless/aws-lambda-sdk');
-})()._initialize();
+})();
+serverlessSdk._initialize();
 const instrument = require('../instrument');
 
 // 2. Initialize original handler
@@ -84,12 +85,7 @@ const resolveHandlerObject = (resolvedHandlerModule) => {
   try {
     return { handler: instrument(handlerFunction) };
   } catch (error) {
-    process._rawDebug(
-      'Fatal Serverless SDK Error: ' +
-        'Please report at https://github.com/serverless/console/issues: ' +
-        'Async handler setup failed: ',
-      error && (error.stack || error)
-    );
+    serverlessSdk._reportSdkError(error);
     return { handler: handlerFunction };
   }
 };
