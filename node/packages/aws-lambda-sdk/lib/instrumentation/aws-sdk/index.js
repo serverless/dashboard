@@ -16,7 +16,11 @@ module.exports.install = () => {
     const originalSend = Client.prototype.send;
     const uninstallers = new Set();
     Client.prototype.send = function send(command, optionsOrCb, cb) {
-      uninstallers.add(instrumentV3Client(this));
+      try {
+        uninstallers.add(instrumentV3Client(this));
+      } catch (error) {
+        serverlessSdk._reportSdkError(error);
+      }
       return originalSend.call(this, command, optionsOrCb, cb);
     };
     const uninstall = () => {
@@ -34,3 +38,5 @@ module.exports.uninstall = () => {
   cjsHook.unregister('/aws-sdk/lib/core.js');
   cjsHook.unregister('/@aws-sdk/smithy-client/dist-cjs/client.js');
 };
+
+const serverlessSdk = require('../../../');

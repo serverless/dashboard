@@ -21,31 +21,35 @@ const pendingCapturedEvents = [];
 let isScheduled = false;
 let timeoutId = null;
 const sendData = () => {
-  isScheduled = false;
-  clearTimeout(timeoutId);
-  if (!pendingSpans.length && !pendingCapturedEvents.length) return;
-  const payload = {
-    slsTags: {
-      orgId: serverlessSdk.orgId,
-      service: process.env.AWS_LAMBDA_FUNCTION_NAME,
-      sdk: { name: '@serverless/aws-lambda-sdk', version: serverlessSdk.version },
-    },
-    spans: pendingSpans.map((span) => span.toProtobufObject()),
-    events: pendingCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
-    customTags: objHasOwnProperty.call(serverlessSdk, '_customTags')
-      ? JSON.stringify(serverlessSdk._customTags)
-      : undefined,
-  };
-  pendingSpans.length = 0;
-  pendingCapturedEvents.length = 0;
-  if (!invocationContextAccessor.value) {
-    // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
-    // which we don't have if handler crashed at initialization.
-    payload.spans = payload.spans.filter((span) => span.name !== 'aws.lambda');
+  try {
+    isScheduled = false;
+    clearTimeout(timeoutId);
+    if (!pendingSpans.length && !pendingCapturedEvents.length) return;
+    const payload = {
+      slsTags: {
+        orgId: serverlessSdk.orgId,
+        service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        sdk: { name: '@serverless/aws-lambda-sdk', version: serverlessSdk.version },
+      },
+      spans: pendingSpans.map((span) => span.toProtobufObject()),
+      events: pendingCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+      customTags: objHasOwnProperty.call(serverlessSdk, '_customTags')
+        ? JSON.stringify(serverlessSdk._customTags)
+        : undefined,
+    };
+    pendingSpans.length = 0;
+    pendingCapturedEvents.length = 0;
+    if (!invocationContextAccessor.value) {
+      // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
+      // which we don't have if handler crashed at initialization.
+      payload.spans = payload.spans.filter((span) => span.name !== 'aws.lambda');
+    }
+    serverlessSdk._deferredTelemetryRequests.push(
+      sendTelemetry('trace', traceProto.TracePayload.encode(payload).finish())
+    );
+  } catch (error) {
+    serverlessSdk._reportSdkError(error);
   }
-  serverlessSdk._deferredTelemetryRequests.push(
-    sendTelemetry('trace', traceProto.TracePayload.encode(payload).finish())
-  );
 };
 
 const scheduleEventually = () => {

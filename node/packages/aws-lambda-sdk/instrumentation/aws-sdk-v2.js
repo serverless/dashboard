@@ -30,49 +30,61 @@ module.exports.install = (Sdk) => {
     return originalPresign.call(this, expires, callback);
   };
   Sdk.Request.prototype.runTo = function runTo(state, done) {
-    // identifier
-    const serviceName =
-      this.service.constructor.serviceIdentifier ||
-      this.service.constructor.__super__.serviceIdentifier;
-    const tagMapper = serviceMapper.get(serviceName);
-    const operationName = this.operation.toLowerCase();
-    const params = this.params;
-    const traceSpan = serverlessSdk._createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
-      tags: {
-        'aws.sdk.region': this.service.config.region,
-        'aws.sdk.signature_version': this.service.config.signatureVersion,
-        'aws.sdk.service': serviceName,
-        'aws.sdk.operation': operationName,
-      },
-      input: shouldMonitorRequestResponse ? safeStringify(params) : null,
-    });
-    if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
-    let wasCompleted = false;
-    this.on('complete', (response) => {
-      if (wasCompleted) {
-        console.warn({
-          source: 'serverlessSdk',
-          message:
-            'Detected doubled handling for same AWS SDK request. ' +
-            'It may happen if for the same request both callback and promise resolution ' +
-            'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n',
-          code: 'AWS_SDK_DOUBLE_RESOLUTION',
-        });
-        return;
-      }
-      wasCompleted = true;
-      if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
-      if (response.error) {
-        // Fallback to error.name, as there are cases when AWS SDK returns error with no message:
-        // https://github.com/aws/aws-sdk-js/issues/4330
-        traceSpan.tags.set('aws.sdk.error', response.error.message || response.error.name);
-      } else {
-        if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.data);
-        if (tagMapper && tagMapper.responseData) tagMapper.responseData(traceSpan, response.data);
-      }
-      if (!traceSpan.endTime) traceSpan.close();
-    });
-    doNotInstrumentFollowingHttpRequest();
+    let traceSpan;
+    try {
+      // identifier
+      const serviceName =
+        this.service.constructor.serviceIdentifier ||
+        this.service.constructor.__super__.serviceIdentifier;
+      const tagMapper = serviceMapper.get(serviceName);
+      const operationName = this.operation.toLowerCase();
+      const params = this.params;
+      traceSpan = serverlessSdk._createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
+        tags: {
+          'aws.sdk.region': this.service.config.region,
+          'aws.sdk.signature_version': this.service.config.signatureVersion,
+          'aws.sdk.service': serviceName,
+          'aws.sdk.operation': operationName,
+        },
+        input: shouldMonitorRequestResponse ? safeStringify(params) : null,
+      });
+      if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
+      let wasCompleted = false;
+      this.on('complete', (response) => {
+        try {
+          if (wasCompleted) {
+            console.warn({
+              source: 'serverlessSdk',
+              message:
+                'Detected doubled handling for same AWS SDK request. ' +
+                'It may happen if for the same request both callback and promise resolution ' +
+                'is requested. Internally it creates two AWS SDK calls so such design should be avoided.\n',
+              code: 'AWS_SDK_DOUBLE_RESOLUTION',
+            });
+            return;
+          }
+          wasCompleted = true;
+          if (response.requestId) traceSpan.tags.set('aws.sdk.request_id', response.requestId);
+          if (response.error) {
+            // Fallback to error.name, as there are cases when AWS SDK returns error with no message:
+            // https://github.com/aws/aws-sdk-js/issues/4330
+            traceSpan.tags.set('aws.sdk.error', response.error.message || response.error.name);
+          } else {
+            if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.data);
+            if (tagMapper && tagMapper.responseData) {
+              tagMapper.responseData(traceSpan, response.data);
+            }
+          }
+          if (!traceSpan.endTime) traceSpan.close();
+        } catch (error) {
+          serverlessSdk._reportError(error);
+        }
+      });
+      doNotInstrumentFollowingHttpRequest();
+    } catch (error) {
+      serverlessSdk._reportError(error);
+      return originalRunTo.call(this, state, done);
+    }
     try {
       return originalRunTo.call(this, state, done);
     } finally {
