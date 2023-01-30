@@ -55,7 +55,6 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
     const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
-    delete global.serverlessSdk;
     return {
       result,
       error,
