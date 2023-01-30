@@ -31,6 +31,7 @@ module.exports = async (basename, coreConfig, options) => {
         Variables: {
           SLS_ORG_ID: process.env.SLS_ORG_ID,
           SLS_SDK_DEBUG: '1',
+          SLS_CRASH_ON_SDK_ERROR: '1',
         },
       },
       Timeout: 15,
