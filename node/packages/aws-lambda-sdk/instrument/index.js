@@ -174,12 +174,7 @@ const closeTrace = async (outcome, outcomeResult) => {
       `${Math.round(Number(process.hrtime.bigint() - endTime) / 1000000)}ms`
     );
   } catch (error) {
-    process._rawDebug(
-      'Fatal Serverless SDK Error: ' +
-        'Please report at https://github.com/serverless/console/issues: ' +
-        'Response handling failed: ',
-      error && (error.stack || error)
-    );
+    serverlessSdk._reportSdkError(error);
     if (!isRootSpanReset) clearRootSpan();
   }
 };
@@ -259,12 +254,7 @@ module.exports = (originalHandler, options = {}) => {
         `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
       );
     } catch (error) {
-      process._rawDebug(
-        'Fatal Serverless SDK Error: ' +
-          'Please report at https://github.com/serverless/console/issues: ' +
-          'Request handling failed: ',
-        error && (error.stack || error)
-      );
+      serverlessSdk._reportSdkError(error);
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }
