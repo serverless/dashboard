@@ -565,6 +565,18 @@ describe('integration', function () {
       },
     ],
     [
+      'error-uncaught-resolution-race',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
       'error-unhandled',
       {
         variants: new Map([
