@@ -5,12 +5,7 @@ const isObject = require('type/object/is');
 const isError = require('type/error/is');
 const CapturedEvent = require('./captured-event');
 const resolveStackTraceString = require('./resolve-stack-trace-string');
-
-const resolveNonErrorName = (value) => {
-  if (isObject(value)) return 'object';
-  if (value === null) return 'null';
-  return typeof value;
-};
+const resolveNonErrorName = require('./resolve-non-error-name');
 
 module.exports = (error, options = {}) => {
   const timestamp = options._timestamp || process.hrtime.bigint();
