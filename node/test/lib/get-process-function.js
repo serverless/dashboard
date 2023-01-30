@@ -268,6 +268,16 @@ module.exports = async (basename, coreConfig, options) => {
               });
             }
             break;
+          case 'DR':
+            {
+              const devModePayload = normalizeProtoObject(
+                DevModePayload.decode(Buffer.from(payloadString, 'base64'))
+              );
+              Object.assign(currentInvocationData, {
+                reqResPayloads: [...(currentInvocationData.reqResPayloads || []), devModePayload],
+              });
+            }
+            break;
           case 'DL':
             {
               const logPayload = normalizeProtoObject(

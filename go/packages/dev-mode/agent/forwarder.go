@@ -305,6 +305,20 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 		region := os.Getenv("AWS_REGION")
 		functionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
 		slsTagPlatform := "lambda"
+
+		var errorTag tags.ErrorTags
+		recordAsJSON := hasRuntimeDone.Record.(map[string]interface{})
+		if recordAsJSON["status"] == "timeout" {
+			metrics := recordAsJSON["metrics"].(map[string]interface{})
+			durationInMS := metrics["durationMs"]
+			message := fmt.Sprintf("Task timed out after %.2f milliseconds", durationInMS)
+			errorTag = tags.ErrorTags{
+				Type:    tags.ErrorTags_ERROR_TYPE_UNCAUGHT,
+				Name:    "function_timeout",
+				Message: &message,
+			}
+		}
+
 		reqProto := &schema.RequestResponse{
 			SlsTags: &tags.SlsTags{
 				OrgId: orgId,
@@ -331,6 +345,7 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 					RequestId:    &requestId,
 					ResourceName: &functionName,
 				},
+				Error: &errorTag,
 				OrgId: &orgId,
 				Sdk: &tags.SdkTags{
 					Name:    "@serverless/external-extension",
