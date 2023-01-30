@@ -29,7 +29,7 @@ module.exports.handler = async () => {
   try {
     ++invocationCount;
 
-    // STS (any service tracing
+    // STS (confirm on tracing of any AWS service)
     await sts.getCallerIdentity();
 
     // getSignedUrl won't issue a real HTTP request
