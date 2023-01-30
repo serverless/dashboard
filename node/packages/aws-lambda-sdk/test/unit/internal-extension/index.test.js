@@ -135,6 +135,7 @@ describe('internal-extension/index.test.js', () => {
     process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');
     process.env.LAMBDA_RUNTIME_DIR = path.resolve(fixturesDirname, 'runtime');
     process.env.SLS_ORG_ID = 'dummy';
+    process.env.SLS_UNIT_TEST_RUN = '1';
   });
   afterEach(() => {
     delete process.env._HANDLER;
