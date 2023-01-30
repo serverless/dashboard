@@ -38,10 +38,18 @@ Object.defineProperties(
   })
 );
 serverlessSdk.captureError = (error, options = {}) => {
-  createErrorCapturedEvent(error, options);
+  try {
+    createErrorCapturedEvent(error, options);
+  } catch (reportError) {
+    reportSdkError(reportError);
+  }
 };
 serverlessSdk.captureWarning = (message, options = {}) => {
-  createWarningCapturedEvent(message, options);
+  try {
+    createWarningCapturedEvent(message, options);
+  } catch (reportError) {
+    reportSdkError(reportError);
+  }
 };
 serverlessSdk.setTag = (name, value) => {
   try {

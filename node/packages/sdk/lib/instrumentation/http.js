@@ -2,6 +2,7 @@
 
 const { searchParamsSymbol } = require('url');
 const { errorMonitor } = require('events');
+const reportSdkError = require('../report-sdk-error');
 
 let shouldIgnoreFollowingRequest = false;
 
@@ -49,26 +50,34 @@ const install = (protocol, httpModule) => {
       body = null;
     };
     req.write = function write(chunk, encoding, callback) {
-      if (isCapturing) {
-        if (typeof chunk === 'string') {
-          body += chunk;
-          if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
-        } else {
-          abortCapture();
+      try {
+        if (isCapturing) {
+          if (typeof chunk === 'string') {
+            body += chunk;
+            if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
+          } else {
+            abortCapture();
+          }
         }
+      } catch (error) {
+        reportSdkError(error);
       }
       return originalWrite.call(this, chunk, encoding, callback);
     };
     req.end = function end(chunk, encoding, callback) {
-      if (isCapturing) {
-        if (typeof chunk === 'string') {
-          body += chunk;
-          if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
-        } else if (chunk) {
+      try {
+        if (isCapturing) {
+          if (typeof chunk === 'string') {
+            body += chunk;
+            if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
+          } else if (chunk) {
+            abortCapture();
+          }
+          if (body) traceSpan.input = body;
           abortCapture();
         }
-        if (body) traceSpan.input = body;
-        abortCapture();
+      } catch (error) {
+        reportSdkError(error);
       }
       return originalEnd.call(this, chunk, encoding, callback);
     };
@@ -84,23 +93,31 @@ const install = (protocol, httpModule) => {
         response.addListener = response.on = originalAddListener;
         let bodyBuffer = Buffer.from('');
         response.on('data', (chunk) => {
-          if (!bodyBuffer) return;
-          bodyBuffer = Buffer.concat([
-            bodyBuffer,
-            typeof chunk === 'string' ? Buffer.from(chunk) : chunk,
-          ]);
-          if (bodyBuffer.length > bodySizeLimit) bodyBuffer = null;
+          try {
+            if (!bodyBuffer) return;
+            bodyBuffer = Buffer.concat([
+              bodyBuffer,
+              typeof chunk === 'string' ? Buffer.from(chunk) : chunk,
+            ]);
+            if (bodyBuffer.length > bodySizeLimit) bodyBuffer = null;
+          } catch (error) {
+            reportSdkError(error);
+          }
         });
         response.on('end', () => {
-          const body = (() => {
-            if (!bodyBuffer || !bodyBuffer.length) return null;
-            try {
-              return new TextDecoder('utf-8', { fatal: true }).decode(bodyBuffer);
-            } catch {
-              return null;
-            }
-          })();
-          if (body) traceSpan.output = body;
+          try {
+            const body = (() => {
+              if (!bodyBuffer || !bodyBuffer.length) return null;
+              try {
+                return new TextDecoder('utf-8', { fatal: true }).decode(bodyBuffer);
+              } catch {
+                return null;
+              }
+            })();
+            if (body) traceSpan.output = body;
+          } catch (error) {
+            reportSdkError(error);
+          }
         });
       }
       return originalAddListener.call(this, type, listener);
