@@ -1,17 +1,10 @@
-FROM golang:1.18-alpine AS installer
+FROM alpine:latest AS installer
 
-# Move to opt folder
-WORKDIR /opt
-
-# Copy code
-COPY go.mod go.sum ./
-RUN go mod download && go mod verify
-COPY . .
-# Build for arm64
-RUN GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o extensions/dev-mode-extension main.go
-# Add permissions
-RUN chmod -R 755 extensions/dev-mode-extension
+RUN mkdir -p /opt/extensions
+WORKDIR /opt/extensions
+COPY dist/extensions .
+RUN chmod -R 755 dev-mode-extension
 
 FROM scratch AS base
 WORKDIR /opt/extensions
-COPY --from=installer /opt/extensions .
+COPY --from=installer /opt/extensions/dev-mode-extension .
