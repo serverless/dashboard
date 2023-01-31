@@ -16,17 +16,16 @@ module.exports = (error, options = {}) => {
     message = typeof error === 'string' ? error : util.inspect(error);
   }
   const type = options.type || 'INTERNAL';
-  console.error({
-    source: 'serverlessSdk',
-    type,
-    description:
-      type === 'INTERNAL'
-        ? 'Internal Serverless SDK Error. ' +
-          'Please report at https://github.com/serverless/console/issue'
-        : undefined,
-    name,
-    message,
-    code: error && error.code,
-    stackTrace: error && error.stack,
-  });
+
+  const errorData = { source: 'serverlessSdk', type };
+  if (type === 'INTERNAL') {
+    errorData.description =
+      'Internal Serverless SDK Error. ' +
+      'Please report at https://github.com/serverless/console/issue';
+  }
+  errorData.name = name;
+  errorData.message = message;
+  if (error.code) errorData.code = error.code;
+  if (error.stack) errorData.stakTrace = error.stack;
+  console.error(errorData);
 };
