@@ -31,6 +31,7 @@ module.exports = async (basename, coreConfig, options) => {
         Variables: {
           SLS_ORG_ID: process.env.SLS_ORG_ID,
           SLS_SDK_DEBUG: '1',
+          SLS_CRASH_ON_SDK_ERROR: '1',
         },
       },
       Timeout: 15,
@@ -265,6 +266,16 @@ module.exports = async (basename, coreConfig, options) => {
               );
               Object.assign(currentInvocationData, {
                 devModePayloads: [...(currentInvocationData.devModePayloads || []), devModePayload],
+              });
+            }
+            break;
+          case 'DR':
+            {
+              const devModePayload = normalizeProtoObject(
+                DevModePayload.decode(Buffer.from(payloadString, 'base64'))
+              );
+              Object.assign(currentInvocationData, {
+                reqResPayloads: [...(currentInvocationData.reqResPayloads || []), devModePayload],
               });
             }
             break;

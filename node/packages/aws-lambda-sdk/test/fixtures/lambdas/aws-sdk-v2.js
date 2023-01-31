@@ -1,13 +1,15 @@
 'use strict';
 
 // eslint-disable-next-line import/no-unresolved
-const { S3, SQS, SNS, DynamoDB, STS } = require('aws-sdk');
+const { S3, SQS, SNS, DynamoDB, STS, SSM, Lambda } = require('aws-sdk');
 
 const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const s3 = new S3();
 const sqs = new SQS();
 const sns = new SNS();
+const lambda = new Lambda();
+const ssm = new SSM();
 const dynamoDb = new DynamoDB();
 const dynamodbDocumentClient = new DynamoDB.DocumentClient();
 const sts = new STS();
@@ -18,12 +20,25 @@ module.exports.handler = async () => {
   try {
     ++invocationCount;
 
-    // STS (any service tracing
+    // STS (confirm on tracing of any AWS service)
     await sts.getCallerIdentity().promise();
 
     // s3.getSignedUrlPromise won't issue a real HTTP request
     // It's injected to confirm no trace span will be created for it
     await s3.getSignedUrlPromise('putObject', { Bucket: 'test', Key: 'test', Expires: 500 });
+
+    // Test request error reporting
+    try {
+      await lambda.getFunction({ FunctionName: 'not-existing' }).promise();
+    } catch (error) {
+      // do nothing
+    }
+    try {
+      // Special error case: https://github.com/aws/aws-sdk-js/issues/4330
+      await ssm.getParameter({ Name: '/not/existing' }).promise();
+    } catch (error) {
+      // do nothing
+    }
 
     // SQS
     const queueName = `${process.env.AWS_LAMBDA_FUNCTION_NAME}-${invocationCount}.fifo`;

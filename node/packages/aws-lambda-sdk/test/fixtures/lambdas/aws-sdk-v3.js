@@ -5,6 +5,8 @@ const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { SQS } = require('@aws-sdk/client-sqs');
 const { SNS } = require('@aws-sdk/client-sns');
 const { STS } = require('@aws-sdk/client-sts');
+const { Lambda } = require('@aws-sdk/client-lambda');
+const { SSM } = require('@aws-sdk/client-ssm');
 const { DynamoDB, DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 
@@ -20,6 +22,8 @@ const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const s3Client = new S3Client();
 const sqs = new SQS();
 const sns = new SNS();
+const lambda = new Lambda();
+const ssm = new SSM();
 const dynamoDb = new DynamoDB();
 const sts = new STS();
 
@@ -29,7 +33,7 @@ module.exports.handler = async () => {
   try {
     ++invocationCount;
 
-    // STS (any service tracing
+    // STS (confirm on tracing of any AWS service)
     await sts.getCallerIdentity();
 
     // getSignedUrl won't issue a real HTTP request
@@ -37,6 +41,18 @@ module.exports.handler = async () => {
     await getSignedUrl(s3Client, new GetObjectCommand({ Bucket: 'test', Key: 'test' }), {
       expiresIn: 3600,
     });
+
+    // Test request error reporting
+    try {
+      await lambda.getFunction({ FunctionName: 'not-existing' });
+    } catch (error) {
+      // do nothing
+    }
+    try {
+      await ssm.getParameter({ Name: '/not/existing' });
+    } catch (error) {
+      // do nothing
+    }
 
     // SQS
     const queueName = `${process.env.AWS_LAMBDA_FUNCTION_NAME}-${invocationCount}.fifo`;

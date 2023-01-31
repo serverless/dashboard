@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.3](https://github.com/serverless/console/compare/@serverless/sdk@0.4.2...@serverless/sdk@0.4.3) (2023-01-30)
+
+### Features
+
+- Log instead of throw on invalid internal tag settings ([8b4c595](https://github.com/serverless/console/commit/8b4c595564cf082661bb9cfc7ff6e9e2c32df2ab))
+- Prevent lambda crashes on internal SDK errors ([015c598](https://github.com/serverless/console/commit/015c598d6f9e76235bf25186108074c5ab0d7edc))
+
+### Maintenance Improvements
+
+- Introduce `._reportSdkError` for silent error reporting ([f2a5c5d](https://github.com/serverless/console/commit/f2a5c5db366283c55cfe8a1fbc0fadc5a1344b3d))
+- Prevent HTTP releated debug log when instrumentation is off ([1c6f201](https://github.com/serverless/console/commit/1c6f201889d3d1e6d2d3939763b2d8740e7faa34))
+- Seclude `resolveNonErrorName` util ([57e28f5](https://github.com/serverless/console/commit/57e28f53896ba816a96744633f73126f7fb5e75d))
+
+### [0.4.2](https://github.com/serverless/console/compare/@serverless/sdk@0.4.1...@serverless/sdk@0.4.2) (2023-01-27)
+
+### Bug Fixes
+
+- Fix manual `express` instrumentation ([0fefb5a](https://github.com/serverless/console/commit/0fefb5a202321369599db4cb0687e12f1e122c46))
+
+### [0.4.1](https://github.com/serverless/console/compare/@serverless/sdk@0.4.0...@serverless/sdk@0.4.1) (2023-01-26)
+
+### Features
+
+- Cover each `console.error` invocation with captured event ([c37ef74](https://github.com/serverless/console/commit/c37ef74094d8012570364572be69eaf633b44227))
+- Store stack trace with each captured error and warning ([eadaafa](https://github.com/serverless/console/commit/eadaafa7f8b3258996e5a16d826bada94fa7f85c))
+
 ## [0.4.0](https://github.com/serverless/console/compare/@serverless/sdk@0.3.1...@serverless/sdk@0.4.0) (2023-01-19)
 
 ### ⚠ BREAKING CHANGES

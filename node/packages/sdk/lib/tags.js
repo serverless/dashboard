@@ -8,6 +8,7 @@ const isDate = require('type/date/is');
 const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 const ServerlessSdkError = require('./error');
+const reportSdkError = require('./report-sdk-error');
 
 const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]+$/);
 
@@ -94,7 +95,7 @@ const ensureTagValue = (() => {
 })();
 
 module.exports = class Tags extends Map {
-  set(inputName, value) {
+  _set(inputName, value) {
     const name = ensureTagName(inputName);
     value = ensureTagValue(value, name);
     if (this.has(name)) {
@@ -120,7 +121,15 @@ module.exports = class Tags extends Map {
     }
     return super.set(name, value);
   }
-  setMany(tags, options = {}) {
+  set(inputName, value) {
+    try {
+      this._set(inputName, value);
+    } catch (error) {
+      reportSdkError(error);
+    }
+    return this;
+  }
+  _setMany(tags, options = {}) {
     ensurePlainObject(tags, { name: 'tags', Error: ServerlessSdkError });
     if (!isObject(options)) options = {};
     const prefix = ensureString(options.prefix, {
@@ -133,7 +142,7 @@ module.exports = class Tags extends Map {
     for (const [name, value] of Object.entries(tags)) {
       if (value == null) continue;
       try {
-        this.set(`${prefix ? `${prefix}.` : ''}${name}`, value);
+        this._set(`${prefix ? `${prefix}.` : ''}${name}`, value);
       } catch (error) {
         errors.push(error);
       }
@@ -143,6 +152,14 @@ module.exports = class Tags extends Map {
     throw new ServerlessSdkError(
       `Cannot set Tags:\n\t- ${errors.map(({ message }) => message).join('\n\t- ')}`
     );
+  }
+  setMany(tags, options) {
+    try {
+      this._setMany(tags, options);
+    } catch (error) {
+      reportSdkError(error);
+    }
+    return this;
   }
   toJSON() {
     return Object.fromEntries(this);

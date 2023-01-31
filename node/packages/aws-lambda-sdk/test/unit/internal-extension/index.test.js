@@ -55,7 +55,6 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
     const serverlessSdk = require('../../../');
     const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
     const { RequestResponse } = require('@serverless/sdk-schema/dist/request_response');
-    delete global.serverlessSdk;
     return {
       result,
       error,
@@ -136,6 +135,8 @@ describe('internal-extension/index.test.js', () => {
     process.env.LAMBDA_TASK_ROOT = path.resolve(fixturesDirname, 'lambdas');
     process.env.LAMBDA_RUNTIME_DIR = path.resolve(fixturesDirname, 'runtime');
     process.env.SLS_ORG_ID = 'dummy';
+    process.env.SLS_UNIT_TEST_RUN = '1';
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
   });
   afterEach(() => {
     delete process.env._HANDLER;
@@ -824,7 +825,15 @@ describe('internal-extension/index.test.js', () => {
       event = { ...event };
       expect(Buffer.isBuffer(event.id)).to.be.true;
       expect(typeof event.timestampUnixNano).to.equal('number');
-      if (event.tags.error) delete event.tags.error.stacktrace;
+      if (event.tags.error) {
+        delete event.tags.error.stacktrace;
+        if (event.tags.error.message) {
+          event.tags.error.message = event.tags.error.message.split('\n')[0];
+        }
+      }
+      if (event.tags.warning) {
+        delete event.tags.warning.stacktrace;
+      }
       delete event.id;
       delete event.timestampUnixNano;
       return event;
@@ -851,8 +860,8 @@ describe('internal-extension/index.test.js', () => {
         customTags: JSON.stringify({}),
         tags: {
           error: {
-            name: 'Error',
-            message: 'Consoled error',
+            name: 'string',
+            message: 'My error: Error: Consoled error',
             type: 2,
           },
         },

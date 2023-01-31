@@ -108,6 +108,8 @@ describe('integration', function () {
       const [
         invocationSpan,
         stsSpan,
+        lambdaErrorSpan,
+        ssmErrorSpan,
         sqsCreateSpan,
         sqsSendSpan,
         sqsDeleteSpan,
@@ -129,6 +131,28 @@ describe('integration', function () {
       expect(sdkTags.operation).to.equal('getcalleridentity');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
+
+      // Lambda error span
+      expect(lambdaErrorSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(lambdaErrorSpan.name).to.equal('aws.sdk.lambda.getfunction');
+      sdkTags = lambdaErrorSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('lambda');
+      expect(sdkTags.operation).to.equal('getfunction');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.have.property('error');
+
+      // SSM error span
+      expect(ssmErrorSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(ssmErrorSpan.name).to.equal('aws.sdk.ssm.getparameter');
+      sdkTags = ssmErrorSpan.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('ssm');
+      expect(sdkTags.operation).to.equal('getparameter');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.have.property('error');
 
       // SNS
       const queueName = `${testConfig.configuration.FunctionName}-${index + 1}.fifo`;
@@ -554,6 +578,18 @@ describe('integration', function () {
     ],
     [
       'error-uncaught-immediate',
+      {
+        variants: new Map([
+          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'error-uncaught-resolution-race',
       {
         variants: new Map([
           ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
@@ -1092,7 +1128,7 @@ describe('integration', function () {
               },
             },
           ],
-          ['external', {}],
+          ['external', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
       },
     ],
@@ -1105,6 +1141,7 @@ describe('integration', function () {
             'internal',
             {
               configuration: {
+                Runtime: 'nodejs18.x',
                 Code: {
                   ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws-sdk-v3.js')),
                 },
@@ -1404,7 +1441,15 @@ describe('integration', function () {
                 event = { ...event };
                 expect(Buffer.isBuffer(event.id)).to.be.true;
                 expect(typeof event.timestampUnixNano).to.equal('number');
-                if (event.tags.error) delete event.tags.error.stacktrace;
+                if (event.tags.error) {
+                  delete event.tags.error.stacktrace;
+                  if (event.tags.error.message) {
+                    event.tags.error.message = event.tags.error.message.split('\n')[0];
+                  }
+                }
+                if (event.tags.warning) {
+                  delete event.tags.warning.stacktrace;
+                }
                 delete event.id;
                 delete event.timestampUnixNano;
                 return event;
@@ -1430,8 +1475,8 @@ describe('integration', function () {
                   customTags: JSON.stringify({}),
                   tags: {
                     error: {
-                      name: 'Error',
-                      message: 'Consoled error',
+                      name: 'string',
+                      message: 'My error: Error: Consoled error',
                       type: 2,
                     },
                   },

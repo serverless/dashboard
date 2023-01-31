@@ -228,7 +228,7 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 	return payload
 }
 
-func CollectRequestResponseData(logs []LogItem, requestId string, accountId string) ([][]byte, []*LogItem) {
+func CollectRequestResponseData(logs []LogItem, requestId string, accountId string, traceId string) ([][]byte, []*LogItem) {
 	messages := make([][]byte, 0)
 	metadata := make([]*LogItem, 0)
 	hasPlatformStart := FindPlatformStart(logs)
@@ -305,6 +305,31 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 		region := os.Getenv("AWS_REGION")
 		functionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
 		slsTagPlatform := "lambda"
+
+		var errorTag tags.ErrorTags
+		recordAsJSON := hasRuntimeDone.Record.(map[string]interface{})
+		if recordAsJSON["status"] == "timeout" {
+			metrics := recordAsJSON["metrics"].(map[string]interface{})
+			durationInMS := metrics["durationMs"]
+			message := fmt.Sprintf("Task timed out after %.2f milliseconds", durationInMS)
+			errorTag = tags.ErrorTags{
+				Type:    tags.ErrorTags_ERROR_TYPE_UNCAUGHT,
+				Name:    "function_timeout",
+				Message: &message,
+			}
+		}
+
+		tId := []byte(requestId)
+		lib.Info("TraceID: ", traceId)
+		if tId != nil {
+			decodedTraceId, err := base64.StdEncoding.DecodeString(traceId)
+			if err == nil {
+				tId = decodedTraceId
+			} else {
+				lib.Info("Error decoding traceId: ", err)
+			}
+		}
+
 		reqProto := &schema.RequestResponse{
 			SlsTags: &tags.SlsTags{
 				OrgId: orgId,
@@ -323,7 +348,7 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 			Origin:       schema.RequestResponse_ORIGIN_RESPONSE,
 			Timestamp:    &epoch,
 			Type:         &payloadType,
-			TraceId:      []byte(requestId),
+			TraceId:      tId,
 			Tags: &tags.Tags{
 				Aws: &tags.AwsTags{
 					AccountId:    &accountId,
@@ -331,6 +356,7 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 					RequestId:    &requestId,
 					ResourceName: &functionName,
 				},
+				Error: &errorTag,
 				OrgId: &orgId,
 				Sdk: &tags.SdkTags{
 					Name:    "@serverless/external-extension",
@@ -395,7 +421,7 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 	region := os.Getenv("AWS_REGION")
 
 	// Send reqRes payloads
-	payloads, metadata := CollectRequestResponseData(logs, requestId, accountId)
+	payloads, metadata := CollectRequestResponseData(logs, requestId, accountId, traceId)
 	if len(payloads) != 0 {
 		for index, payload := range payloads {
 			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))

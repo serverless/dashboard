@@ -15,6 +15,7 @@ const pkgJson = require('../package');
 const serverlessSdk = require('./lib/sdk');
 
 const objHasOwnProperty = Object.prototype.hasOwnProperty;
+const unresolvedPromise = new Promise(() => {});
 
 const capturedEvents = [];
 serverlessSdk._eventEmitter.on('captured-event', (capturedEvent) =>
@@ -123,7 +124,10 @@ const resolveOutcomeEnumValue = (value) => {
   }
 };
 
+let isCurrentInvocationResolved = false;
+
 const closeTrace = async (outcome, outcomeResult) => {
+  isCurrentInvocationResolved = true;
   let isRootSpanReset = false;
   const clearRootSpan = () => {
     delete awsLambdaSpan.traceId;
@@ -157,7 +161,8 @@ const closeTrace = async (outcome, outcomeResult) => {
     }
     if (traceSpans.awsLambdaInvocation) traceSpans.awsLambdaInvocation.close({ endTime });
     awsLambdaSpan.close({ endTime });
-    // Trace report requires requestId, which we don't have if handler crashed at initialization
+    // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
+    // which we don't have if handler crashed at initialization
     if (invocationContextAccessor.value) reportTrace();
     flushSpans();
     clearRootSpan();
@@ -169,25 +174,28 @@ const closeTrace = async (outcome, outcomeResult) => {
       `${Math.round(Number(process.hrtime.bigint() - endTime) / 1000000)}ms`
     );
   } catch (error) {
-    process._rawDebug(
-      'Fatal Serverless SDK Error: ' +
-        'Please report at https://github.com/serverless/console/issues: ' +
-        'Response handling failed: ',
-      error && (error.stack || error)
-    );
+    serverlessSdk._reportSdkError(error);
     if (!isRootSpanReset) clearRootSpan();
   }
 };
 
-const wrapUnhandledErrorListener = (eventName) => {
-  const [awsListener] = process.listeners(eventName);
-  process.off(eventName, awsListener);
-  process.on(eventName, (error) => {
-    closeTrace('error:unhandled', error).finally(() => process.nextTick(() => awsListener(error)));
-  });
-};
-wrapUnhandledErrorListener('uncaughtException');
-wrapUnhandledErrorListener('unhandledRejection');
+if (!process.env.SLS_UNIT_TEST_RUN) {
+  const wrapUnhandledErrorListener = (eventName) => {
+    const [awsListener] = process.listeners(eventName);
+    process.off(eventName, awsListener);
+    process.on(eventName, (error) => {
+      if (isCurrentInvocationResolved) {
+        awsListener(error);
+        return;
+      }
+      closeTrace('error:unhandled', error).finally(() =>
+        process.nextTick(() => awsListener(error))
+      );
+    });
+  };
+  wrapUnhandledErrorListener('uncaughtException');
+  wrapUnhandledErrorListener('unhandledRejection');
+}
 
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
@@ -208,7 +216,7 @@ module.exports = (originalHandler, options = {}) => {
     let contextDone;
 
     let originalDone;
-    let isResolved = false;
+    isCurrentInvocationResolved = false;
     const invocationId = ++currentInvocationId;
     try {
       serverlessSdk._debugLog('Invocation: start');
@@ -227,8 +235,7 @@ module.exports = (originalHandler, options = {}) => {
         (someAwsCallback) =>
         (...args) => {
           if (invocationId !== currentInvocationId) return;
-          if (isResolved) return;
-          isResolved = true;
+          if (isCurrentInvocationResolved) return;
           closeTrace(
             args[0] == null ? 'success' : 'error:handled',
             args[0] == null ? args[1] : args[0]
@@ -247,12 +254,7 @@ module.exports = (originalHandler, options = {}) => {
         `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
       );
     } catch (error) {
-      process._rawDebug(
-        'Fatal Serverless SDK Error: ' +
-          'Please report at https://github.com/serverless/console/issues: ' +
-          'Request handling failed: ',
-        error && (error.stack || error)
-      );
+      serverlessSdk._reportSdkError(error);
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }
@@ -273,15 +275,19 @@ module.exports = (originalHandler, options = {}) => {
       .then(
         async (result) => {
           if (invocationId !== currentInvocationId) return result;
-          if (isResolved) return result;
-          isResolved = true;
+          if (isCurrentInvocationResolved) {
+            // If we're here, it means there's an uncaught exception of which propagation is
+            // currently deferred (so SDK trace is propagated).
+            // Return unresolvedPromise to ensure this function doesn't resolve successfuly
+            // before the uncaught exception is propagated
+            return unresolvedPromise;
+          }
           await closeTrace('success', result);
           return result;
         },
         async (error) => {
           if (invocationId !== currentInvocationId) throw error;
-          if (isResolved) throw error;
-          isResolved = true;
+          if (isCurrentInvocationResolved) return unresolvedPromise;
           await closeTrace('error:handled', error);
           throw error;
         }
