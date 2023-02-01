@@ -33,10 +33,19 @@ module.exports.install = () => {
   nodeConsole.error = function (...args) {
     original.error.apply(this, args);
     try {
-      createErrorCapturedEvent(
-        args.length === 1 && isError(args[0]) ? args[0] : resolveMessage(args),
-        { _origin: 'nodeConsole' }
-      );
+      const input = args[0];
+      if (args.length === 1 && isPlainObject(input) && input.source === 'serverlessSdk') {
+        createErrorCapturedEvent(input.message, {
+          _name: input.name,
+          _stack: input.stack,
+          _origin: 'nodeConsole',
+        });
+      } else {
+        createErrorCapturedEvent(
+          args.length === 1 && isError(input) ? input : resolveMessage(args),
+          { _origin: 'nodeConsole' }
+        );
+      }
     } catch (error) {
       reportSdkError(error);
     }
