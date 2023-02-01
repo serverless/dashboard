@@ -23,10 +23,10 @@ module.exports = (error, options = {}) => {
     tags.name = error.name;
     tags.message = error.message;
   } else {
-    tags.name = resolveNonErrorName(error);
+    tags.name = options._name || resolveNonErrorName(error);
     tags.message = typeof error === 'string' ? error : util.inspect(error);
   }
-  tags.stacktrace = resolveStackTraceString(error);
+  tags.stacktrace = options._stack || resolveStackTraceString(error);
   capturedEvent.tags.setMany(tags, { prefix: 'error' });
 
   return capturedEvent;
