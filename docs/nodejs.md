@@ -22,6 +22,13 @@ Serverless Console, much like a Captured Error.
 Captured Error or Captured Warning, and sent to Serverless Console. Tags can be
 viewed on the Trace Explorer Details and Dev Mode.
 
+## Compatibility
+
+While Serverless Console is developed by the makers of the Serverless Framework,
+the entire Serverless Console product and this SDK are 100% agnostic of the
+deployment tool you use. Serverless Console and this SDK work just as well with
+Terraform, CDK, SAM, Pulumi, etc, as as they do with Serverless Framework.
+
 ## Installation
 
 **Install the package**
