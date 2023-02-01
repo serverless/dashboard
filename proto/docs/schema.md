@@ -435,7 +435,9 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | ---- | ------ | ----------- |
 | ERROR_TYPE_UNSPECIFIED | 0 | No ErrorType was provided. This should never be the case and if it is received ingest will ignore it. |
 | ERROR_TYPE_UNCAUGHT | 1 | An unexpected error that caused the application to fail |
-| ERROR_TYPE_CAUGHT | 2 | An error that was reported via the Serverless SDK. Error that doesn&#39;t explicitly fail the application. Multiple errors of this type can be reported during a single application run |
+| ERROR_TYPE_CAUGHT_USER | 2 | An error that was reported by user explictly via the Serverless SDK or console.error call Error doesn&#39;t explicitly fail the application. Multiple errors of this type can be reported during a single application run |
+| ERROR_TYPE_CAUGHT_SDK_USER | 3 | An error that was reported by the Serverless SDK internally that reports user error (misuage of the SDK) Error doesn&#39;t explicitly fail the application. Multiple errors of this type can be reported during a single application run |
+| ERROR_TYPE_CAUGHT_SDK_INTERNAL | 4 | An error that was reported by the Serverless SDK internally that reports internal SDK error Error doesn&#39;t explicitly fail the application. Multiple errors of this type can be reported during a single application run |
 
 
  
@@ -557,7 +559,8 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | ---- | ------ | ----------- |
 | WARNING_TYPE_UNSPECIFIED | 0 | Warning type not set |
 | WARNING_TYPE_USER | 1 | Warning explicitly reported by user |
-| WARNING_TYPE_SDK | 2 | Warning reported internally by the SDK |
+| WARNING_TYPE_SDK_USER | 2 | Warning reported internally by the SDK that signal potential misusage on user side |
+| WARNING_TYPE_SDK_INTERNAL | 3 | Warning reported internally by the SDK that signal non fatal SDK issue |
 
 
  
