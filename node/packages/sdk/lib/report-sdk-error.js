@@ -27,6 +27,6 @@ module.exports = (error, options = {}) => {
   errorData.name = name;
   errorData.message = message;
   if (error.code) errorData.code = error.code;
-  if (error.stack) errorData.stakTrace = resolveStackTraceString(error);
+  if (error.stack) errorData.stack = resolveStackTraceString(error);
   console.error(errorData);
 };
