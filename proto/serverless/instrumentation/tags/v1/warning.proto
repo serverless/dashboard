@@ -17,8 +17,11 @@ message WarningTags {
       // Warning explicitly reported by user
       WARNING_TYPE_USER = 1;
 
-      // Warning reported internally by the SDK
-      WARNING_TYPE_SDK = 2;
+      // Warning reported internally by the SDK that signal potential misusage on user side
+      WARNING_TYPE_SDK_USER = 2;
+
+      // Warning reported internally by the SDK that signal non fatal SDK issue
+      WARNING_TYPE_SDK_INTERNAL = 3;
   }
 
   optional WarningType type = 2;
