@@ -212,3 +212,32 @@ Errors.
 
 Tag keys on `captureWarning` are validated the same way as tag keys on
 `setTag()`.
+
+### Structured Logs with captureError and captureWarning
+
+The `captureWarning` and `captureError` methods will send the content to
+Serverless Console in a binary format. To enable humand readability these
+methods will also output a structured-log JSON string, like the one shown
+below.
+
+This string is easier to read, and can also be used with other tools like
+CloudWatch Log Insights to parse and search.
+
+```javascript
+{
+  "source": "serverlessSdk",
+  "type": "ERROR_TYPE_CAUGHT",
+  "message": "User not found",
+  "stackTrace": "...",
+  "tags": { 
+    "userId": "eb661c69405c"
+   }
+}
+```
+
+To disable the output of the structured logs with `captureError` and
+`captureWarning`, set this environment variable in the runtime.
+
+```bash
+SLS_DISABLE_CAPTURED_EVENTS_STDOUT=true
+```
