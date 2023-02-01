@@ -18,7 +18,7 @@ module.exports = (error, options = {}) => {
   }
   const type = options.type || 'INTERNAL';
 
-  const errorData = { source: 'serverlessSdk', type };
+  const errorData = { source: 'serverlessSdk', type: `ERROR_TYPE_CAUGHT_SDK_${type}` };
   if (type === 'INTERNAL') {
     errorData.description =
       'Internal Serverless SDK Error. ' +

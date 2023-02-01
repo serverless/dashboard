@@ -81,7 +81,7 @@ describe('lib/instrumentation/node-console.js', () => {
 
     expect(capturedEvent.name).to.equal('telemetry.error.generated.v1');
     expect(capturedEvent.tags.get('error.message')).to.equal('Something failed');
-    expect(capturedEvent.tags.get('error.type')).to.equal(2);
+    expect(capturedEvent.tags.get('error.type')).to.equal(4);
     expect(capturedEvent.tags.get('error.name')).to.equal('Error');
     expect(capturedEvent.tags.get('error.stacktrace')).to.equal('at /foo.js:12:1\nat /bar.js:13:1');
     expect(capturedEvent._origin).to.equal('nodeConsole');
