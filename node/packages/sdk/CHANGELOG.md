@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.4](https://github.com/serverless/console/compare/@serverless/sdk@0.4.3...@serverless/sdk@0.4.4) (2023-02-01)
+
+### Bug Fixes
+
+- Do not define `undefined` properties in structured error ([37e2491](https://github.com/serverless/console/commit/37e2491b9c0baa8ea606db1d1e595bccbb9e6d8a))
+- Ensure to unpack structured SDK errors for captured events ([b0ecd2b](https://github.com/serverless/console/commit/b0ecd2ba17eb6cb4b238b6518f7c1f0c882b2be1))
+
+### Maintenance Improvements
+
+- Improve stack trace presentation in SDK error ([40c3930](https://github.com/serverless/console/commit/40c3930796b8783bfbc565df9182d7f2c977138a))
+- Report stack trace with simpler `stack` property ([a6f4604](https://github.com/serverless/console/commit/a6f46040e987524616f79088f90107df274224e5))
+
 ### [0.4.3](https://github.com/serverless/console/compare/@serverless/sdk@0.4.2...@serverless/sdk@0.4.3) (2023-01-30)
 
 ### Features
