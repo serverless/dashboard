@@ -38,6 +38,8 @@ module.exports.install = () => {
         createErrorCapturedEvent(input.message, {
           _name: input.name,
           _stack: input.stack,
+          _type:
+            input.type === '`ERROR_TYPE_CAUGHT_SDK_USER' ? 'handledSdkUser' : 'handledSdkInternal',
           _origin: 'nodeConsole',
         });
       } else {

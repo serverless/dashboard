@@ -7,6 +7,13 @@ const CapturedEvent = require('./captured-event');
 const resolveStackTraceString = require('./resolve-stack-trace-string');
 const resolveNonErrorName = require('./resolve-non-error-name');
 
+const typeMap = new Map([
+  ['unhandled', 1],
+  ['handledUser', 2],
+  ['handledSdkUser', 3],
+  ['handledSdkInternal', 4],
+]);
+
 module.exports = (error, options = {}) => {
   const timestamp = options._timestamp || process.hrtime.bigint();
   if (!isObject(options)) options = {};
@@ -18,7 +25,7 @@ module.exports = (error, options = {}) => {
     _origin: options._origin,
   });
 
-  const tags = { type: options._type === 'unhandled' ? 1 : 2 };
+  const tags = { type: typeMap.get(options._type || 'handledUser') };
   if (isError(error)) {
     tags.name = error.name;
     tags.message = error.message;
