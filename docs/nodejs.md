@@ -14,9 +14,8 @@ library must be added and instrumented in your AWS Lambda function handler.
 
 ## Key terms
 
-- A **Captured Error** is one instance of an `Error` object in Node.js that is
-sent to Serverless Console. It can be viewed in Dev Mode or the Trace Explorer
-Details.
+- A **Captured Error** is one instance of an error that is sent to Serverless
+Console. It can be viewed in Dev Mode or the Trace Explorer Details.
 - A **Captured Warning** is one instance of a string in Node.js that is sent to
 Serverless Console, much like a Captured Error.
 - A **Tag** is a key/value-pair that can be set on the Trace or an individual
@@ -25,7 +24,7 @@ viewed on the Trace Explorer Details and Dev Mode.
 
 ## Installation
 
-**Install the package with:**
+**Install the package**
 
 When Tracing is enabled in Servelress Console, an  AWS Lambda Layer is added to
 your AWS Lambda function with the `@serverless/sdk` package. If you are running
@@ -109,7 +108,6 @@ try {
 }
 ```
 
-
 **Using console.error**
 
 ```javascript
@@ -124,9 +122,11 @@ The Serverless SDK automatically instruments the `console.error` method to
 capture errors. This makes instrumentation much easier as you may already be
 using `console.error` to dispaly the errors.
 
-This method only supports capturing Errors, that is, the object must inherit
-from the Node.js `Error` object. Passing values of any other type will be
-ignored.
+This method can be used to capture `Error` objects, as well as any combination
+of strings. If only an `Error` object is provided, then the stack trace in
+Console will show the stack trace of the error object. If a string, or a
+combination of a string and `Error`, are provided, then then stack trace of the
+`console.error` will be captured.
 
 ### Capturing Warnings
 
@@ -151,6 +151,9 @@ This method only supports capturing strings.
 We recommend avoiding using unique instance values for the strings. For example,
 if you need to include a userId, email, request ID, or any ID that may be unique
 to the individual invocation, we recommend using Tagging instead.
+
+This method will capture the stack trace of the `console.warn` call so it
+is easy to identify in Console.
 
 ### Tagging
 
