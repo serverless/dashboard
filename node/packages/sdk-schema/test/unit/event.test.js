@@ -27,7 +27,7 @@ const expectedEventErrorData = {
       name: 'testError',
       message: 'abc123',
       stacktrace: 'test',
-      type: ErrorType.ERROR_TYPE_CAUGHT,
+      type: ErrorType.ERROR_TYPE_CAUGHT_USER,
     },
     sdk: {
       name: '@serverless/aws-lambda-sdk',
