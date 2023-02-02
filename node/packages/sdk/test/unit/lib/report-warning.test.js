@@ -16,7 +16,20 @@ describe('lib/report-warning.test.js', () => {
   after(() => {
     delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
   });
-  it('should report captured event', () => {
+  it('should report captured event for user warning', () => {
+    let capturedEvent;
+    serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
+    // eslint-disable-next-line no-console
+    reportWarning('Something is wrong', 'WARN_CODE', { type: 'USER' });
+
+    expect(capturedEvent.name).to.equal('telemetry.warning.generated.v1');
+    expect(capturedEvent.tags.get('warning.message')).to.equal('Something is wrong');
+    expect(capturedEvent.tags.get('warning.type')).to.equal(2);
+    expect(capturedEvent.customFingerprint).to.equal('WARN_CODE');
+    expect(capturedEvent._origin).to.equal('nodeConsole');
+  });
+
+  it('should report captured event for internal warning', () => {
     let capturedEvent;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
     // eslint-disable-next-line no-console
@@ -24,7 +37,7 @@ describe('lib/report-warning.test.js', () => {
 
     expect(capturedEvent.name).to.equal('telemetry.warning.generated.v1');
     expect(capturedEvent.tags.get('warning.message')).to.equal('Something is wrong');
-    expect(capturedEvent.tags.get('warning.type')).to.equal(2);
+    expect(capturedEvent.tags.get('warning.type')).to.equal(3);
     expect(capturedEvent.customFingerprint).to.equal('WARN_CODE');
     expect(capturedEvent._origin).to.equal('nodeConsole');
   });
