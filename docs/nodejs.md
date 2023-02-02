@@ -237,7 +237,7 @@ CloudWatch Log Insights to parse and search.
 ```javascript
 {
   "source": "serverlessSdk",
-  "type": "ERROR_TYPE_CAUGHT",
+  "type": "ERROR_TYPE_CAUGHT_USER",
   "message": "User not found",
   "stackTrace": "...",
   "tags": { 
