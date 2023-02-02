@@ -3,13 +3,13 @@
     "@aws-sdk/client-dynamodb": "^3.262.0",
     "@aws-sdk/client-lambda": "^3.262.0",
     "@aws-sdk/client-s3": "^3.262.0",
-    "@aws-sdk/client-sns": "^3.262.0",
+    "@aws-sdk/client-sns": "^3.263.0",
     "@aws-sdk/client-sqs": "^3.262.0",
     "@aws-sdk/client-ssm": "^3.262.0",
     "@aws-sdk/client-sts": "^3.262.0",
     "@aws-sdk/lib-dynamodb": "^3.262.0",
     "@aws-sdk/s3-request-presigner": "^3.262.0",
-    "aws-sdk": "^2.1306.0",
+    "aws-sdk": "^2.1307.0",
     "express": "^4.18.2",
     "serverless-http": "^3.1.1"
   }
