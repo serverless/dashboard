@@ -26,7 +26,7 @@ Most of the instrumentation is setup automatically, still there are scenarios wh
 
 ### `.captureError(error[, options])`
 
-Record captured error
+Record captured error. Captured error is sent to Serverless Console backend and printed to the stdout in structured format (writing to stdout can be disabled with `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` env var)
 
 - `error` - Captured error
 - `options`:
@@ -35,7 +35,7 @@ Record captured error
 
 ### `.captureWarning(message[, options])`
 
-Record warning
+Record warning. Captured warning is sent to Serverless Console backend and printed to the stdout in structured format (writing to stdout can be disabled with `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` env var)
 
 - `message` - Warning message
 - `options`:

@@ -25,7 +25,8 @@ module.exports = (error, options = {}) => {
     _origin: options._origin,
   });
 
-  const tags = { type: typeMap.get(options._type || 'handledUser') };
+  const type = options._type || 'handledUser';
+  const tags = { type: typeMap.get(type) };
   if (isError(error)) {
     tags.name = error.name;
     tags.message = error.message;
@@ -36,5 +37,25 @@ module.exports = (error, options = {}) => {
   tags.stacktrace = options._stack || resolveStackTraceString(error);
   capturedEvent.tags.setMany(tags, { prefix: 'error' });
 
+  if (
+    options._origin === 'nodeConsole' ||
+    type !== 'handledUser' ||
+    serverlessSdk._settings.disableCapturedEventsStdout
+  ) {
+    return capturedEvent;
+  }
+
+  const errorLogData = {
+    source: 'serverlessSdk',
+    type: 'ERROR_TYPE_CAUGHT_USER',
+    name: tags.name,
+    message: tags.message,
+    stack: tags.stacktrace,
+  };
+  if (options.fingerprint) errorLogData.fingerprint = options.fingerprint;
+  console.error(errorLogData);
+
   return capturedEvent;
 };
+
+const serverlessSdk = require('../');
