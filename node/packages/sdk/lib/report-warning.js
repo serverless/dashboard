@@ -2,15 +2,17 @@
 
 const createWarningCapturedEvent = require('./create-warning-captured-event');
 
-module.exports = (message, code) => {
+module.exports = (message, code, options = {}) => {
+  const type = options.type || 'INTERNAL';
   console.warn({
     source: 'serverlessSdk',
+    type: `WARNING_TYPE_SDK_${type}`,
     message,
     code,
   });
   createWarningCapturedEvent(message, {
     _origin: 'nodeConsole',
-    type: 'sdk',
+    _type: type === 'USER' ? 'sdkUser' : 'sdkInternal',
     fingerprint: code,
   });
 };
