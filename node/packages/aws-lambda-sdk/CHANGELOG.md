@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.14.4](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.3...@serverless/aws-lambda-sdk@0.14.4) (2023-02-01)
 
-_Upgrade `@serverless/sdk` to v0.4.4_
+_Upgrade to `@serverless/sdk` to v0.4.4_
 
 ### [0.14.3](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.2...@serverless/aws-lambda-sdk@0.14.3) (2023-01-30)
 
