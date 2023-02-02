@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/serverless/console/compare/@serverless/sdk@0.4.4...@serverless/sdk@0.5.0) (2023-02-02)
+
+### ⚠ BREAKING CHANGES
+
+- All internal warnings need to be configured via `serverlessSdk._reportWarning` to be reflected as captured events
+- `serverless._reportSdkError` is renamed to `serverless._reportError`
+
+### Features
+
+- Dedicated internal endpoint for reporting warnings ([685cb2a](https://github.com/serverless/console/commit/685cb2a7a24313c01d961fa6d26d7547b6b1c93d))
+- Support different SDK error types and reflect the type in structured log ([d45cbfa](https://github.com/serverless/console/commit/d45cbfaa7950927aa920992ab8444d3d666553b5))
+- Write captured events reported with `.capture*` methods to stdout ([4f940eb](https://github.com/serverless/console/commit/4f940ebacab518e71fa60eafd17d511144a7f353))
+
+### Bug Fixes
+
+- Ensure to always generate captured events for internal errors ([dc1e70f](https://github.com/serverless/console/commit/dc1e70f9ff21c6ca30492869294c219e2faa01ac))
+- Ensure to always generate captured events for internal warnings ([eef80e0](https://github.com/serverless/console/commit/eef80e06a086dc3c1af20b75803abcc8b9a94666))
+
+### Maintenance Improvements
+
+- Reflect internal error types in structured log ([0f7f554](https://github.com/serverless/console/commit/0f7f554a069ba7660d80acada2309246b59a2438))
+- Rename `._reportSdkError` to `._reportError` ([33327cb](https://github.com/serverless/console/commit/33327cbe0ddcf5daf60c7217f35f2f3f41a34c62))
+
 ### [0.4.4](https://github.com/serverless/console/compare/@serverless/sdk@0.4.3...@serverless/sdk@0.4.4) (2023-02-01)
 
 ### Bug Fixes
