@@ -51,9 +51,12 @@ yarn add @serverless/sdk
 **Using a bundler**
 
 If you use a bundler, like esbuild, the AWS Lambda Layer for Serverless Console
-will not be able to auto-instrument traces and spans on your handler. To enable
-auto-instrumentation of spans and traces, you will need to manually add the
-AWS-specific auto-instrumentation library and initiate auto-instrumentation.
+will instrument native Node.js APIs like `http` and `console`, and APIs
+available on the runtime like the AWS SDK; however, if the handler bundles APIs,
+like `express` or the AWS SDK, then Serverless Console will not be able to
+auto-instrument. To enable auto-instrumentation for these APIs, you will need to
+manually add the AWS-specific auto-instrumentation library and initiate
+auto-instrumentation.
 
 Install the `@serverless/aws-lambda-sdk` package locally. This replaces
 the need for the `@serverless/sdk` package, so you do not need both.
