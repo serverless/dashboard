@@ -29,4 +29,15 @@ module.exports = (error, options = {}) => {
   if (error.code) errorData.code = error.code;
   if (error.stack) errorData.stack = resolveStackTraceString(error);
   console.error(errorData);
+  try {
+    // Require on spot to avoid otherwise difficult to mitigate circular dependency
+    require('./create-error-captured-event')(errorData.message, {
+      _name: errorData.name,
+      _stack: errorData.stack,
+      _type: type === 'USER' ? 'handledSdkUser' : 'handledSdkInternal',
+      _origin: 'nodeConsole',
+    });
+  } catch {
+    // ignore
+  }
 };
