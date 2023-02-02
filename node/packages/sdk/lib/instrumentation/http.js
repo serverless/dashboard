@@ -2,7 +2,7 @@
 
 const { searchParamsSymbol } = require('url');
 const { errorMonitor } = require('events');
-const reportSdkError = require('../report-sdk-error');
+const reportError = require('../report-error');
 
 let shouldIgnoreFollowingRequest = false;
 
@@ -60,7 +60,7 @@ const install = (protocol, httpModule) => {
           }
         }
       } catch (error) {
-        reportSdkError(error);
+        reportError(error);
       }
       return originalWrite.call(this, chunk, encoding, callback);
     };
@@ -77,7 +77,7 @@ const install = (protocol, httpModule) => {
           abortCapture();
         }
       } catch (error) {
-        reportSdkError(error);
+        reportError(error);
       }
       return originalEnd.call(this, chunk, encoding, callback);
     };
@@ -101,7 +101,7 @@ const install = (protocol, httpModule) => {
             ]);
             if (bodyBuffer.length > bodySizeLimit) bodyBuffer = null;
           } catch (error) {
-            reportSdkError(error);
+            reportError(error);
           }
         });
         response.on('end', () => {
@@ -116,7 +116,7 @@ const install = (protocol, httpModule) => {
             })();
             if (body) traceSpan.output = body;
           } catch (error) {
-            reportSdkError(error);
+            reportError(error);
           }
         });
       }

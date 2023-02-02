@@ -5,7 +5,7 @@ const isPlainObject = require('type/plain-object/is');
 const util = require('util');
 const createErrorCapturedEvent = require('../create-error-captured-event');
 const createWarningCapturedEvent = require('../create-warning-captured-event');
-const reportSdkError = require('../report-sdk-error');
+const reportError = require('../report-error');
 
 const nodeConsole = console;
 
@@ -49,7 +49,7 @@ module.exports.install = () => {
         );
       }
     } catch (error) {
-      reportSdkError(error);
+      reportError(error);
     }
   };
 
@@ -62,7 +62,7 @@ module.exports.install = () => {
         createWarningCapturedEvent(resolveMessage(args), { _origin: 'nodeConsole' });
       }
     } catch (error) {
-      reportSdkError(error);
+      reportError(error);
     }
   };
 

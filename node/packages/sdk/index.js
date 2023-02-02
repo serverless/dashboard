@@ -17,7 +17,7 @@ const Tags = require('./lib/tags');
 const TraceSpan = require('./lib/trace-span');
 const createErrorCapturedEvent = require('./lib/create-error-captured-event');
 const createWarningCapturedEvent = require('./lib/create-warning-captured-event');
-const reportSdkError = require('./lib/report-sdk-error');
+const reportError = require('./lib/report-error');
 const pkgJson = require('./package');
 
 const serverlessSdk = module.exports;
@@ -40,22 +40,22 @@ Object.defineProperties(
 serverlessSdk.captureError = (error, options = {}) => {
   try {
     createErrorCapturedEvent(error, options);
-  } catch (reportError) {
-    reportSdkError(reportError);
+  } catch (internalError) {
+    reportError(internalError);
   }
 };
 serverlessSdk.captureWarning = (message, options = {}) => {
   try {
     createWarningCapturedEvent(message, options);
-  } catch (reportError) {
-    reportSdkError(reportError);
+  } catch (internalError) {
+    reportError(internalError);
   }
 };
 serverlessSdk.setTag = (name, value) => {
   try {
     serverlessSdk._customTags._set(name, value);
   } catch (error) {
-    reportSdkError(error, { type: 'USER' });
+    reportError(error, { type: 'USER' });
   }
 };
 
@@ -111,7 +111,7 @@ serverlessSdk._initialize = (options = {}) => {
 };
 
 serverlessSdk._createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
-serverlessSdk._reportSdkError = reportSdkError;
+serverlessSdk._reportError = reportError;
 serverlessSdk._isDebugMode = Boolean(process.env.SLS_SDK_DEBUG);
 serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);

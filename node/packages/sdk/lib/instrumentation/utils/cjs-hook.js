@@ -1,7 +1,7 @@
 'use strict';
 
 const Module = require('module');
-const reportSdkError = require('../../report-sdk-error');
+const reportError = require('../../report-error');
 
 const installers = new Map();
 const uninstallers = new Map();
@@ -11,7 +11,7 @@ const runInstall = (exports, relativeFilename, install) => {
   try {
     uninstall = install(exports);
   } catch (error) {
-    reportSdkError(error);
+    reportError(error);
     return;
   }
   uninstallers.get(relativeFilename).add(uninstall);
@@ -45,7 +45,7 @@ module.exports.unregister = (relativeFilename) => {
       try {
         uninstall();
       } catch (error) {
-        reportSdkError(error);
+        reportError(error);
       }
     }
     uninstallers.delete(relativeFilename);
