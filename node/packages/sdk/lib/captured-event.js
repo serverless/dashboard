@@ -15,7 +15,7 @@ const emitter = require('./emitter');
 const Tags = require('./tags');
 const TraceSpan = require('./trace-span');
 const ServerlessSdkError = require('./error');
-const reportSdkError = require('./report-sdk-error');
+const reportError = require('./report-error');
 
 class CapturedEvent {
   constructor(name, options = {}) {
@@ -49,7 +49,7 @@ class CapturedEvent {
         Error: ServerlessSdkError,
       });
     } catch (error) {
-      reportSdkError(error, { type: 'USER' });
+      reportError(error, { type: 'USER' });
     }
     if (options._origin) this._origin = options._origin;
     this.traceSpan = TraceSpan.resolveCurrentSpan();

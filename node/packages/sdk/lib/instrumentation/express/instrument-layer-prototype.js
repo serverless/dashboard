@@ -1,6 +1,6 @@
 'use strict';
 
-const reportSdkError = require('../../report-sdk-error');
+const reportError = require('../../report-error');
 
 const instrumentedLayers = new WeakMap();
 const expressSpansMap = new WeakMap();
@@ -68,7 +68,7 @@ module.exports.install = (layerPrototype) => {
         expressRouteData.route = this.route;
       }
     } catch (error) {
-      reportSdkError(error);
+      reportError(error);
       return originalHandleRequest.call(this, req, res, next);
     }
     try {
@@ -80,7 +80,7 @@ module.exports.install = (layerPrototype) => {
             if (this.name === 'bound dispatch') delete expressRouteData.routeSpan;
           }
         } catch (error) {
-          reportSdkError(error);
+          reportError(error);
         }
         return next(...args);
       });
@@ -99,7 +99,7 @@ module.exports.install = (layerPrototype) => {
       );
       openedSpans.add(middlewareSpan);
     } catch (sdkError) {
-      reportSdkError(sdkError);
+      reportError(sdkError);
       return originalHandleError.call(this, error, req, res, next);
     }
     return originalHandleError.call(this, error, req, res, (...args) => {

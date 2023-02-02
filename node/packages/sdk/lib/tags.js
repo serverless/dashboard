@@ -8,7 +8,7 @@ const isDate = require('type/date/is');
 const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 const ServerlessSdkError = require('./error');
-const reportSdkError = require('./report-sdk-error');
+const reportError = require('./report-error');
 
 const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]+$/);
 
@@ -125,7 +125,7 @@ module.exports = class Tags extends Map {
     try {
       this._set(inputName, value);
     } catch (error) {
-      reportSdkError(error);
+      reportError(error);
     }
     return this;
   }
@@ -157,7 +157,7 @@ module.exports = class Tags extends Map {
     try {
       this._setMany(tags, options);
     } catch (error) {
-      reportSdkError(error);
+      reportError(error);
     }
     return this;
   }
