@@ -10,14 +10,14 @@ module.exports = (value) => {
   try {
     return JSON.stringify(value, replacer);
   } catch (error) {
-    console.warn({
-      source: 'serverlessSdk',
-      message:
-        'Detected not serializable value in AWS SDK request:\n' +
+    serverlessSdk._reportWarning(
+      'Detected not serializable value in AWS SDK request:\n' +
         `\tvalue: ${util.inspect(value)}\n` +
         `\terror:${error.message}`,
-      code: 'AWS_SDK_DOUBLE_RESOLUTION',
-    });
+      'AWS_SDK_NON_SERIALIZABLE_VALUE'
+    );
     return null;
   }
 };
+
+const serverlessSdk = require('../../../');
