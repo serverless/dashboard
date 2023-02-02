@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.5](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.4...@serverless/aws-lambda-sdk@0.14.5) (2023-02-02)
+
+### Maintenance Improvements
+
+_Upgrade to `@serverless/sdk` to v0.5.0_
+
+- Adapt to utility rename done on SDK side ([2f16112](https://github.com/serverless/console/commit/2f16112c9e3e1050d17188e307e0914997d766ed))
+- Reconfigure warnings with `._reportWarning` ([22b8d4f](https://github.com/serverless/console/commit/22b8d4f2258b97500e8640bd99417d27ca8b4b10))
+
 ### [0.14.4](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.3...@serverless/aws-lambda-sdk@0.14.4) (2023-02-01)
 
 _Upgrade to `@serverless/sdk` to v0.4.4_
