@@ -19,7 +19,7 @@ module.exports.install = () => {
       try {
         uninstallers.add(instrumentV3Client(this));
       } catch (error) {
-        serverlessSdk._reportSdkError(error);
+        serverlessSdk._reportError(error);
       }
       return originalSend.call(this, command, optionsOrCb, cb);
     };

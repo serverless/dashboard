@@ -24,7 +24,7 @@ serverlessSdk._initializeExtension = (options) => {
       require('./lib/instrumentation/aws-sdk').install();
     }
   } catch (error) {
-    serverlessSdk._reportSdkError(error);
+    serverlessSdk._reportError(error);
   }
 };
 serverlessSdk._isDevMode = Boolean(process.env.SLS_DEV_MODE_ORG_ID);
