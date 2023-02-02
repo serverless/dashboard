@@ -18,6 +18,7 @@ const TraceSpan = require('./lib/trace-span');
 const createErrorCapturedEvent = require('./lib/create-error-captured-event');
 const createWarningCapturedEvent = require('./lib/create-warning-captured-event');
 const reportError = require('./lib/report-error');
+const reportWarning = require('./lib/report-warning');
 const pkgJson = require('./package');
 
 const serverlessSdk = module.exports;
@@ -112,6 +113,7 @@ serverlessSdk._initialize = (options = {}) => {
 
 serverlessSdk._createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
 serverlessSdk._reportError = reportError;
+serverlessSdk._reportWarning = reportWarning;
 serverlessSdk._isDebugMode = Boolean(process.env.SLS_SDK_DEBUG);
 serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);
