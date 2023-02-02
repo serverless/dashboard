@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.15.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.5...@serverless/sdk-schema@0.15.0) (2023-02-02)
+
+### ⚠ BREAKING CHANGES
+
+- Captured event `WarningType.WARNING_TYPE_SDK` reference is renamed to `WarningType.WARNING_TYPE_SDK_USER`
+- Captured event `ErrorType.ERROR_TYPE_CAUGHT` reference is renamed to `ErrorType.ERROR_TYPE_CAUGHT_USER`
+
+### Features
+
+- Distinguish between user or internal SDK generated warning ([27f28f2](https://github.com/serverless/console/commit/27f28f2b8846ba8657d6cf60e9282580874045b8))
+- Distinguish user and sdk caught errors ([177516b](https://github.com/serverless/console/commit/177516bf05e59bba1fbd32e09c3d74863cf103f7))
+
 ## [0.14.5](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.4...@serverless/sdk-schema@0.14.5) (2023-01-24)
 
 ### Features
