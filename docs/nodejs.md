@@ -40,7 +40,8 @@ step.
 
 If you will run this on AWS Lambda without Serverless Console Tracing enabled,
 or running it on a different runtime, like locally, then you'll need to add the
-`@serverless/sdk` package.
+`@serverless/sdk` package. Even though the SDK is already available in the AWS
+Lambda layer, bundling it in your handler will not conflict with the layer.
 
 ```
 npm install @serverless/sdk --save
