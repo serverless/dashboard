@@ -90,6 +90,9 @@ serverlessSdk._initialize = (options = {}) => {
     coerceToNaturalNumber(process.env.SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB) ||
     coerceToNaturalNumber(options.traceMaxCapturedBodySizeKb) ||
     10000;
+  serverlessSdk._settings.disableCapturedEventsStdout = Boolean(
+    process.env.SLS_DISABLE_CAPTURED_EVENTS_STDOUT || options.disableCapturedEventsStdout
+  );
 
   if (!settings.disableHttpMonitoring) {
     // Auto generate HTTP(S) request spans
