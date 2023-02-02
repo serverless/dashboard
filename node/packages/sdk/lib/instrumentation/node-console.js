@@ -56,11 +56,8 @@ module.exports.install = () => {
   nodeConsole.warn = function (...args) {
     original.warn.apply(this, args);
     try {
-      if (isPlainObject(args[0]) && args[0].source === 'serverlessSdk') {
-        createWarningCapturedEvent(args[0].message, { _origin: 'nodeConsole', type: 2 });
-      } else {
-        createWarningCapturedEvent(resolveMessage(args), { _origin: 'nodeConsole' });
-      }
+      if (args.length === 1 && isPlainObject(args[0]) && args[0].source === 'serverlessSdk') return;
+      createWarningCapturedEvent(resolveMessage(args), { _origin: 'nodeConsole' });
     } catch (error) {
       reportError(error);
     }
