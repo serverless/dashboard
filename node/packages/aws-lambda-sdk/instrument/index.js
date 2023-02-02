@@ -174,7 +174,7 @@ const closeTrace = async (outcome, outcomeResult) => {
       `${Math.round(Number(process.hrtime.bigint() - endTime) / 1000000)}ms`
     );
   } catch (error) {
-    serverlessSdk._reportSdkError(error);
+    serverlessSdk._reportError(error);
     if (!isRootSpanReset) clearRootSpan();
   }
 };
@@ -254,7 +254,7 @@ module.exports = (originalHandler, options = {}) => {
         `${Math.round(Number(process.hrtime.bigint() - requestStartTime) / 1000000)}ms`
       );
     } catch (error) {
-      serverlessSdk._reportSdkError(error);
+      serverlessSdk._reportError(error);
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }

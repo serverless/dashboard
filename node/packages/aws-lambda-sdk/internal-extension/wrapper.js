@@ -26,7 +26,7 @@ const serverlessSdk = (() => {
 try {
   serverlessSdk._initialize();
 } catch (error) {
-  serverlessSdk._reportSdkError(error);
+  serverlessSdk._reportError(error);
 }
 const instrument = require('../instrument');
 
@@ -89,7 +89,7 @@ const resolveHandlerObject = (resolvedHandlerModule) => {
   try {
     return { handler: instrument(handlerFunction) };
   } catch (error) {
-    serverlessSdk._reportSdkError(error);
+    serverlessSdk._reportError(error);
     return { handler: handlerFunction };
   }
 };

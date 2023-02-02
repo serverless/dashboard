@@ -48,7 +48,7 @@ const sendData = () => {
       sendTelemetry('trace', traceProto.TracePayload.encode(payload).finish())
     );
   } catch (error) {
-    serverlessSdk._reportSdkError(error);
+    serverlessSdk._reportError(error);
   }
 };
 

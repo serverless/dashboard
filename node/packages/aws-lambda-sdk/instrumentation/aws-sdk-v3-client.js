@@ -46,7 +46,7 @@ module.exports.install = (client) => {
             .region()
             .then((region) => traceSpan.tags.set('aws.sdk.region', region));
         } catch (error) {
-          serverlessSdk._reportSdkError(error);
+          serverlessSdk._reportError(error);
           return next(args);
         }
 
@@ -84,7 +84,7 @@ module.exports.install = (client) => {
             try {
               tagMapper.responseData(traceSpan, response.output);
             } catch (sdkError) {
-              serverlessSdk._reportSdkError(sdkError);
+              serverlessSdk._reportError(sdkError);
             }
           }
           if (!traceSpan.endTime) traceSpan.close();
