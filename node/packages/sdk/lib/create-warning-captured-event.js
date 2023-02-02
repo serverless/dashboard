@@ -16,7 +16,7 @@ module.exports = (message, options = {}) => {
     customFingerprint: options.fingerprint,
     tags: {
       'warning.message': message,
-      'warning.type': options.type || 1,
+      'warning.type': options.type === 'sdk' ? 2 : 1,
       'warning.stacktrace': resolveStackTraceString(),
     },
     _origin: options._origin,

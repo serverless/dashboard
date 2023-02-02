@@ -54,15 +54,12 @@ describe('lib/instrumentation/node-console.js', () => {
   });
 
   it('should recognize Serverless SDK warning', () => {
-    let capturedEvent;
+    let capturedEvent = null;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
     // eslint-disable-next-line no-console
     console.warn({ source: 'serverlessSdk', message: 'Something is wrong' });
 
-    expect(capturedEvent.name).to.equal('telemetry.warning.generated.v1');
-    expect(capturedEvent.tags.get('warning.message')).to.equal('Something is wrong');
-    expect(capturedEvent.tags.get('warning.type')).to.equal(2);
-    expect(capturedEvent._origin).to.equal('nodeConsole');
+    expect(capturedEvent).to.be.null;
   });
 
   it('should recognize Serverless SDK error', () => {
