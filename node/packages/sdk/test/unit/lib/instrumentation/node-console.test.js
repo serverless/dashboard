@@ -63,24 +63,18 @@ describe('lib/instrumentation/node-console.js', () => {
   });
 
   it('should recognize Serverless SDK error', () => {
-    let capturedEvent;
+    let capturedEvent = null;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
     // eslint-disable-next-line no-console
     console.error({
       source: 'serverlessSdk',
-      type: 'INTERNAL',
+      type: 'ERROR_TYPE_CAUGHT_SDK_INTERNAL',
       description: 'Internal Serverless SDK Error',
       name: 'Error',
       message: 'Something failed',
       code: 'ERROR_CODE',
       stack: 'at /foo.js:12:1\nat /bar.js:13:1',
     });
-
-    expect(capturedEvent.name).to.equal('telemetry.error.generated.v1');
-    expect(capturedEvent.tags.get('error.message')).to.equal('Something failed');
-    expect(capturedEvent.tags.get('error.type')).to.equal(4);
-    expect(capturedEvent.tags.get('error.name')).to.equal('Error');
-    expect(capturedEvent.tags.get('error.stacktrace')).to.equal('at /foo.js:12:1\nat /bar.js:13:1');
-    expect(capturedEvent._origin).to.equal('nodeConsole');
+    expect(capturedEvent).to.be.null;
   });
 });

@@ -34,20 +34,10 @@ module.exports.install = () => {
     original.error.apply(this, args);
     try {
       const input = args[0];
-      if (args.length === 1 && isPlainObject(input) && input.source === 'serverlessSdk') {
-        createErrorCapturedEvent(input.message, {
-          _name: input.name,
-          _stack: input.stack,
-          _type:
-            input.type === '`ERROR_TYPE_CAUGHT_SDK_USER' ? 'handledSdkUser' : 'handledSdkInternal',
-          _origin: 'nodeConsole',
-        });
-      } else {
-        createErrorCapturedEvent(
-          args.length === 1 && isError(input) ? input : resolveMessage(args),
-          { _origin: 'nodeConsole' }
-        );
-      }
+      if (args.length === 1 && isPlainObject(input) && input.source === 'serverlessSdk') return;
+      createErrorCapturedEvent(args.length === 1 && isError(input) ? input : resolveMessage(args), {
+        _origin: 'nodeConsole',
+      });
     } catch (error) {
       reportError(error);
     }
