@@ -31,17 +31,14 @@ Terraform, CDK, SAM, Pulumi, etc, as as they do with Serverless Framework.
 
 ## Installation
 
-**Install the package**
+### Install the package
 
 When Tracing is enabled in Servelress Console, an  AWS Lambda Layer is added to
-your AWS Lambda function with the `@serverless/sdk` package. If you are running
-the handler with Tracing enabled on AWS Lambda only, then you can skip this
-step.
-
-If you will run this on AWS Lambda without Serverless Console Tracing enabled,
-or running it on a different runtime, like locally, then you'll need to add the
-`@serverless/sdk` package. Even though the SDK is already available in the AWS
-Lambda layer, bundling it in your handler will not conflict with the layer.
+your AWS Lambda function with the `@serverless/sdk` package. While the AWS
+Lambda layer is added by Serverless Console, it is possible for the layer to be
+removed temporarily if you deploy manually or with some infrastructure as code
+tools. As such, we recommend bundling the SDK with your handler to avoid
+unresolved references to the SDK.
 
 ```
 npm install @serverless/sdk --save
@@ -49,7 +46,7 @@ npm install @serverless/sdk --save
 yarn add @serverless/sdk
 ```
 
-**Using a bundler**
+### Using a bundler
 
 If you use a bundler, like esbuild, the AWS Lambda Layer for Serverless Console
 will instrument native Node.js APIs like `http` and `console`, and APIs
@@ -83,7 +80,7 @@ serverlessSdk.instrumentation.awsSdkV3Client.install(client)
 serverlessSdk.instrumentation.expressApp.install(expressApp)
 ```
 
-**Enable Tracing, Logging, and Dev Mode**
+### Enable Tracing, Logging, and Dev Mode**
 
 The SDK will merely generate the necessary Tags, Captured Errors, and Captured
 Warnings; however, Tracing, Logging, and Dev Mode must be enabled on your org on
