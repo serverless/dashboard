@@ -80,7 +80,7 @@ serverlessSdk.instrumentation.awsSdkV3Client.install(client)
 serverlessSdk.instrumentation.expressApp.install(expressApp)
 ```
 
-### Enable Tracing, Logging, and Dev Mode**
+### Enable Tracing, Logging, and Dev Mode
 
 The SDK will merely generate the necessary Tags, Captured Errors, and Captured
 Warnings; however, Tracing, Logging, and Dev Mode must be enabled on your org on
@@ -106,7 +106,7 @@ const serverlessSdk = require("@serverless/sdk");
 The most common use case for the Serverless SDK is to capture handled errors.
 There are two mechanisms for capturing handled errors.
 
-**Using captureError**
+#### Using captureError
 
 ```javascript
 try {
@@ -116,7 +116,7 @@ try {
 }
 ```
 
-**Using console.error**
+#### Using console.error
 
 ```javascript
 try {
@@ -138,13 +138,13 @@ combination of a string and `Error`, are provided, then then stack trace of the
 
 ### Capturing Warnings
 
-**Using captureWarning**
+#### Using captureWarning
 
 ```javascript
 serverlessSdk.captureWarning("Something bad will happen soon")
 ```
 
-**Using console.warn**
+#### Using console.warn
 
 ```javascript
 console.warn("My Warning")
@@ -165,7 +165,7 @@ is easy to identify in Console.
 
 ### Tagging
 
-**Setting Tags on the Trace**
+#### Setting Tags on the Trace
 
 ```javascript
 serverlessSdk.setTag("userId", "bd86489cf036")
@@ -182,7 +182,7 @@ Tag keys may only contain alphanumeric, `.`, `-`, and `_` characters. Tag values
 may contain any string value. Invalid tag keys will not throw errors, instead,
 an SDK error will be made available in Dev Mode and Trace Details.
 
-**Settings Tags with console.error and console.warn**
+#### Settings Tags with console.error and console.warn
 
 ```javascript
 serverlessSdk.setTag("userId", "bd86489cf036")
@@ -196,7 +196,7 @@ using the `console.error` and `console.warn` methods. Therefore, Tags set with
 `setTag()` will therefore apply to all Captured Errors and Captured Warnings
 created using `console.error` and `console.warn`.
 
-**Setting Tags on Captured Errors**
+#### Setting Tags on Captured Errors
 
 ```javascript
 serverlessSdk.captureError(ex, {tags:{userId:"1b8b4c6b4b14"}})
@@ -209,7 +209,7 @@ Captured Error, while keeping the Tag on the trace unmodified.
 Tag keys on `captureError` are validated the same way as tag keys on `setTag()`.
 
 
-**Setting Tags on Captured Warnings**
+#### Setting Tags on Captured Warnings
 
 ```javascript
 serverlessSdk.captureWarning("warning message", {tags:{userId:"eb661c69405c"}})
