@@ -46,7 +46,6 @@ func (e *Extension) ExternalExtension() {
 	lib.ReportInitialization()
 	startTime := time.Now()
 	extensionName := path.Base(os.Args[0])
-	printPrefix := fmt.Sprintf("[%s]", extensionName)
 	extensionClient := extension.NewClient(os.Getenv("AWS_LAMBDA_RUNTIME_API"))
 
 	// Get account id from sts
@@ -58,8 +57,10 @@ func (e *Extension) ExternalExtension() {
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		s := <-sigs
-		cancel()
-		s.String()
+		lib.Info("Received signal: %s %v", s.String(), cancel)
+		// If we cancel now this will prevent the final logs being send in the event
+		// of an invocation error
+		// cancel()
 	}()
 
 	// Register extension as soon as possible
@@ -91,8 +92,9 @@ func (e *Extension) ExternalExtension() {
 		for !(logQueue.Empty() && (force || receivedRuntimeDone)) {
 			logs, err := logQueue.Get(1)
 			if err != nil {
-				logger.Error(printPrefix, zap.Error(err))
-				return
+				lib.Error(err)
+				time.Sleep(time.Millisecond * 50)
+				continue
 			}
 			logsStr := fmt.Sprintf("%v", logs[0])
 			receivedRuntimeDone = strings.Contains(logsStr, string(logsapi.RuntimeDone)) || receivedRuntimeDone
@@ -145,28 +147,25 @@ func (e *Extension) ExternalExtension() {
 				requestId = agent.FindRequestId(arr)
 			}
 
+			hasInitErrorLog := agent.FindInitErrorLog(arr) == nil
+
 			// Find the trace id so we can attach it to incoming logs
-			if traceId == "" && os.Getenv("SLS_ORG_ID") != "" {
+			if traceId == "" {
 				traceId = agent.FindTraceId(arr)
 			}
 
 			if runtimeDoneLog != nil {
 				record := runtimeDoneLog.Record.(map[string]interface{})
 				rId := record["requestId"].(string)
-				finalStatus := record["status"].(string)
 				if requestId == "" {
 					requestId = rId
-				}
-				// TraceId will never come because there was a runtime error
-				if finalStatus == "error" && traceId == "" && hasInternalExtension {
-					traceId = rId
 				}
 			}
 
 			if traceId == "" && hasInternalExtension {
 				deferredLogs = append(deferredLogs, arr...)
 				continue
-			} else if requestId == "" {
+			} else if requestId == "" && !hasInitErrorLog {
 				deferredLogs = append(deferredLogs, arr...)
 				continue
 			}
@@ -222,7 +221,7 @@ func (e *Extension) ExternalExtension() {
 
 			// Exit if we receive a SHUTDOWN event
 			if res.EventType == extension.Shutdown {
-				flushLogQueue(true)
+				flushLogQueue(res.ShutdownReason != "failure")
 				logsApiAgent.Shutdown()
 				// Shutdown duration log for benchmarks
 				lib.ReportShutdownDuration(startTime)

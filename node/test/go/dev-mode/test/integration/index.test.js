@@ -60,6 +60,7 @@ describe('Integration', function () {
               expect(logPayload.slsTags.service).to.equal(testConfig.configuration.FunctionName);
               logPayload.logEvents.forEach((logItem, index) => {
                 const body = logItem.body || '';
+                expect(logItem.traceId !== '').to.equal(true);
                 expect(
                   `${testConfig.name.replace('-v18', '').replace('-v16', '')} ${index + 1}`
                 ).to.have.string(body.slice(body.lastIndexOf('\t') + 1).replace('\n', ''));
@@ -96,6 +97,7 @@ describe('Integration', function () {
               expect(reqResPayloads.length).to.equal(2);
               const lastPayload = reqResPayloads[1];
               const response = lastPayload.payload.requestResponse;
+              expect(response.traceId !== '').to.equal(true);
               expect(response.tags.error.message).to.contain('Task timed out');
               expect(response.tags.error.type).to.equal(1);
             }
@@ -185,12 +187,13 @@ describe('Integration', function () {
             for (const { reqResPayloads, devModePayloads } of invocationsData) {
               // TraceId should match the one send via the dev mode payload
               const traceId = devModePayloads[0].payload?.trace.spans[0].traceId.toString();
+              const encodedTraceId = Buffer.from(traceId).toString('base64');
               expect(reqResPayloads.length).to.equal(2);
               const lastPayload = reqResPayloads[1];
               const response = lastPayload.payload.requestResponse;
               expect(response.tags.error.message).to.contain('Task timed out');
               expect(response.tags.error.type).to.equal(1);
-              expect(response.traceId.toString()).to.equal(traceId);
+              expect(response.traceId.toString()).to.equal(encodedTraceId);
             }
           },
         },

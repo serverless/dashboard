@@ -22,6 +22,7 @@ type RegisterResponse struct {
 // NextEventResponse is the response for /event/next
 type NextEventResponse struct {
 	EventType          EventType `json:"eventType"`
+	ShutdownReason     string    `json:"shutdownReason"`
 	DeadlineMs         int64     `json:"deadlineMs"`
 	RequestID          string    `json:"requestId"`
 	InvokedFunctionArn string    `json:"invokedFunctionArn"`
