@@ -17,6 +17,7 @@ const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const getProcessFunction = require('../../../../test/lib/get-process-function');
 const resolveTestVariantsConfig = require('../../../../test/lib/resolve-test-variants-config');
+const resolveDirZipBuffer = require('../../../../test/utils/resolve-dir-zip-buffer');
 const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
 const awsRequest = require('../../../../test/utils/aws-request');
 const pkgJson = require('../../package');
@@ -329,6 +330,31 @@ describe('integration', function () {
     deferredConfiguration: () => ({
       Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
     }),
+  };
+
+  const expressInvoke = async function self(testConfig) {
+    const startTime = process.hrtime.bigint();
+    const response = await fetch(
+      `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ some: 'content' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    if (response.status !== 200) {
+      if (response.status === 404) {
+        await wait(1000);
+        return self(testConfig);
+      }
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+    const payload = { raw: await response.text() };
+    const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+    log.debug('invoke response payload %s', payload.raw);
+    return { duration, payload };
   };
 
   const useCasesConfig = new Map([
@@ -1113,6 +1139,35 @@ describe('integration', function () {
       },
     ],
     [
+      'esm-http/index',
+      {
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            const [invocationSpan, httpRequestSpan] = spans;
+
+            expect(httpRequestSpan.name).to.equal('node.http.request');
+            expect(httpRequestSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+
+            const { tags } = httpRequestSpan;
+            expect(tags.http.method).to.equal('GET');
+            expect(tags.http.protocol).to.equal('HTTP/1.1');
+            expect(tags.http.host).to.equal('localhost:3177');
+            expect(tags.http.path).to.equal('/');
+            expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
+            expect(tags.http.requestHeaderNames).to.deep.equal(['someHeader']);
+            expect(tags.http.statusCode.toString()).to.equal('200');
+          }
+        },
+      },
+    ],
+    [
       'aws-sdk-v2',
       {
         config: { test: testAwsSdk },
@@ -1133,6 +1188,34 @@ describe('integration', function () {
       },
     ],
     [
+      'esm-aws-sdk-v2/index',
+      {
+        config: {
+          test: ({ invocationsData }) => {
+            for (const [
+              index,
+              {
+                trace: { spans },
+              },
+            ] of invocationsData.entries()) {
+              spans.shift();
+              if (!index) spans.shift();
+              const [invocationSpan, stsSpan] = spans;
+
+              // STS
+              expect(stsSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+              expect(stsSpan.name).to.equal('aws.sdk.sts.getcalleridentity');
+            }
+          },
+        },
+        variants: new Map([
+          // Internal resolution won't work as before nodejs16.x, internally installed CJS
+          // packages were not importable from ESM context (due to lack of NODE_PATH support)
+          ['external', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+      },
+    ],
+    [
       'aws-sdk-v3',
       {
         config: { test: testAwsSdk },
@@ -1146,6 +1229,46 @@ describe('integration', function () {
                   ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws-sdk-v3.js')),
                 },
               },
+            },
+          ],
+          ['external', { configuration: { Runtime: 'nodejs16.x' } }],
+        ]),
+      },
+    ],
+    [
+      'esm-aws-sdk-v3/index',
+      {
+        config: {
+          test: ({ invocationsData }) => {
+            for (const [
+              index,
+              {
+                trace: { spans },
+              },
+            ] of invocationsData.entries()) {
+              spans.shift();
+              if (!index) spans.shift();
+              const [invocationSpan, stsSpan] = spans;
+
+              // STS
+              expect(stsSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+              expect(stsSpan.name).to.equal('aws.sdk.sts.getcalleridentity');
+            }
+          },
+        },
+        variants: new Map([
+          [
+            'internal',
+            {
+              deferredConfiguration: async () => ({
+                Runtime: 'nodejs18.x',
+                Code: {
+                  ZipFile: await resolveDirZipBuffer(
+                    path.resolve(fixturesDirname, 'esm-aws-sdk-v3'),
+                    { dirname: 'esm-aws-sdk-v3' }
+                  ),
+                },
+              }),
             },
           ],
           ['external', { configuration: { Runtime: 'nodejs16.x' } }],
@@ -1182,30 +1305,7 @@ describe('integration', function () {
             await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
           },
         },
-        invoke: async function self(testConfig) {
-          const startTime = process.hrtime.bigint();
-          const response = await fetch(
-            `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
-            {
-              method: 'POST',
-              body: JSON.stringify({ some: 'content' }),
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-          if (response.status !== 200) {
-            if (response.status === 404) {
-              await wait(1000);
-              return self(testConfig);
-            }
-            throw new Error(`Unexpected response status: ${response.status}`);
-          }
-          const payload = { raw: await response.text() };
-          const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
-          log.debug('invoke response payload %s', payload.raw);
-          return { duration, payload };
-        },
+        invoke: expressInvoke,
         test: ({ invocationsData, testConfig }) => {
           for (const [
             index,
@@ -1232,6 +1332,55 @@ describe('integration', function () {
 
             expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
+            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
+
+            const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+            const routeSpan = middlewareSpans.pop();
+            const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+
+            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+              'express.middleware.query',
+              'express.middleware.expressinit',
+              'express.middleware.jsonparser',
+              'express.middleware.router',
+            ]);
+            for (const middlewareSpan of middlewareSpans) {
+              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+            }
+            expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+          }
+        },
+      },
+    ],
+    [
+      'esm-express/index',
+      {
+        hooks: {
+          afterCreate: getCreateHttpApi('2.0'),
+          beforeDelete: async (testConfig) => {
+            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+          },
+        },
+        invoke: expressInvoke,
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            const lambdaSpan = spans.shift();
+            if (!index) spans.shift();
+            const { tags: lambdaTags } = lambdaSpan;
+
+            expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+            expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+            expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+            expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
+            expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
             expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
 
             const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
