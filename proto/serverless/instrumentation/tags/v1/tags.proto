@@ -6,6 +6,7 @@ import "serverless/instrumentation/tags/v1/aws.proto";
 import "serverless/instrumentation/tags/v1/common.proto";
 import "serverless/instrumentation/tags/v1/error.proto";
 import "serverless/instrumentation/tags/v1/warning.proto";
+import "serverless/instrumentation/tags/v1/notice.proto";
 
 option go_package = ".;protoc";
 
@@ -40,6 +41,9 @@ message Tags {
 
   // These tags are used when a warning has occured and is reported on the event.
   optional serverless.instrumentation.tags.v1.WarningTags warning = 114;
+
+  // These tags are used when noteworthy situation occurs and is reported on the event.
+  optional serverless.instrumentation.tags.v1.NoticeTags notice = 115;
 }
 
 message SlsTags {
