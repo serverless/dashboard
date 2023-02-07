@@ -5,6 +5,7 @@ const { expect } = require('chai');
 const path = require('path');
 const log = require('log').get('test');
 const wait = require('timers-ext/promise/sleep');
+const AdmZip = require('adm-zip');
 const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
@@ -15,6 +16,7 @@ const { default: fetch } = require('node-fetch');
 const basename = require('../lib/basename');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
+const runEsbuild = require('../../../../lib/run-esbuild');
 const getProcessFunction = require('../../../../test/lib/get-process-function');
 const resolveTestVariantsConfig = require('../../../../test/lib/resolve-test-variants-config');
 const resolveDirZipBuffer = require('../../../../test/utils/resolve-dir-zip-buffer');
@@ -355,6 +357,50 @@ describe('integration', function () {
     const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
     log.debug('invoke response payload %s', payload.raw);
     return { duration, payload };
+  };
+
+  const expressMinimalTest = ({ invocationsData }) => {
+    for (const [
+      index,
+      {
+        trace: { spans },
+      },
+    ] of invocationsData.entries()) {
+      const lambdaSpan = spans.shift();
+      if (!index) spans.shift();
+      const { tags: lambdaTags } = lambdaSpan;
+
+      expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+      expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+      expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+      expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
+      expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+      expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
+
+      const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+      const routeSpan = middlewareSpans.pop();
+      const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+
+      expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+      expect(
+        middlewareSpans.map(({ name }) => {
+          // Bundled versions of express may introduce numeric postfixes for middlewarne names
+          // (those names are taken from function names, which may be mangled by bundlers)
+          return name.replace(/\d+$/, '');
+        })
+      ).to.deep.equal([
+        'express.middleware.query',
+        'express.middleware.expressinit',
+        'express.middleware.jsonparser',
+        'express.middleware.router',
+      ]);
+      for (const middlewareSpan of middlewareSpans) {
+        expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+      }
+      expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+      expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+    }
   };
 
   const useCasesConfig = new Map([
@@ -1216,6 +1262,39 @@ describe('integration', function () {
       },
     ],
     [
+      'aws-sdk-v2-bundled',
+      {
+        deferredConfiguration: async () => {
+          const zip = new AdmZip();
+          zip.addFile(
+            'aws-sdk-v2-bundled.js',
+            await runEsbuild(
+              path.resolve(fixturesDirname, 'aws-sdk-v2-bundled.js'),
+              '--bundle',
+              '--platform=node',
+              '--external:@serverless/aws-lambda-sdk'
+            )
+          );
+          return { Runtime: 'nodejs18.x', Code: { ZipFile: zip.toBuffer() } };
+        },
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            const [invocationSpan, stsSpan] = spans;
+            // STS
+            expect(stsSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+            expect(stsSpan.name).to.equal('aws.sdk.sts.getcalleridentity');
+          }
+        },
+      },
+    ],
+    [
       'aws-sdk-v3',
       {
         config: { test: testAwsSdk },
@@ -1273,6 +1352,40 @@ describe('integration', function () {
           ],
           ['external', { configuration: { Runtime: 'nodejs16.x' } }],
         ]),
+      },
+    ],
+    [
+      'aws-sdk-v3-bundled',
+      {
+        deferredConfiguration: async () => {
+          const zip = new AdmZip();
+          zip.addFile(
+            'aws-sdk-v3-bundled.js',
+            await runEsbuild(
+              path.resolve(fixturesDirname, 'aws-sdk-v3-bundled.js'),
+              '--bundle',
+              '--platform=node',
+              '--external:@serverless/aws-lambda-sdk'
+            )
+          );
+          return { Runtime: 'nodejs16.x', Code: { ZipFile: zip.toBuffer() } };
+        },
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            const [invocationSpan, stsSpan] = spans;
+            // STS
+            expect(stsSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+            // Note '2' is added by bundler as apparently class name is changed
+            expect(stsSpan.name).to.equal('aws.sdk.sts2.getcalleridentity');
+          }
+        },
       },
     ],
     [
@@ -1365,43 +1478,33 @@ describe('integration', function () {
           },
         },
         invoke: expressInvoke,
-        test: ({ invocationsData }) => {
-          for (const [
-            index,
-            {
-              trace: { spans },
-            },
-          ] of invocationsData.entries()) {
-            const lambdaSpan = spans.shift();
-            if (!index) spans.shift();
-            const { tags: lambdaTags } = lambdaSpan;
-
-            expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
-            expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
-            expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
-            expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
-            expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
-            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
-
-            const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
-            const routeSpan = middlewareSpans.pop();
-            const routerSpan = middlewareSpans[middlewareSpans.length - 1];
-
-            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-
-            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
-              'express.middleware.query',
-              'express.middleware.expressinit',
-              'express.middleware.jsonparser',
-              'express.middleware.router',
-            ]);
-            for (const middlewareSpan of middlewareSpans) {
-              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
-            }
-            expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
-            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
-          }
+        test: expressMinimalTest,
+      },
+    ],
+    [
+      'express-bundled',
+      {
+        hooks: {
+          afterCreate: getCreateHttpApi('2.0'),
+          beforeDelete: async (testConfig) => {
+            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+          },
         },
+        deferredConfiguration: async () => {
+          const zip = new AdmZip();
+          zip.addFile(
+            'express-bundled.js',
+            await runEsbuild(
+              path.resolve(fixturesDirname, 'express-bundled.js'),
+              '--bundle',
+              '--platform=node',
+              '--external:@serverless/aws-lambda-sdk'
+            )
+          );
+          return { Code: { ZipFile: zip.toBuffer() } };
+        },
+        invoke: expressInvoke,
+        test: expressMinimalTest,
       },
     ],
     [
