@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package serverless.instrumentation.tags.v1;
+
+option go_package = ".;protoc";
+
+message NoticeTags {
+    // Notice Message
+    string message = 1;
+
+    enum NoticeType {
+      // Notice type not set
+      NOTICE_TYPE_UNSPECIFIED = 0;
+
+      // Signals SDK noteworthy event
+      // Event that's not relevant to the user but can be important instruction for the Console
+      // on how to process monitoring data of given case
+      NOTICE_TYPE_SDK_INTERNAL = 1;
+  }
+
+  optional NoticeType type = 2;
+}
