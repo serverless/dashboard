@@ -12,7 +12,7 @@ import express from 'express';
 
 const app = express();
 
-serverlessSdk.instrumentation.expressApp.install(express);
+serverlessSdk.instrumentation.expressApp.install(app);
 ```
 
 Handling of express route is covered in context of main `express` span. Additionally middleware jobs are recorded as following spans:
