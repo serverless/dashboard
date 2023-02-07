@@ -4,22 +4,13 @@ const path = require('path');
 const unlink = require('fs2/unlink');
 const AdmZip = require('adm-zip');
 const mkdir = require('fs2/mkdir');
-const spawn = require('child-process-ext/spawn');
+const runEsbuild = require('../../../../lib/run-esbuild');
 
 const rootDir = path.resolve(__dirname, '../../../../');
 const packageDir = path.resolve(rootDir, 'packages/aws-lambda-sdk');
-const esbuildFilename = path.resolve(rootDir, 'node_modules/.bin/esbuild');
 const internalDir = path.resolve(packageDir, 'internal-extension');
 
 const extensionDirname = 'sls-sdk-node';
-
-const runEsbuild = async (...args) => {
-  try {
-    return (await spawn(esbuildFilename, args)).stdoutBuffer;
-  } catch (error) {
-    throw new Error(`ESbuild errored: ${String(error.stdBuffer)}`);
-  }
-};
 
 module.exports = async (distFilename) => {
   const zip = new AdmZip();
