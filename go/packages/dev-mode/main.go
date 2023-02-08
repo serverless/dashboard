@@ -51,7 +51,7 @@ func (e *Extension) ExternalExtension() {
 	// Get account id from sts
 	getAccountId(e.Client)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, _ := context.WithCancel(context.Background())
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
