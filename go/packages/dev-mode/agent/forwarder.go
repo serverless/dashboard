@@ -77,8 +77,7 @@ func FindTraceId(logs []LogItem) string {
 	// If we don't have the internal extension included
 	// then we should generate one
 	if hasInternalExtension == false {
-		id := uuid.New()
-		return id.String()
+		return uuid.NewString()
 	}
 
 	for _, log := range logs {
@@ -122,13 +121,13 @@ func FindRuntimeDone(logs []LogItem) *LogItem {
 	return nil
 }
 
-func StringIncludesInitError(str string) bool {
+func stringIncludesInitError(str string) bool {
 	return strings.Contains(str, "\tundefined\tERROR") && strings.Contains(str, "\tundefined\tUncaught Exception")
 }
 
 func FindInitErrorLog(logs []LogItem) *LogItem {
 	for _, log := range logs {
-		if log.LogType == "function" && StringIncludesInitError(log.Record.(string)) {
+		if log.LogType == "function" && stringIncludesInitError(log.Record.(string)) {
 			return &log
 		}
 	}

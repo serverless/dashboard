@@ -57,7 +57,7 @@ func (e *Extension) ExternalExtension() {
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		s := <-sigs
-		lib.Info("Received signal: %s %v", s.String(), cancel)
+		lib.Info("Received signal: %s", s.String())
 		// If we cancel now this will prevent the final logs being send in the event
 		// of an invocation error
 		// cancel()
@@ -147,7 +147,7 @@ func (e *Extension) ExternalExtension() {
 				requestId = agent.FindRequestId(arr)
 			}
 
-			hasInitErrorLog := agent.FindInitErrorLog(arr) == nil
+			hasInitErrorLog := agent.FindInitErrorLog(arr) != nil
 
 			// Find the trace id so we can attach it to incoming logs
 			if traceId == "" {
