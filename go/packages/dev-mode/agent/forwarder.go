@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	tags "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
@@ -72,6 +73,13 @@ func FindRequestId(logs []LogItem) string {
 
 func FindTraceId(logs []LogItem) string {
 	var traceId string = ""
+
+	// If we don't have the internal extension included
+	// then we should generate one
+	if hasInternalExtension == false {
+		return uuid.NewString()
+	}
+
 	for _, log := range logs {
 		if log.LogType == "spans" {
 			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
@@ -107,6 +115,19 @@ func FindPlatformStart(logs []LogItem) *LogItem {
 func FindRuntimeDone(logs []LogItem) *LogItem {
 	for _, log := range logs {
 		if log.LogType == "platform.runtimeDone" {
+			return &log
+		}
+	}
+	return nil
+}
+
+func stringIncludesInitError(str string) bool {
+	return strings.Contains(str, "\tundefined\tERROR") && strings.Contains(str, "\tundefined\tUncaught Exception")
+}
+
+func FindInitErrorLog(logs []LogItem) *LogItem {
+	for _, log := range logs {
+		if log.LogType == "function" && stringIncludesInitError(log.Record.(string)) {
 			return &log
 		}
 	}
@@ -191,6 +212,9 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 		SlsTags:   &slsTags,
 		LogEvents: messages,
 	}
+	if IsValidUUID(traceId) {
+		traceId = base64.StdEncoding.EncodeToString([]byte(traceId))
+	}
 	for i, log := range logs {
 		if log.LogType == "function" && !IsDefaultConsoleMessage(log.Record) {
 			t, _ := time.Parse(time.RFC3339, log.Time)
@@ -274,7 +298,7 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 			Origin:       schema.RequestResponse_ORIGIN_REQUEST,
 			Timestamp:    &epoch,
 			Type:         &payloadType,
-			TraceId:      []byte(requestId),
+			TraceId:      []byte(traceId),
 			Tags: &tags.Tags{
 				Aws: &tags.AwsTags{
 					AccountId:    &accountId,
@@ -317,16 +341,12 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 				Name:    "function_timeout",
 				Message: &message,
 			}
-		}
-
-		tId := []byte(requestId)
-		lib.Info("TraceID: ", traceId)
-		if tId != nil {
-			decodedTraceId, err := base64.StdEncoding.DecodeString(traceId)
-			if err == nil {
-				tId = decodedTraceId
-			} else {
-				lib.Info("Error decoding traceId: ", err)
+		} else if recordAsJSON["status"] == "error" {
+			message := fmt.Sprintf("Received %s. This is most likely an initialization error", recordAsJSON["errorType"])
+			errorTag = tags.ErrorTags{
+				Type:    tags.ErrorTags_ERROR_TYPE_UNCAUGHT,
+				Name:    "function_init_error",
+				Message: &message,
 			}
 		}
 
@@ -348,7 +368,7 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 			Origin:       schema.RequestResponse_ORIGIN_RESPONSE,
 			Timestamp:    &epoch,
 			Type:         &payloadType,
-			TraceId:      tId,
+			TraceId:      []byte(traceId),
 			Tags: &tags.Tags{
 				Aws: &tags.AwsTags{
 					AccountId:    &accountId,
