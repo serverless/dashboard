@@ -403,6 +403,107 @@ describe('integration', function () {
     }
   };
 
+  const sdkTestConfig = {
+    isCustomResponse: true,
+    test: ({ invocationsData }) => {
+      for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
+        const { spans, events, customTags } = trace;
+        let awsLambdaInvocationSpan;
+        if (index === 0) {
+          awsLambdaInvocationSpan = spans[2];
+          expect(spans.map(({ name }) => name)).to.deep.equal([
+            'aws.lambda',
+            'aws.lambda.initialization',
+            'aws.lambda.invocation',
+            'user.span',
+          ]);
+        } else {
+          awsLambdaInvocationSpan = spans[1];
+          expect(spans.map(({ name }) => name)).to.deep.equal([
+            'aws.lambda',
+            'aws.lambda.invocation',
+            'user.span',
+          ]);
+        }
+        const payload = JSON.parse(responsePayload.raw);
+        expect(payload.name).to.equal(pkgJson.name);
+        expect(payload.version).to.equal(pkgJson.version);
+        expect(payload.rootSpanName).to.equal('aws.lambda');
+        expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': `example:${index + 1}` });
+
+        const normalizeEvent = (event) => {
+          event = { ...event };
+          expect(Buffer.isBuffer(event.id)).to.be.true;
+          expect(typeof event.timestampUnixNano).to.equal('number');
+          if (event.tags.error) {
+            delete event.tags.error.stacktrace;
+            if (event.tags.error.message) {
+              event.tags.error.message = event.tags.error.message.split('\n')[0];
+            }
+          }
+          if (event.tags.warning) {
+            delete event.tags.warning.stacktrace;
+          }
+          delete event.id;
+          delete event.timestampUnixNano;
+          return event;
+        };
+        expect(events.map(normalizeEvent)).to.deep.equal([
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.error.generated.v1',
+            customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
+            tags: {
+              error: {
+                name: 'Error',
+                message: 'Captured error',
+                type: 2,
+              },
+            },
+          },
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.error.generated.v1',
+            customTags: JSON.stringify({}),
+            tags: {
+              error: {
+                name: 'string',
+                message: 'My error: Error: Consoled error',
+                type: 2,
+              },
+            },
+          },
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.warning.generated.v1',
+            customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
+            tags: {
+              warning: {
+                message: 'Captured warning',
+                type: 1,
+              },
+            },
+          },
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.warning.generated.v1',
+            customTags: JSON.stringify({}),
+            tags: {
+              warning: {
+                message: 'Consoled warning 12 true',
+                type: 1,
+              },
+            },
+          },
+        ]);
+      }
+    },
+  };
+
   const useCasesConfig = new Map([
     [
       'esm-callback/index',
@@ -1661,106 +1762,15 @@ describe('integration', function () {
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
-        config: {
-          isCustomResponse: true,
-          test: ({ invocationsData }) => {
-            for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
-              const { spans, events, customTags } = trace;
-              let awsLambdaInvocationSpan;
-              if (index === 0) {
-                awsLambdaInvocationSpan = spans[2];
-                expect(spans.map(({ name }) => name)).to.deep.equal([
-                  'aws.lambda',
-                  'aws.lambda.initialization',
-                  'aws.lambda.invocation',
-                  'user.span',
-                ]);
-              } else {
-                awsLambdaInvocationSpan = spans[1];
-                expect(spans.map(({ name }) => name)).to.deep.equal([
-                  'aws.lambda',
-                  'aws.lambda.invocation',
-                  'user.span',
-                ]);
-              }
-              const payload = JSON.parse(responsePayload.raw);
-              expect(payload.name).to.equal(pkgJson.name);
-              expect(payload.version).to.equal(pkgJson.version);
-              expect(payload.rootSpanName).to.equal('aws.lambda');
-              expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': `example:${index + 1}` });
-
-              const normalizeEvent = (event) => {
-                event = { ...event };
-                expect(Buffer.isBuffer(event.id)).to.be.true;
-                expect(typeof event.timestampUnixNano).to.equal('number');
-                if (event.tags.error) {
-                  delete event.tags.error.stacktrace;
-                  if (event.tags.error.message) {
-                    event.tags.error.message = event.tags.error.message.split('\n')[0];
-                  }
-                }
-                if (event.tags.warning) {
-                  delete event.tags.warning.stacktrace;
-                }
-                delete event.id;
-                delete event.timestampUnixNano;
-                return event;
-              };
-              expect(events.map(normalizeEvent)).to.deep.equal([
-                {
-                  traceId: awsLambdaInvocationSpan.traceId,
-                  spanId: awsLambdaInvocationSpan.id,
-                  eventName: 'telemetry.error.generated.v1',
-                  customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
-                  tags: {
-                    error: {
-                      name: 'Error',
-                      message: 'Captured error',
-                      type: 2,
-                    },
-                  },
-                },
-                {
-                  traceId: awsLambdaInvocationSpan.traceId,
-                  spanId: awsLambdaInvocationSpan.id,
-                  eventName: 'telemetry.error.generated.v1',
-                  customTags: JSON.stringify({}),
-                  tags: {
-                    error: {
-                      name: 'string',
-                      message: 'My error: Error: Consoled error',
-                      type: 2,
-                    },
-                  },
-                },
-                {
-                  traceId: awsLambdaInvocationSpan.traceId,
-                  spanId: awsLambdaInvocationSpan.id,
-                  eventName: 'telemetry.warning.generated.v1',
-                  customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
-                  tags: {
-                    warning: {
-                      message: 'Captured warning',
-                      type: 1,
-                    },
-                  },
-                },
-                {
-                  traceId: awsLambdaInvocationSpan.traceId,
-                  spanId: awsLambdaInvocationSpan.id,
-                  eventName: 'telemetry.warning.generated.v1',
-                  customTags: JSON.stringify({}),
-                  tags: {
-                    warning: {
-                      message: 'Consoled warning 12 true',
-                      type: 1,
-                    },
-                  },
-                },
-              ]);
-            }
-          },
-        },
+        config: sdkTestConfig,
+      },
+    ],
+    [
+      'esm-sdk/index',
+      {
+        // ESM import from modules referenced in NODE_PATH is supported only in nodejs18.x+
+        variants: new Map([['v18', { configuration: { Runtime: 'nodejs18.x' } }]]),
+        config: sdkTestConfig,
       },
     ],
   ]);
