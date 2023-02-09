@@ -54,7 +54,12 @@ const install = (protocol, httpModule) => {
         if (isCapturing) {
           if (typeof chunk === 'string') {
             body += chunk;
-            if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
+            if (Buffer.byteLength(body) > bodySizeLimit) {
+              serverlessSdk._reportNotice('Large body excluded', 'INPUT_BODY_TOO_LARGE', {
+                _traceSpan: traceSpan,
+              });
+              abortCapture();
+            }
           } else {
             abortCapture();
           }
@@ -69,7 +74,12 @@ const install = (protocol, httpModule) => {
         if (isCapturing) {
           if (typeof chunk === 'string') {
             body += chunk;
-            if (Buffer.byteLength(body) > bodySizeLimit) abortCapture();
+            if (Buffer.byteLength(body) > bodySizeLimit) {
+              serverlessSdk._reportNotice('Large body excluded', 'INPUT_BODY_TOO_LARGE', {
+                _traceSpan: traceSpan,
+              });
+              abortCapture();
+            }
           } else if (chunk) {
             abortCapture();
           }
@@ -99,7 +109,12 @@ const install = (protocol, httpModule) => {
               bodyBuffer,
               typeof chunk === 'string' ? Buffer.from(chunk) : chunk,
             ]);
-            if (bodyBuffer.length > bodySizeLimit) bodyBuffer = null;
+            if (bodyBuffer.length > bodySizeLimit) {
+              serverlessSdk._reportNotice('Large body excluded', 'OUTPUT_BODY_TOO_LARGE', {
+                _traceSpan: traceSpan,
+              });
+              bodyBuffer = null;
+            }
           } catch (error) {
             reportError(error);
           }
