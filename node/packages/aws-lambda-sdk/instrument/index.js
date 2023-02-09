@@ -32,8 +32,8 @@ const resolveBodyString = (data, prefix) => {
   if (data === undefined) return null;
   if (awsLambdaSpan.tags.get('aws.lambda.event_source') === 'aws.apigateway') {
     if (typeof data.body === 'string') {
-      data = { ...data };
       if (data.isBase64Encoded) {
+        data = { ...data };
         delete data.body;
         serverlessSdk._reportNotice('Binary body excluded', `${prefix}_BODY_BINARY`, {
           _traceSpan: awsLambdaSpan,
@@ -41,7 +41,14 @@ const resolveBodyString = (data, prefix) => {
       }
     }
   }
-  return JSON.stringify(data);
+  const stringifiedBody = JSON.stringify(data);
+  if (Buffer.byteLength(stringifiedBody) > serverlessSdk._maximumBodyByteLength) {
+    serverlessSdk._reportNotice('Large body excluded', `${prefix}_BODY_TOO_LARGE`, {
+      _traceSpan: awsLambdaSpan,
+    });
+    return null;
+  }
+  return stringifiedBody;
 };
 
 const reportRequest = async (event, context) => {
