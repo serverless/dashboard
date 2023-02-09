@@ -39,6 +39,17 @@ module.exports.install = (Sdk) => {
       const tagMapper = serviceMapper.get(serviceName);
       const operationName = this.operation.toLowerCase();
       const params = this.params;
+      const inputString = (() => {
+        if (!shouldMonitorRequestResponse) return null;
+        const result = safeStringify(params);
+        if (Buffer.byteLength(result) > serverlessSdk._maximumBodyByteLength) {
+          serverlessSdk._reportNotice('Large body excluded', 'INPUT_BODY_TOO_LARGE', {
+            _traceSpan: traceSpan,
+          });
+          return null;
+        }
+        return result;
+      })();
       traceSpan = serverlessSdk._createTraceSpan(`aws.sdk.${serviceName}.${operationName}`, {
         tags: {
           'aws.sdk.region': this.service.config.region,
@@ -46,7 +57,7 @@ module.exports.install = (Sdk) => {
           'aws.sdk.service': serviceName,
           'aws.sdk.operation': operationName,
         },
-        input: shouldMonitorRequestResponse ? safeStringify(params) : null,
+        input: inputString,
       });
       if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
       let wasCompleted = false;
@@ -69,7 +80,16 @@ module.exports.install = (Sdk) => {
             // https://github.com/aws/aws-sdk-js/issues/4330
             traceSpan.tags.set('aws.sdk.error', response.error.message || response.error.name);
           } else {
-            if (shouldMonitorRequestResponse) traceSpan.output = safeStringify(response.data);
+            if (shouldMonitorRequestResponse) {
+              const outputString = safeStringify(response.data);
+              if (Buffer.byteLength(outputString) > serverlessSdk._maximumBodyByteLength) {
+                serverlessSdk._reportNotice('Large body excluded', 'OUTPUT_BODY_TOO_LARGE', {
+                  _traceSpan: traceSpan,
+                });
+              } else {
+                traceSpan.output = safeStringify(response.data);
+              }
+            }
             if (tagMapper && tagMapper.responseData) {
               tagMapper.responseData(traceSpan, response.data);
             }
