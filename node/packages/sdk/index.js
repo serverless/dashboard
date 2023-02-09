@@ -9,7 +9,6 @@ if (uniGlobal.serverlessSdk) {
 
 uniGlobal.serverlessSdk = module.exports;
 
-const coerceToNaturalNumber = require('type/natural-number/coerce');
 const ensureString = require('type/string/ensure');
 const d = require('d');
 const lazy = require('d/lazy');
@@ -87,10 +86,6 @@ serverlessSdk._initialize = (options = {}) => {
   serverlessSdk._settings.disableNodeConsoleMonitoring = Boolean(
     process.env.SLS_DISABLE_NODE_CONSOLE_MONITORING || options.disableNodeConsoleMonitoring
   );
-  serverlessSdk._settings.traceMaxCapturedBodySizeKb =
-    coerceToNaturalNumber(process.env.SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB) ||
-    coerceToNaturalNumber(options.traceMaxCapturedBodySizeKb) ||
-    10000;
   serverlessSdk._settings.disableCapturedEventsStdout = Boolean(
     process.env.SLS_DISABLE_CAPTURED_EVENTS_STDOUT || options.disableCapturedEventsStdout
   );
@@ -123,6 +118,7 @@ serverlessSdk._isDebugMode = Boolean(process.env.SLS_SDK_DEBUG);
 serverlessSdk._debugLog = (...args) => {
   if (serverlessSdk._isDebugMode) process._rawDebug('⚡ SDK:', ...args);
 };
+serverlessSdk._maximumBodyByteLength = 1024 * 127; // 127 KB
 
 serverlessSdk._eventEmitter = require('./lib/emitter');
 

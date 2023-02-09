@@ -35,7 +35,6 @@ export interface SdkOptions {
   disableRequestResponseMonitoring?: boolean;
   disableExpressMonitoring?: boolean;
   disableNodeConsoleMonitoring?: boolean;
-  traceMaxCapturedBodySizeKb?: number;
 }
 declare const sdk: Sdk;
 export default sdk;
