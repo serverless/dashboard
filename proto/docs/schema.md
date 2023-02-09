@@ -28,6 +28,11 @@
   
     - [ErrorTags.ErrorType](#serverless-instrumentation-tags-v1-ErrorTags-ErrorType)
   
+- [serverless/instrumentation/tags/v1/notice.proto](#serverless_instrumentation_tags_v1_notice-proto)
+    - [NoticeTags](#serverless-instrumentation-tags-v1-NoticeTags)
+  
+    - [NoticeTags.NoticeType](#serverless-instrumentation-tags-v1-NoticeTags-NoticeType)
+  
 - [serverless/instrumentation/tags/v1/tags.proto](#serverless_instrumentation_tags_v1_tags-proto)
     - [SdkTags](#serverless-instrumentation-tags-v1-SdkTags)
     - [SlsTags](#serverless-instrumentation-tags-v1-SlsTags)
@@ -448,6 +453,50 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 
 
 
+<a name="serverless_instrumentation_tags_v1_notice-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## serverless/instrumentation/tags/v1/notice.proto
+
+
+
+<a name="serverless-instrumentation-tags-v1-NoticeTags"></a>
+
+### NoticeTags
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| message | [string](#string) |  | Notice Message |
+| type | [NoticeTags.NoticeType](#serverless-instrumentation-tags-v1-NoticeTags-NoticeType) | optional |  |
+
+
+
+
+
+ 
+
+
+<a name="serverless-instrumentation-tags-v1-NoticeTags-NoticeType"></a>
+
+### NoticeTags.NoticeType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| NOTICE_TYPE_UNSPECIFIED | 0 | Notice type not set |
+| NOTICE_TYPE_SDK_INTERNAL | 1 | Signals SDK noteworthy event Event that&#39;s not relevant to the user but can be important instruction for the Console on how to process monitoring data of given case |
+
+
+ 
+
+ 
+
+ 
+
+
+
 <a name="serverless_instrumentation_tags_v1_tags-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -509,6 +558,7 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process |
 | error | [ErrorTags](#serverless-instrumentation-tags-v1-ErrorTags) | optional | These tags are used when an error has occured and is reported on the event. |
 | warning | [WarningTags](#serverless-instrumentation-tags-v1-WarningTags) | optional | These tags are used when a warning has occured and is reported on the event. |
+| notice | [NoticeTags](#serverless-instrumentation-tags-v1-NoticeTags) | optional | These tags are used when noteworthy situation occurs and is reported on the event. |
 
 
 
