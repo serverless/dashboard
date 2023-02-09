@@ -55,13 +55,6 @@ const resolveResponseString = (response) => {
       if (response.isBase64Encoded) {
         delete response.body;
         response.isBodyExcluded = true;
-      } else {
-        try {
-          JSON.parse(response.body);
-        } catch {
-          delete response.body;
-          response.isBodyExcluded = true;
-        }
       }
     }
   }
