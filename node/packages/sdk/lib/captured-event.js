@@ -52,7 +52,7 @@ class CapturedEvent {
       reportError(error, { type: 'USER' });
     }
     if (options._origin) this._origin = options._origin;
-    this.traceSpan = TraceSpan.resolveCurrentSpan();
+    this.traceSpan = options._traceSpan || TraceSpan.resolveCurrentSpan();
     emitter.emit('captured-event', this);
   }
   toJSON() {
