@@ -146,7 +146,11 @@ const closeTrace = async (outcome, outcomeResult) => {
       resolveResponseTags(outcomeResult);
     }
 
-    if (!serverlessSdk._settings.disableRequestResponseMonitoring && !isErrorOutcome) {
+    if (
+      serverlessSdk._isDevMode &&
+      !serverlessSdk._settings.disableRequestResponseMonitoring &&
+      !isErrorOutcome
+    ) {
       serverlessSdk._deferredTelemetryRequests.push(
         reportResponse(outcomeResult, invocationContextAccessor.value, endTime)
       );
@@ -222,7 +226,7 @@ module.exports = (originalHandler, options = {}) => {
         startTime: requestStartTime,
       });
       resolveEventTags(event);
-      if (!serverlessSdk._settings.disableRequestResponseMonitoring) {
+      if (serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring) {
         serverlessSdk._deferredTelemetryRequests.push(reportRequest(event, context));
       }
 

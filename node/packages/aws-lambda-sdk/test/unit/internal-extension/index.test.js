@@ -75,6 +75,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
         output:
           serverlessSdk._lastTraceBuffer && TracePayload.decode(serverlessSdk._lastTraceBuffer),
       },
+      isDevMode: serverlessSdk._isDevMode,
     };
   });
   if (outcome.error && (!outcome.trace.output || options.outcome !== 'error')) {
@@ -113,15 +114,17 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   const nonRootSpanIds = new Set(outcome.trace.input.spans.slice(1).map(({ id }) => String(id)));
   for (const otherSpan of otherSpans) expect(nonRootSpanIds.has(String(otherSpan.id))).to.be.true;
 
-  expect(normalizeObject(outcome.request.output)).to.deep.equal(
-    normalizeObject(outcome.request.input)
-  );
-  expect(outcome.request.input.body).to.deep.equal(stringifiedPayload);
-
-  if (outcome.response.input) {
-    expect(normalizeObject(outcome.response.output)).to.deep.equal(
-      normalizeObject(outcome.response.input)
+  if (outcome.isDevMode) {
+    expect(normalizeObject(outcome.request.output)).to.deep.equal(
+      normalizeObject(outcome.request.input)
     );
+    expect(outcome.request.input.body).to.deep.equal(stringifiedPayload);
+
+    if (outcome.response.input) {
+      expect(normalizeObject(outcome.response.output)).to.deep.equal(
+        normalizeObject(outcome.response.input)
+      );
+    }
   }
 
   return outcome;
@@ -163,7 +166,6 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
-      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -243,8 +245,6 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
     expect(tags.aws.lambda.httpRouter.path).to.equal('/some-path/{param}');
-
-    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle API Gateway v2 HTTP API, payload v1 event', async () => {
@@ -254,7 +254,6 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
-      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -344,8 +343,6 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
     expect(tags.aws.lambda.httpRouter.path).to.equal('/v1');
-
-    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle API Gateway v2 HTTP API, payload v2 event', async () => {
@@ -355,7 +352,6 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
-      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -420,8 +416,6 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
     expect(tags.aws.lambda.httpRouter.path).to.equal('/v2');
-
-    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle function url payload event', async () => {
@@ -431,7 +425,6 @@ describe('internal-extension/index.test.js', () => {
           spans: [{ tags }],
         },
       },
-      response: { input: response },
     } = await handleInvocation('api-endpoint', {
       isApiEndpoint: true,
       payload: {
@@ -487,8 +480,6 @@ describe('internal-extension/index.test.js', () => {
     expect(tags.aws.lambda.http.queryParameterNames).to.deep.equal(['lone', 'multi']);
 
     expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
-
-    expect(response.body).to.deep.equal(JSON.stringify({ statusCode: 200, body: '"ok"' }));
   });
 
   it('should handle SQS event', async () => {
@@ -650,7 +641,6 @@ describe('internal-extension/index.test.js', () => {
       trace: {
         input: { spans },
       },
-      response: { input: response },
     } = await handleInvocation('express', {
       isApiEndpoint: true,
       payload: {
@@ -722,8 +712,6 @@ describe('internal-extension/index.test.js', () => {
     expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
 
     expect(lambdaTags.aws.lambda.httpRouter.path).to.equal('/foo');
-
-    expect(JSON.parse(response.body).body).to.deep.equal(JSON.stringify('ok'));
 
     expect(expressSpan.name).to.equal('express');
     expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
