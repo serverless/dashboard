@@ -28,6 +28,22 @@ const { awsLambda: awsLambdaSpan, awsLambdaInitialization: awsLambdaInitializati
 
 const toProtobufEpochTimestamp = awsLambdaSpan.constructor._toProtobufEpochTimestamp;
 
+const resolveBodyString = (data, prefix) => {
+  if (data === undefined) return null;
+  if (awsLambdaSpan.tags.get('aws.lambda.event_source') === 'aws.apigateway') {
+    if (typeof data.body === 'string') {
+      data = { ...data };
+      if (data.isBase64Encoded) {
+        delete data.body;
+        serverlessSdk._reportNotice('Binary body excluded', `${prefix}_BODY_BINARY`, {
+          _traceSpan: awsLambdaSpan,
+        });
+      }
+    }
+  }
+  return JSON.stringify(data);
+};
+
 const reportRequest = async (event, context) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
@@ -39,7 +55,7 @@ const reportRequest = async (event, context) => {
     spanId: Buffer.from(awsLambdaSpan.id),
     requestId: context.awsRequestId,
     timestamp: toProtobufEpochTimestamp(traceSpans.awsLambdaInvocation.startTime),
-    body: JSON.stringify(event),
+    body: resolveBodyString(event, 'INPUT'),
     origin: 1,
   });
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =
@@ -47,24 +63,8 @@ const reportRequest = async (event, context) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
-const resolveResponseString = (response) => {
-  if (response === undefined) return null;
-  if (awsLambdaSpan.tags.get('aws.lambda.event_source') === 'aws.apigateway') {
-    if (typeof response.body === 'string') {
-      response = { ...response };
-      if (response.isBase64Encoded) {
-        delete response.body;
-        serverlessSdk._reportNotice('Binary body excluded', 'OUTPUT_BODY_BINARY', {
-          _traceSpan: awsLambdaSpan,
-        });
-      }
-    }
-  }
-  return JSON.stringify(response);
-};
-
 const reportResponse = async (response, context, endTime) => {
-  const responseString = resolveResponseString(response);
+  const responseString = resolveBodyString(response, 'OUTPUT');
   const payload = (serverlessSdk._lastResponse = {
     slsTags: {
       orgId: serverlessSdk.orgId,
