@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.15.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.0...@serverless/sdk-schema@0.15.1) (2023-02-09)
+
+### Features
+
+- Notice event tags ([c6641be](https://github.com/serverless/console/commit/c6641beee48b998866ceacd1ff8e317eefdcb057))
+
 ## [0.15.0](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.14.5...@serverless/sdk-schema@0.15.0) (2023-02-02)
 
 ### ⚠ BREAKING CHANGES
