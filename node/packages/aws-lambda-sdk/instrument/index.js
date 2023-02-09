@@ -54,7 +54,9 @@ const resolveResponseString = (response) => {
       response = { ...response };
       if (response.isBase64Encoded) {
         delete response.body;
-        response.isBodyExcluded = true;
+        serverlessSdk._reportNotice('Binary body excluded', 'OUTPUT_BODY_BINARY', {
+          _traceSpan: awsLambdaSpan,
+        });
       }
     }
   }
