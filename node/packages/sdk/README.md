@@ -70,10 +70,6 @@ Disable automated express monitoring. See [express app instrumentation](docs/ins
 
 Disable writing captured events registered via `.captureError` and `.captureWarning` to stdout
 
-##### `SLS_TRACE_MAX_CAPTURED_BODY_SIZE_KB` (or `options.traceMaxCapturedBodySizeKb`)
-
-In dev mode, HTTP request and response bodies are stored as tags. To avoid performance issues, bodies that extend 10 000KB in size are not exposed. This default can be overridden with this settin
-
 ### Instrumentation
 
 This package comes with instrumentation for following areas.

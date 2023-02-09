@@ -34,7 +34,7 @@ const resolveQueryParamNamesFromSearchString = (searchString) => {
 };
 
 const install = (protocol, httpModule) => {
-  const bodySizeLimit = serverlessSdk._settings.traceMaxCapturedBodySizeKb * 1000;
+  const bodySizeLimit = serverlessSdk._maximumBodyByteLength;
   const shouldMonitorRequestResponse =
     serverlessSdk._isDevMode && !serverlessSdk._settings.disableRequestResponseMonitoring;
 
