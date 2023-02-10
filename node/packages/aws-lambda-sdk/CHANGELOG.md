@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.6](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.5...@serverless/aws-lambda-sdk@0.14.6) (2023-02-10)
+
+### Features
+
+- Strip binary lambda request ([2b85fe8](https://github.com/serverless/console/commit/2b85fe81ee9492442e28ed954eadf61c7adb12b5))
+- Strip large lambda request and response bodies ([afd9ec9](https://github.com/serverless/console/commit/afd9ec98c39e57c99af2e4a9efaa290f15afeecc))
+- Strip too large AWS SDK request bodies ([de064c1](https://github.com/serverless/console/commit/de064c1ac2babe94036dfc034992308ce7222ef7))
+
+### Maintenance Improvements
+
+- Do not strip non JSON bodies ([431b48e](https://github.com/serverless/console/commit/431b48e4918e978b7e947c7ca99d709d174c9267))
+- Ensure to not proces request and response when not in dev mode ([9d016aa](https://github.com/serverless/console/commit/9d016aa4e1436ecb3b852c9102d2548d00d3f088))
+- Exclude `runEsbuild` util ([7d985c4](https://github.com/serverless/console/commit/7d985c4fc436158cadb3bf671b5688a2b5f52105))
+- Report binary response body removal with notice event ([52588a0](https://github.com/serverless/console/commit/52588a01245ad8aa88bb77bc74b7553c734bd701))
+
 ### [0.14.5](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.4...@serverless/aws-lambda-sdk@0.14.5) (2023-02-02)
 
 ### Maintenance Improvements
