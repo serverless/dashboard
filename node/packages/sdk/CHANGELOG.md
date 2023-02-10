@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.1](https://github.com/serverless/console/compare/@serverless/sdk@0.5.0...@serverless/sdk@0.5.1) (2023-02-10)
+
+### Bug Fixes
+
+- Remove support for `traceCaptureBodySizeKb` setting (relying on it may introduce bugs) ([8d5d410](https://github.com/serverless/console/commit/8d5d4105f820f97b2168284d57b327bdb4285b9a))
+
+### Maintenance Improvements
+
+- Internal `_reportNotice` interface ([8aac3f2](https://github.com/serverless/console/commit/8aac3f2aa205b286d1d463d77f5272500dc94f84))
+- Report with notice large HTTP bodies ([e9b59ca](https://github.com/serverless/console/commit/e9b59ca537d55e851caae2ece3cb6b34865c0318))
+
 ## [0.5.0](https://github.com/serverless/console/compare/@serverless/sdk@0.4.4...@serverless/sdk@0.5.0) (2023-02-02)
 
 ### ⚠ BREAKING CHANGES
