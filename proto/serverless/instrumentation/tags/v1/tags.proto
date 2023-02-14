@@ -10,6 +10,7 @@ import "serverless/instrumentation/tags/v1/notice.proto";
 
 option go_package = ".;protoc";
 
+// @validation_root
 message Tags {
   reserved 108;
   reserved "sls_tags";
