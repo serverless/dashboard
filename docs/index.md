@@ -1,7 +1,7 @@
 <!--
 title: Getting Started
 menuText: Getting Started
-description: 
+description: Getting Started with Serverless Console
 menuOrder: 1
 -->
 
