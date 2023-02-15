@@ -26,8 +26,8 @@ const (
 
 var version = "undefined"
 
-func (w Wrapper) printTrace(tags environment.Tags, span *RootSpan) error {
-	payload, err := convert(span, tags, w.Environment)
+func (w Wrapper) printTrace(span *RootSpan) error {
+	payload, err := convert(span, w.tags, w.Environment)
 	if err != nil {
 		return fmt.Errorf("convert: %w", err)
 	}
@@ -52,9 +52,9 @@ func slsTags(tags environment.Tags, environment string) *tagsv1.SlsTags {
 func printServerlessTelemetryLogLine(payload *instrumentationv1.TracePayload) {
 	bytes, err := proto.Marshal(payload)
 	if err != nil {
-		fmt.Print(fmt.Errorf("proto marshal trace payload: %w", err))
+		fmt.Println(fmt.Errorf("proto marshal trace payload: %w", err))
 	}
-	fmt.Print(tracePayloadPrefix + base64.StdEncoding.EncodeToString(bytes))
+	fmt.Println(tracePayloadPrefix + base64.StdEncoding.EncodeToString(bytes))
 }
 
 func generateID(size int) ([]byte, error) {

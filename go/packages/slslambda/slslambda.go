@@ -10,15 +10,6 @@ import (
 
 var initializationStart = time.Now()
 
-// An unexported type to be used as the key for types in this package.
-// This prevents collisions with keys defined in other packages.
-type key struct{}
-
-// The key for a LambdaContext in Contexts.
-// Users of this package must use slslambda.FromContext
-// instead of using this key directly.
-var contextKey = &key{}
-
 type Span interface {
 	CaptureError(error)
 }
@@ -28,10 +19,10 @@ func Start(handler any, options ...Option) {
 	h := lambda.NewHandler(handler)
 	w, err := wrapper.New(options...)
 	if err != nil {
-		fmt.Print(fmt.Errorf("cannot instrument function: %w", err))
-	} else {
-		h = w.Wrap(h.Invoke, initializationStart)
+		fmt.Println(fmt.Errorf("cannot instrument function: %w", err))
+		lambda.Start(handler)
 	}
+	h = w.Wrap(h.Invoke, initializationStart)
 	lambda.Start(h)
 }
 
@@ -46,7 +37,7 @@ func WithEnvironment(env string) Option {
 }
 
 func FromContext(ctx context.Context) Span {
-	span, ok := ctx.Value(contextKey).(*wrapper.RootSpan)
+	span, ok := ctx.Value(wrapper.ContextKey).(*wrapper.RootSpan)
 	if !ok {
 		return noopSpan{}
 	}
@@ -56,5 +47,5 @@ func FromContext(ctx context.Context) Span {
 type noopSpan struct{}
 
 func (n noopSpan) CaptureError(error) {
-	fmt.Print("couldn't get Span from context: using noop span")
+	fmt.Println("couldn't get Span from context: using noop span")
 }
