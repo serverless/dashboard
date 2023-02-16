@@ -72,6 +72,9 @@ func convert(span *RootSpan, tags environment.Tags, environment string) (*instru
 		return nil, errors.New("invocation proto span not found")
 	}
 	protoEvents, err := convertToProtoEvents(span.errorEvents, invocationSpan.TraceId, invocationSpan.Id)
+	if err != nil {
+		return nil, fmt.Errorf("convert to proto events: %w", err)
+	}
 	payload := instrumentationv1.TracePayload{
 		SlsTags: slsTags(tags, environment),
 		Spans:   protoSpans,
