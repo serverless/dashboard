@@ -14,7 +14,9 @@ type (
 		invocationStartTime time.Time
 		endTime             time.Time
 		errorEvents         []errorEvent
-		mu                  sync.Mutex
+
+		// Mutex is needed because the consumer may add data to the span from multiple goroutines.
+		sync.Mutex
 	}
 	errorEvent struct {
 		timestamp time.Time
@@ -23,16 +25,16 @@ type (
 )
 
 func (r *RootSpan) CaptureError(err error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	r.errorEvents = append(r.errorEvents, errorEvent{
 		timestamp: time.Now(),
 		err:       err,
 	})
 }
 
-func (r *RootSpan) Close(endTime time.Time) {
-	r.endTime = endTime
+func (r *RootSpan) close() {
+	r.endTime = time.Now()
 }
 
 func newRootSpan(ctx context.Context, initializationStart, invocationStart time.Time) (*RootSpan, error) {

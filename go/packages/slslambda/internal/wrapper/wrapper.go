@@ -53,7 +53,7 @@ func (w Wrapper) Wrap(handler BytesHandlerFunc, initializationStart time.Time) B
 		}
 		slsCtx := context.WithValue(ctx, ContextKey, rootSpan)
 		output, err := handler(slsCtx, payload)
-		rootSpan.Close(time.Now())
+		rootSpan.close()
 		if err := w.printTrace(rootSpan); err != nil {
 			log.Debug(fmt.Errorf("print trace: %w", err))
 		}
