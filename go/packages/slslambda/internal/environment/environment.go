@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/serverless/console/go/packages/slslambda/internal/log"
 	"os"
 	"runtime"
 )
@@ -72,7 +73,7 @@ func organizationID() OrganizationID {
 func architecture() Architecture {
 	arch, err := newArchitecture(runtime.GOARCH)
 	if err != nil {
-		fmt.Println(fmt.Errorf("new architecture: %w", err))
+		log.Debug(fmt.Errorf("new architecture: %w", err))
 		return ""
 	}
 	return arch
@@ -122,7 +123,7 @@ func newArchitecture(s string) (Architecture, error) {
 
 func newMemorySize(size int) MemorySize {
 	if size <= 0 {
-		fmt.Println(errors.New("memory size cannot be less or equal 0"))
+		log.Debug(errors.New("memory size cannot be less or equal 0"))
 	}
 	return MemorySize(size)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/serverless/console/go/packages/slslambda/internal/environment"
+	"github.com/serverless/console/go/packages/slslambda/internal/log"
 	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"time"
@@ -47,14 +48,14 @@ func (w Wrapper) Wrap(handler BytesHandlerFunc, initializationStart time.Time) B
 	return func(ctx context.Context, payload []byte) ([]byte, error) {
 		rootSpan, err := newRootSpan(ctx, initializationStart, time.Now())
 		if err != nil {
-			fmt.Println(fmt.Errorf("new span: %w", err))
+			log.Debug(fmt.Errorf("new span: %w", err))
 			return handler(ctx, payload)
 		}
 		slsCtx := context.WithValue(ctx, ContextKey, rootSpan)
 		output, err := handler(slsCtx, payload)
 		rootSpan.Close(time.Now())
 		if err := w.printTrace(rootSpan); err != nil {
-			fmt.Println(fmt.Errorf("print trace: %w", err))
+			log.Debug(fmt.Errorf("print trace: %w", err))
 		}
 		initializationStart = time.Time{}
 		return output, err

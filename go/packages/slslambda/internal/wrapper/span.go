@@ -3,6 +3,7 @@ package wrapper
 import (
 	"context"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"sync"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type (
 		invocationStartTime time.Time
 		endTime             time.Time
 		errorEvents         []errorEvent
+		mu                  sync.Mutex
 	}
 	errorEvent struct {
 		timestamp time.Time
@@ -21,6 +23,8 @@ type (
 )
 
 func (r *RootSpan) CaptureError(err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.errorEvents = append(r.errorEvents, errorEvent{
 		timestamp: time.Now(),
 		err:       err,

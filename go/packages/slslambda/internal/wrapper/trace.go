@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/serverless/console/go/packages/slslambda/internal/environment"
+	"github.com/serverless/console/go/packages/slslambda/internal/log"
 	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
@@ -52,7 +53,7 @@ func slsTags(tags environment.Tags, environment string) *tagsv1.SlsTags {
 func printServerlessTelemetryLogLine(payload *instrumentationv1.TracePayload) {
 	bytes, err := proto.Marshal(payload)
 	if err != nil {
-		fmt.Println(fmt.Errorf("proto marshal trace payload: %w", err))
+		log.Debug(fmt.Errorf("proto marshal trace payload: %w", err))
 	}
 	fmt.Println(tracePayloadPrefix + base64.StdEncoding.EncodeToString(bytes))
 }

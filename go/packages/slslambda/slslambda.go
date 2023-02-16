@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/serverless/console/go/packages/slslambda/internal/log"
 	"github.com/serverless/console/go/packages/slslambda/internal/wrapper"
 	"time"
 )
@@ -19,7 +20,7 @@ func Start(handler any, options ...Option) {
 	h := lambda.NewHandler(handler)
 	w, err := wrapper.New(options...)
 	if err != nil {
-		fmt.Println(fmt.Errorf("cannot instrument function: %w", err))
+		log.Debug(fmt.Errorf("cannot instrument function: %w", err))
 		lambda.Start(handler)
 	}
 	h = w.Wrap(h.Invoke, initializationStart)
@@ -47,5 +48,5 @@ func FromContext(ctx context.Context) Span {
 type noopSpan struct{}
 
 func (n noopSpan) CaptureError(error) {
-	fmt.Println("couldn't get Span from context: using noop span")
+	log.Debug("couldn't get Span from context: using noop span")
 }
