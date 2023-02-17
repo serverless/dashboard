@@ -553,9 +553,9 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
 | https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
 | sdk | [SdkTags](#serverless-instrumentation-tags-v1-SdkTags) | optional | These sdk tags are added at ingest time so we know where the data was generated from |
-| environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process |
-| namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process |
-| org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process |
+| environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process @validation_top_level |
+| namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process @validation_top_level |
+| org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process @validation_top_level @validation_single_string |
 | error | [ErrorTags](#serverless-instrumentation-tags-v1-ErrorTags) | optional | These tags are used when an error has occured and is reported on the event. |
 | warning | [WarningTags](#serverless-instrumentation-tags-v1-WarningTags) | optional | These tags are used when a warning has occured and is reported on the event. |
 | notice | [NoticeTags](#serverless-instrumentation-tags-v1-NoticeTags) | optional | These tags are used when noteworthy situation occurs and is reported on the event. |
