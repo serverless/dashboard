@@ -1,26 +1,33 @@
 from __future__ import annotations
 
-import importlib
 import logging
-import sys
 from functools import lru_cache
 from os import environ
 from pathlib import Path
 from time import time_ns
-from typing import Optional
+from typing import Optional, Tuple
 
-from typing_extensions import Final
+from strenum import StrEnum
 
-from ..base import Env, Handler, NEW_HANDLER, PYTHON_EXTS
-from ..exceptions import (
-    BuiltInModuleConflict,
-    HandlerNotFound,
-    ImportModuleError,
-    UserCodeSyntaxError,
-)
+from typing_extensions import Final, Self
 
 
 NS_IN_MS: Final[int] = 1_000_000
+NEW_HANDLER: Final[
+    str
+] = "serverless_aws_lambda_sdk.internal_extension.wrapper.handler"
+PYTHON_EXTS: Final[Tuple[str, ...]] = (".py", ".pyc", ".pyo", ".pyd")
+
+
+class Env(StrEnum):
+    HANDLER: Self = "_HANDLER"
+    ORIGIN_HANDLER: Self = "_ORIGIN_HANDLER"
+    LAMBDA_RUNTIME_DIR: Self = "LAMBDA_RUNTIME_DIR"
+    LAMBDA_TASK_ROOT: Self = "LAMBDA_TASK_ROOT"
+
+    SLS_ORG_ID: Self = "SLS_ORG_ID"
+    SLS_SDK_DEBUG: Self = "SLS_SDK_DEBUG"
+
 
 # Lambda env vars
 HANDLER: Final[Optional[str]] = environ.get(Env.HANDLER)

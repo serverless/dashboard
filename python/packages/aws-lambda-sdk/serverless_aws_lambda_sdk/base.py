@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Tuple, TypeVar
+from typing import Callable, Dict, List, TypeVar
 
 from importlib_metadata import packages_distributions, version
 from strenum import StrEnum
@@ -19,11 +19,6 @@ __name__: Final[str] = _distribution[FIRST]
 __version__: Final[str] = version(__name__)
 
 NAME: Final[str] = __name__
-
-NEW_HANDLER: Final[
-    str
-] = "/opt/serverless_aws_lambda_sdk/internal_extension/wrapper.handler"
-PYTHON_EXTS: Final[Tuple[str, ...]] = (".py", ".pyc", ".pyo", ".pyd")
 
 
 P = ParamSpec("P")

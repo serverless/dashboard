@@ -4,6 +4,9 @@ import os
 
 
 def main():
+    from base import initialize
+    initialize()
+
     _, *args = sys.argv
     command = " ".join(args)
     os.system(command)

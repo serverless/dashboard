@@ -10,11 +10,11 @@ from pathlib import Path
 from types import ModuleType
 from typing import List, Optional
 
-from typing_extensions import Final, TypeAlias, TYPE_CHECKING
+from typing_extensions import Final
 
-from .base import get_module_path
-from ..base import Env, Handler
-from ..exceptions import (
+from serverless_aws_lambda_sdk.internal_extension.base import get_module_path
+from serverless_aws_lambda_sdk.base import Env, Handler
+from serverless_aws_lambda_sdk.exceptions import (
     BuiltInModuleConflict,
     HandlerNotFound,
     ImportModuleError,
@@ -22,12 +22,6 @@ from ..exceptions import (
     handler_not_found,
 )
 from ..instrument import instrument
-
-if TYPE_CHECKING:
-    from serverless_sdk.sdk.base import ServerlessSdk
-
-else:
-    ServerlessSdk: TypeAlias = "ServerlessSdk"
 
 
 __all__: Final[List[str]] = [
@@ -37,24 +31,6 @@ __all__: Final[List[str]] = [
 
 
 LAMBDA_RUNTIME_DIR: Final[Optional[str]] = environ.get(Env.LAMBDA_RUNTIME_DIR)
-
-
-# 1. Initialize SDK instrumentation
-def get_sdk(init: bool = False, *args, **kwargs) -> ServerlessSdk:
-    try:
-        from aws_lambda_sdk import serverlessSdk
-
-        sdk = serverlessSdk
-
-    except ImportError:
-        from .. import serverlessSdk
-
-        sdk = serverlessSdk
-
-    if init:
-        sdk._initialize(*args, **kwargs)
-
-    return sdk
 
 
 def import_from_path(path: str) -> Optional[ModuleType]:
@@ -189,9 +165,6 @@ def get_instrumented_handler(handler: Optional[str] = None) -> Handler:
 
     if not handler:
         raise HandlerNotFound(f"{Env.HANDLER} is not set.")
-
-    sdk = get_sdk(init=True)
-    assert sdk
 
     try:
         return get_instrumented_handler_via_name(handler)
