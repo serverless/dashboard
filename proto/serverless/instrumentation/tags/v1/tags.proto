@@ -31,10 +31,14 @@ message Tags {
   optional serverless.instrumentation.tags.v1.SdkTags sdk = 112;
 
   // Environment is added to all schemas during ingest as part of our data enrichment process
+  // @validation_top_level
   optional string environment = 109;
   // Namespace is added to all schemas during ingest as part of our data enrichment process
+  // @validation_top_level
   optional string namespace = 110;
   // OrgId is added to all schemas during ingest as part of our data enrichment process
+  // @validation_top_level
+  // @validation_single_string
   optional string org_id = 111;
 
   // These tags are used when an error has occured and is reported on the event.
