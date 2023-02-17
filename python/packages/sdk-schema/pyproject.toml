@@ -33,7 +33,6 @@ tests = [
 [tool.ruff]
 ignore = ["F401"]
 
-
 [tool.poe.tasks]
 build = "bash ./scripts/build.sh"
 install = "bash ./scripts/install.sh"
