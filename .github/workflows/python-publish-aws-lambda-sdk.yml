@@ -1,0 +1,92 @@
+name: "Python: Publish python/serverless_aws_lambda_sdk"
+
+on:
+  push:
+    tags:
+      - "python/serverless_aws_lambda_sdk@[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publishNewVersion:
+    name: Publish new version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Python and Pip
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
+
+          # ensure project dependencies are cached
+          # When using only `pyproject.toml` for dependencies, see:
+          #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
+          cache: 'pip'
+          cache-dependency-path: |
+            **/pyproject.toml
+
+      - name: Install main project dependencies
+        run: |
+          cd python/packages
+          python3 -m pip install ./sdk-schema
+          python3 -m pip install ./sdk
+          python3 -m pip install ./aws-lambda-sdk
+
+      - name: Create layer package
+        run: |
+          cd python/packages
+
+          INSTALLED_DIR=($(python3 -m pip show serverless_aws_lambda_sdk | sed -n 's/^Location: //p'))
+
+          mkdir -p dist/{python,sls-sdk-python}
+
+          cp -R "$INSTALLED_DIR"/../../../lib dist/python
+
+          cp "$INSTALLED_DIR"/serverless_aws_lambda_sdk/internal_extension/__init__.py dist/sls-sdk-python
+          cp "$INSTALLED_DIR"/serverless_aws_lambda_sdk/internal_extension/base.py dist/sls-sdk-python
+          cp "$INSTALLED_DIR"/serverless_aws_lambda_sdk/internal_extension/exec_wrapper.py dist/sls-sdk-python
+          cp "$INSTALLED_DIR"/typing_extensions.py dist/sls-sdk-python
+          cp -R "$INSTALLED_DIR"/strenum dist/sls-sdk-python
+          cd dist
+          zip -r ../extension.internal.zip python sls-sdk-python
+
+      - name: Install Node.js and npm
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org
+
+      - name: Install main project dependencies
+        run: |
+          cd node
+          npm update --save-dev --no-save
+
+      - name: Publish layers (dev)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_DEV_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_DEV_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          cd node
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-dev-layers-registry \
+            --layer-basename sls-sdk-python \
+            --version $VERSION \
+            --layer-filename ../python/packages/extension.internal.zip
+
+      - name: Publish layers (prod)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OPEN_PROD_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OPEN_PROD_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          TEMP_ARRAY=($(echo $GITHUB_REF | tr "@" "\n"))
+          VERSION=${TEMP_ARRAY[@]: -1}
+          TAG=${GITHUB_REF:10}
+          cd node
+          ./scripts/publish-extension-layers.js \
+            --bucket-name sls-layers-registry \
+            --layer-basename sls-sdk-python \
+            --version $VERSION \
+            --layer-filename ../python/packages/extension.internal.zip \
+            --github-tag $TAG
