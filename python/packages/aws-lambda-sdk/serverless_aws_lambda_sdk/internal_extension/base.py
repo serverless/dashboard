@@ -13,9 +13,7 @@ from typing_extensions import Final, Self
 
 
 NS_IN_MS: Final[int] = 1_000_000
-NEW_HANDLER: Final[
-    str
-] = "serverless_aws_lambda_sdk.internal_extension.wrapper.handler"
+NEW_HANDLER: Final[str] = "serverless_aws_lambda_sdk.internal_extension.wrapper.handler"
 PYTHON_EXTS: Final[Tuple[str, ...]] = (".py", ".pyc", ".pyo", ".pyd")
 
 
