@@ -11,7 +11,7 @@ environ["AWS_LAMBDA_FUNCTION_NAME"] = "example.handler"
 environ["SLS_ORG_ID"] = "hello.world"
 environ["AWS_LAMBDA_INITIALIZATION_TYPE"] = "on-demand"
 environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
-environ["_HANDLER"] = "serverless_aws_lambda_sdk.tests.example.handler"
+environ["_HANDLER"] = "selcuk_serverless_aws_lambda_sdk.tests.example.handler"
 environ["LAMBDA_TASK_ROOT"] = "./python/packages/aws-lambda-sdk"
 
 

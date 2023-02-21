@@ -11,10 +11,10 @@ from .example import callable_obj, env_handler, handler as example
 from ..base import Env, Handler
 
 
-EXAMPLE_MODULE: Final[str] = "serverless_aws_lambda_sdk.tests.example"
+EXAMPLE_MODULE: Final[str] = "selcuk_serverless_aws_lambda_sdk.tests.example"
 
 HANDLER: Final[str] = f"{EXAMPLE_MODULE}.handler"
-HANDLER_PATH: Final[str] = "serverless_aws_lambda_sdk/tests/example.handler"
+HANDLER_PATH: Final[str] = "selcuk_serverless_aws_lambda_sdk/tests/example.handler"
 CLS_HANDLER: Final[str] = f"{EXAMPLE_MODULE}.callable_obj"
 ENV_HANDLER: Final[str] = f"{EXAMPLE_MODULE}.env_handler"
 
