@@ -14,7 +14,9 @@ jobs:
     name: "[Linux] Python 3.7: Unit Tests"
     runs-on: ubuntu-latest
     outputs:
+      pathChangedAwsLambdaSdk: ${{ steps.pathChanges.outputs.awsLambdaSdk }}
       pathChangedSdk: ${{ steps.pathChanges.outputs.sdk}}
+      pathChangedSdkSchema: ${{ steps.pathChanges.outputs.sdkSchema}}
       pathChangedProto: ${{ steps.pathChanges.outputs.proto }}
     steps:
       - name: Checkout repository
@@ -34,6 +36,8 @@ jobs:
         id: pathChanges
         with:
           filters: |
+            awsLambdaSdk:
+              - 'python/packages/aws-lambda-sdk/**'
             sdk:
               - 'python/packages/sdk/**'
             sdkSchema:
@@ -70,10 +74,13 @@ jobs:
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
         with:
-          github_token: ${{ github.token }}
-
+          input: "proto"
       - name: Build Protobufs
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd ./proto
           python3 -m pip install "betterproto[compiler]"
@@ -95,6 +102,19 @@ jobs:
           python3 -m pip install poethepoet pytest
           python3 -m poethepoet test
 
+      - name: Install AWS Lambda SDK project and dependencies
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        run: |
+          cd python/packages/aws-lambda-sdk
+
+          python3 -m pip install --editable .
+
+      - name: Unit tests /aws-lambda-sdk
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        run: |
+          cd python/packages/aws-lambda-sdk
+          python3 -m pip install pytest
+          python3 -m pytest
 
   integratePythonSdk:
     name: Integrate Python SDK
@@ -115,10 +135,36 @@ jobs:
 
       - name: Tag if new version
         run: |
-          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk/pyproject.toml | grep 'version = ' | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk/pyproject.toml | grep 'version = ' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
           then
             git tag python/serverless_sdk@$NEW_VERSION
+            git push --tags
+          fi
+
+  integrateAwsLambdaSdk:
+    name: Integrate Python AWS Lambda SDK
+    runs-on: ubuntu-latest
+    needs: [ linuxPython37 ]
+    if: needs.linuxPython37.outputs.pathChangedAwsLambdaSdk == 'true'
+    timeout-minutes: 5 # Default is 360
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # Ensure to have complete history of commits pushed with given push operation
+          # It's loose and imperfect assumption that no more than 30 commits will be pushed at once
+          fetch-depth: 30
+          # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
+          # Hence we're passing 'serverless-ci' user authentication token
+          token: ${{ secrets.USER_GITHUB_TOKEN }}
+
+      - name: Tag if new version
+        run: |
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/aws-lambda-sdk/pyproject.toml | grep 'version = ' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
+          then
+            git tag python/serverless_aws_lambda_sdk@$NEW_VERSION
             git push --tags
           fi
 
@@ -141,7 +187,7 @@ jobs:
 
       - name: Tag if new version
         run: |
-          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk-schema/pyproject.toml | grep 'version = ' | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk-schema/pyproject.toml | grep 'version = ' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
           then
             git tag python/serverless_sdk_schema@$NEW_VERSION

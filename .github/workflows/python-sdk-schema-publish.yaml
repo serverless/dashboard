@@ -1,28 +1,19 @@
-name: "Python: Publish python/serverless_aws_schema_sdk"
+name: "Python: Publish python/serverless_sdk_schema"
 
 on:
   push:
     tags:
-      - "python/serverless_aws_schema_sdk@[0-9]+.[0-9]+.[0-9]+"
+      - "python/serverless_sdk_schema@[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   publishNewSdkVersion:
     name: Publish new version
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Install Python and Pip
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.7'
-
-          # ensure project dependencies are cached
-          # When using only `pyproject.toml` for dependencies, see:
-          #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
-          cache: 'pip'
-          cache-dependency-path: |
-            **/pyproject.toml
-
-      - name: Install Python 3.7
         uses: actions/setup-python@v4
         with:
           python-version: '3.7'
@@ -37,7 +28,6 @@ jobs:
       - name: Install main project dependencies
         run: |
           cd python/packages/sdk-schema
-
           python3 -m pip install .
 
       - name: Buf Setup
@@ -55,7 +45,7 @@ jobs:
           buf build
           buf generate --template=buf.gen.python.yaml 
 
-          cd ./python/packages/sdk-schema
+          cd ../python/packages/sdk-schema
           python3 -m pip install --upgrade build twine wheel poethepoet
           python3 -m build --wheel --sdist .
           twine upload dist/*.tar.gz dist/*.whl

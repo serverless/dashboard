@@ -10,6 +10,9 @@ jobs:
     name: Publish new version
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Install Python and Pip
         uses: actions/setup-python@v4
         with:
