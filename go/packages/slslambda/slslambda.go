@@ -2,51 +2,59 @@ package slslambda
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/serverless/console/go/packages/slslambda/internal/log"
-	"github.com/serverless/console/go/packages/slslambda/internal/wrapper"
+	"runtime/debug"
 	"time"
 )
 
 var initializationStart = time.Now()
 
-type Span interface {
-	CaptureError(error)
+// Start starts handler function with Serverless instrumentation.
+func Start(handlerFunc any, options ...Option) {
+	lambda.Start(wrap(handlerFunc, options))
 }
 
-// Start starts handler function with serverless instrumentation.
-func Start(handler any, options ...Option) {
-	h := lambda.NewHandler(handler)
-	w, err := wrapper.New(options...)
+func wrap(userHandlerFunc any, options []Option) (handlerFunc any) {
+	defer func() {
+		if r := recover(); r != nil {
+			debugLog("recover panic in wrap:", r, string(debug.Stack()))
+			// return user handler
+			handlerFunc = userHandlerFunc
+		}
+	}()
+	w, err := newWrapper(options...)
 	if err != nil {
-		log.Debug(fmt.Errorf("cannot instrument function: %w", err))
-		lambda.Start(handler)
+		debugLog("cannot instrument function:", err)
+		// return user handler
+		return userHandlerFunc
 	}
-	h = w.Wrap(h.Invoke, initializationStart)
-	lambda.Start(h)
+	return w.Wrap(lambda.NewHandler(userHandlerFunc), initializationStart)
 }
 
 // Option is used to customize the instrumentation.
-type Option = func(c *wrapper.Wrapper)
+type Option = func(c *wrapper)
 
 // WithEnvironment allows for associating custom environment with telemetry data sent.
 func WithEnvironment(env string) Option {
-	return func(w *wrapper.Wrapper) {
-		w.Environment = env
+	return func(w *wrapper) {
+		w.environment = env
 	}
 }
 
-func FromContext(ctx context.Context) Span {
-	span, ok := ctx.Value(wrapper.ContextKey).(*wrapper.RootSpan)
-	if !ok {
-		return noopSpan{}
+func CaptureError(ctx context.Context, err error) {
+	span, ctxErr := fromContext(ctx)
+	if ctxErr != nil {
+		debugLog("capture error:", ctxErr)
+		return
 	}
-	return span
+	span.captureError(err)
 }
 
-type noopSpan struct{}
-
-func (n noopSpan) CaptureError(error) {
-	log.Debug("couldn't get Span from context: using noop span")
+func CaptureWarning(ctx context.Context, msg string) {
+	span, ctxErr := fromContext(ctx)
+	if ctxErr != nil {
+		debugLog("capture warning:", ctxErr)
+		return
+	}
+	span.captureWarning(msg)
 }

@@ -1,4 +1,4 @@
-package wrapper
+package slslambda
 
 import (
 	"crypto/rand"
@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/serverless/console/go/packages/slslambda/internal/environment"
-	"github.com/serverless/console/go/packages/slslambda/internal/log"
 	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
@@ -27,8 +25,8 @@ const (
 
 var version = "undefined"
 
-func (w Wrapper) printTrace(span *RootSpan) error {
-	payload, err := convert(span, w.tags, w.Environment)
+func (w wrapper) printTrace(span *rootSpan) error {
+	payload, err := convert(span, w.tags, w.environment)
 	if err != nil {
 		return fmt.Errorf("convert: %w", err)
 	}
@@ -36,7 +34,7 @@ func (w Wrapper) printTrace(span *RootSpan) error {
 	return nil
 }
 
-func slsTags(tags environment.Tags, environment string) *tagsv1.SlsTags {
+func slsTags(tags tags, environment string) *tagsv1.SlsTags {
 	return &tagsv1.SlsTags{
 		OrgId:    string(tags.OrganizationID),
 		Platform: aws.String(lambdaPlatform),
@@ -53,7 +51,7 @@ func slsTags(tags environment.Tags, environment string) *tagsv1.SlsTags {
 func printServerlessTelemetryLogLine(payload *instrumentationv1.TracePayload) {
 	bytes, err := proto.Marshal(payload)
 	if err != nil {
-		log.Debug(fmt.Errorf("proto marshal trace payload: %w", err))
+		debugLog("proto marshal trace payload:", err)
 	}
 	fmt.Println(tracePayloadPrefix + base64.StdEncoding.EncodeToString(bytes))
 }

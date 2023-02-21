@@ -1,68 +1,98 @@
-package wrapper
+package slslambda
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/serverless/console/go/packages/slslambda/internal/environment"
-	"github.com/serverless/console/go/packages/slslambda/internal/log"
 	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
+	"runtime/debug"
 	"time"
 )
 
-type BytesHandlerFunc func(context.Context, []byte) ([]byte, error)
+type bytesHandlerFunc func(context.Context, []byte) ([]byte, error)
 
-func (f BytesHandlerFunc) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+func (f bytesHandlerFunc) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	return f(ctx, payload)
 }
 
-type Wrapper struct {
-	Environment string
-	tags        environment.Tags
+type wrapper struct {
+	environment string
+	tags        tags
 }
 
 // An unexported type to be used as the key for types in this package.
 // This prevents collisions with keys defined in other packages.
 type key struct{}
 
-// ContextKey is the key for a LambdaContext in Contexts.
+// contextKey is the key for a rootSpan in Contexts.
 // Users of this package must use slslambda.FromContext
 // instead of using this key directly.
-var ContextKey = &key{}
+var contextKey = &key{}
 
-func New(options ...func(c *Wrapper)) (*Wrapper, error) {
-	tags, err := environment.GetTags()
+func newWrapper(options ...func(c *wrapper)) (*wrapper, error) {
+	tags, err := getTags()
 	if err != nil {
 		return nil, fmt.Errorf("get tags: %w", err)
 	}
-	w := &Wrapper{tags: tags}
+	w := &wrapper{tags: tags}
 	for _, o := range options {
 		o(w)
 	}
 	return w, nil
 }
 
-func (w Wrapper) Wrap(handler BytesHandlerFunc, initializationStart time.Time) BytesHandlerFunc {
-	return func(ctx context.Context, payload []byte) ([]byte, error) {
-		rootSpan, err := newRootSpan(ctx, initializationStart, time.Now())
-		if err != nil {
-			log.Debug(fmt.Errorf("new span: %w", err))
-			return handler(ctx, payload)
+func (w wrapper) Wrap(userHandler lambda.Handler, initializationStart time.Time) bytesHandlerFunc {
+	return func(ctx context.Context, payload []byte) (output []byte, userHandlerErr error) {
+		userHandlerInvoked := false
+		defer func() {
+			if r := recover(); r != nil {
+				debugLog("recover panic in wrapped handler:", r, "\n", string(debug.Stack()))
+				if !userHandlerInvoked {
+					// invoke user handler with regular lambda context if it hasn't been called yet
+					// and return its outputs via named return values
+					output, userHandlerErr = userHandler.Invoke(ctx, payload)
+				}
+			}
+		}()
+
+		slsCtx := ctxWithRootSpan(ctx, initializationStart)
+
+		output, userHandlerErr = userHandler.Invoke(slsCtx, payload)
+		userHandlerInvoked = true
+
+		if err := w.closeRootSpan(slsCtx); err != nil {
+			debugLog("closeRootSpan:", err)
 		}
-		slsCtx := context.WithValue(ctx, ContextKey, rootSpan)
-		output, err := handler(slsCtx, payload)
-		rootSpan.close()
-		if err := w.printTrace(rootSpan); err != nil {
-			log.Debug(fmt.Errorf("print trace: %w", err))
-		}
+
+		// reset initialization start time
 		initializationStart = time.Time{}
-		return output, err
+
+		// return outputs from user handler
+		return output, userHandlerErr
 	}
 }
 
-func convert(span *RootSpan, tags environment.Tags, environment string) (*instrumentationv1.TracePayload, error) {
+func ctxWithRootSpan(ctx context.Context, initializationStart time.Time) context.Context {
+	rootSpan := newRootSpan(ctx, initializationStart, time.Now())
+	return context.WithValue(ctx, contextKey, rootSpan)
+}
+
+func (w wrapper) closeRootSpan(ctx context.Context) error {
+	span, err := fromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("close root span: %w", err)
+	}
+	span.close()
+	if err := w.printTrace(span); err != nil {
+		return fmt.Errorf("print trace: %w", err)
+	}
+	return nil
+}
+
+func convert(span *rootSpan, tags tags, environment string) (*instrumentationv1.TracePayload, error) {
 	protoSpans, err := convertToProtoSpans(span, tags)
 	if err != nil {
 		return nil, fmt.Errorf("convert to proto spans: %w", err)
@@ -71,9 +101,9 @@ func convert(span *RootSpan, tags environment.Tags, environment string) (*instru
 	if invocationSpan == nil {
 		return nil, errors.New("invocation proto span not found")
 	}
-	protoEvents, err := convertToProtoEvents(span.errorEvents, invocationSpan.TraceId, invocationSpan.Id)
+	protoEvents, err := convertToProtoEvents(span.errorEvents, span.warningEvents, invocationSpan.TraceId, invocationSpan.Id)
 	if err != nil {
-		return nil, fmt.Errorf("convert to proto events: %w", err)
+		return nil, fmt.Errorf("convert error events to proto events: %w", err)
 	}
 	payload := instrumentationv1.TracePayload{
 		SlsTags: slsTags(tags, environment),
@@ -83,7 +113,7 @@ func convert(span *RootSpan, tags environment.Tags, environment string) (*instru
 	return &payload, nil
 }
 
-func convertToProtoSpans(rootSpan *RootSpan, tags environment.Tags) ([]*instrumentationv1.Span, error) {
+func convertToProtoSpans(rootSpan *rootSpan, tags tags) ([]*instrumentationv1.Span, error) {
 	var spans []*instrumentationv1.Span
 	rootSpanID, err := generateSpanID()
 	if err != nil {

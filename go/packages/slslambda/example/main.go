@@ -16,10 +16,15 @@ func handle(ctx context.Context) {
 	fmt.Println("hello from lambda!")
 	time.Sleep(100 * time.Millisecond)
 
-	span := slslambda.FromContext(ctx)
 	err := errors.New("something went wrong")
-	span.CaptureError(err)
+	slslambda.CaptureError(ctx, err)
 	fmt.Println("error captured!")
+
+	time.Sleep(100 * time.Millisecond)
+
+	msg := "something bad will happen soon"
+	slslambda.CaptureWarning(ctx, msg)
+	fmt.Println("warning captured!")
 
 	time.Sleep(100 * time.Millisecond)
 	fmt.Println("goodbye!")
