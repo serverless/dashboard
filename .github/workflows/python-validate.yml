@@ -33,6 +33,8 @@ jobs:
               - 'python/packages/sdk/**'
             sdkSchema:
               - 'python/packages/sdk-schema/**'
+            awsLambdaSdk:
+              - 'python/packages/aws-lambda-sdk/**'
             proto:
               - 'proto/**'
             packages:
@@ -70,7 +72,7 @@ jobs:
         run: |
           cd python/packages
           
-          python3 -m pip install pyproject-fmt
+          python3 -m pip install pyproject-fmt==0.4.1
           
           for directory in */; do
             if [ -f "$directory/pyproject.toml" ]; then
@@ -129,3 +131,16 @@ jobs:
 
           python3 -m pip install poethepoet pytest
           python3 -m poethepoet test
+
+      - name: Install AWS Lambda SDK project and dependencies
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        run: |
+          cd python/packages/aws-lambda-sdk
+          python3 -m pip install .
+
+      - name: Run AWS Lambda SDK unit tests
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        run: |
+          cd python/packages/aws-lambda-sdk
+          python3 -m pip install pytest strenum
+          python3 -m pytest

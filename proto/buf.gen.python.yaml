@@ -2,4 +2,4 @@ version: v1
 plugins:
   - name: python_betterproto
     strategy: all
-    out: ../python/packages/sdk-schema/serverless_sdk_schema/schema
+    out: ../python/packages/sdk-schema/selcuk_serverless_sdk_schema/schema

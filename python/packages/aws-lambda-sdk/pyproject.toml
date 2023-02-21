@@ -6,17 +6,15 @@ requires = [
 ]
 
 [project]
-name = "selcuk_serverless_sdk"
+name = "selcuk_serverless_aws_lambda_sdk"
 version = "0.0.0"
-description = "Serverless SDK for Python"
+description = "Serverless AWS Lambda SDK for Python"
 authors = [{ name = "selcuk_" }]
 requires-python = ">=3.7"
 dependencies = [
-    "backports.cached-property", # included in Python >=3.8
-    "importlib_metadata>=5.2", # included in Python >=3.8
-    "js-regex<1.1.0,>=1.0.1",
-    "pydantic>=1.10.4",
-    "pyhumps>=3.8",
+    "selcuk_serverless_sdk",
+    "selcuk_serverless_sdk_schema",
+    "strenum>=0.4.9",
     "typing-extensions>=4.4", # included in Python 3.8 - 3.11
 ]
 [project.optional-dependencies]
