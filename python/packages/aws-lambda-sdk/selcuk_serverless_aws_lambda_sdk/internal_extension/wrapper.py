@@ -12,9 +12,9 @@ from typing import List, Optional
 
 from typing_extensions import Final, TypeAlias, TYPE_CHECKING
 
-from serverless_aws_lambda_sdk.internal_extension.base import get_module_path
-from serverless_aws_lambda_sdk.base import Env, Handler
-from serverless_aws_lambda_sdk.exceptions import (
+from selcuk_serverless_aws_lambda_sdk.internal_extension.base import get_module_path
+from selcuk_serverless_aws_lambda_sdk.base import Env, Handler
+from selcuk_serverless_aws_lambda_sdk.exceptions import (
     BuiltInModuleConflict,
     HandlerNotFound,
     ImportModuleError,
@@ -24,7 +24,7 @@ from serverless_aws_lambda_sdk.exceptions import (
 from ..instrument import instrument
 
 if TYPE_CHECKING:
-    from serverless_sdk.sdk.base import ServerlessSdk
+    from selcuk_serverless_sdk.sdk.base import ServerlessSdk
 
 else:
     ServerlessSdk: TypeAlias = "ServerlessSdk"
@@ -42,7 +42,7 @@ LAMBDA_RUNTIME_DIR: Final[Optional[str]] = environ.get(Env.LAMBDA_RUNTIME_DIR)
 # 1. Initialize SDK instrumentation
 def get_sdk(init: bool = False, *args, **kwargs) -> ServerlessSdk:
     try:
-        from serverless_aws_lambda_sdk import serverlessSdk
+        from selcuk_serverless_aws_lambda_sdk import serverlessSdk
 
         sdk = serverlessSdk
 

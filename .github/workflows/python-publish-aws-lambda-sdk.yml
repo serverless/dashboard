@@ -54,9 +54,9 @@ jobs:
 
           cp -R ./build/* dist/python/lib/python3.9/site-packages
 
-          cp ./build/serverless_aws_lambda_sdk/internal_extension/__init__.py dist/sls-sdk-python
-          cp ./build/serverless_aws_lambda_sdk/internal_extension/base.py dist/sls-sdk-python
-          cp ./build/serverless_aws_lambda_sdk/internal_extension/exec_wrapper.py dist/sls-sdk-python
+          cp ./build/selcuk_serverless_aws_lambda_sdk/internal_extension/__init__.py dist/sls-sdk-python
+          cp ./build/selcuk_serverless_aws_lambda_sdk/internal_extension/base.py dist/sls-sdk-python
+          cp ./build/selcuk_serverless_aws_lambda_sdk/internal_extension/exec_wrapper.py dist/sls-sdk-python
           cp ./build/typing_extensions.py dist/sls-sdk-python
           cp -R ./build/strenum dist/sls-sdk-python
           cd dist

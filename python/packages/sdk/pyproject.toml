@@ -6,10 +6,10 @@ requires = [
 ]
 
 [project]
-name = "serverless_sdk"
+name = "selcuk_serverless_sdk"
 version = "0.0.0"
 description = "Serverless SDK for Python"
-authors = [{ name = "serverlessinc" }]
+authors = [{ name = "selcuk_" }]
 requires-python = ">=3.7"
 dependencies = [
     "backports.cached-property", # included in Python >=3.8

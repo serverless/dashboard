@@ -10,10 +10,10 @@ requires = [
 ]
 
 [project]
-name = "serverless_sdk_schema"
+name = "selcuk_serverless_sdk_schema"
 version = "0.0.0"
 description = "The protobuf generated Serverless SDK Schema"
-authors = [{ name = "serverlessinc" }]
+authors = [{ name = "selcuk_" }]
 requires-python = ">=3.7"
 dependencies = [
     "betterproto[compiler]<3.0.0,>=2.0.0b5", # This version supports proto3 optional fields

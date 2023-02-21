@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from serverless_sdk import serverlessSdk
+from selcuk_serverless_sdk import serverlessSdk
 
 from .base import NAME, __version__
 
