@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       pathChangedSdk: ${{ steps.pathChanges.outputs.sdk}}
+      pathChangedSdkSchema: ${{ steps.pathChanges.outputs.sdkSchema}}
       pathChangedProto: ${{ steps.pathChanges.outputs.proto }}
     steps:
       - name: Checkout repository
@@ -70,17 +71,20 @@ jobs:
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
         with:
-          github_token: ${{ github.token }}
-
+          input: "proto"
       - name: Build Protobufs
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd ./proto
           python3 -m pip install "betterproto[compiler]"
           buf generate --template=buf.gen.python.yaml 
 
       - name: Install SDK Schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
 
@@ -88,13 +92,12 @@ jobs:
           python3 -m poethepoet install
 
       - name: Run SDK Schema unit tests
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
 
           python3 -m pip install poethepoet pytest
           python3 -m poethepoet test
-
 
   integratePythonSdk:
     name: Integrate Python SDK
@@ -115,7 +118,7 @@ jobs:
 
       - name: Tag if new version
         run: |
-          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk/pyproject.toml | grep 'version = ' | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk/pyproject.toml | grep 'version = ' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
           then
             git tag python/serverless_sdk@$NEW_VERSION
@@ -141,7 +144,7 @@ jobs:
 
       - name: Tag if new version
         run: |
-          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk-schema/pyproject.toml | grep 'version = ' | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
+          NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/sdk-schema/pyproject.toml | grep 'version = ' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
           if [ -n "$NEW_VERSION" ] && [ $NEW_VERSION != "0.0.0" ];
           then
             git tag python/serverless_sdk_schema@$NEW_VERSION

@@ -8,8 +8,8 @@ on:
       - proto/**
 
 jobs:
-  linuxPython37:
-    name: "[Linux] Python 3.7: Lint, Formatting & Unit Tests"
+  linuxPython39:
+    name: "[Linux] Python 3.9: Lint, Formatting & Unit Tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -38,10 +38,10 @@ jobs:
             packages:
               - 'python/packages/**'
 
-      - name: Install Python 3.7
+      - name: Install Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: '3.9'
 
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
@@ -95,7 +95,7 @@ jobs:
           python3 -m pytest
 
       - name: Install SDK Schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
 
@@ -123,7 +123,7 @@ jobs:
           buf generate --template=buf.gen.python.yaml 
 
       - name: Run SDK Schema unit tests
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
 
