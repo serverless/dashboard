@@ -84,7 +84,7 @@ jobs:
           buf generate --template=buf.gen.python.yaml 
 
       - name: Install SDK Schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
 
@@ -92,7 +92,7 @@ jobs:
           python3 -m poethepoet install
 
       - name: Run SDK Schema unit tests
-        if: steps.pathChanges.outputs.sdkSchema == 'true'
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
 
