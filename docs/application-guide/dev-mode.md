@@ -52,8 +52,8 @@ Explorer when Prod Instrumentation Mode is enabled.
 However, there are a few differences in instrumentaiton between Dev and Prod
 Instrumentaiton Modes:
 
-- Dev captures only HTTP and AWS API spans, while Prod also captures
-Express.js spans.
+- Dev displays only HTTP and AWS API spans, while the Trace Explorer also
+displays Express.js spans.
 - Dev captures requests/responses on the Lambda invocation, while in Prod the
 request/response are not captured to prevent potentially sensitive information
 from being captured.
