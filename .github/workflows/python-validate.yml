@@ -70,7 +70,7 @@ jobs:
         run: |
           cd python/packages
           
-          python3 -m pip install pyproject-fmt
+          python3 -m pip install pyproject-fmt==0.4.1
           
           for directory in */; do
             if [ -f "$directory/pyproject.toml" ]; then
