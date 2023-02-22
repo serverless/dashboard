@@ -20,15 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 30
-
-      - name: Retrieve last main commit (for `git diff` purposes)
-        run: |
-          git checkout -b pr
-          git fetch --prune --depth=30 origin +refs/heads/main:refs/remotes/origin/main
-          git checkout main
-          git checkout pr
 
       - name: Resolve path filters
         uses: dorny/paths-filter@v2
