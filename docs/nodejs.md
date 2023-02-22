@@ -33,7 +33,7 @@ Terraform, CDK, SAM, Pulumi, etc, as as they do with Serverless Framework.
 
 ### Install the package
 
-When Tracing is enabled in Servelress Console, an  AWS Lambda Layer is added to
+When Tracing is enabled in Serverless Console, an  AWS Lambda Layer is added to
 your AWS Lambda function with the `@serverless/sdk` package. While the AWS
 Lambda layer is added by Serverless Console, it is possible for the layer to be
 removed temporarily if you deploy manually or with some infrastructure as code
@@ -128,7 +128,7 @@ try {
 
 The Serverless SDK automatically instruments the `console.error` method to
 capture errors. This makes instrumentation much easier as you may already be
-using `console.error` to dispaly the errors.
+using `console.error` to display the errors.
 
 This method can be used to capture `Error` objects, as well as any combination
 of strings. If only an `Error` object is provided, then the stack trace in
@@ -224,7 +224,7 @@ Tag keys on `captureWarning` are validated the same way as tag keys on
 ### Structured Logs with captureError and captureWarning
 
 The `captureWarning` and `captureError` methods will send the content to
-Serverless Console in a binary format. To enable humand readability these
+Serverless Console in a binary format. To enable human-readability these
 methods will also output a structured-log JSON string, like the one shown
 below.
 

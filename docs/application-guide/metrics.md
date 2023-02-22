@@ -54,7 +54,7 @@ saved as a shared views to collaborate with team mates on specific searches.
 
 - **Resources** - Filter for specific AWS Resources in any of the integrated
 AWS Accounts. Currently this only supports AWS Lambda, but other AWS resources
-will be made availble soon.
+will be made available soon.
 - **Namespace** - Namespaces are configured on individual AWS Lambda functions
 on the AWS Integrations page. Filtering by namespace allows you to filter the
 metrics based on the namespaces that were configured on the functions for which
@@ -78,6 +78,3 @@ cold start.
 - **Custom Tags** - Filters for metrics on invocations that had the provided
 custom tags. Custom tags on traces, errors, and warnings are all queried. Use
 the [Serverless SDK](../nodejs.md) to set custom tags.
-
-
-

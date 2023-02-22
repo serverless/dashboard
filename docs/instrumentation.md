@@ -39,7 +39,7 @@ it adds some latency to the AWS Lambda function.
 
 ### Instrumentation Mode: None
 
-When the **Instrumentation Mode** is set to **Nonde**, then no data is collected
+When the **Instrumentation Mode** is set to **None**, then no data is collected
 on the function.
 
 ## Custom Instrumentation

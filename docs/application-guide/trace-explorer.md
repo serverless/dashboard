@@ -32,7 +32,7 @@ details on each Error & Warning type is available below.
 automatically or manually using the Serverless SDK, a message string is saved
 with the Error/Warning. You can filter for the Traces based on the Error or
 Warning messages that were captured in the trace. Traces are filtered if any of
-the Errors or Warnins in the Trace contained the message string.
+the Errors or Warnings in the Trace contained the message string.
 - **Resource** - You can select the specific resource by AWS ARN, like a
 specific Lambda function.
 - **Environment**, **Namespace** - These properties are inferred from the
@@ -44,14 +44,13 @@ instrumented Lambda functions across AWS accounts and regions; you  can filter
 on any of these properties.
 - **Timeframe** - Any timeframe within the last 30 days can be used.
 
-
 ## Error & Warning Types
 
 - `ERROR_TYPE_UNCAUGHT` - The Lambda function handler had a fatal error and
 caused the invocation to fail.
 - `ERROR_TYPE_CAUGHT_USER` - The Lambda function handler had an error that was
 captured using the SDK. This can include Error objects or strings that were
-captured implicitely (e.g. `console.error`) or explicitely using the provided
+captured implicitly (e.g. `console.error`) or explicitly using the provided
 SDK methods.
 - `ERROR_TYPE_CAUGHT_SDK_USER` - An internal SDK error that was reported due to
 misuse of the SDK. These errors do not cause handler failures, but misusage of
@@ -76,7 +75,6 @@ on a Lambda function as input, then Dev Mode will not ingest the payload as it
 can't be shown in Console. This event type can be seen in the Trace Details, but
 it can't be filtered on Metrics or Trace Explorer.
 
-
 ## Trace Details
 
 Trace Details provides a way to look at the details of an individual AWS Lambda
@@ -97,7 +95,7 @@ out the tooltips for details on each of the tags.
 ### Spans
 
 A Trace contains a set of Spans associated with and displayed in the style of a 
-Gantt Chart. This chart provides you with context for when, and how long various
+Gantt chart. This chart provides you with context for when, and how long various
 subsequent interactions took. 
 
 A span can be selected from the timeline to view the details of the span in the

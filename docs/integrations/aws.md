@@ -62,14 +62,14 @@ or add a new one. Only one namespace tag can be added per function.
 ## AWS Account Infrastructure updates and data collection
 
 The following is an overview of the changes Serverless Console makes to your
-AWS Infastructure, including IAM Roles, and the data it collects, when you add
+AWS Infrastructure, including IAM Roles, and the data it collects, when you add
 an AWS Integration.
 
 ### IAM Roles
 
 Serverless Console configures three IAM Roles when adding your AWS Account.
 Where possible the least privileges are applied and [detailed comments](https://github.com/serverless/console/blob/main/instrumentation/aws/iam-role-cfn-template.yaml)
-are maintained about the premissions.
+are maintained about the permissions.
 
 - `ServerlessRole` - The primary role used for the setting up general
 infrastructure.
@@ -95,14 +95,14 @@ you have instrumented resources.
 
 ### CloudWatch Log Subscriptions
 
-When you enable instrumentation for a function, Serverlesss Console will setup
+When you enable instrumentation for a function, Serverless Console will setup
 a [Cloudwatch Subscription](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions.html)
 to collect logs for that function. Cloudwatch Subscriptions are configured in
 the region your function is deployed.
 
 ### Lambda Layer with Dev Mode Instrumentation Extension
 
-When Dev Mode instrumentaiton is enabled, an AWS Lambda Layer with an external
+When Dev Mode instrumentation is enabled, an AWS Lambda Layer with an external
 extension is added to the function. This extension is responsible for collecting
 the trace details, logs, errors, and warnings, and forwarding them to Serverless
 Console. This extension enables the real-time logging in DevMode by skipping
@@ -116,7 +116,7 @@ When Dev or Prod mode instrumentation is enabled, an AWS Lambda Layer with the
 Serverless SDK is added to the function. The Serverless SDK is responsible for
 auto-instrumentation of traces and spans and collecting errors and warnings.
 
-The traces and errrors/warnings are binary encoded and logged in CloudWatch
+The traces and errors/warnings are binary encoded and logged in CloudWatch
 where Serverless Console can consume the events via CloudWatch log subscription
 groups.
 

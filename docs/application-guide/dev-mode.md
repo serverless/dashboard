@@ -40,17 +40,16 @@ By default, all strings and Errors are captured with `console.warn` and
 `console.error`. Unlike `console.log`, these methods will capture structured
 logs, including the stack trace and Error name, if applicable.
 
-For futher customization, you can use the [Node.js SDK](../nodejs.md) methods to
-capture warnings and errors with custom tags.
-
+For further customization, you can use the [Node.js SDK](../nodejs.md) methods
+to capture warnings and errors with custom tags.
 
 ## Real Time Traces & Spans
 
 Traces and Spans are available in Dev Mode, just like they are in the Trace
 Explorer when Prod Instrumentation Mode is enabled.
 
-However, there are a few differences in instrumentaiton between Dev and Prod
-Instrumentaiton Modes:
+However, there are a few differences in instrumentation between Dev and Prod
+Instrumentation Modes:
 
 - Dev displays only HTTP and AWS API spans, while the Trace Explorer also
 displays Express.js spans.
