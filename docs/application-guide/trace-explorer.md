@@ -68,9 +68,13 @@ failed")`, would result in this type of warning.
 due to misuse of the SDK.
 - `WARNING_TYPE_SDK_INTERNAL` - An internal SDK warning that was reported due to
 an internal issue not caused by user input. These are non-fatal issues that may
-result in partial data collection. For example, if a binary input payload is
-used then DevMode may not be able to ingest the payload resulting in this type
-of warning.
+result in partial data collection. For example, approaching EMFILE problems.
+- `NOTICE_TYPE_SDK_INTERNAL` - An internal SDK notice is a valid condition but
+results in limited functionality. These are non-fatal issues that are
+informative and can be ignored. For example, if a binary input payload is used
+on a Lambda function as input, then Dev Mode will not ingest the payload as it
+can't be shown in Console. This event type can be seen in the Trace Details, but
+it can't be filtered on Metrics or Trace Explorer.
 
 
 ## Trace Details
