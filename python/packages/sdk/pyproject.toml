@@ -9,6 +9,7 @@ requires = [
 name = "serverless-sdk"
 version = "0.1.1"
 description = "Serverless SDK for Python"
+readme = "README.md"
 authors = [{ name = "serverlessinc" }]
 requires-python = ">=3.7"
 dependencies = [
@@ -25,6 +26,11 @@ tests = [
     "pytest>=7.2",
     "ruff>=0.0.199",
 ]
+[project.urls]
+changelog = "https://github.com/serverless/console/blob/main/python/packages/sdk/CHANGELOG.md"
+documentation = "https://github.com/serverless/console/tree/main/python/packages/sdk"
+homepage = "https://www.serverless.com/console"
+repository = "https://github.com/serverless/console"
 
 [tool.ruff]
 ignore = ["F401"]
