@@ -28,7 +28,7 @@ tests = [
 ]
 [project.urls]
 changelog = "https://github.com/serverless/console/blob/main/python/packages/sdk/CHANGELOG.md"
-documentation = "https://github.com/serverless/console#readme"
+documentation = "https://github.com/serverless/console/tree/main/python/packages/sdk"
 homepage = "https://www.serverless.com/console"
 repository = "https://github.com/serverless/console"
 
