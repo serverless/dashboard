@@ -26,8 +26,8 @@ Using log statements is one of the more intuitive approach troubleshooting, and
 Serverless Console offers you a best in class experience to using logs 
 across your Lambda functions.
 
-All Node.js log statements (`console.log`) will appear in the log stream in 
-real-time on Dev Mode.
+All process outputs (e.g. `console.log`, stdout, stderr) will appear in the log
+stream in real-time on Dev Mode.
 
 If the logs are formatted as JSON, they will be parsed and pretty formatted on
 the output.
