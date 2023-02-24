@@ -405,6 +405,12 @@ describe('integration', function () {
 
   const sdkTestConfig = {
     isCustomResponse: true,
+    capturedEvents: [
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+    ],
     test: ({ invocationsData }) => {
       for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
         const { spans, events, customTags } = trace;
@@ -1508,6 +1514,12 @@ describe('integration', function () {
             ]);
           }
         },
+        capturedEvents: [
+          // Warning is generated twice, as AWS creates two requests and on each "complete" event
+          // is triggered twice
+          { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_SDK_USER' },
+          { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_SDK_USER' },
+        ],
       },
     ],
     [
@@ -1815,13 +1827,54 @@ describe('integration', function () {
         throw new Error(`Unexpected outcome value: ${value}`);
     }
   };
+  const normalizeEvents = (events) =>
+    events.map(({ eventName: name, tags }) => ({
+      name,
+      type: (() => {
+        switch (name) {
+          case 'telemetry.error.generated.v1':
+            switch (tags.error.type) {
+              case 1:
+                return 'ERROR_TYPE_UNCAUGHT';
+              case 2:
+                return 'ERROR_TYPE_CAUGHT_USER';
+              case 3:
+                return 'ERROR_TYPE_CAUGHT_SDK_USER';
+              case 4:
+                return 'ERROR_TYPE_CAUGHT_SDK_INTERNAL';
+              default:
+                throw new Error(`Unexpected error type: ${tags.error.type}`);
+            }
+          case 'telemetry.warning.generated.v1':
+            switch (tags.warning.type) {
+              case 1:
+                return 'WARNING_TYPE_USER';
+              case 2:
+                return 'WARNING_TYPE_SDK_USER';
+              case 3:
+                return 'WARNING_TYPE_SDK_INTERNAL';
+              default:
+                throw new Error(`Unexpected warning type: ${tags.warning.type}`);
+            }
+          case 'telemetry.notice.generated.v1':
+            switch (tags.warning.type) {
+              case 1:
+                return 'NOTICE_TYPE_SDK_INTERNAL';
+              default:
+                throw new Error(`Unexpected notice type: ${tags.warning.type}`);
+            }
+          default:
+            throw new Error(`Unexpected event name: ${name}`);
+        }
+      })(),
+    }));
 
   for (const testConfig of testVariantsConfig) {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
       log.debug('%s test result: %o', testConfig.name, testResult);
-      const { expectedOutcome } = testConfig;
+      const { expectedOutcome, capturedEvents } = testConfig;
       const { invocationsData } = testResult;
       if (
         expectedOutcome === 'success' ||
@@ -1877,13 +1930,25 @@ describe('integration', function () {
           expect(lambdaSpan.tags.aws.lambda.outcome).to.equal(
             resolveOutcomeEnumValue(expectedOutcome)
           );
-          if (expectedOutcome !== 'success') {
+          const normalizedEvents = normalizeEvents(events);
+          if (expectedOutcome === 'success') {
+            if (!capturedEvents) expect(normalizedEvents).deep.equal([]);
+          } else {
             const errorTags = events.find(
               (event) => event.tags.error && event.tags.error.type === 1
             ).tags.error;
             expect(typeof errorTags.message).to.equal('string');
             expect(typeof errorTags.stacktrace).to.equal('string');
+            if (!capturedEvents) {
+              expect(normalizedEvents).deep.equal([
+                {
+                  name: 'telemetry.error.generated.v1',
+                  type: 'ERROR_TYPE_UNCAUGHT',
+                },
+              ]);
+            }
           }
+          if (capturedEvents) expect(normalizedEvents).deep.equal(capturedEvents);
         }
       }
       if (testConfig.test) {
