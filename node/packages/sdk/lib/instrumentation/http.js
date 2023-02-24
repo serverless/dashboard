@@ -164,15 +164,17 @@ const install = (protocol, httpModule) => {
     } else {
       options = Object.assign(url || {}, options);
     }
-    if (shouldIgnoreFollowingRequest || options._slsIgnore) {
+
+    const originalCb = args[cbIndex];
+    if (
+      shouldIgnoreFollowingRequest ||
+      options._slsIgnore ||
+      (originalCb && typeof originalCb !== 'function')
+    ) {
       shouldIgnoreFollowingRequest = false;
       return originalRequest.apply(this, args);
     }
 
-    const originalCb = args[cbIndex];
-    if (originalCb && typeof originalCb !== 'function') {
-      throw new TypeError('The "listener" argument must be of type function');
-    }
     let requestEndTime;
     let responseReadableState;
     args.splice(cbIndex, 1, (response) => {
