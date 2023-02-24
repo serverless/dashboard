@@ -9,6 +9,7 @@ const resolveEventTags = require('./lib/resolve-event-tags');
 const resolveResponseTags = require('./lib/resolve-response-tags');
 const sendTelemetry = require('./lib/send-telemetry');
 const flushSpans = require('./lib/auto-send-spans').flush;
+const filterCapturedEvent = require('./lib/filter-captured-event');
 const invocationContextAccessor = require('./lib/invocation-context-accessor');
 const pkgJson = require('../package');
 
@@ -103,7 +104,9 @@ const reportTrace = () => {
       delete spanPayload.output;
       return spanPayload;
     }),
-    events: capturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+    events: capturedEvents
+      .filter(filterCapturedEvent)
+      .map((capturedEvent) => capturedEvent.toProtobufObject()),
     customTags: objHasOwnProperty.call(serverlessSdk, '_customTags')
       ? JSON.stringify(serverlessSdk._customTags)
       : undefined,

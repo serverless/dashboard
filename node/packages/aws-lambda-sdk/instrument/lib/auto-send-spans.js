@@ -15,15 +15,17 @@ if (!serverlessSdk._isDevMode) {
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const sendTelemetry = require('./send-telemetry');
 const invocationContextAccessor = require('./invocation-context-accessor');
+const filterCapturedEvent = require('./filter-captured-event');
 
 const pendingSpans = [];
-const pendingCapturedEvents = [];
+let pendingCapturedEvents = [];
 let isScheduled = false;
 let timeoutId = null;
 const sendData = () => {
   try {
     isScheduled = false;
     clearTimeout(timeoutId);
+    pendingCapturedEvents = pendingCapturedEvents.filter(filterCapturedEvent);
     if (!pendingSpans.length && !pendingCapturedEvents.length) return;
     const payload = {
       slsTags: {
