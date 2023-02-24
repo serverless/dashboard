@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.2](https://github.com/serverless/console/compare/@serverless/sdk@0.5.1...@serverless/sdk@0.5.2) (2023-02-24)
+
+### Bug Fixes
+
+- Respect native HTTP request error handling ([bc1f263](https://github.com/serverless/console/commit/bc1f263f22004614676133adcd00919d72d9b4b9))
+
 ### [0.5.1](https://github.com/serverless/console/compare/@serverless/sdk@0.5.0...@serverless/sdk@0.5.1) (2023-02-10)
 
 ### Bug Fixes
