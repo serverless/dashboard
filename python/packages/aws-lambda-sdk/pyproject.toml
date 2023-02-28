@@ -1,0 +1,36 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=65.6.3",
+    "wheel>=0.38.4",
+]
+
+[project]
+name = "serverless-aws-lambda-sdk"
+version = "0.0.0"
+description = "Serverless AWS Lambda SDK for Python"
+authors = [{ name = "serverlessinc" }]
+requires-python = ">=3.7"
+dependencies = [
+    "serverless-sdk~=0.1",
+    "serverless-sdk-schema~=0.1",
+    "strenum~=0.4",
+    "typing-extensions~=4.5", # included in Python 3.8 - 3.11
+]
+[project.optional-dependencies]
+tests = [
+    "black>=22.12",
+    "pytest>=7.2",
+    "ruff>=0.0.199",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+[tool.ruff]
+ignore = ["F401"]
+exclude = ["syntax_error.py"]
+
+# pyproject.toml

@@ -1,0 +1,6 @@
+SUCCESS_HANDLER = "success"
+SUBMODULE_HANDLER = "submodule.success"
+NOT_CALLABLE_HANDLER = "not_callable"
+UNIMPORTABLE_HANDLER = "unimportable"
+SYNTAX_ERROR_HANDLER = "syntax_error"
+ERROR_HANDLER = "error"
