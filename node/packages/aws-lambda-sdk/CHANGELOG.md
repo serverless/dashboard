@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.7](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.6...@serverless/aws-lambda-sdk@0.14.7) (2023-02-28)
+
+### Bug Fixes
+
+- Ensure to not capture logs issued by the AWS runtime ([2df64ee](https://github.com/serverless/console/commit/2df64eecf59679e8693107cd9e19f33bb752d6a8))
+
 ### [0.14.6](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.5...@serverless/aws-lambda-sdk@0.14.6) (2023-02-10)
 
 ### Features
