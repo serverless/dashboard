@@ -120,6 +120,9 @@ serverlessSdk._debugLog = (...args) => {
 };
 serverlessSdk._maximumBodyByteLength = 1024 * 127; // 127 KB
 
+// Ensure full stack traces in debug mode
+if (serverlessSdk._isDebugMode) Error.stackTraceLimit = Infinity;
+
 serverlessSdk._eventEmitter = require('./lib/emitter');
 
 Object.defineProperties(
