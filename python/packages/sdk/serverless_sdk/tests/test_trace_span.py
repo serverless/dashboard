@@ -40,6 +40,7 @@ def test_sub_span(root_span: TraceSpan):
         child_span.start_time != root_span.start_time
     ), "should have a different `start_time`"
     assert child_span.name == "child", "should expose `name`"
+    assert child_span in root_span.sub_spans
 
 
 def test_span_init_start_time():
@@ -170,6 +171,8 @@ def test_creation_of_immediate_descendant_spans():
     assert [x.name for x in grand_grand_children] == ["grandgrandchild"]
     assert grand_child.start_time == child_span.start_time
     assert grand_grand_child.start_time == child_span.start_time
+    assert grand_grand_child.parent_span == grand_child
+    assert grand_child.parent_span == child_span
 
     grand_grand_child.close()
     grand_child.close()
