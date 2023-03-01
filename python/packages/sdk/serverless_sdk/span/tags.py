@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import re
 from datetime import datetime
 from math import inf, nan
 from re import Pattern
@@ -128,3 +128,22 @@ def ensure_tag_value(attr: str, value: str) -> ValidTags:
         f"Invalid trace span tag value for {attr}: "
         f"Expected {valid_types}, received {value}"
     )
+
+
+def _snake_to_camel_case(string):
+    return re.sub(r"_(.)", lambda match: match.group(1).upper(), string)
+
+
+def convert_tags_to_protobuf(tags: Tags):
+    protobuf_tags = {}
+    for key, value in tags.items():
+        context = protobuf_tags
+        key_tokens = key.split(".")
+        key_tokens = [_snake_to_camel_case(token) for token in key_tokens]
+        last_token = key_tokens.pop()
+        for token in key_tokens:
+            if token not in context:
+                context[token] = {}
+            context = context[token]
+        context[last_token] = value
+    return protobuf_tags
