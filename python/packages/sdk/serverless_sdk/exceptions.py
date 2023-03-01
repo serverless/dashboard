@@ -35,6 +35,10 @@ class FutureSpanStartTime(InvalidValue):
     pass
 
 
+class FutureSpanEndTime(InvalidValue):
+    pass
+
+
 class PastSpanEndTime(InvalidValue):
     pass
 

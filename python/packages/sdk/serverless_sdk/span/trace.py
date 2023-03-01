@@ -1,9 +1,10 @@
 from __future__ import annotations
-
+from collections.abc import Iterable
+import logging
 from time import time_ns
-from typing import List, Optional
+from typing import List, Optional, Set
 from contextvars import ContextVar
-
+import json
 from backports.cached_property import cached_property  # available in Python >=3.8
 from pydantic import BaseModel
 from typing_extensions import Final, Self
@@ -15,24 +16,24 @@ from ..exceptions import (
     FutureSpanStartTime,
     InvalidType,
     UnreachableTrace,
+    PastSpanEndTime,
+    FutureSpanEndTime,
 )
 from .id import generate_id
 from .name import get_resource_name
-from .tags import Tags
+from .tags import Tags, convert_tags_to_protobuf
 
 
 __all__: Final[List[str]] = [
     "TraceSpan",
 ]
 
-NO_SPAN: Final = None
-
 
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
 
 ctx: Final[TraceSpanContext] = ContextVar("ctx", default=None)
-root_span = None  # type: Optional[TraceSpan]
+root_span: Optional[TraceSpan] = None
 
 
 class TraceSpanBuf(BaseModel):
@@ -64,6 +65,7 @@ class TraceSpan:
     input: Optional[str] = None
     output: Optional[str] = None
     tags: Tags
+    sub_spans: Set[Self]
 
     def __init__(
         self,
@@ -72,49 +74,66 @@ class TraceSpan:
         output: Optional[str] = None,
         start_time: Optional[Nanoseconds] = None,
         tags: Optional[Tags] = None,
+        immediate_descendants: Optional[List[str]] = None,
     ):
         self.name = get_resource_name(name)
         self.input = input
         self.output = output
+        self.sub_spans = set()
 
         self._set_start_time(start_time)
         self._set_tags(tags)
-        self._set_spans()
+        self._set_spans(immediate_descendants)
+
+    def toJSON(self) -> str:
+        return json.dumps(
+            {
+                "traceId": self.trace_id,
+                "id": self.id,
+                "name": self.name,
+                "startTime": self.start_time,
+                "endTime": self.end_time,
+                "input": self.input,
+                "output": self.output,
+                "tags": self.tags,
+            }
+        )
 
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
-        global root_span
-        span = TraceSpan._get_span()
+        global root_span, ctx
+        span = ctx.get(None)
 
-        return span or root_span or NO_SPAN
+        return span or root_span or None
 
-    @staticmethod
-    def _get_span() -> Optional[TraceSpan]:
-        return ctx.get(NO_SPAN)
-
-    def _set_spans(self):
-        self._set_root_span()
-        self._set_parent_span()
+    def _set_spans(self, immediate_descendants: Optional[List[str]]):
+        self._set_span_hierarchy()
         self._set_ctx()
+        if immediate_descendants and len(immediate_descendants) > 0:
+            TraceSpan(
+                immediate_descendants.pop(0),
+                start_time=self.start_time,
+                immediate_descendants=immediate_descendants,
+            )
 
-    def _set_root_span(self):
+    def _set_span_hierarchy(self):
         global root_span
-
-        if root_span is NO_SPAN:
+        if root_span is None:
             root_span = self
-            self.parent_span = NO_SPAN
+            self.parent_span = None
+        else:
+            if root_span.end_time is not None:
+                raise UnreachableTrace("Cannot initialize span: Trace is closed")
 
-        elif root_span.end_time is not NO_SPAN:
-            raise UnreachableTrace("Cannot initialize span: Trace is closed")
+            self.parent_span = TraceSpan.resolve_current_span()
+            while self.parent_span.end_time:
+                self.parent_span = self.parent_span.parent_span or root_span
 
-    def _set_parent_span(self):
-        global root_span
-        self.parent_span = TraceSpan.resolve_current_span()
-
-        while self.parent_span.end_time:
-            self.parent_span = self.parent_span.parent_span or root_span
+        if self.parent_span:
+            self.parent_span.sub_spans.add(self)
 
     def _set_ctx(self):
+        global ctx
         ctx.set(self)
 
     def _set_tags(self, tags: Optional[Tags]):
@@ -133,7 +152,6 @@ class TraceSpan:
             raise FutureSpanStartTime(
                 "Cannot initialize span: Start time cannot be set in the future"
             )
-
         self.start_time = start_time or default_start
 
     @cached_property
@@ -150,6 +168,10 @@ class TraceSpan:
         return parent.trace_id if parent else generate_id()
 
     @property
+    def spans(self) -> Set[TraceSpan]:
+        return set([self] + list(_flatten([s.spans for s in self.sub_spans])))
+
+    @property
     def output(self) -> str:
         return self._output
 
@@ -163,11 +185,36 @@ class TraceSpan:
     def close(self, end_time: Optional[Nanoseconds] = None):
         global root_span
         default: Nanoseconds = time_ns()
+        target_end_time = end_time
 
         if self.end_time is not None:
-            raise ClosureOnClosedSpan("TraceSpan already closed.")
+            raise ClosureOnClosedSpan("Cannot close span: Span already closed")
+
+        if target_end_time:
+            if target_end_time < self.start_time:
+                raise PastSpanEndTime(
+                    "Cannot close span: End time cannot be earlier than start time"
+                )
+            if target_end_time > default:
+                raise FutureSpanEndTime(
+                    "Cannot close span: End time cannot be set in the future"
+                )
 
         self.end_time = default if end_time is None else end_time
+        if self is root_span:
+            left_over_spans = []
+            for sub_span in self.spans:
+                if not sub_span.end_time:
+                    sub_span.close(end_time=self.end_time)
+                    left_over_spans.append(sub_span)
+
+            if left_over_spans:
+                spans = ", ".join([s.name for s in left_over_spans])
+                logging.error(
+                    "Serverless SDK Warning: Following trace spans didn't end before"
+                    + f" end of lambda invocation: {spans}"
+                )
+        return self
 
     def to_protobuf_object(self) -> TraceSpanBuf:
         return TraceSpanBuf(
@@ -181,3 +228,25 @@ class TraceSpan:
             input=self.input,
             output=self.output,
         )
+
+    def to_protobuf_dict(self):
+        return {
+            "id": self.id,
+            "traceId": self.trace_id,
+            "parentSpanId": self.parent_span.id or None,
+            "name": self.name,
+            "startTimeUnixNano": self.start_time,
+            "endTimeUnixNano": self.end_time,
+            "input": self.input,
+            "output": self.output,
+            "tags": convert_tags_to_protobuf(self.tags),
+        }
+
+
+def _flatten(xs):
+    # https://stackoverflow.com/a/2158532
+    for x in xs:
+        if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            yield from _flatten(x)
+        else:
+            yield x

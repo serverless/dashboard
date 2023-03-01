@@ -1,152 +1,199 @@
-from __future__ import annotations
-from typing_extensions import Final, TypeAlias
-from types import MethodType
-
 import pytest
-
-from . import get_params
-
-
-TEST_NAME: Final[str] = "test.span"
-TEST_INPUT: Final[str] = "Test Input"
-TEST_OUTPUT: Final[str] = "Test Output"
-TEST_START_TIME: Final[int] = 1_000_000
+import time
+import json
+from serverless_sdk.span.trace import TraceSpan
 
 
-TraceSpan: TypeAlias = "TraceSpan"
+# root span that lives throughout the test session
+@pytest.fixture(scope="session")
+def root_span():
+    span = TraceSpan("test")
+    yield span
+    span.close()
 
 
-@pytest.fixture
-def trace_span() -> TraceSpan:
-    return get_trace_span()
+def test_root_span(root_span: TraceSpan):
+    assert type(root_span.trace_id) == str, "should automatically generate `trace_id`"
+    assert type(root_span.id) == str, "should automatically generate `id`"
+    assert (
+        type(root_span.start_time) == int
+    ), "should automatically generate `start_time`"
 
 
-def get_trace_span():
-    from ..span.trace import TraceSpan
+def test_sub_span(root_span: TraceSpan):
+    # given
+    child_span = TraceSpan("child")
 
-    return TraceSpan(
-        name=TEST_NAME,
-        input=TEST_INPUT,
-        output=TEST_OUTPUT,
-        start_time=TEST_START_TIME,
+    # when
+    child_span.close()
+
+    # then
+    assert (
+        child_span.trace_id == root_span.trace_id
+    ), "should expose `trace_id` of a root span"
+    assert type(child_span.id) == str, "should automatically generate `id`"
+    assert child_span.id != root_span.id, "should have a unique `id`"
+    assert (
+        type(child_span.start_time) == int
+    ), "should automatically generate `start_time`"
+    assert (
+        child_span.start_time != root_span.start_time
+    ), "should have a different `start_time`"
+    assert child_span.name == "child", "should expose `name`"
+    assert child_span in root_span.sub_spans
+
+
+def test_span_init_start_time():
+    # given
+    start_time = time.time_ns()
+
+    # when
+    span = TraceSpan("child", start_time=start_time).close()
+
+    # then
+    assert span.start_time == start_time, "should support injection of `start_time`"
+
+
+def test_span_init_tags():
+    # given
+    tags = {"foo": "bar"}
+
+    # when
+    span = TraceSpan("child", tags=tags).close()
+
+    # then
+    assert span.tags == tags, "should support initial `tags`"
+
+
+def test_span_init_end_time():
+    # given
+    span = TraceSpan("child")
+    end_time = time.time_ns()
+
+    # when
+    span.close(end_time=end_time)
+
+    # then
+    assert span.end_time == end_time, "should support injection of `end_time`"
+
+
+def test_span_init_input():
+    # given
+    input = "foo"
+
+    # when
+    span = TraceSpan("child", input=input).close()
+
+    # then
+    assert span.input == input, "should support `input`"
+
+
+def test_span_stringify_to_json():
+    # given
+    child_span = TraceSpan("child")
+    child_span.tags["foo"] = 12
+    child_span.close()
+
+    # when
+    json_value = json.loads(child_span.toJSON())
+
+    # then
+    assert json_value == {
+        "traceId": child_span.trace_id,
+        "id": child_span.id,
+        "name": child_span.name,
+        "startTime": child_span.start_time,
+        "endTime": child_span.end_time,
+        "input": child_span.input,
+        "output": child_span.output,
+        "tags": child_span.tags,
+    }, "should stringify to JSON"
+
+
+def test_span_protobuf():
+    # given
+    child_span = TraceSpan("child")
+    child_span.input = "some input"
+    child_span.output = "some output"
+    child_span.tags["toptag"] = "1"
+    child_span.tags["top.nested"] = "2"
+    child_span.tags["top.deep.nested"] = "3"
+    child_span.tags["top_snake.deep_snake.nested_snake"] = "3"
+    child_span.tags["some.boolean"] = True
+    child_span.tags["some.number"] = 123
+    child_span.tags["some.strings"] = ["foo", "bar"]
+    child_span.tags["some.numbers"] = [12, 23]
+    child_span.close()
+
+    # when
+    proto_json = child_span.to_protobuf_dict()
+
+    # then
+    assert proto_json == {
+        "traceId": child_span.trace_id,
+        "parentSpanId": child_span.parent_span.id,
+        "id": child_span.id,
+        "name": child_span.name,
+        "startTimeUnixNano": child_span.start_time,
+        "endTimeUnixNano": child_span.end_time,
+        "input": child_span.input,
+        "output": child_span.output,
+        "tags": {
+            "toptag": "1",
+            "top": {"nested": "2", "deep": {"nested": "3"}},
+            "topSnake": {"deepSnake": {"nestedSnake": "3"}},
+            "some": {
+                "boolean": True,
+                "number": 123,
+                "strings": ["foo", "bar"],
+                "numbers": [12, 23],
+            },
+        },
+    }, "should stringify to JSON"
+
+
+def test_creation_of_immediate_descendant_spans():
+    # given
+    child_span = TraceSpan(
+        "child", immediate_descendants=["grandchild", "grandgrandchild"]
     )
 
+    # when
+    grand_children = list(child_span.sub_spans)
 
-def test_can_import_trace_span():
-    try:
-        from ..span.trace import TraceSpan
+    grand_child = grand_children[0]
+    grand_grand_children = list(grand_child.sub_spans)
 
-    except ImportError as e:
-        raise AssertionError("Cannot import TraceSpan") from e
+    grand_grand_child = grand_grand_children[0]
 
+    # then
+    assert [x.name for x in grand_children] == ["grandchild"]
+    assert [x.name for x in grand_grand_children] == ["grandgrandchild"]
+    assert grand_child.start_time == child_span.start_time
+    assert grand_grand_child.start_time == child_span.start_time
+    assert grand_grand_child.parent_span == grand_child
+    assert grand_child.parent_span == child_span
 
-def test_has_id(trace_span: TraceSpan):
-    _id = trace_span.id
-
-    assert hasattr(trace_span, "id")
-    assert isinstance(trace_span.id, str)
-    assert trace_span.id == _id
-
-
-def test_has_trace_id(trace_span: TraceSpan):
-    _ = trace_span.trace_id
-    assert hasattr(trace_span, "trace_id")
-
-
-def test_has_name(trace_span: TraceSpan):
-    assert hasattr(trace_span, "name")
+    grand_grand_child.close()
+    grand_child.close()
+    child_span.close()
 
 
-def test_has_start_time(trace_span: TraceSpan):
-    assert hasattr(trace_span, "start_time")
+def test_leaf_span():
+    # given
+    span = TraceSpan("child").close()
+
+    # then
+    assert list(span.spans) == [span], "should resolve just self when no subspans"
 
 
-def test_has_input(trace_span: TraceSpan):
-    assert hasattr(trace_span, "input")
+def test_spans():
+    # given
+    span = TraceSpan("child")
+    sub_span = TraceSpan("subchild")
+    sub_sub_span = TraceSpan("subsubchild").close()
+    sub_span.close()
+    span.close()
 
-
-def test_has_output(trace_span: TraceSpan):
-    assert hasattr(trace_span, "output")
-
-
-def test_has_parent_span(trace_span: TraceSpan):
-    assert hasattr(trace_span, "parent_span")
-    assert trace_span.parent_span is not None
-
-    new = get_trace_span()
-
-    assert new.trace_id == trace_span.trace_id
-    assert new.parent_span is trace_span
-    assert new.id != trace_span.id
-
-
-def test_has_tags(trace_span: TraceSpan):
-    assert hasattr(trace_span, "tags")
-
-
-def test_has_close_method(trace_span: TraceSpan):
-    assert hasattr(trace_span, "close")
-    assert isinstance(trace_span.close, MethodType)
-
-    params = get_params(trace_span.close)
-
-    assert len(params) >= 1
-    assert "end_time" in params
-
-
-def test_can_close(trace_span: TraceSpan):
-    assert trace_span.end_time is None
-    trace_span.close()
-
-    assert trace_span.end_time is not None
-
-
-def test_cannot_close_twice(trace_span: TraceSpan):
-    from ..exceptions import ClosureOnClosedSpan
-
-    trace_span.close()
-
-    with pytest.raises(ClosureOnClosedSpan):
-        trace_span.close()
-
-
-def test_has_to_protobuf_object_method(trace_span: TraceSpan):
-    assert hasattr(trace_span, "to_protobuf_object")
-    assert isinstance(trace_span.to_protobuf_object, MethodType)
-
-    params = get_params(trace_span.to_protobuf_object)
-
-    assert len(params) <= 1
-
-
-def test_to_protobuf_object_method_returns_obj(trace_span: TraceSpan):
-    from ..span.trace import TraceSpanBuf
-
-    trace_span.close()
-    obj = trace_span.to_protobuf_object()
-
-    assert isinstance(obj, TraceSpanBuf)
-
-    assert obj.name == trace_span.name
-    assert obj.start_time_unix_nano == trace_span.start_time
-    assert obj.input == trace_span.input
-    assert obj.output == trace_span.output
-    assert obj.tags == trace_span.tags
-
-    assert obj.id.decode() == trace_span.id
-    assert obj.trace_id.decode() == trace_span.trace_id
-    assert obj.parent_span_id.decode() == trace_span.parent_span.id
-
-
-def test_can_set_output(trace_span: TraceSpan):
-    from ..exceptions import InvalidType
-
-    assert trace_span.output == TEST_OUTPUT
-
-    new_output: str = "New Output"
-    trace_span.output = new_output
-
-    assert trace_span.output == new_output
-
-    with pytest.raises(InvalidType):
-        trace_span.output = 1
+    # then
+    assert not set(span.spans) ^ set([span, sub_span, sub_sub_span])
