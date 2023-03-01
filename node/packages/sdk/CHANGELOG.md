@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.3](https://github.com/serverless/console/compare/@serverless/sdk@0.5.2...@serverless/sdk@0.5.3) (2023-03-01)
+
+### Maintenance Improvements
+
+- Ensure full stack traces in debug mode ([cd87544](https://github.com/serverless/console/commit/cd87544c1ca822244ac5f5735469e78ccaf63664))
+- Minimize needed debug logs verbosity ([2171f39](https://github.com/serverless/console/commit/2171f39638a095eb616d141f5e241fdaaff853a5))
+
 ### [0.5.2](https://github.com/serverless/console/compare/@serverless/sdk@0.5.1...@serverless/sdk@0.5.2) (2023-02-24)
 
 ### Bug Fixes
