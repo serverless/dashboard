@@ -37,7 +37,7 @@ class ServerlessSdk:
     def _initialize(self, org_id: Optional[str] = None):
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
 
-    def create_trace_span(
+    def _create_trace_span(
         self,
         name: str,
         input: str,
