@@ -66,20 +66,6 @@ def _get_sdk() -> ServerlessSdk:
     return sdk
 
 
-def instrument_safe(user_handler: Handler) -> Handler:
-    try:
-        return instrument(user_handler)
-
-    except Exception as e:
-        logging.error(
-            "Fatal Serverless SDK Error: "
-            "Please report at https://github.com/serverless/console/issues: "
-            f"Async handler setup failed: {e}"
-        )
-
-        return user_handler
-
-
 def _check_original_handler_and_reset_vars() -> str:
     origin = environ.get(Env.ORIGIN_HANDLER)
 
@@ -100,7 +86,7 @@ def _get_instrumented_handler() -> Handler:
     _get_sdk()
 
     try:
-        return instrument_safe(handler)
+        return instrument(handler)
     except Exception as ex:
         # TODO: call _reportError on sdk
         logging.error(ex)

@@ -2,52 +2,48 @@ from __future__ import annotations
 
 import pytest
 
-from . import compare_handlers
-from serverless_aws_lambda_sdk.base import Handler, Instrument
+from . import compare_handlers, context
 
 
 @pytest.fixture
-def instrument() -> Instrument:
+def instrument(monkeypatch):
+    monkeypatch.setenv("_SLS_PROCESS_START_TIME", "0")
+    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", "test-function")
+    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_VERSION", "1")
+    monkeypatch.setenv("SLS_ORG_ID", "test-org")
     from serverless_aws_lambda_sdk.instrument import instrument
 
     return instrument
 
 
-def test_instrument_exists_and_importable():
-    try:
-        from serverless_aws_lambda_sdk.instrument import instrument
-
-    except ImportError as e:
-        raise AssertionError("`instrument` not found") from e
-
-
-def test_instrument_is_callable(instrument: Instrument):
+def test_instrument_is_callable(instrument):
     assert callable(instrument)
 
 
-def test_instrument_wraps_callable(instrument: Instrument):
-    def example():
+def test_instrument_wraps_callable(instrument):
+    def example(event, context):
         pass
 
     result = instrument(example)
     assert callable(result)
+    result({}, context)
 
 
-def test_instrumented_callable_behaves_like_original(instrument: Instrument):
-    def example(a: int, b: int) -> int:
-        return a + b
+def test_instrumented_callable_behaves_like_original(instrument):
+    def example(event, context) -> str:
+        return context.aws_request_id
 
     instrumented = instrument(example)
 
     compare_handlers(example, instrumented)
 
 
-def test_instrument_works_with_all_callables(instrument: Instrument):
+def test_instrument_works_with_all_callables(instrument):
     class Example:
-        def __call__(self, a: int, b: int) -> int:
-            return a + b
+        def __call__(self, event, context) -> str:
+            return context.aws_request_id
 
-    example: Handler = Example()
-    instrumented: Handler = instrument(example)
+    example = Example()
+    instrumented = instrument(example)
 
     compare_handlers(example, instrumented)

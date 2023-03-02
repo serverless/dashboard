@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 from os import environ
 from pathlib import Path
-from time import time_ns
 from typing import Optional, Tuple
 from importlib import import_module
 import sys
+from timeit import default_timer
 
 from strenum import StrEnum
 
@@ -65,6 +65,10 @@ def _configure_logger(debug):
 _logger = _configure_logger(SLS_SDK_DEBUG)
 
 
+def timer():
+    return int(default_timer() * 1000000000)
+
+
 def initialize(handler: Optional[str] = HANDLER):
     """Checks handler is an importable function, inits env variables for the handler.
 
@@ -76,7 +80,7 @@ def initialize(handler: Optional[str] = HANDLER):
         handler (Optional[str], optional): _description_. Defaults to HANDLER.
     """
     try:
-        process_start_time = time_ns()
+        process_start_time = timer()
         environ[Env.PROCESS_START_TIME] = str(process_start_time)
 
         # AWS Lambda Python runtime converts forward slashes to dots.
@@ -146,7 +150,7 @@ def initialize(handler: Optional[str] = HANDLER):
         environ[Env.ORIGIN_HANDLER] = HANDLER
         environ[Env.HANDLER] = NEW_HANDLER
 
-        end = time_ns()
+        end = timer()
         ms = round((end - process_start_time) / NS_IN_MS)
 
         _logger.debug(f"Overhead duration: Internal initialization: {ms}ms")
