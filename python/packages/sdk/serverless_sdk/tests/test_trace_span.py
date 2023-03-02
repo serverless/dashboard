@@ -1,7 +1,11 @@
 import pytest
-import time
+from timeit import default_timer
 import json
 from serverless_sdk.span.trace import TraceSpan
+
+
+def timer():
+    return int(default_timer() * 1000000000)
 
 
 # root span that lives throughout the test session
@@ -45,7 +49,7 @@ def test_sub_span(root_span: TraceSpan):
 
 def test_span_init_start_time():
     # given
-    start_time = time.time_ns()
+    start_time = timer()
 
     # when
     span = TraceSpan("child", start_time=start_time).close()
@@ -68,7 +72,7 @@ def test_span_init_tags():
 def test_span_init_end_time():
     # given
     span = TraceSpan("child")
-    end_time = time.time_ns()
+    end_time = timer()
 
     # when
     span.close(end_time=end_time)
@@ -197,3 +201,20 @@ def test_spans():
 
     # then
     assert not set(span.spans) ^ set([span, sub_span, sub_sub_span])
+
+
+def test_span_closure():
+    # given
+    aws_lambda = TraceSpan(
+        "aws.lambda", immediate_descendants=["aws.lambda.initialization"]
+    )
+    aws_lambda_initialization = next(iter(aws_lambda.sub_spans))
+    aws_lambda_initialization.close()
+
+    aws_lambda_invocation = TraceSpan("aws.lambda.invocation")
+
+    # when
+    aws_lambda_invocation.close()
+
+    # then
+    aws_lambda.close()

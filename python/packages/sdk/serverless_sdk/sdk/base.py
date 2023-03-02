@@ -40,8 +40,8 @@ class ServerlessSdk:
     def _create_trace_span(
         self,
         name: str,
-        input: str,
-        output: str,
+        input: Optional[str] = None,
+        output: Optional[str] = None,
         start_time: Optional[Nanoseconds] = None,
         tags: Optional[Tags] = None,
     ) -> TraceSpan:
