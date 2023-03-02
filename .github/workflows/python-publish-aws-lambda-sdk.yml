@@ -49,7 +49,7 @@ jobs:
         run: |
           cd python/packages
 
-          ./aws-lambda-sdk/scripts/build-layer-archive.sh extension.internal.zip
+          ./aws-lambda-sdk/scripts/build-layer-archive.sh aws-lambda-sdk/dist/extension.internal.zip
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
@@ -74,7 +74,7 @@ jobs:
             --bucket-name sls-dev-layers-registry \
             --layer-basename sls-sdk-python \
             --version $VERSION \
-            --layer-filename ../python/packages/extension.internal.zip
+            --layer-filename ../python/packages/aws-lambda-sdk/dist/extension.internal.zip
 
       - name: Publish layers (prod)
         env:
@@ -89,5 +89,5 @@ jobs:
             --bucket-name sls-layers-registry \
             --layer-basename sls-sdk-python \
             --version $VERSION \
-            --layer-filename ../python/packages/extension.internal.zip \
+            --layer-filename ../python/packages/aws-lambda-sdk/dist/extension.internal.zip \
             --github-tag $TAG
