@@ -2,4 +2,4 @@
 
 const testUid = require('../../../../test/lib/test-uid');
 
-module.exports = `test-sdk-${testUid}`;
+module.exports = `test-node-sdk-${testUid}`;
