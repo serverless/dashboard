@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections.abc import Iterable
 import logging
-from time import time_ns
+from timeit import default_timer
 from typing import List, Optional, Set
 from contextvars import ContextVar
 import json
@@ -34,6 +34,10 @@ TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
 ctx: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 root_span: Optional[TraceSpan] = None
+
+
+def timer():
+    return int(default_timer() * 1000000000)
 
 
 class TraceSpanBuf(BaseModel):
@@ -132,9 +136,9 @@ class TraceSpan:
         if self.parent_span:
             self.parent_span.sub_spans.add(self)
 
-    def _set_ctx(self):
+    def _set_ctx(self, override: Optional[TraceSpan] = None):
         global ctx
-        ctx.set(self)
+        ctx.set(override or self)
 
     def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()
@@ -143,7 +147,7 @@ class TraceSpan:
             self.tags.update(tags)
 
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
-        default_start = time_ns()
+        default_start = timer()
 
         if start_time is not None and not isinstance(start_time, Nanoseconds):
             raise InvalidType("`start_time` must be an integer.")
@@ -183,12 +187,14 @@ class TraceSpan:
         self._output = value
 
     def close(self, end_time: Optional[Nanoseconds] = None):
-        global root_span
-        default: Nanoseconds = time_ns()
+        global root_span, ctx
+        default: Nanoseconds = timer()
         target_end_time = end_time
 
         if self.end_time is not None:
-            raise ClosureOnClosedSpan("Cannot close span: Span already closed")
+            raise ClosureOnClosedSpan(
+                f"Cannot close span ({self.name}): Span already closed"
+            )
 
         if target_end_time:
             if target_end_time < self.start_time:
@@ -202,6 +208,8 @@ class TraceSpan:
 
         self.end_time = default if end_time is None else end_time
         if self is root_span:
+            # if this is the root span, check if there are any leftovers
+            # and finally reset root_span and reset the context
             left_over_spans = []
             for sub_span in self.spans:
                 if not sub_span.end_time:
@@ -214,6 +222,21 @@ class TraceSpan:
                     "Serverless SDK Warning: Following trace spans didn't end before"
                     + f" end of lambda invocation: {spans}"
                 )
+            root_span = None
+            self._set_ctx(None)
+        else:
+            # if this is not the root span and context points to this
+            # then we need to reset the context to the first open ancestor span
+            if self is ctx.get(None):
+                current = self.parent_span
+                # loop through ancestors
+                while current:
+                    if not current.end_time:
+                        # break at the first open ancestor and store it in the context
+                        self._set_ctx(current)
+                        break
+                    current = current.parent_span
+
         return self
 
     def to_protobuf_object(self) -> TraceSpanBuf:
@@ -233,7 +256,7 @@ class TraceSpan:
         return {
             "id": self.id,
             "traceId": self.trace_id,
-            "parentSpanId": self.parent_span.id or None,
+            "parentSpanId": self.parent_span.id if self.parent_span else None,
             "name": self.name,
             "startTimeUnixNano": self.start_time,
             "endTimeUnixNano": self.end_time,
