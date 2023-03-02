@@ -70,6 +70,7 @@
     "standard-version": "^9.5.0",
     "stream-promise": "^3.2.0",
     "timers-ext": "^0.1.7",
+    "toml": "^3.0.0",
     "ts-proto": "^1.140.0",
     "tslib": "^2.5.0",
     "type": "^2.7.2",
