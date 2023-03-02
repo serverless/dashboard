@@ -49,9 +49,6 @@ class Instrumenter:
         serverlessSdk.trace_spans.aws_lambda_initialization.close()
 
     def _report_trace(self):
-        # convert spans to protobuf object
-        # add some more json data
-        # encode the payload json object to proto buffer
         payload = TracePayload()
         payload.from_dict(
             {
