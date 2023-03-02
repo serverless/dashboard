@@ -49,7 +49,7 @@ jobs:
         run: |
           cd python/packages
 
-          ./aws-lambda-sdk/scripts/build-layer-archive.sh build extension.internal.zip
+          ./aws-lambda-sdk/scripts/build-layer-archive.sh extension.internal.zip
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
