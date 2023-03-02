@@ -66,7 +66,9 @@ class Instrumenter:
                 "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
             }
         )
-        print(f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString())}")
+        print(
+            f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
+        )
 
     def _close_trace(self, outcome: str):
         try:
