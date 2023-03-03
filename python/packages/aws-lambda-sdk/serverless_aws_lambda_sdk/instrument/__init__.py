@@ -34,6 +34,21 @@ def _resolve_outcome_enum_value(outcome: str) -> int:
     raise Exception(f"Unexpected outcome value: {outcome}")
 
 
+def _get_payload(payload_dct: dict) -> TracePayload:
+    payload = TracePayload()
+    payload.from_dict(payload_dct)
+    spans = payload_dct["spans"]
+    for index, span in enumerate(payload.spans):
+        span.id = str.encode(spans[index]["id"])
+        span.trace_id = str.encode(spans[index]["traceId"])
+        span.parent_span_id = (
+            str.encode(spans[index]["parentSpanId"])
+            if spans[index]["parentSpanId"]
+            else None
+        )
+    return payload
+
+
 class Instrumenter:
     def __init__(self):
         serverlessSdk._initialize()
@@ -49,20 +64,18 @@ class Instrumenter:
         serverlessSdk.trace_spans.aws_lambda_initialization.close()
 
     def _report_trace(self):
-        payload = TracePayload()
-        payload.from_dict(
-            {
-                "slsTags": {
-                    "orgId": serverlessSdk.org_id,
-                    "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
-                    "sdk": {
-                        "name": serverlessSdk.name,
-                        "version": serverlessSdk.version,
-                    },
+        payload_dct = {
+            "slsTags": {
+                "orgId": serverlessSdk.org_id,
+                "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
+                "sdk": {
+                    "name": serverlessSdk.name,
+                    "version": serverlessSdk.version,
                 },
-                "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
-            }
-        )
+            },
+            "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
+        }
+        payload = _get_payload(payload_dct)
         print(
             f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
         )

@@ -81,3 +81,20 @@ def test_instrument_adds_lambda_trace_spans(instrument):
     aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
     assert aws_lambda.tags.aws.lambda_.outcome == 1
     assert aws_lambda.tags.aws.lambda_.request_id == context.aws_request_id
+
+    aws_lambda_initialization = [
+        x for x in trace_payload.spans if x.name == "aws.lambda.initialization"
+    ][0]
+    aws_lambda_invocation = [
+        x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
+    ][0]
+    assert (
+        aws_lambda_initialization.start_time_unix_nano
+        == aws_lambda.start_time_unix_nano
+    )
+    assert (
+        aws_lambda_invocation.start_time_unix_nano
+        > aws_lambda_initialization.start_time_unix_nano
+    )
+    for span in trace_payload.spans:
+        assert span.start_time_unix_nano < span.end_time_unix_nano
