@@ -194,13 +194,14 @@ def test_leaf_span():
 def test_spans():
     # given
     span = TraceSpan("child")
-    sub_span = TraceSpan("subchild")
+    sub_span_1 = TraceSpan("subchild1")
     sub_sub_span = TraceSpan("subsubchild").close()
-    sub_span.close()
+    sub_span_1.close()
+    sub_span_2 = TraceSpan("subchild2")
     span.close()
 
     # then
-    assert not set(span.spans) ^ set([span, sub_span, sub_sub_span])
+    assert span.spans == [span, sub_span_1, sub_sub_span, sub_span_2]
 
 
 def test_span_closure():
