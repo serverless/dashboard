@@ -222,20 +222,23 @@ class TraceSpan:
                     "Serverless SDK Warning: Following trace spans didn't end before"
                     + f" end of lambda invocation: {spans}"
                 )
-            root_span = None
-            self._set_ctx(None)
+            self._set_ctx()
         else:
             # if this is not the root span and context points to this
             # then we need to reset the context to the first open ancestor span
             if self is ctx.get(None):
                 current = self.parent_span
+                found = False
                 # loop through ancestors
                 while current:
                     if not current.end_time:
                         # break at the first open ancestor and store it in the context
                         self._set_ctx(current)
+                        found = True
                         break
                     current = current.parent_span
+                if not found:
+                    self._set_ctx(root_span)
 
         return self
 
