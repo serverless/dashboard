@@ -5,8 +5,6 @@ import sys
 from pathlib import Path
 from typing import Callable, Dict
 
-from serverless_aws_lambda_sdk.base import Handler
-
 
 sys.path.append(str(Path(__file__).parent / "fixtures/lambdas"))
 
@@ -27,7 +25,7 @@ def get_params(func: Callable) -> Params:
     return signature.parameters
 
 
-def compare_handlers(original: Handler, instrumented: Handler):
+def compare_handlers(original, instrumented):
     assert callable(original) and callable(instrumented)
 
     orig_params = get_params(original)

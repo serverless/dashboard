@@ -12,7 +12,7 @@ from ..base import Handler
 from .base import Env
 from ..exceptions import HandlerNotFound
 
-from ..instrument import instrument
+from ..instrument import Instrumenter
 
 if TYPE_CHECKING:
     from serverless_sdk.sdk.base import ServerlessSdk
@@ -86,7 +86,8 @@ def _get_instrumented_handler() -> Handler:
     _get_sdk()
 
     try:
-        return instrument(handler)
+        instrumenter = Instrumenter()
+        return instrumenter.instrument(handler)
     except Exception as ex:
         # TODO: call _reportError on sdk
         logging.error(ex)

@@ -7,7 +7,7 @@ import logging
 from typing_extensions import Final
 from .. import serverlessSdk
 from ..base import Handler
-from ..trace_spans.aws_lambda import create as create_root_span
+from ..trace_spans.aws_lambda import reset as reset_aws_lambda_span
 from serverless_sdk_schema import TracePayload
 import base64
 
@@ -50,9 +50,13 @@ def _get_payload(payload_dct: dict) -> TracePayload:
 
 
 class Instrumenter:
+    """This class is instantiated once per AWS Lambda Runtime environment.
+
+    The instance is reused through subsequent requests, if any.
+    """
+
     def __init__(self):
         serverlessSdk._initialize()
-        create_root_span()
         self.aws_lambda = serverlessSdk.trace_spans.aws_lambda
         if not serverlessSdk.org_id:
             raise Exception(
@@ -81,6 +85,7 @@ class Instrumenter:
         )
 
     def _close_trace(self, outcome: str):
+        self.isRootSpanReset = False
         try:
             end_time = timer()
             self.aws_lambda.tags["aws.lambda.outcome"] = _resolve_outcome_enum_value(
@@ -98,6 +103,7 @@ class Instrumenter:
             self.aws_lambda.close(end_time=end_time)
 
             self._report_trace()
+            self._clear_root_span()
             logger.debug(
                 "Overhead duration: Internal response:"
                 + f"{int((timer() - end_time) / 1000_000)}ms"
@@ -105,6 +111,13 @@ class Instrumenter:
 
         except Exception:
             logging.exception("Error while closing the trace.")
+
+    def _clear_root_span(self):
+        reset_aws_lambda_span()
+        del self.aws_lambda.id
+        del self.aws_lambda.trace_id
+        del self.aws_lambda.end_time
+        self.isRootSpanReset = True
 
     def instrument(self, user_handler: Handler) -> Handler:
         @wraps(user_handler)
@@ -118,6 +131,7 @@ class Instrumenter:
                         "aws.lambda.invocation", start_time=request_start_time
                     )
                 )
+
                 logger.debug(
                     "Overhead duration: Internal request:"
                     + f"{int((timer() - request_start_time) / 1000_000)}ms"
@@ -136,8 +150,3 @@ class Instrumenter:
                 raise
 
         return stub
-
-
-def instrument(user_handler: Handler) -> Handler:
-    instrumenter = Instrumenter()
-    return instrumenter.instrument(user_handler)

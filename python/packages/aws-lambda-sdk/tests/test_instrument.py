@@ -1,81 +1,78 @@
 from __future__ import annotations
-
+from importlib import reload
 import pytest
 from unittest.mock import patch
 from . import compare_handlers, context
 from serverless_sdk_schema import TracePayload
 import base64
 
-
 TEST_ORG = "test-org"
 TEST_FUNCTION = "test-function"
 
 
-@pytest.fixture
-def instrument(monkeypatch):
-    monkeypatch.setenv("_SLS_PROCESS_START_TIME", "0")
-    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", TEST_FUNCTION)
-    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_VERSION", "1")
-    monkeypatch.setenv("SLS_ORG_ID", "test-org")
-    from serverless_aws_lambda_sdk.instrument import instrument
+@pytest.fixture()
+def instrumenter(reset_sdk):
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
 
-    return instrument
+    return Instrumenter()
 
 
-def test_instrument_is_callable(instrument):
-    assert callable(instrument)
+def test_instrument_is_callable(instrumenter):
+    assert callable(instrumenter.instrument)
 
 
-def test_instrument_wraps_callable(instrument):
+def test_instrument_wraps_callable(instrumenter, reset_sdk):
     def example(event, context):
         pass
 
-    result = instrument(example)
+    result = instrumenter.instrument(example)
     assert callable(result)
     result({}, context)
 
 
-def test_instrumented_callable_behaves_like_original(instrument):
+def test_instrumented_callable_behaves_like_original(instrumenter, reset_sdk):
     def example(event, context) -> str:
         return context.aws_request_id
 
-    instrumented = instrument(example)
+    instrumented = instrumenter.instrument(example)
 
     compare_handlers(example, instrumented)
 
 
-def test_instrument_works_with_all_callables(instrument):
+def test_instrument_works_with_all_callables(instrumenter, reset_sdk):
     class Example:
         def __call__(self, event, context) -> str:
             return context.aws_request_id
 
     example = Example()
-    instrumented = instrument(example)
+    instrumented = instrumenter.instrument(example)
 
     compare_handlers(example, instrumented)
 
 
-def test_instrument_adds_lambda_trace_spans(instrument):
-    with patch("builtins.print") as mocked_print:
-        # given
-        def handler(event, context):
-            return context.aws_request_id
+def test_instrument_adds_lambda_trace_spans(instrumenter, reset_sdk):
+    # given
+    def handler(event, context):
+        return context.aws_request_id
 
-        # when
-        instrument(handler)({}, context)
-        serialized = mocked_print.call_args.args[0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        instrumented({}, context)
+        serialized = (
+            mocked_print.call_args_list[0]
+            .args[0]
+            .replace("SERVERLESS_TELEMETRY.T.", "")
         )
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
-    assert set([s.name for s in trace_payload.spans]) == set(
-        [
-            "aws.lambda.initialization",
-            "aws.lambda.invocation",
-            "aws.lambda",
-        ]
-    )
+    assert [s.name for s in trace_payload.spans] == [
+        "aws.lambda",
+        "aws.lambda.initialization",
+        "aws.lambda.invocation",
+    ]
     assert trace_payload.sls_tags.org_id == TEST_ORG
     assert trace_payload.sls_tags.service == TEST_FUNCTION
     aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
@@ -98,3 +95,43 @@ def test_instrument_adds_lambda_trace_spans(instrument):
     )
     for span in trace_payload.spans:
         assert span.start_time_unix_nano < span.end_time_unix_nano
+
+
+def test_instrument_subsequent_calls(instrumenter):
+    # given
+    def handler(event, context):
+        import logging
+
+        logging.error("RUNNING ")
+        return context.aws_request_id
+
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        instrumented({}, context)
+        instrumented({}, context)
+        first = (
+            mocked_print.call_args_list[0]
+            .args[0]
+            .replace("SERVERLESS_TELEMETRY.T.", "")
+        )
+        second = (
+            mocked_print.call_args_list[1]
+            .args[0]
+            .replace("SERVERLESS_TELEMETRY.T.", "")
+        )
+
+    # then
+    first_trace_payload = TracePayload.FromString(base64.b64decode(first))
+    second_trace_payload = TracePayload.FromString(base64.b64decode(second))
+
+    assert [s.name for s in first_trace_payload.spans] == [
+        "aws.lambda",
+        "aws.lambda.initialization",
+        "aws.lambda.invocation",
+    ]
+    assert [s.name for s in second_trace_payload.spans] == [
+        "aws.lambda",
+        "aws.lambda.invocation",
+    ]

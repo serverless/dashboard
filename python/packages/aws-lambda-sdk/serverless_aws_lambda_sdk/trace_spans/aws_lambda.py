@@ -6,7 +6,8 @@ import logging
 from serverless_sdk.span.trace import TraceSpan
 
 __all__ = [
-    "create",
+    "aws_lambda_span",
+    "reset",
 ]
 
 
@@ -37,14 +38,18 @@ if arch:
     IMMUTABLE_TAGS["aws.lambda.arch"] = arch
 
 
-def create():
-    aws_lambda_span = TraceSpan(
-        "aws.lambda",
-        start_time=int(os.environ["_SLS_PROCESS_START_TIME"]),
-        immediate_descendants=["aws.lambda.initialization"],
-        tags=IMMUTABLE_TAGS,
-    )
+aws_lambda_span = TraceSpan(
+    "aws.lambda",
+    start_time=int(os.environ.get("_SLS_PROCESS_START_TIME", 0)),
+    immediate_descendants=["aws.lambda.initialization"],
+    tags=IMMUTABLE_TAGS,
+)
 
-    if os.environ.get("AWS_LAMBDA_INITIALIZATION_TYPE") == "on-demand":
-        aws_lambda_span.tags["aws.lambda.is_coldstart"] = True
-    return aws_lambda_span
+if os.environ.get("AWS_LAMBDA_INITIALIZATION_TYPE") == "on-demand":
+    aws_lambda_span.tags["aws.lambda.is_coldstart"] = True
+
+
+def reset():
+    aws_lambda_span.tags.clear()
+    aws_lambda_span.tags.update(IMMUTABLE_TAGS)
+    aws_lambda_span.sub_spans.clear()

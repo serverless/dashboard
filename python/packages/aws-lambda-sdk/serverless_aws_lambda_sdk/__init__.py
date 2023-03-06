@@ -3,6 +3,7 @@ import os
 import logging
 from typing import Optional
 from serverless_sdk import serverlessSdk as baseSdk
+from .trace_spans.aws_lambda import aws_lambda_span
 from serverless_sdk.sdk.base import ServerlessSdk, TraceSpans
 from serverless_sdk.span.trace import TraceSpan
 from .base import NAME, __version__
@@ -27,17 +28,17 @@ __all__ = [
 
 baseSdk.name = NAME
 baseSdk.version = __version__
-TraceSpans.aws_lambda = property(lambda self: baseSdk.trace_spans.root)
-TraceSpans.aws_lambda_initialization = property(
-    lambda self: next(
-        (
-            x
-            for x in baseSdk.trace_spans.root.sub_spans
-            if x.name == "aws.lambda.initialization"
-        ),
-        None,
-    )
+TraceSpans.aws_lambda = aws_lambda_span
+TraceSpans.aws_lambda_initialization = next(
+    (
+        x
+        for x in baseSdk.trace_spans.root.sub_spans
+        if x.name == "aws.lambda.initialization"
+    ),
+    None,
 )
+
+
 baseSdk._is_dev_mode = bool(os.environ.get("SLS_DEV_MODE_ORG_ID"))
 
 
