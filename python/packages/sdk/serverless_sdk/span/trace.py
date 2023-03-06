@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 import logging
 from timeit import default_timer
-from typing import List, Optional, Set
+from typing import List, Optional
 from contextvars import ContextVar
 import json
 from backports.cached_property import cached_property  # available in Python >=3.8
@@ -69,7 +69,7 @@ class TraceSpan:
     input: Optional[str] = None
     output: Optional[str] = None
     tags: Tags
-    sub_spans: Set[Self]
+    sub_spans: List[Self]
 
     def __init__(
         self,
@@ -83,7 +83,7 @@ class TraceSpan:
         self.name = get_resource_name(name)
         self.input = input
         self.output = output
-        self.sub_spans = set()
+        self.sub_spans = []
 
         self._set_start_time(start_time)
         self._set_tags(tags)
@@ -134,7 +134,7 @@ class TraceSpan:
                 self.parent_span = self.parent_span.parent_span or root_span
 
         if self.parent_span:
-            self.parent_span.sub_spans.add(self)
+            self.parent_span.sub_spans.append(self)
 
     def _set_ctx(self, override: Optional[TraceSpan] = None):
         global ctx
@@ -172,8 +172,8 @@ class TraceSpan:
         return parent.trace_id if parent else generate_id()
 
     @property
-    def spans(self) -> Set[TraceSpan]:
-        return set([self] + list(_flatten([s.spans for s in self.sub_spans])))
+    def spans(self) -> List[TraceSpan]:
+        return [self] + list(_flatten([s.spans for s in self.sub_spans]))
 
     @property
     def output(self) -> str:
