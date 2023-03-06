@@ -1855,16 +1855,28 @@ describe('integration', function () {
             const [, initializationSpan, invocationSpan] = spans;
             expect(String(initializationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
+            expect(lambdaSpan.startTimeUnixNano).to.equal(initializationSpan.startTimeUnixNano);
+            expect(lambdaSpan.endTimeUnixNano).to.equal(invocationSpan.endTimeUnixNano);
           } else {
             if (!testConfig.hasOrphanedSpans) {
               expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
                 'aws.lambda',
                 'aws.lambda.invocation',
               ]);
+              const [, invocationSpan] = spans;
+              expect(lambdaSpan.startTimeUnixNano).to.equal(invocationSpan.startTimeUnixNano);
+              expect(lambdaSpan.endTimeUnixNano).to.equal(invocationSpan.endTimeUnixNano);
             }
             expect(lambdaSpan.tags.aws.lambda.isColdstart).to.be.false;
             const [, invocationSpan] = spans;
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
+          }
+          for (const span of spans) {
+            if (span.endTimeUnixNano <= span.startTimeUnixNano) {
+              throw new Error(
+                `Span ${span.name} has invalid time range: ${span.startTimeUnixNano} - ${span.endTimeUnixNano}`
+              );
+            }
           }
           expect(slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
