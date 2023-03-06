@@ -219,3 +219,30 @@ def test_span_closure():
 
     # then
     aws_lambda.close()
+
+
+def test_root_span_reuse():
+    # given
+    from importlib import reload
+    import serverless_sdk.span.trace
+
+    reload(serverless_sdk.span.trace)
+
+    span = TraceSpan("root")
+    TraceSpan("child1").close()
+    TraceSpan("child2").close()
+    span.close()
+    span.sub_spans.clear()
+    del serverless_sdk.span.trace.root_span.end_time
+
+    # when
+    span.start_time = timer()
+    TraceSpan("otherchild").close()
+    serverless_sdk.span.trace.root_span.close()
+
+    # then
+    assert [x.name for x in serverless_sdk.span.trace.root_span.spans] == [
+        "root",
+        "otherchild",
+    ]
+    serverless_sdk.span.trace.root_span.sub_spans.clear()
