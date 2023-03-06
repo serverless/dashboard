@@ -132,7 +132,7 @@ class Instrumenter:
                 self._close_trace("success")
                 return result
             except Exception:
-                self._close_trace("error:handler")
+                self._close_trace("error:handled")
                 raise
 
         return stub
