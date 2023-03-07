@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.3 (2023-03-07)
+
+### Bug Fixes
+
+- Fix root trace span handling
+- Maintain deterministic ordering of trace spans
+
 ## 0.1.2 (2023-03-03)
 
 ### Bug Fixes
