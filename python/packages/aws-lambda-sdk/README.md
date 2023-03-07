@@ -2,7 +2,7 @@
 
 ## AWS Lambda [Serverless Console](https://www.serverless.com/console) SDK for Python
 
-Instruments AWS Lambda functions, propagates traces to the [Serverless Console](https://www.serverless.com/console/docs) and exposes Serverless SDK to function logic
+Instruments AWS Lambda functions, propagates traces to the [Serverless Console](https://www.serverless.com/console/docs) and exposes Serverless SDK to the function logic
 
 ### Setup
 
@@ -13,7 +13,6 @@ Instruments AWS Lambda functions, propagates traces to the [Serverless Console](
 ### Instrumentation
 
 AWS Lambda SDK automatically creates `aws.lambda`, `aws.lambda.initialization` and `aws.lambda.invocation` trace spans.
-For more details see [SDK Trace spans documentation](docs/sdk-trace.md)
 
 ### SDK API
 
