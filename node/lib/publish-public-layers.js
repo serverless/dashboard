@@ -34,15 +34,12 @@ module.exports = async ({ bucketName, layerBasename, version, content, githubTag
     await Promise.all([
       (async () => {
         const layersRegistry = JSON.parse(
-          await toPromise(
-            (
-              await awsRequest(S3, 'getObject', { Bucket: bucketName, Key: registryName }).catch(
-                (error) => {
-                  if (error.Code === 'AccessDenied') return '{}'; // Registry does not exist yet
-                  throw error;
-                }
-              )
-            ).Body
+          await awsRequest(S3, 'getObject', { Bucket: bucketName, Key: registryName }).then(
+            ({ Body }) => toPromise(Body),
+            (error) => {
+              if (error.Code === 'AccessDenied') return '{}'; // Registry does not exist yet
+              throw error;
+            }
           )
         );
         _.merge(layersRegistry, newMeta);
