@@ -12,7 +12,8 @@ Instruments AWS Lambda functions, propagates traces to the [Serverless Console](
 
 ### Instrumentation
 
-N/A
+AWS Lambda SDK automatically creates `aws.lambda`, `aws.lambda.initialization` and `aws.lambda.invocation` trace spans.
+For more details see [SDK Trace spans documentation](docs/sdk-trace.md)
 
 ### SDK API
 
