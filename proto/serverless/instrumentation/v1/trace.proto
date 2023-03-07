@@ -7,7 +7,7 @@ import "serverless/instrumentation/v1/event.proto";
 
 option go_package = ".;protoc";
 
-// ATracePayload is a message that will contain any number
+// TracePayload is a message that will contain any number
 // of Spans plus the global tags required by our Serverless Ingest
 // Platform. A TracePayload DOES NOT necessarily mean that it is a
 // complete Trace. It may contain only a subset of Spans that
