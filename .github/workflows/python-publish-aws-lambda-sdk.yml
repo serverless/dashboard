@@ -25,31 +25,31 @@ jobs:
           cache-dependency-path: |
             **/pyproject.toml
 
-      - name: Install main project dependencies
-        run: |
-          cd python/packages
-          python3 -m venv .venv
-          source .venv/bin/activate
-          python3 -m pip install ./aws-lambda-sdk --target=dist
-
       - name: Publish New Version on PyPI
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_AUTH_TOKEN }}
         run: |
           cd python/packages
+          python3 -m venv .venv
           source .venv/bin/activate
-          cd ./aws-lambda-sdk
 
           python3 -m pip install --upgrade build twine wheel
-          python3 -m build --wheel --sdist .
+          python3 -m build --wheel --sdist ./aws-lambda-sdk --outdir dist
           twine upload dist/*.tar.gz dist/*.whl
+
+      - name: Install main project dependencies
+        run: |
+          cd python/packages/aws-lambda-sdk
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install . --target=dist
 
       - name: Create lambda layer package
         run: |
-          cd python/packages
+          cd python/packages/aws-lambda-sdk
 
-          ./aws-lambda-sdk/scripts/build-layer-archive.sh aws-lambda-sdk/dist/extension.internal.zip
+          ./scripts/build-layer-archive.sh dist/extension.internal.zip
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
