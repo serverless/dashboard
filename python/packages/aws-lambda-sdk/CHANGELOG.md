@@ -4,15 +4,11 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## 0.1.2 (2023-03-07)
 
-### Maintenance Improvements
-
-- Create layers registry if it doesn't exist yet
+_Re-release due to broken publication process_
 
 ## 0.1.1 (2023-03-07)
 
-### Maintenance Improvements
-
-- Fix lambda layer publishing
+_Re-release due to broken publication process_
 
 ## 0.1.0 (2023-03-07)
 
