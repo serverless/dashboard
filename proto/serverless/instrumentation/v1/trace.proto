@@ -28,6 +28,10 @@ message TracePayload {
     // The optional custom trace tags to be set by the user
     // This is expected to be a JSON object in string format.
     optional string custom_tags = 5;
+
+    // Whether the trace payload represents sampled out invocation and in result contains just
+    // core spans and no events
+    optional bool is_sampled_out = 6;
 }
 
 message Span {
