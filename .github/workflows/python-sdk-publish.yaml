@@ -16,7 +16,7 @@ jobs:
       - name: Install Python and Pip
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: '3.9'
 
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
