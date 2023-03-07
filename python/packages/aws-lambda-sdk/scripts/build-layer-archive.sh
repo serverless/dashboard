@@ -12,16 +12,16 @@ esac
 SITE_PACKAGES_DIR=python/lib/python3.9/site-packages
 mkdir -p $DIST/{$SITE_PACKAGES_DIR,sls-sdk-python}
 
-INSTALL_DIR=$DIST/$SITE_PACKAGES_DIR
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-python3 -m pip install $SCRIPT_DIR/.. --target=$INSTALL_DIR
+INSTALL_DIR=$SCRIPT_DIR/../dist
 
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/__init__.py $DIST/sls-sdk-python
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/base.py $DIST/sls-sdk-python
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/exec_wrapper.py $DIST/sls-sdk-python
 cp $INSTALL_DIR/typing_extensions.py $DIST/sls-sdk-python
 cp -R $INSTALL_DIR/strenum $DIST/sls-sdk-python
+cp -R $INSTALL_DIR/* $DIST/$SITE_PACKAGES_DIR
 
 mkdir -p $(dirname $OUTPUT)
 

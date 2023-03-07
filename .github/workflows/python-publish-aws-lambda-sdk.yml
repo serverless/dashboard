@@ -30,7 +30,7 @@ jobs:
           cd python/packages
           python3 -m venv .venv
           source .venv/bin/activate
-          python3 -m pip install ./aws-lambda-sdk --target=build
+          python3 -m pip install ./aws-lambda-sdk --target=dist
 
       - name: Publish New Version on PyPI
         env:
