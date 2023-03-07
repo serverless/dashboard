@@ -18,6 +18,13 @@ const serverlessSdk = require('./lib/sdk');
 const objHasOwnProperty = Object.prototype.hasOwnProperty;
 const unresolvedPromise = new Promise(() => {});
 
+const coreTraceSpanNames = new Set([
+  'aws.lambda',
+  'aws.lambda.initialization',
+  'aws.lambda.invocation',
+]);
+const alertEventNames = new Set(['telemetry.error.generated.v1', 'telemetry.warning.generated.v1']);
+
 const capturedEvents = [];
 serverlessSdk._eventEmitter.on('captured-event', (capturedEvent) =>
   capturedEvents.push(capturedEvent)
@@ -91,25 +98,38 @@ const reportResponse = async (response, context, endTime) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
-const reportTrace = () => {
+const reportTrace = ({ isErrorOutcome }) => {
+  // Sample out 80% of traces in production mode if no warning or error event was reported
+  const isSampledOut =
+    (!isErrorOutcome &&
+      !serverlessSdk._isDebugMode &&
+      !serverlessSdk._isDevMode &&
+      !capturedEvents.some(({ name }) => alertEventNames.has(name)) &&
+      Math.random() > 0.2) ||
+    undefined;
   const payload = (serverlessSdk._lastTrace = {
+    isSampledOut,
     slsTags: {
       orgId: serverlessSdk.orgId,
       service: process.env.AWS_LAMBDA_FUNCTION_NAME,
       sdk: { name: pkgJson.name, version: pkgJson.version },
     },
-    spans: Array.from(awsLambdaSpan.spans).map((span) => {
+    spans: Array.from(awsLambdaSpan.spans, (span) => {
+      if (isSampledOut && !coreTraceSpanNames.has(span.name)) return null;
       const spanPayload = span.toProtobufObject();
       delete spanPayload.input;
       delete spanPayload.output;
       return spanPayload;
-    }),
-    events: capturedEvents
-      .filter(filterCapturedEvent)
-      .map((capturedEvent) => capturedEvent.toProtobufObject()),
-    customTags: objHasOwnProperty.call(serverlessSdk, '_customTags')
-      ? JSON.stringify(serverlessSdk._customTags)
-      : undefined,
+    }).filter(Boolean),
+    events: isSampledOut
+      ? []
+      : capturedEvents
+          .filter(filterCapturedEvent)
+          .map((capturedEvent) => capturedEvent.toProtobufObject()),
+    customTags:
+      !isSampledOut && objHasOwnProperty.call(serverlessSdk, '_customTags')
+        ? JSON.stringify(serverlessSdk._customTags)
+        : undefined,
   });
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
@@ -172,7 +192,7 @@ const closeTrace = async (outcome, outcomeResult) => {
     awsLambdaSpan.close({ endTime });
     // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
     // which we don't have if handler crashed at initialization
-    if (invocationContextAccessor.value) reportTrace();
+    if (invocationContextAccessor.value) reportTrace({ isErrorOutcome });
     flushSpans();
     clearRootSpan();
 

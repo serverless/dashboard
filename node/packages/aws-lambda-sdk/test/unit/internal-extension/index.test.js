@@ -140,10 +140,24 @@ describe('internal-extension/index.test.js', () => {
     process.env.SLS_ORG_ID = 'dummy';
     process.env.SLS_UNIT_TEST_RUN = '1';
     process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+    process.env.SLS_SDK_DEBUG = '1';
   });
   afterEach(() => {
     delete process.env._HANDLER;
     delete process.env.AWS_LAMBDA_FUNCTION_NAME;
+  });
+
+  describe('sampling', () => {
+    before(() => {
+      delete process.env.SLS_SDK_DEBUG;
+    });
+    after(() => {
+      process.env.SLS_SDK_DEBUG = '1';
+    });
+    it('should produce complete basic trace when sampled', async () => {
+      // There's 80% chance that trace will be sampled
+      return handleInvocation('callback');
+    });
   });
 
   it('should handle "ESM callback"', async () => handleInvocation('esm-callback/index'));
@@ -151,6 +165,7 @@ describe('internal-extension/index.test.js', () => {
   it('should handle "ESM nested module"', async () =>
     handleInvocation('esm-nested/nested/within/index'));
   it('should handle "callback"', async () => handleInvocation('callback'));
+
   it('should handle "thenable"', async () => handleInvocation('thenable'));
   it('should handle "esbuild from ESM callback', async () =>
     handleInvocation('esbuild-from-esm-callback'));
