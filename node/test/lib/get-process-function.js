@@ -208,7 +208,6 @@ module.exports = async (basename, coreConfig, options) => {
       let currentProcessData;
       let startedMessage;
       let startedMessageType;
-      let isExternalExtensionLoaded = false;
       const getCurrentInvocationData = () => {
         if (!currentInvocationData) {
           log.error(
@@ -293,14 +292,7 @@ module.exports = async (basename, coreConfig, options) => {
         }
       };
       for (const { message } of events) {
-        if (message.startsWith('⚡ SDK: External initialization')) {
-          isExternalExtensionLoaded = true;
-          processesData.push(
-            (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
-          );
-          continue;
-        }
-        if (!isExternalExtensionLoaded && message.startsWith('⚡ SDK: Wrapper initialization')) {
+        if (message.startsWith('INIT_START Runtime Version: ')) {
           processesData.push(
             (currentProcessData = { extensionOverheadDurations: {}, internalDurations: {} })
           );

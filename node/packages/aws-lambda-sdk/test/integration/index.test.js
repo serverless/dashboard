@@ -20,6 +20,8 @@ const runEsbuild = require('../../../../lib/run-esbuild');
 const getProcessFunction = require('../../../../test/lib/get-process-function');
 const resolveTestVariantsConfig = require('../../../../test/lib/resolve-test-variants-config');
 const resolveDirZipBuffer = require('../../../../test/utils/resolve-dir-zip-buffer');
+const resolveOutcomeEnumValue = require('../../../../test/utils/resolve-outcome-enum-value');
+const normalizeEvents = require('../../../../test/utils/normalize-events');
 const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
 const awsRequest = require('../../../../test/utils/aws-request');
 const pkgJson = require('../../package');
@@ -1815,60 +1817,6 @@ describe('integration', function () {
     }
   });
 
-  const resolveOutcomeEnumValue = (value) => {
-    switch (value) {
-      case 'success':
-        return 1;
-      case 'error:handled':
-        return 5;
-      case 'error:unhandled':
-        return 3;
-      default:
-        throw new Error(`Unexpected outcome value: ${value}`);
-    }
-  };
-  const normalizeEvents = (events) =>
-    events.map(({ eventName: name, tags }) => ({
-      name,
-      type: (() => {
-        switch (name) {
-          case 'telemetry.error.generated.v1':
-            switch (tags.error.type) {
-              case 1:
-                return 'ERROR_TYPE_UNCAUGHT';
-              case 2:
-                return 'ERROR_TYPE_CAUGHT_USER';
-              case 3:
-                return 'ERROR_TYPE_CAUGHT_SDK_USER';
-              case 4:
-                return 'ERROR_TYPE_CAUGHT_SDK_INTERNAL';
-              default:
-                throw new Error(`Unexpected error type: ${tags.error.type}`);
-            }
-          case 'telemetry.warning.generated.v1':
-            switch (tags.warning.type) {
-              case 1:
-                return 'WARNING_TYPE_USER';
-              case 2:
-                return 'WARNING_TYPE_SDK_USER';
-              case 3:
-                return 'WARNING_TYPE_SDK_INTERNAL';
-              default:
-                throw new Error(`Unexpected warning type: ${tags.warning.type}`);
-            }
-          case 'telemetry.notice.generated.v1':
-            switch (tags.warning.type) {
-              case 1:
-                return 'NOTICE_TYPE_SDK_INTERNAL';
-              default:
-                throw new Error(`Unexpected notice type: ${tags.warning.type}`);
-            }
-          default:
-            throw new Error(`Unexpected event name: ${name}`);
-        }
-      })(),
-    }));
-
   for (const testConfig of testVariantsConfig) {
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
@@ -1907,16 +1855,28 @@ describe('integration', function () {
             const [, initializationSpan, invocationSpan] = spans;
             expect(String(initializationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
+            expect(lambdaSpan.startTimeUnixNano).to.equal(initializationSpan.startTimeUnixNano);
+            expect(lambdaSpan.endTimeUnixNano).to.equal(invocationSpan.endTimeUnixNano);
           } else {
             if (!testConfig.hasOrphanedSpans) {
               expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
                 'aws.lambda',
                 'aws.lambda.invocation',
               ]);
+              const [, invocationSpan] = spans;
+              expect(lambdaSpan.startTimeUnixNano).to.equal(invocationSpan.startTimeUnixNano);
+              expect(lambdaSpan.endTimeUnixNano).to.equal(invocationSpan.endTimeUnixNano);
             }
             expect(lambdaSpan.tags.aws.lambda.isColdstart).to.be.false;
             const [, invocationSpan] = spans;
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
+          }
+          for (const span of spans) {
+            if (span.endTimeUnixNano <= span.startTimeUnixNano) {
+              throw new Error(
+                `Span ${span.name} has invalid time range: ${span.startTimeUnixNano} - ${span.endTimeUnixNano}`
+              );
+            }
           }
           expect(slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
