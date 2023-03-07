@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"runtime/debug"
 	"time"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
+	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 )
 
 type bytesHandlerFunc func(context.Context, []byte) ([]byte, error)
@@ -76,24 +77,26 @@ func (w wrapper) Wrap(userHandler lambda.Handler, initializationStart time.Time)
 }
 
 func ctxWithRootSpan(ctx context.Context, initializationStart time.Time) context.Context {
-	rootSpan := newRootSpan(ctx, initializationStart, time.Now())
-	return context.WithValue(ctx, contextKey, rootSpan)
+	spanCtx := newSpanContext(ctx, initializationStart, time.Now())
+	return context.WithValue(ctx, contextKey, spanCtx)
 }
 
 func (w wrapper) closeRootSpan(ctx context.Context) error {
-	span, err := fromContext(ctx)
+	spanCtx, err := fromContext(ctx)
 	if err != nil {
 		return fmt.Errorf("close root span: %w", err)
 	}
+
+	span := spanCtx.rootSpan
 	span.close()
-	if err := w.printTrace(span); err != nil {
+	if err := w.printTrace(spanCtx); err != nil {
 		return fmt.Errorf("print trace: %w", err)
 	}
 	return nil
 }
 
-func convert(span *rootSpan, tags tags, environment string) (*instrumentationv1.TracePayload, error) {
-	protoSpans, err := convertToProtoSpans(span, tags)
+func convert(spanCtx *spanContext, tags tags, environment string) (*instrumentationv1.TracePayload, error) {
+	protoSpans, err := convertToProtoSpans(spanCtx, tags)
 	if err != nil {
 		return nil, fmt.Errorf("convert to proto spans: %w", err)
 	}
@@ -101,6 +104,9 @@ func convert(span *rootSpan, tags tags, environment string) (*instrumentationv1.
 	if invocationSpan == nil {
 		return nil, errors.New("invocation proto span not found")
 	}
+
+	span := spanCtx.rootSpan
+
 	protoEvents, err := convertToProtoEvents(span.errorEvents, span.warningEvents, invocationSpan.TraceId, invocationSpan.Id)
 	if err != nil {
 		return nil, fmt.Errorf("convert error events to proto events: %w", err)
@@ -113,7 +119,8 @@ func convert(span *rootSpan, tags tags, environment string) (*instrumentationv1.
 	return &payload, nil
 }
 
-func convertToProtoSpans(rootSpan *rootSpan, tags tags) ([]*instrumentationv1.Span, error) {
+func convertToProtoSpans(spanCtx *spanContext, tags tags) ([]*instrumentationv1.Span, error) {
+	rootSpan := spanCtx.rootSpan
 	var spans []*instrumentationv1.Span
 	rootSpanID, err := generateSpanID()
 	if err != nil {
@@ -190,12 +197,8 @@ func convertToProtoSpans(rootSpan *rootSpan, tags tags) ([]*instrumentationv1.Sp
 		}
 		spans = append(spans, &initializationProtoSpan)
 	}
-	spanID, err := generateSpanID()
-	if err != nil {
-		return nil, fmt.Errorf("generate span ID: %w", err)
-	}
 	invocationProtoSpan := instrumentationv1.Span{
-		Id:                spanID,
+		Id:                spanCtx.invocationSpanId,
 		TraceId:           traceID,
 		ParentSpanId:      rootProtoSpan.Id,
 		Name:              invocationSpanName,
@@ -222,7 +225,45 @@ func convertToProtoSpans(rootSpan *rootSpan, tags tags) ([]*instrumentationv1.Sp
 		},
 	}
 	spans = append(spans, &invocationProtoSpan)
+
+	for _, userSpan := range spanCtx.userSpans {
+		spans = append(spans, convertUserSpans(userSpan, traceID, (*string)(&tags.OrganizationID))...)
+	}
+
 	return spans, nil
+}
+
+func convertUserSpan(span *UserSpan, traceId []byte, orgId *string) *instrumentationv1.Span {
+	newSpan := instrumentationv1.Span{
+		Id:                span.id,
+		TraceId:           traceId,
+		ParentSpanId:      span.parentSpanId,
+		Name:              span.name,
+		StartTimeUnixNano: uint64(span.startTime.UnixNano()),
+		EndTimeUnixNano:   uint64(span.endTime.UnixNano()),
+		CustomTags:        span.marshalCustomTags(),
+		Tags: &tagsv1.Tags{
+			OrgId: orgId,
+		},
+	}
+
+	return &newSpan
+}
+
+func convertUserSpans(rootSpan *UserSpan, traceId []byte, orgId *string) []*instrumentationv1.Span {
+
+	if len(rootSpan.childSpans) == 0 {
+		return []*instrumentationv1.Span{convertUserSpan(rootSpan, traceId, orgId)}
+	}
+
+	spans := make([]*instrumentationv1.Span, 0)
+
+	spans = append(spans, convertUserSpan(rootSpan, traceId, orgId))
+	for _, span := range rootSpan.childSpans {
+		spans = append(spans, convertUserSpans(span, traceId, orgId)...)
+	}
+
+	return spans
 }
 
 func invocationProtoSpan(spans []*instrumentationv1.Span) *instrumentationv1.Span {

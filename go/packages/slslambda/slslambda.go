@@ -2,9 +2,10 @@ package slslambda
 
 import (
 	"context"
-	"github.com/aws/aws-lambda-go/lambda"
 	"runtime/debug"
 	"time"
+
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 var initializationStart = time.Now()
@@ -42,19 +43,37 @@ func WithEnvironment(env string) Option {
 }
 
 func CaptureError(ctx context.Context, err error) {
-	span, ctxErr := fromContext(ctx)
+	spanCtx, ctxErr := fromContext(ctx)
 	if ctxErr != nil {
 		debugLog("capture error:", ctxErr)
 		return
 	}
+	span := spanCtx.rootSpan
 	span.captureError(err)
 }
 
 func CaptureWarning(ctx context.Context, msg string) {
-	span, ctxErr := fromContext(ctx)
+	spanCtx, ctxErr := fromContext(ctx)
 	if ctxErr != nil {
 		debugLog("capture warning:", ctxErr)
 		return
 	}
+
+	span := spanCtx.rootSpan
 	span.captureWarning(msg)
+}
+
+// A span that will always be attached to the invocation span.
+func StartSpan(ctx context.Context, name string) *UserSpan {
+	spanCtx, ctxErr := fromContext(ctx)
+	if ctxErr != nil {
+		debugLog("start user span:", ctxErr)
+		return nil
+	}
+
+	userSpan := spanCtx.newCustomSpan(name)
+
+	spanCtx.userSpans = append(spanCtx.userSpans, userSpan)
+
+	return userSpan
 }

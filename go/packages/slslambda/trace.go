@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
@@ -25,8 +26,8 @@ const (
 
 var version = "undefined"
 
-func (w wrapper) printTrace(span *rootSpan) error {
-	payload, err := convert(span, w.tags, w.environment)
+func (w wrapper) printTrace(spanCtx *spanContext) error {
+	payload, err := convert(spanCtx, w.tags, w.environment)
 	if err != nil {
 		return fmt.Errorf("convert: %w", err)
 	}
