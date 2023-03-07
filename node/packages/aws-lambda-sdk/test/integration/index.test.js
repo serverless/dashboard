@@ -553,6 +553,20 @@ describe('integration', function () {
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
           [
+            'sampled',
+            {
+              configuration: {
+                Environment: {
+                  Variables: {
+                    SLS_ORG_ID: process.env.SLS_ORG_ID,
+                    SLS_CRASH_ON_SDK_ERROR: '1',
+                    AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+                  },
+                },
+              },
+            },
+          ],
+          [
             'sqs',
             {
               isAsyncInvocation: true,
