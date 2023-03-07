@@ -15,6 +15,7 @@ python3 -m pytest
 ```
 
 To run against local version of `sdk` & `sdk-schema`, install them from the local repository as:
+
 ```
 ...
 python3 -m pip install --editable ../sdk
@@ -34,4 +35,4 @@ How extensions behave, for various testing purposes, can be tweaked with followi
 ### Variables handled in extension logic
 
 - `SLS_SDK_DEBUG` - Log debug messages, of which scope is to:
-  - Mark certain processing points
+- Mark certain processing points
