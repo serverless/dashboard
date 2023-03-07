@@ -5,8 +5,6 @@ import os
 from typing_extensions import Final
 from pathlib import Path
 
-from serverless_aws_lambda_sdk.exceptions import HandlerNotFound
-from serverless_aws_lambda_sdk.internal_extension.base import Env
 
 from .fixtures import (
     SUBMODULE_HANDLER,
@@ -22,10 +20,13 @@ import pytest
 HANDLER_MODULE_DIR: Final[str] = str(Path(__file__).parent.resolve())
 
 
-def test_raises_exception_when_handler_is_not_set(monkeypatch):
+def test_raises_exception_when_handler_is_not_set(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.exceptions import HandlerNotFound
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = dict(os.environ)
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     with pytest.raises(HandlerNotFound):
@@ -34,15 +35,17 @@ def test_raises_exception_when_handler_is_not_set(monkeypatch):
         importlib.reload(wrapper)
 
 
-def test_raises_exception_when_handler_function_does_not_exist(monkeypatch):
+def test_raises_exception_when_handler_function_does_not_exist(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = dict(os.environ)
     env[Env.HANDLER] = f"{SUCCESS_HANDLER}.invalid"
     env[Env.HANDLER_MODULE_BASENAME] = f"{SUCCESS_HANDLER}"
     env[Env.HANDLER_BASENAME] = f"{SUCCESS_HANDLER}.invalid"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "invalid"
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     with pytest.raises(Exception):
@@ -51,15 +54,17 @@ def test_raises_exception_when_handler_function_does_not_exist(monkeypatch):
         importlib.reload(wrapper)
 
 
-def test_raises_exception_when_handler_module_has_an_error(monkeypatch):
+def test_raises_exception_when_handler_module_has_an_error(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = dict(os.environ)
     env[Env.HANDLER] = f"{UNIMPORTABLE_HANDLER}.foo"
     env[Env.HANDLER_MODULE_BASENAME] = f"{UNIMPORTABLE_HANDLER}"
     env[Env.HANDLER_BASENAME] = f"{UNIMPORTABLE_HANDLER}.foo"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "foo"
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     with pytest.raises(ImportError):
@@ -68,15 +73,17 @@ def test_raises_exception_when_handler_module_has_an_error(monkeypatch):
         importlib.reload(wrapper)
 
 
-def test_raises_exception_when_handler_module_has_a_syntax_error(monkeypatch):
+def test_raises_exception_when_handler_module_has_a_syntax_error(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = dict(os.environ)
     env[Env.HANDLER] = f"{SYNTAX_ERROR_HANDLER}.foo"
     env[Env.HANDLER_MODULE_BASENAME] = f"{SYNTAX_ERROR_HANDLER}"
     env[Env.HANDLER_BASENAME] = f"{SYNTAX_ERROR_HANDLER}.foo"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "foo"
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     with pytest.raises(SyntaxError):
@@ -85,15 +92,17 @@ def test_raises_exception_when_handler_module_has_a_syntax_error(monkeypatch):
         importlib.reload(wrapper)
 
 
-def test_can_instrument_handler(monkeypatch):
+def test_can_instrument_handler(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = os.environ
     env[Env.HANDLER] = f"{SUCCESS_HANDLER}.handler"
     env[Env.HANDLER_MODULE_BASENAME] = f"{SUCCESS_HANDLER}"
     env[Env.HANDLER_BASENAME] = f"{SUCCESS_HANDLER}.handler"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "handler"
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     from serverless_aws_lambda_sdk.internal_extension import wrapper
@@ -105,15 +114,17 @@ def test_can_instrument_handler(monkeypatch):
     assert response == "ok", "handler return should not be tampered with"
 
 
-def test_can_instrument_handler_with_submodule(monkeypatch):
+def test_can_instrument_handler_with_submodule(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = os.environ
     env[Env.HANDLER] = f"{SUBMODULE_HANDLER}.handler"
     env[Env.HANDLER_MODULE_BASENAME] = f"{SUBMODULE_HANDLER}"
     env[Env.HANDLER_BASENAME] = f"{SUBMODULE_HANDLER}.handler"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "handler"
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     from serverless_aws_lambda_sdk.internal_extension import wrapper
@@ -125,15 +136,17 @@ def test_can_instrument_handler_with_submodule(monkeypatch):
     assert response == "ok", "handler return should not be tampered with"
 
 
-def test_can_instrument_handler_when_handler_fails(monkeypatch):
+def test_can_instrument_handler_when_handler_fails(reset_sdk):
     # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
     env = os.environ
     env[Env.HANDLER] = f"{ERROR_HANDLER}.handler"
     env[Env.HANDLER_MODULE_BASENAME] = f"{ERROR_HANDLER}"
     env[Env.HANDLER_BASENAME] = f"{ERROR_HANDLER}.handler"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "handler"
-    monkeypatch.setattr(os, "environ", env)
+    reset_sdk.setattr(os, "environ", env)
 
     # when
     from serverless_aws_lambda_sdk.internal_extension import wrapper
