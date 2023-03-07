@@ -135,3 +135,9 @@ def test_instrument_subsequent_calls(instrumenter):
         "aws.lambda",
         "aws.lambda.invocation",
     ]
+
+    aws_lambda, aws_lambda_invocation = (
+        second_trace_payload.spans[0],
+        second_trace_payload.spans[-1],
+    )
+    assert aws_lambda.start_time_unix_nano == aws_lambda_invocation.start_time_unix_nano

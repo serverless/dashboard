@@ -56,6 +56,7 @@ class Instrumenter:
     """
 
     def __init__(self):
+        self.current_invocation_id = 0
         serverlessSdk._initialize()
         self.aws_lambda = serverlessSdk.trace_spans.aws_lambda
         if not serverlessSdk.org_id:
@@ -123,8 +124,12 @@ class Instrumenter:
         @wraps(user_handler)
         def stub(event, context):
             request_start_time = timer()
+            self.current_invocation_id += 1
             try:
                 logger.debug("Invocation: start")
+                if self.current_invocation_id > 1:
+                    self.aws_lambda.start_time = request_start_time
+
                 self.aws_lambda.tags["aws.lambda.request_id"] = context.aws_request_id
                 serverlessSdk.trace_spans.aws_lambda_invocation = (
                     serverlessSdk._create_trace_span(
