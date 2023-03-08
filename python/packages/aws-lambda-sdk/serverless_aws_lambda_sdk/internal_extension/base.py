@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Optional, Tuple
 from importlib import import_module
 import sys
-from timeit import default_timer
+import time
+
 from strenum import StrEnum
 from typing_extensions import Final, Self
 
@@ -56,10 +57,6 @@ def debug_log(msg):
     return logger.debug(f"⚡ SDK: {msg}")
 
 
-def timer():
-    return int(default_timer() * 1000000000)
-
-
 def initialize(handler: Optional[str] = HANDLER):
     """Checks handler is an importable function, inits env variables for the handler.
 
@@ -71,7 +68,7 @@ def initialize(handler: Optional[str] = HANDLER):
         handler (Optional[str], optional): _description_. Defaults to HANDLER.
     """
     try:
-        process_start_time = timer()
+        process_start_time = time.perf_counter_ns()
         environ[Env.PROCESS_START_TIME] = str(process_start_time)
 
         # AWS Lambda Python runtime converts forward slashes to dots.
@@ -141,7 +138,7 @@ def initialize(handler: Optional[str] = HANDLER):
         environ[Env.ORIGIN_HANDLER] = HANDLER
         environ[Env.HANDLER] = NEW_HANDLER
 
-        end = timer()
+        end = time.perf_counter_ns()
         ms = round((end - process_start_time) / NS_IN_MS)
 
         debug_log(f"Overhead duration: Internal initialization: {ms}ms")
