@@ -36,7 +36,8 @@ describe('Python: integration', function () {
       'success',
       {
         variants: new Map([
-          // TODO: Cover v3.6 and v3.7 once support for those is fixed
+          // TODO: Cover v3.7 once support for it is fixed
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
         ]),
       },
@@ -45,7 +46,8 @@ describe('Python: integration', function () {
       'error',
       {
         variants: new Map([
-          // TODO: Cover v3.6 and v3.7 once support for those is fixed
+          // TODO: Cover v3.7 once support for it is fixed
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
         ]),
         config: { expectedOutcome: 'error:handled' },
