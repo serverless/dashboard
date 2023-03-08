@@ -42,7 +42,7 @@ func WithEnvironment(env string) Option {
 }
 
 func CaptureError(ctx context.Context, err error) {
-	span, ctxErr := fromContext(ctx)
+	span, ctxErr := currentSpanFromContext(ctx)
 	if ctxErr != nil {
 		debugLog("capture error:", ctxErr)
 		return
@@ -51,10 +51,41 @@ func CaptureError(ctx context.Context, err error) {
 }
 
 func CaptureWarning(ctx context.Context, msg string) {
-	span, ctxErr := fromContext(ctx)
+	span, ctxErr := currentSpanFromContext(ctx)
 	if ctxErr != nil {
 		debugLog("capture warning:", ctxErr)
 		return
 	}
 	span.captureWarning(msg)
+}
+
+func WithSpan(ctx context.Context, name string) context.Context {
+	span, ctxErr := currentSpanFromContext(ctx)
+	if ctxErr != nil {
+		debugLog("with span:", ctxErr)
+		return ctx
+	}
+	return span.newChild(ctx, name)
+}
+
+func Close(ctx context.Context) {
+	span, ctxErr := currentSpanFromContext(ctx)
+	if ctxErr != nil {
+		debugLog("close:", ctxErr)
+		return
+	}
+	span.Close()
+}
+
+func AddTags(ctx context.Context, tags map[string]string) {
+	span, ctxErr := currentSpanFromContext(ctx)
+	if ctxErr != nil {
+		debugLog("add tag:", ctxErr)
+		return
+	}
+	span.addTags(tags)
+}
+
+func AddTag(ctx context.Context, key, value string) {
+	AddTags(ctx, map[string]string{key: value})
 }
