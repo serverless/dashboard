@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.2](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.1...@serverless/sdk-schema@0.15.2) (2023-03-08)
+
+### Features
+
+- Define `is_sampled_out` for TracePayload ([20c1966](https://github.com/serverless/console/commit/20c1966cb5c00748e766f99bf8f054a32484cd02))
+
 ## [0.15.1](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.0...@serverless/sdk-schema@0.15.1) (2023-02-09)
 
 ### Features
