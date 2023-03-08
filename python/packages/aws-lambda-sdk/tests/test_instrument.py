@@ -60,10 +60,8 @@ def test_instrument_adds_lambda_trace_spans(instrumenter, reset_sdk):
     # when
     with patch("builtins.print") as mocked_print:
         instrumented({}, context)
-        serialized = (
-            mocked_print.call_args_list[0]
-            .args[0]
-            .replace("SERVERLESS_TELEMETRY.T.", "")
+        serialized = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
         )
 
     # then
@@ -111,15 +109,11 @@ def test_instrument_subsequent_calls(instrumenter):
     with patch("builtins.print") as mocked_print:
         instrumented({}, context)
         instrumented({}, context)
-        first = (
-            mocked_print.call_args_list[0]
-            .args[0]
-            .replace("SERVERLESS_TELEMETRY.T.", "")
+        first = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
         )
-        second = (
-            mocked_print.call_args_list[1]
-            .args[0]
-            .replace("SERVERLESS_TELEMETRY.T.", "")
+        second = mocked_print.call_args_list[1][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
         )
 
     # then
