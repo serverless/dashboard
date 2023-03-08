@@ -1,15 +1,13 @@
 from __future__ import annotations
 from collections.abc import Iterable
 import logging
-from timeit import default_timer
+import time
 from typing import List, Optional
 from contextvars import ContextVar
 import json
 from backports.cached_property import cached_property  # available in Python >=3.8
-from pydantic import BaseModel
 from typing_extensions import Final, Self
-from humps import camelize
-
+from ..lib.timing import to_protobuf_epoch_timestamp
 from ..base import Nanoseconds, TraceId
 from ..exceptions import (
     ClosureOnClosedSpan,
@@ -34,31 +32,6 @@ TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
 ctx: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 root_span: Optional[TraceSpan] = None
-
-
-def timer():
-    return int(default_timer() * 1000000000)
-
-
-class TraceSpanBuf(BaseModel):
-    """Type-validated intermediate protobuf representation of a TraceSpan"""
-
-    id: bytes
-    trace_id: bytes
-    parent_span_id: Optional[bytes]
-    name: str
-    start_time_unix_nano: Nanoseconds
-    end_time_unix_nano: Nanoseconds
-    tags: Tags
-    input: Optional[str]
-    output: Optional[str]
-    timestamp: Optional[Nanoseconds]
-    is_historical: Optional[bool]
-    type: Optional[str]
-
-    class Config:
-        alias_generator = camelize
-        allow_population_by_field_name = True
 
 
 class TraceSpan:
@@ -88,20 +61,6 @@ class TraceSpan:
         self._set_start_time(start_time)
         self._set_tags(tags)
         self._set_spans(immediate_descendants)
-
-    def toJSON(self) -> str:
-        return json.dumps(
-            {
-                "traceId": self.trace_id,
-                "id": self.id,
-                "name": self.name,
-                "startTime": self.start_time,
-                "endTime": self.end_time,
-                "input": self.input,
-                "output": self.output,
-                "tags": self.tags,
-            }
-        )
 
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
@@ -147,7 +106,7 @@ class TraceSpan:
             self.tags.update(tags)
 
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
-        default_start = timer()
+        default_start = time.time_ns()
 
         if start_time is not None and not isinstance(start_time, Nanoseconds):
             raise InvalidType("`start_time` must be an integer.")
@@ -188,7 +147,7 @@ class TraceSpan:
 
     def close(self, end_time: Optional[Nanoseconds] = None):
         global root_span, ctx
-        default: Nanoseconds = timer()
+        default: Nanoseconds = time.time_ns()
         target_end_time = end_time
 
         if self.end_time is not None:
@@ -242,27 +201,14 @@ class TraceSpan:
 
         return self
 
-    def to_protobuf_object(self) -> TraceSpanBuf:
-        return TraceSpanBuf(
-            id=self.id,
-            trace_id=self.trace_id,
-            parent_span_id=self.parent_span.id if self.parent_span else None,
-            name=self.name,
-            start_time_unix_nano=self.start_time,
-            end_time_unix_nano=self.end_time,
-            tags=self.tags,
-            input=self.input,
-            output=self.output,
-        )
-
     def to_protobuf_dict(self):
         return {
             "id": self.id,
             "traceId": self.trace_id,
             "parentSpanId": self.parent_span.id if self.parent_span else None,
             "name": self.name,
-            "startTimeUnixNano": self.start_time,
-            "endTimeUnixNano": self.end_time,
+            "startTimeUnixNano": to_protobuf_epoch_timestamp(self.start_time),
+            "endTimeUnixNano": to_protobuf_epoch_timestamp(self.end_time),
             "input": self.input,
             "output": self.output,
             "tags": convert_tags_to_protobuf(self.tags),
