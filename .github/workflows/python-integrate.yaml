@@ -10,9 +10,12 @@ on:
       - proto/**
 
 jobs:
-  linuxPython37:
-    name: "[Linux] Python 3.7: Unit Tests"
+  validate:
+    name: "[Linux] Python 3: Unit Tests"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ["3.7", "3.8", "3.9"]
     outputs:
       pathChangedAwsLambdaSdk: ${{ steps.pathChanges.outputs.awsLambdaSdk }}
       pathChangedSdk: ${{ steps.pathChanges.outputs.sdk}}
@@ -36,10 +39,10 @@ jobs:
             proto:
               - 'proto/**'
 
-      - name: Install Python 3.7
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: ${{ matrix.python_version }}
 
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
@@ -110,8 +113,8 @@ jobs:
   integratePythonSdk:
     name: Integrate Python SDK
     runs-on: ubuntu-latest
-    needs: [ linuxPython37 ]
-    if: needs.linuxPython37.outputs.pathChangedSdk == 'true'
+    needs: [ validate ]
+    if: needs.validate.outputs.pathChangedSdk == 'true'
     timeout-minutes: 5 # Default is 360
     steps:
       - name: Checkout repository
@@ -136,8 +139,8 @@ jobs:
   integrateAwsLambdaSdk:
     name: Integrate Python AWS Lambda SDK
     runs-on: ubuntu-latest
-    needs: [ linuxPython37 ]
-    if: needs.linuxPython37.outputs.pathChangedAwsLambdaSdk == 'true'
+    needs: [ validate ]
+    if: needs.validate.outputs.pathChangedAwsLambdaSdk == 'true'
     timeout-minutes: 5 # Default is 360
     env:
       AWS_REGION: us-east-1
@@ -196,8 +199,8 @@ jobs:
   integratePythonSdkSchema:
     name: Integrate Python SDK Schema
     runs-on: ubuntu-latest
-    needs: [ linuxPython37 ]
-    if: needs.linuxPython37.outputs.pathChangedSdkSchema == 'true'
+    needs: [ validate ]
+    if: needs.validate.outputs.pathChangedSdkSchema == 'true'
     timeout-minutes: 5 # Default is 360
     steps:
       - name: Checkout repository
