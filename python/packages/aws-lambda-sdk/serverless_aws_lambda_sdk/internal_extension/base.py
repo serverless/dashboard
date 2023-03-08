@@ -110,7 +110,7 @@ def initialize(handler: Optional[str] = HANDLER):
         )  # absolute path of the directory containing the module
 
         # Add the SDK installation folder to sys.path
-        sys.path.append("/opt/python/lib/python3.9/site-packages")
+        sys.path.append("/opt/python")
 
         # Try to import the client's handler module and check the handler
         # function if it is a callable. To do that, add the client's handler

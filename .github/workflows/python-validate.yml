@@ -8,9 +8,12 @@ on:
       - proto/**
 
 jobs:
-  linuxPython39:
-    name: "[Linux] Python 3.9: Lint, Formatting & Unit Tests"
+  validate:
+    name: "[Linux] Python 3: Lint, Formatting & Unit Tests"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ["3.7", "3.8", "3.9"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -40,10 +43,10 @@ jobs:
             packages:
               - 'python/packages/**'
 
-      - name: Install Python 3.9
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python_version }}
 
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:

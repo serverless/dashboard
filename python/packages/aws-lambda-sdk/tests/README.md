@@ -6,7 +6,7 @@ Unit tests are configured to be independent of any external infrastructure (AWS 
 
 ```bash
 cd python/packages/aws-lambda-sdk
-python3.9 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 
 python3 -m pip install --editable .
