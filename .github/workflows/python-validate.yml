@@ -8,8 +8,8 @@ on:
       - proto/**
 
 jobs:
-  linuxPython39:
-    name: "[Linux] Python 3.9: Lint, Formatting & Unit Tests"
+  linuxPython37:
+    name: "[Linux] Python 3.7: Lint, Formatting & Unit Tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -40,10 +40,10 @@ jobs:
             packages:
               - 'python/packages/**'
 
-      - name: Install Python 3.9
+      - name: Install Python 3.7
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.7'
 
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
