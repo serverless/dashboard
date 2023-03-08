@@ -15,6 +15,10 @@ import base64
 logger = logging.getLogger(__name__)
 
 
+def debug_log(msg):
+    return logger.debug(f"⚡ SDK: {msg}")
+
+
 __all__: Final[List[str]] = [
     "instrument",
 ]
@@ -105,7 +109,7 @@ class Instrumenter:
 
             self._report_trace()
             self._clear_root_span()
-            logger.debug(
+            debug_log(
                 "Overhead duration: Internal response:"
                 + f"{int((timer() - end_time) / 1000_000)}ms"
             )
@@ -126,7 +130,7 @@ class Instrumenter:
             request_start_time = timer()
             self.current_invocation_id += 1
             try:
-                logger.debug("Invocation: start")
+                debug_log("Invocation: start")
                 if self.current_invocation_id > 1:
                     self.aws_lambda.start_time = request_start_time
 
@@ -137,7 +141,7 @@ class Instrumenter:
                     )
                 )
 
-                logger.debug(
+                debug_log(
                     "Overhead duration: Internal request:"
                     + f"{int((timer() - request_start_time) / 1000_000)}ms"
                 )
