@@ -25,8 +25,8 @@ const (
 
 var version = "undefined"
 
-func (w wrapper) printTrace(span *rootSpan) error {
-	payload, err := convert(span, w.tags, w.environment)
+func (w wrapper) printTrace(root *rootContext) error {
+	payload, err := convertToPayload(root.spanTreeRoot, root.requestID, w.environment, w.tags)
 	if err != nil {
 		return fmt.Errorf("convert: %w", err)
 	}
