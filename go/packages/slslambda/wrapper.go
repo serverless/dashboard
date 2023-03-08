@@ -101,7 +101,7 @@ func (w wrapper) closeRootSpan(ctx context.Context) error {
 	return nil
 }
 
-func convertToPayload(spanTreeRoot *basicSpan, requestID, environment string, tags tags) (*instrumentationv1.TracePayload, error) {
+func convertToPayload(spanTreeRoot *rootSpan, requestID, environment string, tags tags) (*instrumentationv1.TracePayload, error) {
 	traceID, err := generateTraceID()
 	if err != nil {
 		return nil, fmt.Errorf("generate trace ID: %w", err)

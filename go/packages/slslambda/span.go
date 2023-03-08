@@ -17,7 +17,7 @@ type (
 	rootContext struct {
 		requestID    string
 		invocation   *basicSpan
-		spanTreeRoot *basicSpan
+		spanTreeRoot *rootSpan
 	}
 	errorEvent struct {
 		timestamp time.Time
@@ -30,8 +30,9 @@ type (
 )
 
 func newRootContext(ctx context.Context, initializationStart, invocationStart time.Time) *rootContext {
-	root := newSpanWithStartTime(rootSpanName, rootSpanStartTime(initializationStart, invocationStart))
-	if isColdStart(initializationStart) {
+	isColdStart := isColdStart(initializationStart)
+	root := newRootSpan(initializationStart, invocationStart, isColdStart)
+	if isColdStart {
 		root.children = append(root.children, newInitializationSpan(initializationStart, invocationStart))
 	}
 	invocation := newSpanWithStartTime(invocationSpanName, invocationStart)
@@ -40,14 +41,6 @@ func newRootContext(ctx context.Context, initializationStart, invocationStart ti
 		requestID:    requestID(ctx),
 		invocation:   invocation,
 		spanTreeRoot: root,
-	}
-}
-
-func rootSpanStartTime(initializationStart, invocationStart time.Time) time.Time {
-	if isColdStart(initializationStart) {
-		return initializationStart
-	} else {
-		return invocationStart
 	}
 }
 

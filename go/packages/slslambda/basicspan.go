@@ -46,7 +46,7 @@ func (s *basicSpan) Close() {
 	}
 }
 
-func (s *basicSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID string, tags tags) *instrumentationv1.Span {
+func (s *basicSpan) ToProto(traceID, spanID, parentSpanID []byte, _ string, tags tags) *instrumentationv1.Span {
 	return &instrumentationv1.Span{
 		Id:                spanID,
 		TraceId:           traceID,
@@ -57,22 +57,6 @@ func (s *basicSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID stri
 		CustomTags:        convertCustomTags(s.customTags),
 		Tags: &tagsv1.Tags{
 			OrgId: (*string)(&tags.OrganizationID),
-			Aws: &tagsv1.AwsTags{
-				Lambda: &tagsv1.AwsLambdaTags{
-					Arch:          string(tags.Architecture),
-					LogGroup:      (*string)(&tags.LogGroupName),
-					LogStreamName: (*string)(&tags.LogStreamName),
-					MaxMemory:     aws.Uint32(uint32(tags.MemorySize)),
-					Name:          string(tags.FunctionName),
-					RequestId:     requestID,
-					Version:       string(tags.FunctionVersion),
-				},
-				Region:       (*string)(&tags.AWSRegion),
-				RequestId:    &requestID,
-				ResourceName: (*string)(&tags.FunctionName),
-				LogGroup:     (*string)(&tags.LogGroupName),
-				LogStream:    (*string)(&tags.LogStreamName),
-			},
 		},
 	}
 }

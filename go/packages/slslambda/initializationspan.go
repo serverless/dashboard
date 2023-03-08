@@ -27,7 +27,5 @@ func (is *initializationSpan) Close() {
 }
 
 func (is *initializationSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID string, tags tags) *instrumentationv1.Span {
-	proto := is.basicSpan.ToProto(traceID, spanID, parentSpanID, requestID, tags)
-	proto.Tags.Aws.Lambda.IsColdstart = true
-	return proto
+	return is.basicSpan.ToProto(traceID, spanID, parentSpanID, requestID, tags)
 }
