@@ -955,7 +955,7 @@ the function invocation.
 <a name="serverless-instrumentation-v1-TracePayload"></a>
 
 ### TracePayload
-ATracePayload is a message that will contain any number
+TracePayload is a message that will contain any number
 of Spans plus the global tags required by our Serverless Ingest
 Platform. A TracePayload DOES NOT necessarily mean that it is a
 complete Trace. It may contain only a subset of Spans that
@@ -968,6 +968,7 @@ will make up the complete Trace.
 | spans | [Span](#serverless-instrumentation-v1-Span) | repeated | A list of Spans to be ingest. Ingest does not impose a limit on the number of Spans in a single payload. It is the responsibility of the Span producers to limit the size of payloads based on their own requirements. |
 | events | [Event](#serverless-instrumentation-v1-Event) | repeated | A list of Events to be ingested. Ingest does not impose a limit on the number of Events in a single payload. It is the responsibility of the Event producers to limit the size of paylaods based on their own requirements. |
 | custom_tags | [string](#string) | optional | The optional custom trace tags to be set by the user This is expected to be a JSON object in string format. |
+| is_sampled_out | [bool](#bool) | optional | Whether the trace payload represents sampled out invocation and in result contains just core spans and no events |
 
 
 
