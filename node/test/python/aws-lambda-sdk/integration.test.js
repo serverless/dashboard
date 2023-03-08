@@ -12,6 +12,7 @@ const createCoreResources = require('./lib/create-core-resources');
 const basename = require('./lib/basename');
 const getProcessFunction = require('../../lib/get-process-function');
 const resolveOutcomeEnumValue = require('../../utils/resolve-outcome-enum-value');
+const resolveNanosecondsTimestamp = require('../../utils/resolve-nanoseconds-timestamp');
 const normalizeEvents = require('../../utils/normalize-events');
 const resolveTestVariantsConfig = require('../../lib/resolve-test-variants-config');
 
@@ -58,6 +59,7 @@ describe('Python: integration', function () {
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
 
   let pyProjectToml;
+  let beforeTimestamp;
 
   before(async () => {
     pyProjectToml = toml.parse(
@@ -81,6 +83,9 @@ describe('Python: integration', function () {
         },
       },
     });
+
+    beforeTimestamp = resolveNanosecondsTimestamp() - 2000000000; // 2 seconds ago
+
     for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to
@@ -97,6 +102,7 @@ describe('Python: integration', function () {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
       log.debug('%s test result: %o', testConfig.name, testResult);
+      const afterTimestamp = resolveNanosecondsTimestamp() + 2000000000; // 2 seconds after
       const { expectedOutcome, capturedEvents } = testConfig;
       const { invocationsData } = testResult;
       if (
@@ -129,6 +135,9 @@ describe('Python: integration', function () {
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
             expect(lambdaSpan.startTimeUnixNano).to.equal(initializationSpan.startTimeUnixNano);
             expect(lambdaSpan.endTimeUnixNano).to.equal(invocationSpan.endTimeUnixNano);
+            if (initializationSpan.endTimeUnixNano > invocationSpan.startTimeUnixNano) {
+              throw new Error('Initialization span overlaps invocation span');
+            }
           } else {
             if (!testConfig.hasOrphanedSpans) {
               expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
@@ -146,8 +155,31 @@ describe('Python: integration', function () {
           for (const span of spans) {
             if (span.endTimeUnixNano <= span.startTimeUnixNano) {
               throw new Error(
-                `Span ${span.name} has invalid time range: ${span.startTimeUnixNano} - ${span.endTimeUnixNano}`
+                `Span ${span.name} has invalid time range: ` +
+                  `${span.startTimeUnixNano} - ${span.endTimeUnixNano}`
               );
+            }
+            if (span.startTimeUnixNano < beforeTimestamp) {
+              throw new Error(
+                `Span ${span.name} has invalid start time: ${span.startTimeUnixNano}`
+              );
+            }
+            if (span.endTimeUnixNano > afterTimestamp) {
+              throw new Error(`Span ${span.name} has invalid end time: ${span.endTimeUnixNano}`);
+            }
+            if (!testConfig.hasOrphanedSpans) {
+              if (span.startTimeUnixNano < lambdaSpan.startTimeUnixNano) {
+                throw new Error(
+                  `Span ${span.name} start time is earlier than start time of ` +
+                    `root span: ${span.startTimeUnixNano}`
+                );
+              }
+              if (span.endTimeUnixNano > lambdaSpan.endTimeUnixNano) {
+                throw new Error(
+                  `Span ${span.name} end time is past end time of ` +
+                    `root span: ${span.startTimeUnixNano}`
+                );
+              }
             }
           }
           expect(slsTags).to.deep.equal({

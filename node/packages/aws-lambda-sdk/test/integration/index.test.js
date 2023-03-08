@@ -21,6 +21,7 @@ const getProcessFunction = require('../../../../test/lib/get-process-function');
 const resolveTestVariantsConfig = require('../../../../test/lib/resolve-test-variants-config');
 const resolveDirZipBuffer = require('../../../../test/utils/resolve-dir-zip-buffer');
 const resolveOutcomeEnumValue = require('../../../../test/utils/resolve-outcome-enum-value');
+const resolveNanosecondsTimestamp = require('../../../../test/utils/resolve-nanoseconds-timestamp');
 const normalizeEvents = require('../../../../test/utils/normalize-events');
 const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
 const awsRequest = require('../../../../test/utils/aws-request');
@@ -1790,6 +1791,7 @@ describe('integration', function () {
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
+  let beforeTimestamp;
 
   before(async () => {
     await createCoreResources(coreConfig);
@@ -1807,6 +1809,8 @@ describe('integration', function () {
       },
     });
 
+    beforeTimestamp = resolveNanosecondsTimestamp() - 2000000000; // 2 seconds ago
+
     for (const testConfig of testVariantsConfig) {
       testConfig.deferredResult = processFunction(testConfig, coreConfig).catch((error) => ({
         // As we process result promises sequentially step by step in next turn, allowing them to
@@ -1818,10 +1822,12 @@ describe('integration', function () {
   });
 
   for (const testConfig of testVariantsConfig) {
+    // eslint-disable-next-line no-loop-func
     it(testConfig.name, async () => {
       const testResult = await testConfig.deferredResult;
       if (testResult.error) throw testResult.error;
       log.debug('%s test result: %o', testConfig.name, testResult);
+      const afterTimestamp = resolveNanosecondsTimestamp() + 2000000000; // 2 seconds after
       const { expectedOutcome, capturedEvents } = testConfig;
       const { invocationsData } = testResult;
       if (
@@ -1857,6 +1863,9 @@ describe('integration', function () {
             expect(String(invocationSpan.parentSpanId)).to.equal(String(lambdaSpan.id));
             expect(lambdaSpan.startTimeUnixNano).to.equal(initializationSpan.startTimeUnixNano);
             expect(lambdaSpan.endTimeUnixNano).to.equal(invocationSpan.endTimeUnixNano);
+            if (initializationSpan.endTimeUnixNano > invocationSpan.startTimeUnixNano) {
+              throw new Error('Initialization span overlaps invocation span');
+            }
           } else {
             if (!testConfig.hasOrphanedSpans) {
               expect(spans.map(({ name }) => name).slice(0, 2)).to.deep.equal([
@@ -1874,8 +1883,31 @@ describe('integration', function () {
           for (const span of spans) {
             if (span.endTimeUnixNano <= span.startTimeUnixNano) {
               throw new Error(
-                `Span ${span.name} has invalid time range: ${span.startTimeUnixNano} - ${span.endTimeUnixNano}`
+                `Span ${span.name} has invalid time range: ` +
+                  `${span.startTimeUnixNano} - ${span.endTimeUnixNano}`
               );
+            }
+            if (span.startTimeUnixNano < beforeTimestamp) {
+              throw new Error(
+                `Span ${span.name} has invalid start time: ${span.startTimeUnixNano}`
+              );
+            }
+            if (span.endTimeUnixNano > afterTimestamp) {
+              throw new Error(`Span ${span.name} has invalid end time: ${span.endTimeUnixNano}`);
+            }
+            if (!testConfig.hasOrphanedSpans) {
+              if (span.startTimeUnixNano < lambdaSpan.startTimeUnixNano) {
+                throw new Error(
+                  `Span ${span.name} start time is earlier than start time of ` +
+                    `root span: ${span.startTimeUnixNano}`
+                );
+              }
+              if (span.endTimeUnixNano > lambdaSpan.endTimeUnixNano) {
+                throw new Error(
+                  `Span ${span.name} end time is past end time of ` +
+                    `root span: ${span.startTimeUnixNano}`
+                );
+              }
             }
           }
           expect(slsTags).to.deep.equal({

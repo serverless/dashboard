@@ -9,17 +9,10 @@ from serverless_sdk.span.trace import TraceSpan
 from .base import NAME, __version__
 
 
-def _initialize_logger():
-    logger = logging.getLogger(__name__)
-    logger.addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("⚡ SDK: %(message)s")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    if os.environ.get("SLS_SDK_DEBUG", None):
-        logger.setLevel(logging.DEBUG)
-    return logger
+if os.environ.get("SLS_SDK_DEBUG", None):
+    logger.setLevel(logging.DEBUG)
 
 
 __all__ = [
@@ -54,5 +47,3 @@ class AwsLambdaSdk(ServerlessSdk):
 
 
 serverlessSdk: AwsLambdaSdk = baseSdk
-
-_initialize_logger()

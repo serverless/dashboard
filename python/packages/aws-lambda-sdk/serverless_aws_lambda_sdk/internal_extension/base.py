@@ -1,15 +1,13 @@
 from __future__ import annotations
-
 import logging
 from os import environ
 from pathlib import Path
 from typing import Optional, Tuple
 from importlib import import_module
 import sys
-from timeit import default_timer
+import time
 
 from strenum import StrEnum
-
 from typing_extensions import Final, Self
 
 
@@ -49,24 +47,14 @@ SLS_SDK_DEBUG: Final[Optional[str]] = environ.get(Env.SLS_SDK_DEBUG)
 DEFAULT_TASK_ROOT: Final[str] = "/var/task"
 
 
-def _configure_logger(debug):
-    # Configures module level logger.
+logger = logging.getLogger(__name__)
 
-    logger = logging.getLogger(__name__)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("⚡ SDK: %(message)s")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    return logger
+if SLS_SDK_DEBUG:
+    logger.setLevel(logging.DEBUG)
 
 
-_logger = _configure_logger(SLS_SDK_DEBUG)
-
-
-def timer():
-    return int(default_timer() * 1000000000)
+def debug_log(msg):
+    return logger.debug(f"⚡ SDK: {msg}")
 
 
 def initialize(handler: Optional[str] = HANDLER):
@@ -80,21 +68,21 @@ def initialize(handler: Optional[str] = HANDLER):
         handler (Optional[str], optional): _description_. Defaults to HANDLER.
     """
     try:
-        process_start_time = timer()
+        process_start_time = time.perf_counter_ns()
         environ[Env.PROCESS_START_TIME] = str(process_start_time)
 
         # AWS Lambda Python runtime converts forward slashes to dots.
         handler = handler.replace("/", ".")
 
         if not SLS_ORG_ID:
-            _logger.error(
+            logger.error(
                 "Serverless SDK Warning: "
                 "Cannot instrument function: "
                 'Missing "SLS_ORG_ID" environment variable',
             )
             return
 
-        _logger.debug("Wrapper initialization")
+        debug_log("Wrapper initialization")
 
         task_root = Path(LAMBDA_TASK_ROOT).resolve()
         if not task_root.exists():
@@ -150,12 +138,12 @@ def initialize(handler: Optional[str] = HANDLER):
         environ[Env.ORIGIN_HANDLER] = HANDLER
         environ[Env.HANDLER] = NEW_HANDLER
 
-        end = timer()
+        end = time.perf_counter_ns()
         ms = round((end - process_start_time) / NS_IN_MS)
 
-        _logger.debug(f"Overhead duration: Internal initialization: {ms}ms")
+        debug_log(f"Overhead duration: Internal initialization: {ms}ms")
     except Exception:
-        _logger.exception(
+        logger.exception(
             "Fatal Serverless SDK Error: "
             "Please report at https://github.com/serverless/console/issues: "
             "Internal extension setup failed."
