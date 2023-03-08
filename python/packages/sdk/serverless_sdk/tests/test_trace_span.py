@@ -45,7 +45,7 @@ def test_sub_span(root_span: TraceSpan):
 
 def test_span_init_start_time():
     # given
-    start_time = time.time_ns()
+    start_time = time.perf_counter_ns()
 
     # when
     span = TraceSpan("child", start_time=start_time).close()
@@ -68,7 +68,7 @@ def test_span_init_tags():
 def test_span_init_end_time():
     # given
     span = TraceSpan("child")
-    end_time = time.time_ns()
+    end_time = time.perf_counter_ns()
 
     # when
     span.close(end_time=end_time)
@@ -210,7 +210,7 @@ def test_root_span_reuse():
     del serverless_sdk.span.trace.root_span.end_time
 
     # when
-    span.start_time = time.time_ns()
+    span.start_time = time.perf_counter_ns()
     TraceSpan("otherchild").close()
     serverless_sdk.span.trace.root_span.close()
 

@@ -4,7 +4,6 @@ import logging
 import time
 from typing import List, Optional
 from contextvars import ContextVar
-import json
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
 from ..lib.timing import to_protobuf_epoch_timestamp
@@ -106,7 +105,7 @@ class TraceSpan:
             self.tags.update(tags)
 
     def _set_start_time(self, start_time: Optional[Nanoseconds]):
-        default_start = time.time_ns()
+        default_start = time.perf_counter_ns()
 
         if start_time is not None and not isinstance(start_time, Nanoseconds):
             raise InvalidType("`start_time` must be an integer.")
@@ -147,7 +146,7 @@ class TraceSpan:
 
     def close(self, end_time: Optional[Nanoseconds] = None):
         global root_span, ctx
-        default: Nanoseconds = time.time_ns()
+        default: Nanoseconds = time.perf_counter_ns()
         target_end_time = end_time
 
         if self.end_time is not None:
