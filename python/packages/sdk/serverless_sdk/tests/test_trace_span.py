@@ -1,11 +1,7 @@
 import pytest
-from timeit import default_timer
-import json
+import time
+from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 from serverless_sdk.span.trace import TraceSpan
-
-
-def timer():
-    return int(default_timer() * 1000000000)
 
 
 # root span that lives throughout the test session
@@ -49,7 +45,7 @@ def test_sub_span(root_span: TraceSpan):
 
 def test_span_init_start_time():
     # given
-    start_time = timer()
+    start_time = time.perf_counter_ns()
 
     # when
     span = TraceSpan("child", start_time=start_time).close()
@@ -72,7 +68,7 @@ def test_span_init_tags():
 def test_span_init_end_time():
     # given
     span = TraceSpan("child")
-    end_time = timer()
+    end_time = time.perf_counter_ns()
 
     # when
     span.close(end_time=end_time)
@@ -92,28 +88,6 @@ def test_span_init_input():
     assert span.input == input, "should support `input`"
 
 
-def test_span_stringify_to_json():
-    # given
-    child_span = TraceSpan("child")
-    child_span.tags["foo"] = 12
-    child_span.close()
-
-    # when
-    json_value = json.loads(child_span.toJSON())
-
-    # then
-    assert json_value == {
-        "traceId": child_span.trace_id,
-        "id": child_span.id,
-        "name": child_span.name,
-        "startTime": child_span.start_time,
-        "endTime": child_span.end_time,
-        "input": child_span.input,
-        "output": child_span.output,
-        "tags": child_span.tags,
-    }, "should stringify to JSON"
-
-
 def test_span_protobuf():
     # given
     child_span = TraceSpan("child")
@@ -130,16 +104,16 @@ def test_span_protobuf():
     child_span.close()
 
     # when
-    proto_json = child_span.to_protobuf_dict()
+    proto_dict = child_span.to_protobuf_dict()
 
     # then
-    assert proto_json == {
+    assert proto_dict == {
         "traceId": child_span.trace_id,
         "parentSpanId": child_span.parent_span.id,
         "id": child_span.id,
         "name": child_span.name,
-        "startTimeUnixNano": child_span.start_time,
-        "endTimeUnixNano": child_span.end_time,
+        "startTimeUnixNano": to_protobuf_epoch_timestamp(child_span.start_time),
+        "endTimeUnixNano": to_protobuf_epoch_timestamp(child_span.end_time),
         "input": child_span.input,
         "output": child_span.output,
         "tags": {
@@ -236,7 +210,7 @@ def test_root_span_reuse():
     del serverless_sdk.span.trace.root_span.end_time
 
     # when
-    span.start_time = timer()
+    span.start_time = time.perf_counter_ns()
     TraceSpan("otherchild").close()
     serverless_sdk.span.trace.root_span.close()
 
