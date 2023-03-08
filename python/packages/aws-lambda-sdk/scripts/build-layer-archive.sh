@@ -9,7 +9,7 @@ case $1 in
   *) OUTPUT=$CURRENT_DIR/$1 ;;
 esac
 
-SITE_PACKAGES_DIR=python/lib/python3.9/site-packages
+SITE_PACKAGES_DIR=python
 mkdir -p $DIST/{$SITE_PACKAGES_DIR,sls-sdk-python}
 
 
