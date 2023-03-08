@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.4 (2023-03-08)
+
+### Bug Fixes
+
+- Fix timestamps in trace spans.
+
 ## 0.1.3 (2023-03-07)
 
 ### Bug Fixes
