@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from timeit import default_timer
+import time
 from functools import wraps
 from typing import List
 import logging
@@ -22,10 +22,6 @@ def debug_log(msg):
 __all__: Final[List[str]] = [
     "instrument",
 ]
-
-
-def timer():
-    return int(default_timer() * 1000000000)
 
 
 def _resolve_outcome_enum_value(outcome: str) -> int:
@@ -92,7 +88,7 @@ class Instrumenter:
     def _close_trace(self, outcome: str):
         self.isRootSpanReset = False
         try:
-            end_time = timer()
+            end_time = time.perf_counter_ns()
             self.aws_lambda.tags["aws.lambda.outcome"] = _resolve_outcome_enum_value(
                 outcome
             )
@@ -111,7 +107,7 @@ class Instrumenter:
             self._clear_root_span()
             debug_log(
                 "Overhead duration: Internal response:"
-                + f"{int((timer() - end_time) / 1000_000)}ms"
+                + f"{int((time.perf_counter_ns() - end_time) / 1000_000)}ms"
             )
 
         except Exception:
@@ -127,7 +123,7 @@ class Instrumenter:
     def instrument(self, user_handler: Handler) -> Handler:
         @wraps(user_handler)
         def stub(event, context):
-            request_start_time = timer()
+            request_start_time = time.perf_counter_ns()
             self.current_invocation_id += 1
             try:
                 debug_log("Invocation: start")
@@ -141,10 +137,8 @@ class Instrumenter:
                     )
                 )
 
-                debug_log(
-                    "Overhead duration: Internal request:"
-                    + f"{int((timer() - request_start_time) / 1000_000)}ms"
-                )
+                diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
+                logger.debug("Overhead duration: Internal request:" + f"{diff}ms")
 
             except Exception:
                 logger.exception("Unhandled exception during instrumentation.")
