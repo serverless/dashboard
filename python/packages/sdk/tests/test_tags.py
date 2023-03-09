@@ -7,13 +7,13 @@ from typing import Tuple, Any
 import pytest
 from typing_extensions import Final
 
-from ..base import ValidTags
-from ..exceptions import (
+from serverless_sdk.base import ValidTags
+from serverless_sdk.exceptions import (
     DuplicateTraceSpanName,
     InvalidTraceSpanTagName,
     InvalidTraceSpanTagValue,
 )
-from ..span.tags import ensure_tag_name, ensure_tag_value, Tags
+from serverless_sdk.lib.tags import ensure_tag_name, ensure_tag_value, Tags
 
 
 VALID_NAMES: Final[Tuple[str, ...]] = (
