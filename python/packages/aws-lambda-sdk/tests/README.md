@@ -26,7 +26,52 @@ python3 -m pip install --editable .
 
 ## Integration tests
 
-TODO: Link to integration tests in the node/test/python/aws-lambda-sdk folder.
+Integration tests are run through the node package, using [integration.test.js](/node/test/python/aws-lambda-sdk/integration.test.js).
+
+AWS account is needed to run integration tests, and AWS credentials need to be configured.
+
+In tests, the home folder is mocked, therefore AWS access cannot be reliably set up via the `AWS_PROFILE` variable or any other means that rely on configuration placed in the home folder. That's why credentails should be set through environment variables as listed below. Set the following environment variables before running the test:
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_REGION`
+* `SLS_ORG_ID` (can be set to "test")
+
+Tests create a temporary layer and Lambda resources and remove them after the test is finalized.
+
+All created resourced are named or prefixed with `test-sdk-<testUid>` string, where `testUid` is four characters taken from [local machine id](https://www.npmjs.com/package/node-machine-id) or in case of CI runs a random string. `testUid` string can also be overridden via environment variable `TEST_UID`.
+
+The Python code subject to test, which will be packaged as a lambda layer, should be built in the `python/packages/aws-lambda-sdk/dist` folder. You can choose where to pull the dependencies from, they might be pulled from PyPI repository or you can use dependencies from the local repository.
+
+### A. Build code from PyPI repository
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install serverless-aws-lambda-sdk --target=python/packages/aws-lambda-sdk/dist
+```
+
+### B. Build code from local repository
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install python/packages/sdk --target=python/packages/aws-lambda-sdk/dist
+python3 -m pip install python/packages/sdk-schema --target=python/packages/aws-lambda-sdk/dist
+python3 -m pip install python/packages/aws-lambda-sdk --target=python/packages/aws-lambda-sdk/dist
+```
+
+### C. Build Lambda SDK from local repository, but base SDK from PyPI repository
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install python/packages/aws-lambda-sdk --target=python/packages/aws-lambda-sdk/dist
+```
+
+### Running the tests
+```bash
+cd node
+npm install
+npx mocha test/python/aws-lambda-sdk/integration.test.js
+```
 
 ## Environment variables
 
