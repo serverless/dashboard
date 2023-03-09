@@ -2,7 +2,7 @@
 
 ## AWS Lambda [Serverless Console](https://www.serverless.com/console) SDK for Python
 
-Instruments AWS Lambda functions, propagates traces to the [Serverless Console](https://www.serverless.com/console/docs) and exposes Serverless SDK to the function logic
+Instruments AWS Lambda functions, propagates traces to the [Serverless Console](https://www.serverless.com/console/docs) and exposes Serverless SDK to the function logic.
 
 ### Setup
 
