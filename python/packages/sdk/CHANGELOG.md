@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.2.0 (2023-03-09)
+
+### ⚠ BREAKING CHANGES
+
+- Submodules from `serverless_sdk.span` are moved to `serverless_sdk.lib`
+- Base module logic is moved into `serverless_sdk`
+
+### Maintenance Improvements
+
+- Refactor internal modules to follow similar folder structure to NodeJS SDK.
+- Move tests out of the package code
+
 ## 0.1.4 (2023-03-08)
 
 ### Bug Fixes

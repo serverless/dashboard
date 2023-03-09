@@ -6,7 +6,7 @@ from typing import List, Optional
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
-from ..lib.timing import to_protobuf_epoch_timestamp
+from .timing import to_protobuf_epoch_timestamp
 from ..base import Nanoseconds, TraceId
 from ..exceptions import (
     ClosureOnClosedSpan,

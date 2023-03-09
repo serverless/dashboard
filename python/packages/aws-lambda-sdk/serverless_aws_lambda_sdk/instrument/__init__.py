@@ -138,7 +138,7 @@ class Instrumenter:
                 )
 
                 diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
-                logger.debug("Overhead duration: Internal request:" + f"{diff}ms")
+                debug_log("Overhead duration: Internal request:" + f"{diff}ms")
 
             except Exception:
                 logger.exception("Unhandled exception during instrumentation.")

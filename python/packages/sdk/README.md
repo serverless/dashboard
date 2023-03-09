@@ -23,6 +23,7 @@ pip install serverless-sdk
 ```python
 from serverless_sdk import serverlessSdk
 print(serverlessSdk.name)
+print(serverlessSdk.version)
 ```
 
 ### Setup

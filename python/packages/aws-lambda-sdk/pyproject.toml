@@ -7,14 +7,14 @@ requires = [
 
 [project]
 name = "serverless-aws-lambda-sdk"
-version = "0.1.5"
+version = "0.1.6"
 description = "Serverless AWS Lambda SDK for Python"
 readme = "README.md"
 authors = [{ name = "serverlessinc" }]
 requires-python = ">=3.7"
 dependencies = [
-    "serverless-sdk~=0.1",
-    "serverless-sdk-schema~=0.1",
+    "serverless-sdk~=0.2.0",
+    "serverless-sdk-schema~=0.1.0",
     "strenum~=0.4",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11
 ]

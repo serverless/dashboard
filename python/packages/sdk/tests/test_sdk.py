@@ -3,20 +3,21 @@ from types import MethodType
 
 import pytest
 
-from . import ServerlessSdk, get_params
-from ..base import SLS_ORG_ID
+from . import get_params
+from serverless_sdk import ServerlessSdk
+from serverless_sdk.base import SLS_ORG_ID
 
 
 @pytest.fixture
 def sdk() -> ServerlessSdk:
-    from .. import serverlessSdk
+    from serverless_sdk import serverlessSdk
 
     return serverlessSdk
 
 
 def test_can_import_serverless_sdk():
     try:
-        from .. import serverlessSdk
+        from serverless_sdk import serverlessSdk
 
     except ImportError as e:
         raise AssertionError("Cannot import `serverlessSdk`") from e
@@ -83,7 +84,7 @@ def test_has_create_trace_span_method(sdk: ServerlessSdk):
 
 
 def test_create_trace_span_returns_trace_span(sdk: ServerlessSdk):
-    from ..span.trace import TraceSpan
+    from serverless_sdk.lib.trace import TraceSpan
 
     span = sdk._create_trace_span("name", "input", "output")
 

@@ -4,8 +4,8 @@ import logging
 from typing import Optional
 from serverless_sdk import serverlessSdk as baseSdk
 from .trace_spans.aws_lambda import aws_lambda_span
-from serverless_sdk.sdk.base import ServerlessSdk, TraceSpans
-from serverless_sdk.span.trace import TraceSpan
+from serverless_sdk import ServerlessSdk, TraceSpans
+from serverless_sdk.lib.trace import TraceSpan
 from .base import NAME, __version__
 
 
