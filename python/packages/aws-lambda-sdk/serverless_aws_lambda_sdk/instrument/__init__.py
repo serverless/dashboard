@@ -148,7 +148,7 @@ class Instrumenter:
                 result = user_handler(event, context)
                 self._close_trace("success")
                 return result
-            except Exception:
+            except:
                 self._close_trace("error:handled")
                 raise
 
