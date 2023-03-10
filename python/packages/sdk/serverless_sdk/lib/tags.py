@@ -3,8 +3,7 @@ import re
 from datetime import datetime
 from math import inf, nan
 from re import Pattern
-from typing import Dict, Iterable, List, Mapping, Tuple
-from itertools import chain
+from typing import Dict, List, Mapping, Tuple, Optional
 
 from js_regex import compile
 from typing_extensions import Final, get_args
@@ -23,7 +22,10 @@ RE_C: Final[Pattern] = compile(RE)
 
 class Tags(Dict[str, ValidTags]):
     def __setitem__(self, key: str, value: ValidTags):
-        name = ensure_tag_name(key, key)
+        if value is None:
+            return
+
+        name = ensure_tag_name(key)
         value = ensure_tag_value(name, value)
 
         if name not in self:
@@ -38,20 +40,12 @@ class Tags(Dict[str, ValidTags]):
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
-    def update(self, mapping: Mapping, **kwargs) -> None:
-        items: Iterable[Tuple[str, ValidTags]]
-
-        if mapping and hasattr(mapping, "items"):
-            items = mapping.items()
-
-        elif mapping:
-            items = chain(mapping, kwargs.items())
-
-        else:
-            items = kwargs.items()  # type: ignore
-
-        for key, value in items:
-            self[key] = value
+    def update(self, mapping: Mapping[str, ValidTags], prefix: Optional[str] = None) -> None:
+        _prefix = ""
+        if prefix:
+            _prefix = ensure_tag_name(prefix) + "."
+        for key, value in mapping.items():
+            self[f"{_prefix}{key}"] = value
 
 
 def is_valid_name(name: str) -> bool:
@@ -69,17 +63,17 @@ def is_date(value: str) -> bool:
         return False
 
 
-def ensure_tag_name(attr: str, name: str) -> ValidTags:
+def ensure_tag_name(name: str) -> str:
     if not isinstance(name, str):
         raise InvalidTraceSpanTagName(
-            f"Invalid trace span tag {attr}: Expected string, received {name}"
+            f"Invalid trace span tag {name}: Expected string, received {name}"
         )
 
     if is_valid_name(name):
         return name
 
     raise InvalidTraceSpanTagName(
-        f"Invalid trace span tag {attr}: {attr.capitalize()} "
+        f"Invalid trace span tag {name}: {name.capitalize()} "
         f"should contain dot separated tokens that follow "
         f'"[a-z][a-z0-9_]*" pattern. Received {name}'
     )

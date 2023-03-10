@@ -20,6 +20,8 @@ from .id import generate_id
 from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
 
+logger = logging.getLogger(__name__)
+
 
 __all__: Final[List[str]] = [
     "TraceSpan",
@@ -176,7 +178,7 @@ class TraceSpan:
 
             if left_over_spans:
                 spans = ", ".join([s.name for s in left_over_spans])
-                logging.error(
+                logger.error(
                     "Serverless SDK Warning: Following trace spans didn't end before"
                     + f" end of lambda invocation: {spans}"
                 )

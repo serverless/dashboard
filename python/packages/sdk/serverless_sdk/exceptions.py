@@ -49,3 +49,7 @@ class ClosureOnClosedSpan(SdkException):
 
 class UnreachableTrace(SdkException):
     pass
+
+
+class FutureEventTimestamp(InvalidValue):
+    pass
