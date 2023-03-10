@@ -7,8 +7,9 @@ from types import SimpleNamespace
 
 from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from .lib import trace
+from .lib.captured_event import CapturedEvent
 from .lib.tags import Tags
-from .lib import error_captured_event as create_error_captured_event
+from .lib.error_captured_event import create as create_error_captured_event
 
 
 __all__: Final[List[str]] = [
@@ -47,10 +48,10 @@ class ServerlessSdk:
     ) -> trace.TraceSpan:
         return trace.TraceSpan(name, input, output, start_time, tags)
 
-    def capture_error(error, **kwargs):
+    def capture_error(self, error, **kwargs) -> CapturedEvent:
         try:
-            create_error_captured_event(error, **kwargs)
-        except:
+            return create_error_captured_event(error, **kwargs)
+        except Exception:
             # TODO report error
             pass
 

@@ -40,7 +40,9 @@ class Tags(Dict[str, ValidTags]):
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
-    def update(self, mapping: Mapping[str, ValidTags], prefix: Optional[str] = None) -> None:
+    def update(
+        self, mapping: Mapping[str, ValidTags], prefix: Optional[str] = None
+    ) -> None:
         _prefix = ""
         if prefix:
             _prefix = ensure_tag_name(prefix) + "."

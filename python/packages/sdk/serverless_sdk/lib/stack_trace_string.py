@@ -1,5 +1,6 @@
 import traceback
 import sys
+import inspect
 from typing import Optional, Any
 
 
@@ -11,5 +12,6 @@ def resolve(error: Optional[Any] = None) -> str:
             )
         )
     else:
-        previous_frame = sys._getframe(1)
-        return traceback.format_stack(f=previous_frame)
+        depth = len(inspect.stack())
+        relevant_frame = sys._getframe(4) if depth > 4 else None
+        return "".join(traceback.format_stack(f=relevant_frame))

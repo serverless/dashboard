@@ -100,8 +100,8 @@ def test_tags_valid_names_and_null_values():
 
 
 def test_tags_update():
-    # given
-    input = { "test": 0, "type": "unit" }
+    # given
+    input = {"test": 0, "type": "unit"}
     tags = Tags()
 
     # when
@@ -112,8 +112,8 @@ def test_tags_update():
 
 
 def test_tags_update_with_prefix():
-    # given
-    input = { "a": 0, "b": 1 }
+    # given
+    input = {"a": 0, "b": 1}
     prefix = "test"
     tags = Tags()
 
@@ -121,7 +121,7 @@ def test_tags_update_with_prefix():
     tags.update(input, prefix=prefix)
 
     # then
-    assert tags == { "test.a": 0, "test.b": 1}
+    assert tags == {"test.a": 0, "test.b": 1}
 
 
 def test_tags_invalid_names_and_values(tags: Tags):

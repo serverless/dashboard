@@ -20,6 +20,7 @@ class CapturedEvent:
     name: str
     timestamp: int
     tags: Tags
+    custom_tags: Tags
     trace_span: Optional[TraceSpan]
 
     def __init__(
@@ -27,6 +28,7 @@ class CapturedEvent:
         name: str,
         timestamp: Optional[int] = None,
         tags: Optional[Tags] = None,
+        custom_tags: Optional[Tags] = None,
         trace_span: Optional[TraceSpan] = TraceSpan.resolve_current_span(),
     ):
         default_timestamp = time.perf_counter_ns()
@@ -40,6 +42,10 @@ class CapturedEvent:
         self.tags = Tags()
         if tags:
             self.tags.update(tags)
+
+        self.custom_tags = Tags()
+        if custom_tags:
+            self.custom_tags.update(custom_tags)
 
         self.trace_span = trace_span
 
@@ -55,4 +61,5 @@ class CapturedEvent:
             "timestampUnixNano": to_protobuf_epoch_timestamp(self.timestamp),
             "eventName": self.name,
             "tags": convert_tags_to_protobuf(self.tags),
+            "customTags": convert_tags_to_protobuf(self.custom_tags),
         }
