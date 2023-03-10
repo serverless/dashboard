@@ -32,6 +32,33 @@ describe('Python: integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
+  const sdkTestConfig = {
+    isCustomResponse: true,
+    test: ({ invocationsData }) => {
+      for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
+        const { spans } = trace;
+        if (index === 0) {
+          expect(spans.map(({ name }) => name)).to.deep.equal([
+            'aws.lambda',
+            'aws.lambda.initialization',
+            'aws.lambda.invocation',
+            'user.span',
+          ]);
+        } else {
+          expect(spans.map(({ name }) => name)).to.deep.equal([
+            'aws.lambda',
+            'aws.lambda.invocation',
+            'user.span',
+          ]);
+        }
+        const payload = JSON.parse(responsePayload.raw);
+        expect(payload.name).to.equal(pyProjectToml.project.name);
+        expect(payload.version).to.equal(pyProjectToml.project.version);
+        expect(payload.rootSpanName).to.equal('aws.lambda');
+      }
+    },
+  };
+
   const useCasesConfig = new Map([
     [
       'success',
@@ -50,6 +77,16 @@ describe('Python: integration', function () {
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
         ]),
         config: { expectedOutcome: 'error:handled' },
+      },
+    ],
+    [
+      'sdk',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+        ]),
+        config: sdkTestConfig,
       },
     ],
   ]);
