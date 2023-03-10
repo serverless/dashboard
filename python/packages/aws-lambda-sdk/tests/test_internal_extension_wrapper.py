@@ -10,7 +10,7 @@ from .fixtures import (
     SUBMODULE_HANDLER,
     SUCCESS_HANDLER,
     ERROR_HANDLER,
-    EXIT_WITH_ERROR_HANDLER,
+    UNHANDLED_ERROR_HANDLER,
     UNIMPORTABLE_HANDLER,
     SYNTAX_ERROR_HANDLER,
 )
@@ -163,9 +163,9 @@ def test_can_instrument_handler_when_handler_exits_with_error(reset_sdk):
     from serverless_aws_lambda_sdk.internal_extension.base import Env
 
     env = os.environ
-    env[Env.HANDLER] = f"{EXIT_WITH_ERROR_HANDLER}.handler"
-    env[Env.HANDLER_MODULE_BASENAME] = f"{EXIT_WITH_ERROR_HANDLER}"
-    env[Env.HANDLER_BASENAME] = f"{EXIT_WITH_ERROR_HANDLER}.handler"
+    env[Env.HANDLER] = f"{UNHANDLED_ERROR_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_BASENAME] = f"{UNHANDLED_ERROR_HANDLER}"
+    env[Env.HANDLER_BASENAME] = f"{UNHANDLED_ERROR_HANDLER}.handler"
     env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
     env[Env.HANDLER_FUNCTION_NAME] = "handler"
     reset_sdk.setattr(os, "environ", env)
