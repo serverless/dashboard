@@ -14,8 +14,7 @@ To get started you need to [add an AWS Account integration](./integrations/aws.m
 and [enable Dev or Prod Instrumentation Mode](./instrumentation.md).
 
 Once instrumentation is enabled, go to the **Metrics** page to view all of your
-AWS Lambda function metrics including durations, invocations, errors, and
-warnings.
+AWS Lambda function metrics including durations, invocations, and event counts.
 
 Currently Metrics are supported on the Node.js 14+ runtime on AWS Lambda only.
 Support for Python and Go runtimes is coming soon.
@@ -67,11 +66,10 @@ on the functions for which the metric applies.
 - **Region** - Region is the specific AWS Region of the Lambda function.
 - **AWS Account** - If you have multiple AWS Account integrations in your
 org, you can filter for metrics for individual AWS Accounts.
-- **Errors & Warnings** - Individual invocations may produce multiple errors
-or warnings. The Serverless SDK may also produce errors and warnings. Filtering
-by Errors & Warnings enables filtering for invocations which include any of the
-selected Error & Warning types. You can find more details about Error & Warning
-types on the [Trace Explorer](./trace-explorer.md).
+- **Events** - Individual invocations may produce multiple errors or warnings.
+The Serverless SDK may also produce errors and warnings. Filtering by Events
+enables filtering for invocations which include any of the selected Event types.
+You can find more details about Event types on the [Trace Explorer](./trace-explorer.md).
 - **Cold start** - Filters for metrics on AWS Lambda invocations that were a
 cold start.
 - **Duration** - Filters based on the AWS Lambda response duration.

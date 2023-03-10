@@ -46,7 +46,7 @@ Next, you'll need to instrument the newly deployed function from the browser.
 
 If you haven't already enabled instrumentation on a function while onboarding,
 you'll need to instrument an AWS Lambda function to enable logs, traces, spans,
-errors, and warnings, in Serverless Console.
+and events, in Serverless Console.
 
 Follow these [Instrumentation steps](./instrumentation.md) to enable
 instrumentation on your function.
@@ -54,8 +54,7 @@ instrumentation on your function.
 ## Add custom instrumentation (Optional)
 
 In addition to the automatic instrumentation of your AWS Lambda functions, you
-can also add custom instrumentation for setting tags, errors, and warnings in
-your code. 
+can also add custom instrumentation for setting tags, and events in your code. 
 
 Use the [Node.js Serverless SDK](./nodejs.md) to add custom instrumentation.
 
@@ -68,9 +67,9 @@ Now you are ready to see your data in Serverless Console.
 If you haven't already, invoke your function.
 
 If you set the Instrumentation Mode to Dev, then you'll see the traces, spans,
-logs, errors, and warnings in DevMode in real-time.
+logs, and events in DevMode in real-time.
 
 You'll also be able to use the Metrics and Explorer to view all the metrics,
-traces, spans, logs, errors, and warnings. This works with both Dev and Prod
+traces, spans, logs, and events. This works with both Dev and Prod
 Instrumentation Modes. After an invocation, it may take 3 minutes to be made
 available on the Metrics and Explorer pages.

@@ -7,20 +7,23 @@ menuOrder: 5
 
 # Node.js SDK
 
-Serverless Console, when Tracing is enabled on an AWS Lambda function, will hook
-into the AWS Lambda runtime environment and automatically report Traces and
-Spans. To capture handled errors, warnings, and to set custom tags, the SDK
-library must be added and instrumented in your AWS Lambda function handler.
+Serverless Console, when Instrumentation is enabled on an AWS Lambda function,
+will hook into the AWS Lambda runtime environment and automatically report
+metrics, traces, spans, and events. To capture handled errors, warnings, and to
+set custom tags, the SDK library must be added and instrumented in your AWS
+Lambda function handler.
 
 ## Key terms
 
-- A **Captured Error** is one instance of an error that is sent to Serverless
-Console. It can be viewed in Dev Mode or the Trace Explorer Details.
+- An **Event** is an instance of an error, warning, or notice that is captured
+as a part of a Trace. Multiple events can be captured in a single trace.
+- A **Captured Error** is a one instance of an error that is sent to Serverless
+Console as an Event. It can be viewed in Dev Mode or the Trace Explorer Details.
 - A **Captured Warning** is one instance of a string in Node.js that is sent to
-Serverless Console, much like a Captured Error.
+Serverless Console as an Event, much like a Captured Error.
 - A **Tag** is a key/value-pair that can be set on the Trace or an individual
-Captured Error or Captured Warning, and sent to Serverless Console. Tags can be
-viewed on the Trace Explorer Details and Dev Mode.
+Event, and sent to Serverless Console. Tags can be viewed on the Trace Explorer
+Details and Dev Mode.
 
 ## Compatibility
 

@@ -104,9 +104,9 @@ the region your function is deployed.
 
 When Dev Mode instrumentation is enabled, an AWS Lambda Layer with an external
 extension is added to the function. This extension is responsible for collecting
-the trace details, logs, errors, and warnings, and forwarding them to Serverless
-Console. This extension enables the real-time logging in DevMode by skipping
-CloudWatch Logs.
+the trace details, logs, events, and forwarding them to Serverless Console.
+This extension enables the real-time logging in DevMode by skipping CloudWatch
+Logs.
 
 Currently this is limited to Node.js 14+ runtime only. 
 
@@ -114,9 +114,9 @@ Currently this is limited to Node.js 14+ runtime only.
 
 When Dev or Prod mode instrumentation is enabled, an AWS Lambda Layer with the
 Serverless SDK is added to the function. The Serverless SDK is responsible for
-auto-instrumentation of traces and spans and collecting errors and warnings.
+auto-instrumentation of traces and spans and collecting events.
 
-The traces and errors/warnings are binary encoded and logged in CloudWatch
+The traces, spans, and events are binary encoded and logged in CloudWatch
 where Serverless Console can consume the events via CloudWatch log subscription
 groups.
 

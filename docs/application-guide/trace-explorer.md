@@ -7,8 +7,8 @@ menuOrder: 5
 
 # Trace Explorer
 
-Traces, Spans, Logs, Errors, and Warnings are captured and made available in
-Trace Explorer for your AWS Lambda functions when [Instrumentation](./instrumentation.md)
+Traces, Spans, Logs, and Events are captured and made available in Trace
+Explorer for your AWS Lambda functions when [Instrumentation](./instrumentation.md)
 is enabled.
 
 Serverless Console provides a set of tools to analyzing Traces.
@@ -25,14 +25,13 @@ performance issues across all of your AWS Lambda functions across your org.
 Filtering allows you to narrow in on particular behavior and time frame for 
 to isolate invocations. You can filter on:
 
-- **Error & Warning Types** - Errors and Warnings can be captured in the trace,
-these includes user defined as well as SDK defined errors and warnings. More
-details on each Error & Warning type is available below.
-- **Error & Warning Messages** - When an Error or Warning is captured
-automatically or manually using the Serverless SDK, a message string is saved
-with the Error/Warning. You can filter for the Traces based on the Error or
-Warning messages that were captured in the trace. Traces are filtered if any of
-the Errors or Warnings in the Trace contained the message string.
+- **Event Types** - Errors and Warnings can be captured in the trace, these
+includes user defined as well as SDK defined errors and warnings. More details
+on each Event type is available below.
+- **Event Messages** - When an Event like an error or warning is captured, a
+message string is saved with the Event. You can filter for the Traces based on
+the Event messages that were captured in the trace. Traces are filtered if any
+of the Events in the Trace contained the message string.
 - **Resource** - You can select the specific resource by AWS ARN, like a
 specific Lambda function.
 - **Environment**, **Namespace** - These properties are inferred from the
@@ -44,7 +43,7 @@ instrumented Lambda functions across AWS accounts and regions; you  can filter
 on any of these properties.
 - **Timeframe** - Any timeframe within the last 30 days can be used.
 
-## Error & Warning Types
+## Event Types
 
 - `ERROR_TYPE_UNCAUGHT` - The Lambda function handler had a fatal error and
 caused the invocation to fail.
@@ -78,14 +77,14 @@ it can't be filtered on Metrics or Trace Explorer.
 ## Trace Details
 
 Trace Details provides a way to look at the details of an individual AWS Lambda
-Invocation trace, including the spans, tags, logs, errors, and warnings.
+Invocation trace, including the spans, tags, logs, and events.
 
 The Trace details are deep-linked so you can easily share the URL with your
 team when collaboratively troubleshooting.
 
 The pane on the right, the Inspector, presents the details about the Trace. If
-a Span, Error, or Warning are selected from the timeline, then the Inspector
-will shows details about the selected item.
+a Span, or an Events are selected from the timeline, then the Inspector will
+show details about the selected item.
 
 The Inspector for the trace will present details about the trace as tags. These
 tags include information about the runtime, like `Cold Start`, `Request ID`,
@@ -109,12 +108,12 @@ logs for the Lambda invocation, select the root span, `aws.lambda`.
 If the logs are structured and formatted as JSON, they will be parsed and
 displayed with pretty formatting.
 
-### Errors & Warnings
+### Events
 
-Errors and Warnings, like Spans, are displayed on the timeline. Errors and
-Warnings can be selected to view the details.
+Events, like Spans, are displayed on the timeline. Events can be selected to
+view the details.
 
-Errors and warnings include a `name`, `message`, and `stack` when available.
-The Node.js SDK captures the stacktraces for all requests when possible. It also
-captures `Error` objects, so the `name`, `message`, and `stack` from the `Error`
-are made available as an error in the Inspector.
+Events include a `name`, `message`, and `stack` when available. The Node.js SDK
+captures the stacktraces for all requests when possible. It also captures
+`Error` objects, so the `name`, `message`, and `stack` from the `Error` are made
+available as an error in the Inspector.
