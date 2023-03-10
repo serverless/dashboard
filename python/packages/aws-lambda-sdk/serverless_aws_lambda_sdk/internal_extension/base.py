@@ -124,7 +124,7 @@ def initialize(handler: Optional[str] = HANDLER):
             handler_function = getattr(module, handler_function_name)
             if not handler_function or not callable(handler_function):
                 return
-        except Exception:
+        except:
             return
         finally:
             if path_modified:

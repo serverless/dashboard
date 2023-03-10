@@ -11,6 +11,7 @@ from .fixtures import (
     SUBMODULE_HANDLER,
     SUCCESS_HANDLER,
     NOT_CALLABLE_HANDLER,
+    UNIMPORTABLE_EXITS_WITH_ERROR_HANDLER,
 )
 
 
@@ -203,6 +204,24 @@ def test_noops_if_handler_is_not_callable(reset_sdk):
 
     env = dict(os.environ)
     env[Env.HANDLER] = f"{NOT_CALLABLE_HANDLER}.handler"
+    reset_sdk.setattr(os, "environ", env)
+
+    # when
+    from serverless_aws_lambda_sdk.internal_extension import base
+
+    importlib.reload(base)
+    base.initialize()
+
+    # then
+    assert Env.ORIGIN_HANDLER not in env
+
+
+def test_noops_if_handler_module_exits_with_error(reset_sdk):
+    # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
+    env = dict(os.environ)
+    env[Env.HANDLER] = f"{UNIMPORTABLE_EXITS_WITH_ERROR_HANDLER}.handler"
     reset_sdk.setattr(os, "environ", env)
 
     # when

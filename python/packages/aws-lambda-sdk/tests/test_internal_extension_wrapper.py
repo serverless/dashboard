@@ -10,6 +10,7 @@ from .fixtures import (
     SUBMODULE_HANDLER,
     SUCCESS_HANDLER,
     ERROR_HANDLER,
+    UNHANDLED_ERROR_HANDLER,
     UNIMPORTABLE_HANDLER,
     SYNTAX_ERROR_HANDLER,
 )
@@ -154,4 +155,26 @@ def test_can_instrument_handler_when_handler_fails(reset_sdk):
     importlib.reload(wrapper)
 
     with pytest.raises(Exception, match=r"Stop"):
+        wrapper.handler({}, {})
+
+
+def test_can_instrument_handler_when_handler_exits_with_error(reset_sdk):
+    # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
+    env = os.environ
+    env[Env.HANDLER] = f"{UNHANDLED_ERROR_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_BASENAME] = f"{UNHANDLED_ERROR_HANDLER}"
+    env[Env.HANDLER_BASENAME] = f"{UNHANDLED_ERROR_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
+    env[Env.HANDLER_FUNCTION_NAME] = "handler"
+    reset_sdk.setattr(os, "environ", env)
+
+    # when
+    from serverless_aws_lambda_sdk.internal_extension import wrapper
+
+    importlib.reload(wrapper)
+
+    # then
+    with pytest.raises(SystemExit, match=r"1"):
         wrapper.handler({}, {})

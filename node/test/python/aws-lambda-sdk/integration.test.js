@@ -80,6 +80,16 @@ describe('Python: integration', function () {
       },
     ],
     [
+      'error_unhandled',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
       'sdk',
       {
         variants: new Map([

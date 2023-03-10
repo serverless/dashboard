@@ -2,12 +2,9 @@ from __future__ import annotations
 from importlib import reload
 import pytest
 from unittest.mock import patch
-from . import compare_handlers, context
+from . import assert_trace_payload, compare_handlers, context
 from serverless_sdk_schema import TracePayload
 import base64
-
-TEST_ORG = "test-org"
-TEST_FUNCTION = "test-function"
 
 
 @pytest.fixture()
@@ -50,10 +47,9 @@ def test_instrument_works_with_all_callables(instrumenter, reset_sdk):
     compare_handlers(example, instrumented)
 
 
-def test_instrument_adds_lambda_trace_spans(instrumenter, reset_sdk):
+def test_instrument_lambda_success(instrumenter, reset_sdk):
     # given
-    def handler(event, context):
-        return context.aws_request_id
+    from .fixtures.lambdas.success import handler
 
     instrumented = instrumenter.instrument(handler)
 
@@ -66,42 +62,12 @@ def test_instrument_adds_lambda_trace_spans(instrumenter, reset_sdk):
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
-    assert [s.name for s in trace_payload.spans] == [
-        "aws.lambda",
-        "aws.lambda.initialization",
-        "aws.lambda.invocation",
-    ]
-    assert trace_payload.sls_tags.org_id == TEST_ORG
-    assert trace_payload.sls_tags.service == TEST_FUNCTION
-    aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
-    assert aws_lambda.tags.aws.lambda_.outcome == 1
-    assert aws_lambda.tags.aws.lambda_.request_id == context.aws_request_id
-
-    aws_lambda_initialization = [
-        x for x in trace_payload.spans if x.name == "aws.lambda.initialization"
-    ][0]
-    aws_lambda_invocation = [
-        x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
-    ][0]
-    assert (
-        aws_lambda_initialization.start_time_unix_nano
-        == aws_lambda.start_time_unix_nano
-    )
-    assert (
-        aws_lambda_invocation.start_time_unix_nano
-        > aws_lambda_initialization.start_time_unix_nano
-    )
-    for span in trace_payload.spans:
-        assert span.start_time_unix_nano < span.end_time_unix_nano
+    assert_trace_payload(trace_payload, 1)
 
 
 def test_instrument_subsequent_calls(instrumenter):
     # given
-    def handler(event, context):
-        import logging
-
-        logging.error("RUNNING ")
-        return context.aws_request_id
+    from .fixtures.lambdas.success import handler
 
     instrumented = instrumenter.instrument(handler)
 
@@ -118,6 +84,8 @@ def test_instrument_subsequent_calls(instrumenter):
 
     # then
     first_trace_payload = TracePayload.FromString(base64.b64decode(first))
+    assert_trace_payload(first_trace_payload, 1)
+
     second_trace_payload = TracePayload.FromString(base64.b64decode(second))
 
     assert [s.name for s in first_trace_payload.spans] == [
@@ -135,3 +103,41 @@ def test_instrument_subsequent_calls(instrumenter):
         second_trace_payload.spans[-1],
     )
     assert aws_lambda.start_time_unix_nano == aws_lambda_invocation.start_time_unix_nano
+
+
+def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
+    # given
+    from .fixtures.lambdas.error_unhandled import handler
+
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        with pytest.raises(SystemExit):
+            instrumented({}, context)
+        serialized = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
+        )
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(trace_payload, 3)
+
+
+def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk):
+    # given
+    from .fixtures.lambdas.error import handler
+
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        with pytest.raises(Exception):
+            instrumented({}, context)
+        serialized = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
+        )
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(trace_payload, 5)

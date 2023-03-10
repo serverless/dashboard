@@ -144,12 +144,16 @@ class Instrumenter:
                 logger.exception("Unhandled exception during instrumentation.")
                 return user_handler(event, context)
 
+            # Invocation of customer code
             try:
                 result = user_handler(event, context)
                 self._close_trace("success")
                 return result
-            except Exception:
-                self._close_trace("error:handled")
+            except BaseException as ex:  # catches all exceptions, including SystemExit.
+                if isinstance(ex, Exception):
+                    self._close_trace("error:handled")
+                else:
+                    self._close_trace("error:unhandled")
                 raise
 
         return stub
