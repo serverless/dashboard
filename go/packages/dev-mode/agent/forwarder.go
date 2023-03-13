@@ -85,8 +85,11 @@ func FindTraceId(logs []LogItem) string {
 			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
 			var devModePayload schema.TracePayload
 			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
-			if traceErr == nil && devModePayload.Spans[0] != nil {
+			if traceErr == nil && devModePayload.Spans != nil && len(devModePayload.Spans) > 0 && devModePayload.Spans[0] != nil {
 				traceId = base64.StdEncoding.EncodeToString(devModePayload.Spans[0].TraceId)
+				break
+			} else if traceErr == nil && devModePayload.Events != nil && len(devModePayload.Events) > 0 && devModePayload.Events[0] != nil {
+				traceId = base64.StdEncoding.EncodeToString(devModePayload.Events[0].TraceId)
 				break
 			}
 		}
