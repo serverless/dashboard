@@ -2,11 +2,11 @@ clean:
 	rm -Rf dist/extension*
 
 build_x86: clean
-	GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/extensions/dev-mode-extension main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/extensions/dev-mode-extension main.go
 	cd dist; zip extension.zip -r extensions/
 
 build_arm64: clean
-	GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o dist/extensions/dev-mode-extension main.go
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/extensions/dev-mode-extension main.go
 	cd dist; zip extension.zip -r extensions/
 
 test:
