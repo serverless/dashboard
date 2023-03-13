@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from .lib import trace
+from .lib.emitter import event_emitter, EventEmitter
 from .lib.tags import Tags
 
 
@@ -24,6 +25,7 @@ class TraceSpans(SimpleNamespace):
 class ServerlessSdk:
     name: Final[str] = __name__
     version: Final[str] = __version__
+    _event_emitter: EventEmitter
 
     trace_spans: TraceSpans
     instrumentation: Final = ...
@@ -32,6 +34,7 @@ class ServerlessSdk:
 
     def __init__(self):
         self.trace_spans = TraceSpans()
+        self._event_emitter = event_emitter
 
     def _initialize(self, org_id: Optional[str] = None):
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
