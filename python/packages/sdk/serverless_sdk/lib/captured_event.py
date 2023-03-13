@@ -29,8 +29,9 @@ class CapturedEvent:
         timestamp: Optional[int] = None,
         tags: Optional[Tags] = None,
         custom_tags: Optional[Tags] = None,
-        trace_span: Optional[TraceSpan] = TraceSpan.resolve_current_span(),
+        trace_span: Optional[TraceSpan] = None,
     ):
+        trace_span = trace_span or TraceSpan.resolve_current_span()
         default_timestamp = time.perf_counter_ns()
         self.name = get_resource_name(name)
         if timestamp and timestamp > default_timestamp:

@@ -1,6 +1,7 @@
 import logging
 import time
 from builtins import type as builtins_type
+from typing import Optional
 from .tags import Tags
 from .captured_event import CapturedEvent
 from .stack_trace_string import resolve as resolve_stack_trace_string
@@ -19,34 +20,36 @@ TYPE_MAP = {
 
 def create(
     error,
-    timestamp=time.perf_counter_ns(),
-    tags: Tags = Tags(),
-    type="handledUser",
+    timestamp: Optional[int] = None,
+    tags: Optional[Tags] = None,
+    type: str = "handledUser",
     name=None,
     stack=None,
 ):
+    timestamp = timestamp or time.perf_counter_ns()
+    tags = tags or Tags()
     captured_event = CapturedEvent(
         "telemetry.error.generated.v1", timestamp=timestamp, custom_tags=tags
     )
-    tags = {
+    _tags = {
         "type": TYPE_MAP[type],
     }
     if isinstance(error, Exception):
-        tags["name"] = builtins_type(error).__name__
-        tags["message"] = str(error)
+        _tags["name"] = builtins_type(error).__name__
+        _tags["message"] = str(error)
     else:
-        tags["name"] = name or builtins_type(error).__name__
-        tags["message"] = str(error)
-    tags["stacktrace"] = stack or resolve_stack_trace_string(error)
-    captured_event.tags.update(tags, prefix="error")
+        _tags["name"] = name or builtins_type(error).__name__
+        _tags["message"] = str(error)
+    _tags["stacktrace"] = stack or resolve_stack_trace_string(error)
+    captured_event.tags.update(_tags, prefix="error")
 
     logging.error(
         {
             "source": "serverlessSdk",
             "type": "ERROR_TYPE_CAUGHT_USER",
-            "name": tags["name"],
-            "message": tags["message"],
-            "stack": tags["stacktrace"],
+            "name": _tags["name"],
+            "message": _tags["message"],
+            "stack": _tags["stacktrace"],
         }
     )
     return captured_event
