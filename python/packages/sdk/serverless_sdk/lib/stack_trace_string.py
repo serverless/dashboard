@@ -5,7 +5,7 @@ from typing import Optional, Any
 
 
 def resolve(error: Optional[Any] = None) -> str:
-    if isinstance(error, Exception):
+    if isinstance(error, BaseException):
         return "".join(
             traceback.format_exception(
                 etype=type(error), value=error, tb=error.__traceback__
@@ -13,5 +13,5 @@ def resolve(error: Optional[Any] = None) -> str:
         )
     else:
         depth = len(inspect.stack())
-        relevant_frame = sys._getframe(4) if depth > 4 else None
+        relevant_frame = sys._getframe(3) if depth > 3 else None
         return "".join(traceback.format_stack(f=relevant_frame))

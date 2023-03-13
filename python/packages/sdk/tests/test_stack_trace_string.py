@@ -38,7 +38,4 @@ def test_resolve_stack_trace_string_from_current_stack():
     stack_trace = func()
 
     # then
-    assert (
-        "result = testfunction"
-        in [line for line in stack_trace.split("\n") if line != ""][-1]
-    )
+    assert "stack_trace = func()" in [line for line in stack_trace.split("  File")][-1]
