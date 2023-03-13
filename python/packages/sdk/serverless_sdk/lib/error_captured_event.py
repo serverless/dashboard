@@ -43,7 +43,7 @@ def create(
     _tags["stacktrace"] = stack or resolve_stack_trace_string(error)
     captured_event.tags.update(_tags, prefix="error")
 
-    logging.error(
+    logger.error(
         {
             "source": "serverlessSdk",
             "type": "ERROR_TYPE_CAUGHT_USER",
