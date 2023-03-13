@@ -1,5 +1,6 @@
 from blinker import Signal
-from typing import Literal, Callable
+from typing import Callable
+from typing_extensions import Literal
 
 EVENT_TYPE = Literal["captured-event", "trace-span-close"]
 
