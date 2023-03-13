@@ -31,6 +31,7 @@ class ServerlessSdk:
     instrumentation: Final = ...
 
     org_id: Optional[str] = None
+    _captured_events: List[CapturedEvent] = []
 
     def __init__(self):
         self.trace_spans = TraceSpans()
@@ -50,7 +51,9 @@ class ServerlessSdk:
 
     def capture_error(self, error, **kwargs) -> CapturedEvent:
         try:
-            return create_error_captured_event(error, **kwargs)
+            _error = create_error_captured_event(error, **kwargs)
+            self._captured_events.append(_error)
+            return _error
         except Exception:
             # TODO report error
             pass

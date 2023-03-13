@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Optional
 import time
+import json
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final
 from .timing import to_protobuf_epoch_timestamp
@@ -62,5 +63,5 @@ class CapturedEvent:
             "timestampUnixNano": to_protobuf_epoch_timestamp(self.timestamp),
             "eventName": self.name,
             "tags": convert_tags_to_protobuf(self.tags),
-            "customTags": convert_tags_to_protobuf(self.custom_tags),
+            "customTags": json.dumps(convert_tags_to_protobuf(self.custom_tags)),
         }
