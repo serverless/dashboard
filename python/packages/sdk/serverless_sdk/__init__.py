@@ -9,8 +9,6 @@ from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from .lib import trace
 from .lib.captured_event import CapturedEvent
 from .lib.tags import Tags
-from .lib.error_captured_event import create as create_error_captured_event
-from .lib.error import report as report_error
 
 
 __all__: Final[List[str]] = [
@@ -24,6 +22,15 @@ class TraceSpans(SimpleNamespace):
         return trace.root_span
 
 
+class ServerlessSdkSettings:
+    disable_captured_events_stdout: bool
+
+    def __init__(self):
+        self.disable_captured_events_stdout = bool(
+            environ.get("SLS_DISABLE_CAPTURED_EVENTS_STDOUT")
+        )
+
+
 class ServerlessSdk:
     name: Final[str] = __name__
     version: Final[str] = __version__
@@ -33,9 +40,11 @@ class ServerlessSdk:
 
     org_id: Optional[str] = None
     _captured_events: List[CapturedEvent] = []
+    _settings: ServerlessSdkSettings
 
     def __init__(self):
         self.trace_spans = TraceSpans()
+        self._settings = ServerlessSdkSettings()
 
     def _initialize(self, org_id: Optional[str] = None):
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
@@ -49,14 +58,6 @@ class ServerlessSdk:
         tags: Optional[Tags] = None,
     ) -> trace.TraceSpan:
         return trace.TraceSpan(name, input, output, start_time, tags)
-
-    def capture_error(self, error, **kwargs) -> CapturedEvent:
-        try:
-            _error = create_error_captured_event(error, **kwargs)
-            self._captured_events.append(_error)
-            return _error
-        except Exception as ex:
-            self._captured_events.append(report_error(ex))
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()

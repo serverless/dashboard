@@ -23,6 +23,7 @@ class CapturedEvent:
     tags: Tags
     custom_tags: Tags
     trace_span: Optional[TraceSpan]
+    origin: Optional[str]
 
     def __init__(
         self,
@@ -31,10 +32,14 @@ class CapturedEvent:
         tags: Optional[Tags] = None,
         custom_tags: Optional[Tags] = None,
         trace_span: Optional[TraceSpan] = None,
+        origin: Optional[str] = None,
     ):
         trace_span = trace_span or TraceSpan.resolve_current_span()
         default_timestamp = time.perf_counter_ns()
         self.name = get_resource_name(name)
+        if origin:
+            self.origin = origin
+
         if timestamp and timestamp > default_timestamp:
             raise FutureEventTimestamp(
                 "Cannot intialize captured event Start time cannot be set in the future"
