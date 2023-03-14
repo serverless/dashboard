@@ -101,6 +101,7 @@ def test_span_protobuf():
     child_span.tags["some.number"] = 123
     child_span.tags["some.strings"] = ["foo", "bar"]
     child_span.tags["some.numbers"] = [12, 23]
+    child_span.custom_tags["elo"] = "marko"
     child_span.close()
 
     # when
@@ -127,6 +128,7 @@ def test_span_protobuf():
                 "numbers": [12, 23],
             },
         },
+        "customTags": {"elo": "marko"},
     }, "should stringify to JSON"
 
 
