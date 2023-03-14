@@ -6,6 +6,7 @@ import pytest
 from . import get_params
 from serverless_sdk import ServerlessSdk
 from serverless_sdk.base import SLS_ORG_ID
+from serverless_sdk.lib.emitter import event_emitter
 
 
 @pytest.fixture
@@ -39,6 +40,11 @@ def test_has_tracespans(sdk: ServerlessSdk):
 
 def test_has_instrumentation(sdk: ServerlessSdk):
     assert hasattr(sdk, "instrumentation")
+
+
+def test_has_event_emitter(sdk: ServerlessSdk):
+    assert hasattr(sdk, "_event_emitter")
+    assert sdk._event_emitter is event_emitter
 
 
 def test_has_initialize_method_with_params(sdk: ServerlessSdk):
