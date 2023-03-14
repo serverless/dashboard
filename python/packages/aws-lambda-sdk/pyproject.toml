@@ -13,7 +13,7 @@ readme = "README.md"
 authors = [{ name = "serverlessinc" }]
 requires-python = ">=3.7"
 dependencies = [
-    "serverless-sdk~=0.2.0",
+    "serverless-sdk~=0.2.1",
     "serverless-sdk-schema~=0.1.0",
     "strenum~=0.4",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11

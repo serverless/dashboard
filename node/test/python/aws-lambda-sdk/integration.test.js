@@ -34,6 +34,7 @@ describe('Python: integration', function () {
 
   const sdkTestConfig = {
     isCustomResponse: true,
+    capturedEvents: [{ name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' }],
     test: ({ invocationsData }) => {
       for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
         const { spans } = trace;
@@ -240,8 +241,24 @@ describe('Python: integration', function () {
             resolveOutcomeEnumValue(expectedOutcome)
           );
           const normalizedEvents = normalizeEvents(events);
-          if (!capturedEvents) expect(normalizedEvents).deep.equal([]);
-          else expect(normalizedEvents).deep.equal(capturedEvents);
+          if (expectedOutcome === 'success') {
+            if (!capturedEvents) expect(normalizedEvents).deep.equal([]);
+          } else {
+            const errorTags = events.find(
+              (event) => event.tags.error && event.tags.error.type === 1
+            ).tags.error;
+            expect(typeof errorTags.message).to.equal('string');
+            expect(typeof errorTags.stacktrace).to.equal('string');
+            if (!capturedEvents) {
+              expect(normalizedEvents).deep.equal([
+                {
+                  name: 'telemetry.error.generated.v1',
+                  type: 'ERROR_TYPE_UNCAUGHT',
+                },
+              ]);
+            }
+          }
+          if (capturedEvents) expect(normalizedEvents).deep.equal(capturedEvents);
         }
       }
 

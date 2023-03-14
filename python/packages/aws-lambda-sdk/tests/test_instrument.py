@@ -1,8 +1,9 @@
 from __future__ import annotations
-from importlib import reload
 import pytest
 from unittest.mock import patch
-from . import assert_trace_payload, compare_handlers, context
+import json
+from . import compare_handlers, context
+from .test_assertions import assert_trace_payload
 from serverless_sdk_schema import TracePayload
 import base64
 
@@ -62,7 +63,15 @@ def test_instrument_lambda_success(instrumenter, reset_sdk):
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
-    assert_trace_payload(trace_payload, 1)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
 
 
 def test_instrument_subsequent_calls(instrumenter):
@@ -84,7 +93,15 @@ def test_instrument_subsequent_calls(instrumenter):
 
     # then
     first_trace_payload = TracePayload.FromString(base64.b64decode(first))
-    assert_trace_payload(first_trace_payload, 1)
+    assert_trace_payload(
+        first_trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
 
     second_trace_payload = TracePayload.FromString(base64.b64decode(second))
 
@@ -105,7 +122,7 @@ def test_instrument_subsequent_calls(instrumenter):
     assert aws_lambda.start_time_unix_nano == aws_lambda_invocation.start_time_unix_nano
 
 
-def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
+def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk):
     # given
     from .fixtures.lambdas.error_unhandled import handler
 
@@ -121,10 +138,18 @@ def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
-    assert_trace_payload(trace_payload, 3)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        3,
+    )
 
 
-def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk):
+def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
     # given
     from .fixtures.lambdas.error import handler
 
@@ -140,4 +165,52 @@ def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk):
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
-    assert_trace_payload(trace_payload, 5)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        5,
+    )
+
+
+def test_instrument_lambda_sdk(instrumenter, reset_sdk):
+    # given
+    from .fixtures.lambdas.sdk import handler
+
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        instrumented({}, context)
+        serialized = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
+        )
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "user.span",
+        ],
+        1,
+    )
+
+    event = trace_payload.events[0]
+    aws_lambda_invocation = [
+        x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
+    ][0]
+    assert event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
+    assert event.event_name == "telemetry.error.generated.v1"
+    assert event.tags.error.type == 2
+    assert event.tags.error.name == "Exception"
+    assert event.tags.error.message == "Captured error"
+    assert event.custom_tags == json.dumps(
+        {"user": {"tag": "example"}, "invocationid": 1}
+    )

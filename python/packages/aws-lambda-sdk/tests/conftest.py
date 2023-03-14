@@ -1,11 +1,7 @@
 import pytest
 import sys
 import importlib
-
-
-TEST_ORG = "test-org"
-TEST_FUNCTION = "test-function"
-TEST_FUNCTION_VERSION = "1"
+from . import TEST_FUNCTION, TEST_FUNCTION_VERSION, TEST_ORG
 
 
 @pytest.fixture()
