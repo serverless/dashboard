@@ -48,7 +48,6 @@ VALID_VALUES: Final[Tuple[ValidTags, ...]] = (
 
 
 INVALID_VALUES: Final[Tuple[Any, ...]] = (
-    None,
     1j,
     inf,
     -inf,
@@ -68,11 +67,11 @@ def tags() -> Tags:
 
 def test_ensure_tag_name():
     for name in VALID_NAMES:
-        assert ensure_tag_name(ATTR, name)
+        assert ensure_tag_name(name)
 
     for name in INVALID_NAMES:
         with pytest.raises(InvalidTraceSpanTagName):
-            ensure_tag_name(ATTR, name)
+            ensure_tag_name(name)
 
 
 def test_ensure_tag_value():
@@ -90,6 +89,39 @@ def test_tags_valid_names_and_values():
 
         for name in VALID_NAMES:
             tags[name] = value
+
+
+def test_tags_valid_names_and_null_values():
+    tags = Tags()
+
+    for name in VALID_NAMES:
+        tags[name] = None
+    assert len(tags) == 0
+
+
+def test_tags_update():
+    # given
+    input = {"test": 0, "type": "unit"}
+    tags = Tags()
+
+    # when
+    tags.update(input)
+
+    # then
+    assert tags == input
+
+
+def test_tags_update_with_prefix():
+    # given
+    input = {"a": 0, "b": 1}
+    prefix = "test"
+    tags = Tags()
+
+    # when
+    tags.update(input, prefix=prefix)
+
+    # then
+    assert tags == {"test.a": 0, "test.b": 1}
 
 
 def test_tags_invalid_names_and_values(tags: Tags):

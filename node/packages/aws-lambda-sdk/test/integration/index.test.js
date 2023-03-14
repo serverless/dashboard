@@ -553,6 +553,20 @@ describe('integration', function () {
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
           [
+            'sampled',
+            {
+              configuration: {
+                Environment: {
+                  Variables: {
+                    SLS_ORG_ID: process.env.SLS_ORG_ID,
+                    SLS_CRASH_ON_SDK_ERROR: '1',
+                    AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-node/exec-wrapper.sh',
+                  },
+                },
+              },
+            },
+          ],
+          [
             'sqs',
             {
               isAsyncInvocation: true,
@@ -1844,12 +1858,9 @@ describe('integration', function () {
             expect(responsePayload.raw).to.equal('"ok"');
           }
         }
-        for (const [
-          index,
-          {
-            trace: { spans, slsTags, events },
-          },
-        ] of invocationsData.entries()) {
+        for (const [index, { trace }] of invocationsData.entries()) {
+          if (!trace) throw new Error('Missing trace payload');
+          const { spans, slsTags, events } = trace;
           const lambdaSpan = spans[0];
           if (index === 0 || expectedOutcome === 'error:unhandled') {
             expect(spans.map(({ name }) => name).slice(0, 3)).to.deep.equal([

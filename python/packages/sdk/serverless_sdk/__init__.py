@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from .lib import trace
 from .lib.emitter import event_emitter, EventEmitter
+from .lib.captured_event import CapturedEvent
 from .lib.tags import Tags
 
 
@@ -22,6 +23,15 @@ class TraceSpans(SimpleNamespace):
         return trace.root_span
 
 
+class ServerlessSdkSettings:
+    disable_captured_events_stdout: bool
+
+    def __init__(self):
+        self.disable_captured_events_stdout = bool(
+            environ.get("SLS_DISABLE_CAPTURED_EVENTS_STDOUT")
+        )
+
+
 class ServerlessSdk:
     name: Final[str] = __name__
     version: Final[str] = __version__
@@ -31,10 +41,13 @@ class ServerlessSdk:
     instrumentation: Final = ...
 
     org_id: Optional[str] = None
+    _captured_events: List[CapturedEvent] = []
+    _settings: ServerlessSdkSettings
 
     def __init__(self):
         self.trace_spans = TraceSpans()
         self._event_emitter = event_emitter
+        self._settings = ServerlessSdkSettings()
 
     def _initialize(self, org_id: Optional[str] = None):
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
