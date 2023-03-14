@@ -24,6 +24,8 @@ pip install serverless-sdk
 from serverless_sdk import serverlessSdk
 print(serverlessSdk.name)
 print(serverlessSdk.version)
+
+serverlessSdk.capture_error(Exception("Unexpected"))
 ```
 
 ### Setup
@@ -41,6 +43,10 @@ _Common options supported by all environments:_
 ###### `SLS_ORG_ID` (or `options.orgId`)
 
 Required setting. Id of your organization in Serverless Console.
+
+##### `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` (or `options.disableCapturedEventsStdout`)
+
+Disable writing captured events registered via `.capture_error` to stdout
 
 ### Instrumentation
 
