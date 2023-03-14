@@ -102,11 +102,45 @@ def test_create_trace_span_returns_trace_span(sdk: ServerlessSdk):
 def test_sdk_exposes_capture_error(sdk: ServerlessSdk):
     # given
     error = Exception("My error")
+    captured = None
+
+    def _captured_event_handler(event):
+        nonlocal captured
+        captured = event
 
     # when
-    captured = sdk.capture_error(error, tags={"user.tag": "somevalue"})
+    sdk._event_emitter.on("captured-event", _captured_event_handler)
+    sdk.capture_error(error, tags={"user.tag": "somevalue"})
 
     # then
     assert captured.tags["error.message"] == "My error"
     assert captured.custom_tags["user.tag"] == "somevalue"
     assert captured.tags["error.type"] == TYPE_MAP["handledUser"]
+
+
+def test_sdk_exposes_set_tag(sdk: ServerlessSdk):
+    # given
+    tag_name = "tag"
+    tag_value = "value"
+
+    # when
+    sdk.set_tag(tag_name, tag_value)
+
+    # then
+    assert sdk._custom_tags[tag_name] == tag_value
+
+
+def test_sdk_set_tag_does_not_crash_on_invalid_input(sdk: ServerlessSdk):
+    # given
+    tag_name = ""
+    tag_value = "value"
+
+    # when
+    failed = False
+    try:
+        sdk.set_tag(tag_name, tag_value)
+    except:
+        failed = True
+
+    # then
+    assert not failed
