@@ -43,6 +43,7 @@ class TraceSpan:
     input: Optional[str] = None
     output: Optional[str] = None
     tags: Tags
+    custom_tags: Tags
     sub_spans: List[Self]
 
     def __init__(
@@ -102,6 +103,7 @@ class TraceSpan:
 
     def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()
+        self.custom_tags = Tags()
 
         if tags is not None:
             self.tags.update(tags)
@@ -213,6 +215,7 @@ class TraceSpan:
             "input": self.input,
             "output": self.output,
             "tags": convert_tags_to_protobuf(self.tags),
+            "customTags": convert_tags_to_protobuf(self.custom_tags),
         }
 
 

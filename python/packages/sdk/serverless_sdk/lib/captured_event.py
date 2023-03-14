@@ -10,6 +10,7 @@ from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
 from .trace import TraceSpan
 from ..exceptions import FutureEventTimestamp
+from .emitter import event_emitter
 
 
 __all__: Final[List[str]] = [
@@ -55,6 +56,7 @@ class CapturedEvent:
             self.custom_tags.update(custom_tags)
 
         self.trace_span = trace_span
+        event_emitter.emit("captured-event", self)
 
     @cached_property
     def id(self) -> str:
