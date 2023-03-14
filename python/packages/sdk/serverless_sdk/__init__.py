@@ -9,6 +9,8 @@ from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from .lib import trace
 from .lib.captured_event import CapturedEvent
 from .lib.tags import Tags
+from .lib.error_captured_event import create as create_error_captured_event
+from .lib.error import report as report_error
 
 
 __all__: Final[List[str]] = [
@@ -58,6 +60,14 @@ class ServerlessSdk:
         tags: Optional[Tags] = None,
     ) -> trace.TraceSpan:
         return trace.TraceSpan(name, input, output, start_time, tags)
+
+    def capture_error(self, error, **kwargs) -> CapturedEvent:
+        try:
+            _error = create_error_captured_event(error, **kwargs)
+            self._captured_events.append(_error)
+            return _error
+        except Exception as ex:
+            self._captured_events.append(report_error(ex))
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()

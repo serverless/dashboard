@@ -5,7 +5,6 @@ from typing import Optional
 from .tags import Tags
 from .captured_event import CapturedEvent
 from .stack_trace_string import resolve as resolve_stack_trace_string
-from .. import serverlessSdk
 
 
 logger = logging.getLogger(__name__)
@@ -47,6 +46,9 @@ def create(
         _tags["message"] = str(error)
     _tags["stacktrace"] = stack or resolve_stack_trace_string(error)
     captured_event.tags.update(_tags, prefix="error")
+
+    # to avoid circular dependency, require inline
+    from .. import serverlessSdk
 
     if (
         origin == "nodeConsole"
