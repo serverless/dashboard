@@ -38,5 +38,5 @@ testpaths = [
 ]
 
 [tool.ruff]
-ignore = ["F401"]
+ignore = ["F401", "E722"]
 #fix = true

@@ -52,9 +52,10 @@ def test_has_initialize_method_with_params(sdk: ServerlessSdk):
     assert "org_id" in params
 
 
-def test_initialize_supports_org_id(sdk: ServerlessSdk):
+def test_initialize_supports_org_id(monkeypatch, sdk: ServerlessSdk):
     org_id: str = "test"
 
+    monkeypatch.delenv("SLS_ORG_ID", raising=False)
     sdk._initialize(org_id=org_id)
     assert sdk.org_id == org_id
 
