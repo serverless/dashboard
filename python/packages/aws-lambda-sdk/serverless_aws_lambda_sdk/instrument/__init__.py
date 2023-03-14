@@ -2,9 +2,10 @@ from __future__ import annotations
 import os
 import time
 from functools import wraps
-from typing import List
+from typing import List, Optional, Any
 import logging
 from typing_extensions import Final
+
 from .. import serverlessSdk
 from ..base import Handler
 from ..trace_spans.aws_lambda import reset as reset_aws_lambda_span
@@ -38,6 +39,7 @@ def _get_payload(payload_dct: dict) -> TracePayload:
     payload = TracePayload()
     payload.from_dict(payload_dct)
     spans = payload_dct["spans"]
+    events = payload_dct["events"]
     for index, span in enumerate(payload.spans):
         span.id = str.encode(spans[index]["id"])
         span.trace_id = str.encode(spans[index]["traceId"])
@@ -45,6 +47,14 @@ def _get_payload(payload_dct: dict) -> TracePayload:
             str.encode(spans[index]["parentSpanId"])
             if spans[index]["parentSpanId"]
             else None
+        )
+    for index, event in enumerate(payload.events):
+        event.id = str.encode(events[index]["id"])
+        event.span_id = (
+            str.encode(events[index]["spanId"]) if events[index]["spanId"] else None
+        )
+        event.trace_id = (
+            str.encode(events[index]["traceId"]) if events[index]["traceId"] else None
         )
     return payload
 
@@ -57,6 +67,7 @@ class Instrumenter:
 
     def __init__(self):
         self.current_invocation_id = 0
+        serverlessSdk._captured_events = []
         serverlessSdk._initialize()
         self.aws_lambda = serverlessSdk.trace_spans.aws_lambda
         if not serverlessSdk.org_id:
@@ -79,19 +90,26 @@ class Instrumenter:
                 },
             },
             "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
+            "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events],
         }
         payload = _get_payload(payload_dct)
         print(
             f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
         )
 
-    def _close_trace(self, outcome: str):
+    def _close_trace(self, outcome: str, outcomeResult: Optional[Any] = None):
         self.isRootSpanReset = False
         try:
             end_time = time.perf_counter_ns()
+            is_error_outcome = outcome.startswith("error:")
+
             self.aws_lambda.tags["aws.lambda.outcome"] = _resolve_outcome_enum_value(
                 outcome
             )
+            if is_error_outcome:
+                serverlessSdk.capture_error(
+                    outcomeResult, type="unhandled", timestamp=end_time
+                )
 
             if not serverlessSdk.trace_spans.aws_lambda_initialization.end_time:
                 serverlessSdk.trace_spans.aws_lambda_initialization.close(
@@ -118,6 +136,7 @@ class Instrumenter:
         del self.aws_lambda.id
         del self.aws_lambda.trace_id
         del self.aws_lambda.end_time
+        serverlessSdk._captured_events = []
         self.isRootSpanReset = True
 
     def instrument(self, user_handler: Handler) -> Handler:
@@ -147,13 +166,13 @@ class Instrumenter:
             # Invocation of customer code
             try:
                 result = user_handler(event, context)
-                self._close_trace("success")
+                self._close_trace("success", result)
                 return result
             except BaseException as ex:  # catches all exceptions, including SystemExit.
                 if isinstance(ex, Exception):
-                    self._close_trace("error:handled")
+                    self._close_trace("error:handled", ex)
                 else:
-                    self._close_trace("error:unhandled")
+                    self._close_trace("error:unhandled", ex)
                 raise
 
         return stub

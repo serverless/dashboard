@@ -1,0 +1,4 @@
+{
+  "cSpell.words": ["runtimes"],
+  "python.analysis.extraPaths": ["./python/packages/sdk"]
+}
