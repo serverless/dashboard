@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.2.1 (2023-03-14)
+
+### Features
+
+- Add `serverlessSdk.capture_events` method, providing a way to report error events
+- Support update of `tags` with a prefix
+
+### Maintenance Improvements
+
+- Event emitter implementation
+
 ## 0.2.0 (2023-03-09)
 
 ### ⚠ BREAKING CHANGES
