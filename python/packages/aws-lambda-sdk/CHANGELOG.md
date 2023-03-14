@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.7 (2023-03-14)
+
+### Features
+
+- Include captured error events in trace
+
+### Bug Fixes
+
+- Catch all customer handler errors, including unhandled errors
+
 ## 0.1.6 (2023-03-09)
 
 ### Bug Fixes
