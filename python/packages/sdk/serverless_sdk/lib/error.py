@@ -1,6 +1,7 @@
 import os
 from builtins import type as builtins_type
 from .stack_trace_string import resolve as resolve_stack_trace_string
+
 from .error_captured_event import create as create_error_captured_event
 import logging
 

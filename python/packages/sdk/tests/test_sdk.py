@@ -6,6 +6,7 @@ import pytest
 from . import get_params
 from serverless_sdk import ServerlessSdk
 from serverless_sdk.base import SLS_ORG_ID
+from serverless_sdk.lib.error_captured_event import TYPE_MAP
 from serverless_sdk.lib.emitter import event_emitter
 
 
@@ -96,3 +97,16 @@ def test_create_trace_span_returns_trace_span(sdk: ServerlessSdk):
     span = sdk._create_trace_span("name", "input", "output")
 
     assert isinstance(span, TraceSpan)
+
+
+def test_sdk_exposes_capture_error(sdk: ServerlessSdk):
+    # given
+    error = Exception("My error")
+
+    # when
+    captured = sdk.capture_error(error, tags={"user.tag": "somevalue"})
+
+    # then
+    assert captured.tags["error.message"] == "My error"
+    assert captured.custom_tags["user.tag"] == "somevalue"
+    assert captured.tags["error.type"] == TYPE_MAP["handledUser"]
