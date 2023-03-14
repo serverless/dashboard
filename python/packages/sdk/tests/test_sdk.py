@@ -6,6 +6,7 @@ import pytest
 from . import get_params
 from serverless_sdk import ServerlessSdk
 from serverless_sdk.base import SLS_ORG_ID
+from serverless_sdk.lib.error_captured_event import TYPE_MAP
 
 
 @pytest.fixture
@@ -102,3 +103,4 @@ def test_sdk_exposes_capture_error(sdk: ServerlessSdk):
     # then
     assert captured.tags["error.message"] == "My error"
     assert captured.custom_tags["user.tag"] == "somevalue"
+    assert captured.tags["error.type"] == TYPE_MAP["handledUser"]
