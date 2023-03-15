@@ -2,13 +2,17 @@ package slslambda
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"reflect"
+
+	"github.com/aws/aws-sdk-go/aws"
+	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
+	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 )
 
-const telemetryErrorGeneratedV1 = "telemetry.error.generated.v1"
+const (
+	telemetryErrorGeneratedV1   = "telemetry.error.generated.v1"
+	telemetryWarningGeneratedV1 = "telemetry.warning.generated.v1"
+)
 
 func convertToProtoEvents(errorEvents []errorEvent, warningEvents []warningEvent, traceID, spanID []byte) ([]*instrumentationv1.Event, error) {
 	var protoEvents []*instrumentationv1.Event
@@ -62,7 +66,7 @@ func convertToProtoWarningEvent(event warningEvent, traceID, spanID []byte) (*in
 		TraceId:           traceID,
 		SpanId:            spanID,
 		TimestampUnixNano: uint64(event.timestamp.UnixNano()),
-		EventName:         telemetryErrorGeneratedV1,
+		EventName:         telemetryWarningGeneratedV1,
 		Tags: &tagsv1.Tags{
 			Warning: &tagsv1.WarningTags{
 				Message: event.message,
