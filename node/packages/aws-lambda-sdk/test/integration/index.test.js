@@ -23,7 +23,7 @@ const resolveDirZipBuffer = require('../../../../test/utils/resolve-dir-zip-buff
 const resolveOutcomeEnumValue = require('../../../../test/utils/resolve-outcome-enum-value');
 const resolveNanosecondsTimestamp = require('../../../../test/utils/resolve-nanoseconds-timestamp');
 const normalizeEvents = require('../../../../test/utils/normalize-events');
-const resolveFileZipBuffer = require('../utils/resolve-file-zip-buffer');
+const resolveFileZipBuffer = require('../../../../test/utils/resolve-file-zip-buffer');
 const awsRequest = require('../../../../test/utils/aws-request');
 const pkgJson = require('../../package');
 
