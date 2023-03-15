@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.0 (2023-03-15)
+
+### Features
+
+- Add `serverlessSdk.set_tag` method, providing a way to set custom tags on the trace.
+
+### ⚠ BREAKING CHANGES
+
+- List of captured events are removed
+
 ## 0.2.1 (2023-03-14)
 
 ### Features
