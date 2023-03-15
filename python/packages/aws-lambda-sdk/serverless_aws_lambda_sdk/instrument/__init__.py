@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import time
+import json
 from functools import wraps
 from typing import List, Optional, Any
 import logging
@@ -91,6 +92,7 @@ class Instrumenter:
             },
             "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
             "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events],
+            "customTags": json.dumps(serverlessSdk._custom_tags),
         }
         payload = _get_payload(payload_dct)
         print(

@@ -21,6 +21,8 @@ def handler(event, context):
         tags={"user.tag": "example", "invocationid": invocation_id},
     )
 
+    sdk.set_tag("user.tag", f"example:{invocation_id}")
+
     return {
         "name": sdk.name,
         "version": sdk.version,

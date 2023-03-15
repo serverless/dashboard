@@ -214,3 +214,4 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
     assert event.custom_tags == json.dumps(
         {"user": {"tag": "example"}, "invocationid": 1}
     )
+    assert trace_payload.custom_tags == json.dumps({"user.tag": "example:1"})
