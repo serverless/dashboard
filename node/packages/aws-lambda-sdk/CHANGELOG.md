@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.8](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.7...@serverless/aws-lambda-sdk@0.14.8) (2023-03-15)
+
+### Features
+
+- Enforce 20% sampling on successful invocations in prod environment ([80a02b4](https://github.com/serverless/console/commit/80a02b44eb8cc6c95d65b29976ca71b23f8d2537))
+
 ### [0.14.7](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.6...@serverless/aws-lambda-sdk@0.14.7) (2023-02-28)
 
 ### Bug Fixes
