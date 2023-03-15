@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 const path = require('path');
-const resolveFileZipBuffer = require('../../utils/resolve-file-zip-buffer');
+const resolveFileZipBuffer = require('../../../../../test/utils/resolve-file-zip-buffer');
 
 const fixturesDirname = path.resolve(__dirname, '../../fixtures/lambdas');
 
