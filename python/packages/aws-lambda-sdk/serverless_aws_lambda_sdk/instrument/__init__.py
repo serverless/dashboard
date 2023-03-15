@@ -143,6 +143,7 @@ class Instrumenter:
         del self.aws_lambda.trace_id
         del self.aws_lambda.end_time
         serverlessSdk._captured_events = []
+        serverlessSdk._custom_tags.clear()
         self.isRootSpanReset = True
 
     def instrument(self, user_handler: Handler) -> Handler:
