@@ -69,6 +69,7 @@ class Instrumenter:
     def __init__(self):
         self.current_invocation_id = 0
         serverlessSdk._captured_events = []
+        serverlessSdk._event_emitter.on("captured-event", self._captured_event_handler)
         serverlessSdk._initialize()
         self.aws_lambda = serverlessSdk.trace_spans.aws_lambda
         if not serverlessSdk.org_id:
@@ -79,6 +80,9 @@ class Instrumenter:
                 + "or pass it with the options\n"
             )
         serverlessSdk.trace_spans.aws_lambda_initialization.close()
+
+    def _captured_event_handler(self, captured_event):
+        serverlessSdk._captured_events.append(captured_event)
 
     def _report_trace(self):
         payload_dct = {

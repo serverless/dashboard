@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-DIST=$(mktemp -d)  # directory to store intermediate artifacts
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+INSTALL_DIR=$SCRIPT_DIR/../dist
+if [ ! -d "$INSTALL_DIR/serverless_aws_lambda_sdk" ]; then
+  echo "Dependencies are not installed. Install dependencies in $INSTALL_DIR and rerun the script."
+  exit 1
+fi
+
 CURRENT_DIR=$(pwd)
 
 case $1 in
@@ -9,12 +15,14 @@ case $1 in
   *) OUTPUT=$CURRENT_DIR/$1 ;;
 esac
 
+if [ -f "$OUTPUT" ]
+then
+    rm $OUTPUT
+fi
+
 SITE_PACKAGES_DIR=python
+DIST=$(mktemp -d)  # directory to store intermediate artifacts
 mkdir -p $DIST/{$SITE_PACKAGES_DIR,sls-sdk-python}
-
-
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-INSTALL_DIR=$SCRIPT_DIR/../dist
 
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/__init__.py $DIST/sls-sdk-python
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/base.py $DIST/sls-sdk-python
