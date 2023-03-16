@@ -53,14 +53,12 @@ describe('Go: integration', function () {
           [
             'go1-x',
             {
-              configuration: { Runtime: 'go1.x' },
               deferredConfiguration: buildZipFile('success', 'amd64'),
             },
           ],
           [
             'provided-al2',
             {
-              configuration: { Runtime: 'provided.al2', Architectures: ['arm64'] },
               deferredConfiguration: buildZipFile('success', 'arm64'),
             },
           ],
