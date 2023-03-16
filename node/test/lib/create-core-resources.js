@@ -91,9 +91,11 @@ module.exports = async (basename, config, options = {}) => {
     config.policyArn = policyArn;
   };
   await Promise.all([
-    Promise.all(
-      Array.from(options.layersConfig, ([name, layerConfig]) => createLayer(name, layerConfig))
-    ),
+    options.layersConfig
+      ? Promise.all(
+          Array.from(options.layersConfig, ([name, layerConfig]) => createLayer(name, layerConfig))
+        )
+      : [],
     createRole(config),
   ]);
 };

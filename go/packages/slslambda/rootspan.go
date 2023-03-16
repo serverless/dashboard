@@ -25,8 +25,8 @@ func newRootSpan(initializationStart, invocationStart time.Time, isColdStart boo
 		isColdStart}
 }
 
-func (rs *rootSpan) Close() {
-	rs.basicSpan.Close()
+func (rs *rootSpan) Close(t ...time.Time) {
+	rs.basicSpan.Close(t...)
 }
 
 func (rs *rootSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID string, tags tags) *instrumentationv1.Span {
@@ -41,6 +41,8 @@ func (rs *rootSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID stri
 			RequestId:     requestID,
 			IsColdstart:   rs.isColdStart,
 			Version:       string(tags.FunctionVersion),
+			// TODO: adjust the outcome accordingly
+			Outcome: tagsv1.AwsLambdaTags_OUTCOME_SUCCESS,
 		},
 		Region:       (*string)(&tags.AWSRegion),
 		RequestId:    &requestID,

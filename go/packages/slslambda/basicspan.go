@@ -35,15 +35,22 @@ func newSpanWithStartTime(name string, start time.Time) *basicSpan {
 	return &basicSpan{name: name, start: start, customTags: map[string]string{}}
 }
 
-func (s *basicSpan) Close() {
+func (s *basicSpan) Close(t ...time.Time) {
 	s.Lock()
 	defer s.Unlock()
 	if s.end.IsZero() {
-		s.end = time.Now()
+		s.end = endTime(t...)
 		for _, child := range s.children {
-			child.Close()
+			child.Close(s.end)
 		}
 	}
+}
+
+func endTime(t ...time.Time) time.Time {
+	if len(t) > 0 {
+		return t[0]
+	}
+	return time.Now()
 }
 
 func (s *basicSpan) ToProto(traceID, spanID, parentSpanID []byte, _ string, tags tags) *instrumentationv1.Span {
