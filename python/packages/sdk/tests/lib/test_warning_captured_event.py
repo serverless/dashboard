@@ -2,8 +2,8 @@ from __future__ import annotations
 from unittest import mock
 from unittest.mock import MagicMock
 import json
-from serverless_sdk.lib.error_captured_event import (
-    create as create_error_captured_event,
+from serverless_sdk.lib.warning_captured_event import (
+    create as create_warning_captured_event,
     logger,
 )
 from serverless_sdk import serverlessSdk
@@ -18,7 +18,7 @@ def assert_protobuf_dict(captured_event, tags, fingerprint=None):
         if captured_event.trace_span
         else None,
         "spanId": captured_event.trace_span.id if captured_event.trace_span else None,
-        "eventName": "telemetry.error.generated.v1",
+        "eventName": "telemetry.warning.generated.v1",
         "timestampUnixNano": to_protobuf_epoch_timestamp(captured_event.timestamp),
         "tags": convert_tags_to_protobuf(captured_event.tags),
         "customTags": json.dumps(convert_tags_to_protobuf(tags)),
@@ -26,48 +26,45 @@ def assert_protobuf_dict(captured_event, tags, fingerprint=None):
     }
 
 
-def test_create_error_captured_event():
+def test_create_warning_captured_event():
     # given
-    error = Exception("Captured error")
+    message = "Warning message"
     tags = {"user.tag": "example"}
     origin = "python-test"
     fingerprint = "foo"
 
     # when
-    with mock.patch.object(logger, "error") as mock_logger:
-        captured_event = create_error_captured_event(
-            error,
+    with mock.patch.object(logger, "warning") as mock_logger:
+        captured_event = create_warning_captured_event(
+            message,
             tags=tags,
             fingerprint=fingerprint,
             origin=origin,
         )
-        mock_logger.assert_called_once_with(
+        mock_logger.call_args[0][0].items() <= dict(
             {
                 "source": "serverlessSdk",
-                "type": "ERROR_TYPE_CAUGHT_USER",
-                "name": "Exception",
-                "message": "Captured error",
-                "stack": "Exception: Captured error\n",
-                "fingerprint": fingerprint,
+                "type": 1,
+                "message": message,
             }
-        )
+        ).items()
 
     # then
     assert_protobuf_dict(captured_event, tags, fingerprint=fingerprint)
 
 
-def test_create_error_captured_event_disabled(monkeypatch):
+def test_create_warning_captured_event_disabled(monkeypatch):
     # given
-    error = Exception("Captured error")
+    message = "Warning message"
     tags = {"user.tag": "example"}
     settings = MagicMock()
     settings.disable_captured_events_stdout = "1"
     monkeypatch.setattr(serverlessSdk, "_settings", settings)
 
     # when
-    with mock.patch.object(logger, "error") as mock_logger:
-        captured_event = create_error_captured_event(
-            error,
+    with mock.patch.object(logger, "warning") as mock_logger:
+        captured_event = create_warning_captured_event(
+            message,
             tags=tags,
         )
         mock_logger.assert_not_called()
@@ -76,16 +73,16 @@ def test_create_error_captured_event_disabled(monkeypatch):
     assert_protobuf_dict(captured_event, tags)
 
 
-def test_create_error_captured_event_from_python_console():
+def test_create_warning_captured_event_from_python_console():
     # given
-    error = Exception("Captured error")
+    message = "Warning message"
     tags = {"user.tag": "example"}
     origin = "pythonConsole"
 
     # when
-    with mock.patch.object(logger, "error") as mock_logger:
-        captured_event = create_error_captured_event(
-            error,
+    with mock.patch.object(logger, "warning") as mock_logger:
+        captured_event = create_warning_captured_event(
+            message,
             tags=tags,
             origin=origin,
         )
@@ -95,16 +92,16 @@ def test_create_error_captured_event_from_python_console():
     assert_protobuf_dict(captured_event, tags)
 
 
-def test_create_error_captured_event_unhandled():
+def test_create_warning_captured_event_sdk_internal():
     # given
-    error = Exception("Captured error")
+    message = "Warning message"
     tags = {"user.tag": "example"}
-    type = "unhandled"
+    type = "sdkInternal"
 
     # when
-    with mock.patch.object(logger, "error") as mock_logger:
-        captured_event = create_error_captured_event(
-            error,
+    with mock.patch.object(logger, "warning") as mock_logger:
+        captured_event = create_warning_captured_event(
+            message,
             tags=tags,
             type=type,
         )

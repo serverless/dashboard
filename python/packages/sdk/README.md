@@ -46,7 +46,7 @@ Required setting. Id of your organization in Serverless Console.
 
 ##### `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` (or `options.disableCapturedEventsStdout`)
 
-Disable writing captured events registered via `.capture_error` to stdout
+Disable writing captured events registered via `.capture_error` and `.capture_warning` to stdout
 
 ### Instrumentation
 
