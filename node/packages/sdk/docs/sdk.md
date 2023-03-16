@@ -31,7 +31,7 @@ Record captured error. Captured error is sent to Serverless Console backend and 
 - `error` - Captured error
 - `options`:
   - `tags` _(object)_ - User tags object. Tag names can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
-  - `fingerprint` _(string)_ - Console UI groups common errors by the _fingerprint_, which by default is derived from the error stack trace. This can be overriden by passing custom `fingeprint` value
+  - `fingerprint` _(string)_ - Console UI groups common errors by the _fingerprint_, which by default is derived from the error stack trace. This can be overriden by passing custom `fingerprint` value
 
 ### `.captureWarning(message[, options])`
 
@@ -40,7 +40,7 @@ Record warning. Captured warning is sent to Serverless Console backend and print
 - `message` - Warning message
 - `options`:
   - `tags` _(object)_ - User tags object. Tag names can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters. Values can be _string_, _boolean_, _number_, Date or Array containing any values of prior listed types
-  - `fingerprint` _(string)_ - Console UI groups common warnings by the _fingerprint_, which by default is derived from its message. This can be overriden by passing custom `fingeprint` value
+  - `fingerprint` _(string)_ - Console UI groups common warnings by the _fingerprint_, which by default is derived from its message. This can be overriden by passing custom `fingerprint` value
 
 ### `.setTag(name, value)`
 
