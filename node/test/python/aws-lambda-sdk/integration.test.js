@@ -37,7 +37,7 @@ describe('Python: integration', function () {
     capturedEvents: [{ name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' }],
     test: ({ invocationsData }) => {
       for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
-        const { spans } = trace;
+        const { spans, customTags } = trace;
         if (index === 0) {
           expect(spans.map(({ name }) => name)).to.deep.equal([
             'aws.lambda',
@@ -56,6 +56,7 @@ describe('Python: integration', function () {
         expect(payload.name).to.equal(pyProjectToml.project.name);
         expect(payload.version).to.equal(pyProjectToml.project.version);
         expect(payload.rootSpanName).to.equal('aws.lambda');
+        expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': `example:${index + 1}` });
       }
     },
   };
