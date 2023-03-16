@@ -10,7 +10,9 @@ from .lib import trace
 from .lib.emitter import event_emitter, EventEmitter
 from .lib.tags import Tags, ValidTags
 from .lib.error_captured_event import create as create_error_captured_event
+from .lib.warning_captured_event import create as create_warning_captured_event
 from .lib.error import report as report_error
+from .lib.warning import report as report_warning
 
 
 __all__: Final[List[str]] = [
@@ -51,6 +53,9 @@ class ServerlessSdk:
         self._settings = ServerlessSdkSettings()
         self._custom_tags = Tags()
 
+        self._report_error = report_error
+        self._report_warning = report_warning
+
     def _initialize(self, org_id: Optional[str] = None):
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
 
@@ -67,6 +72,12 @@ class ServerlessSdk:
     def capture_error(self, error, **kwargs):
         try:
             create_error_captured_event(error, **kwargs)
+        except Exception as ex:
+            report_error(ex)
+
+    def capture_warning(self, message: str, **kwargs):
+        try:
+            create_warning_captured_event(message, **kwargs)
         except Exception as ex:
             report_error(ex)
 

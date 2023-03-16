@@ -36,11 +36,12 @@ def report(error, type: str = "INTERNAL"):
     logger.error(error_data)
 
     try:
-        return create_error_captured_event(
+        create_error_captured_event(
             error_data["message"],
             name=error_data["name"],
             stack=error_data["stack"],
             type="handledSdkUser" if type == "USER" else "handledSdkInternal",
+            origin="pythonConsole",
         )
     except:
         # ignore

@@ -25,6 +25,14 @@ Record captured error. Captured error is sent to Serverless Console backend and 
 - `error` - Captured error
 - `tags` _(object)_ - User tags object. Tag names can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters. Values can be _str_, _bool_, _int_, _float_, _datetime_ or _List_ containing any values of prior listed types
 
+### `.capture_warning(message[, options])`
+
+Record warning. Captured warning is sent to Serverless Console backend and printed to the stdout in structured format (writing to stdout can be disabled with `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` env var)
+
+- `message` - Warning message
+- `tags` _(object)_ - User tags object. Tag names can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters. Values can be _str_, _bool_, _int_, _float_, _datetime_ or _List_ containing any values of prior listed types
+- `fingerprint` _(str)_ - Console UI groups common warnings by the _fingerprint_, which by default is derived from its message. This can be overriden by passing custom `fingerprint` value
+
 ### `.set_tag(name, value)`
 
 Set custom (user defined) trace tag

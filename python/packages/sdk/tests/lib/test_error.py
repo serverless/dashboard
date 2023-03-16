@@ -17,7 +17,7 @@ def test_error_with_exception(monkeypatch):
 
     # when
     with patch.object(logger, "error") as mock_logger:
-        reported_error = report_error(error)
+        report_error(error)
         mock_logger.call_args[0][0].items() <= dict(
             {
                 "source": "serverlessSdk",
@@ -29,12 +29,12 @@ def test_error_with_exception(monkeypatch):
         mock_logger.assert_called_once()
 
     # then
-    assert create_error_captured_event.return_value == reported_error
     create_error_captured_event.assert_called_once_with(
         "Something went wrong",
         name="Exception",
         stack="Exception: Something went wrong\n",
         type="handledSdkInternal",
+        origin="pythonConsole",
     )
 
 
@@ -53,7 +53,7 @@ def test_error_with_custom_object(monkeypatch):
 
     # when
     with patch.object(logger, "error") as mock_logger:
-        reported_error = report_error(error, "USER")
+        report_error(error, "USER")
         mock_logger.call_args[0][0].items() <= dict(
             {
                 "source": "serverlessSdk",
@@ -65,10 +65,9 @@ def test_error_with_custom_object(monkeypatch):
         mock_logger.assert_called_once()
 
     # then
-    assert create_error_captured_event.return_value == reported_error
     create_error_captured_event.assert_called_once()
     create_error_captured_event.assert_called_once_with(
-        str(error), name=ANY, stack=ANY, type="handledSdkUser"
+        str(error), name=ANY, stack=ANY, type="handledSdkUser", origin="pythonConsole"
     )
 
 
