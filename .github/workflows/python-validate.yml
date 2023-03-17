@@ -125,6 +125,7 @@ jobs:
         run: |
           cd ./proto
           source ../python/packages/sdk-schema/.venv/bin/activate
+          buf build
           buf generate --template=buf.gen.python.yaml
 
       - name: Install SDK Schema
