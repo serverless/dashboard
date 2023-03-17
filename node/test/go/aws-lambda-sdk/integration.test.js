@@ -16,7 +16,8 @@ const spawn = require('child-process-ext/spawn');
 const resolveTestVariantsConfig = require('../../lib/resolve-test-variants-config');
 const resolveDirZipBuffer = require('../../utils/resolve-dir-zip-buffer');
 
-const fixturesDirname = path.resolve(__dirname, '../../../../go/packages/slslambda/fixtures');
+const slslambdaDirname = path.resolve(__dirname, '../../../../go/packages/slslambda');
+const fixturesDirname = path.resolve(slslambdaDirname, 'fixtures');
 
 for (const name of ['TEST_EXTERNAL_LAYER_FILENAME']) {
   // In tests, current working directory is mocked,
@@ -31,7 +32,7 @@ describe('Go: integration', function () {
 
   function buildZipFile(functionName, architecture) {
     return async () => {
-      const script = path.resolve(__dirname, 'build-go-binary.sh');
+      const script = path.resolve(slslambdaDirname, 'scripts', 'build-go-binary.sh');
       const moduleDir = path.resolve(fixturesDirname, functionName);
       await spawn(script, [moduleDir, architecture]);
       const outputDir = path.resolve(moduleDir, 'build', architecture);

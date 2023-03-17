@@ -25,10 +25,10 @@ jobs:
           cache-dependency-path: |
             **/pyproject.toml
 
-      - name: Install main project dependencies
+      - name: Install Buf dependencies
         run: |
           cd python/packages/sdk-schema
-          python3 -m pip install .
+          python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
 
       - name: Buf Setup
         uses: bufbuild/buf-setup-action@v1
@@ -41,11 +41,10 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_AUTH_TOKEN }}
         run: |
           cd ./proto
-          python3 -m pip install "betterproto[compiler]"
           buf build
           buf generate --template=buf.gen.python.yaml 
 
           cd ../python/packages/sdk-schema
-          python3 -m pip install --upgrade build twine wheel poethepoet
+          python3 -m pip install --upgrade build twine wheel
           python3 -m build --wheel --sdist .
           twine upload dist/*.tar.gz dist/*.whl

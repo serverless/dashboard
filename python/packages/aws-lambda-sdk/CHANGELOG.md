@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.8 (2023-03-16)
+
+### Features
+
+- Include custom tags in trace
+
+### Maintenance Improvements
+
+- Use event emitter for listening on captured errors
+- Improve lambda layer build script
+
 ## 0.1.7 (2023-03-14)
 
 ### Features

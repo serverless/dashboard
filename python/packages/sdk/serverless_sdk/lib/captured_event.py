@@ -10,6 +10,7 @@ from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
 from .trace import TraceSpan
 from ..exceptions import FutureEventTimestamp
+from .emitter import event_emitter
 
 
 __all__: Final[List[str]] = [
@@ -24,6 +25,7 @@ class CapturedEvent:
     custom_tags: Tags
     trace_span: Optional[TraceSpan]
     origin: Optional[str]
+    custom_fingerprint: Optional[str]
 
     def __init__(
         self,
@@ -33,6 +35,7 @@ class CapturedEvent:
         custom_tags: Optional[Tags] = None,
         trace_span: Optional[TraceSpan] = None,
         origin: Optional[str] = None,
+        custom_fingerprint: Optional[str] = None,
     ):
         trace_span = trace_span or TraceSpan.resolve_current_span()
         default_timestamp = time.perf_counter_ns()
@@ -45,6 +48,7 @@ class CapturedEvent:
                 "Cannot intialize captured event Start time cannot be set in the future"
             )
         self.timestamp = timestamp or default_timestamp
+        self.custom_fingerprint = custom_fingerprint
 
         self.tags = Tags()
         if tags:
@@ -55,6 +59,7 @@ class CapturedEvent:
             self.custom_tags.update(custom_tags)
 
         self.trace_span = trace_span
+        event_emitter.emit("captured-event", self)
 
     @cached_property
     def id(self) -> str:
@@ -69,4 +74,5 @@ class CapturedEvent:
             "eventName": self.name,
             "tags": convert_tags_to_protobuf(self.tags),
             "customTags": json.dumps(convert_tags_to_protobuf(self.custom_tags)),
+            "customFingerprint": self.custom_fingerprint,
         }

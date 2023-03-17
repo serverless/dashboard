@@ -182,35 +182,46 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
 
     instrumented = instrumenter.instrument(handler)
 
-    # when
-    with patch("builtins.print") as mocked_print:
-        instrumented({}, context)
-        serialized = mocked_print.call_args_list[0][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
+    def _test_once(invocation, asserted_spans=[]):
+        # when
+        with patch("builtins.print") as mocked_print:
+            instrumented({}, context)
+            serialized = mocked_print.call_args_list[0][0][0].replace(
+                "SERVERLESS_TELEMETRY.T.", ""
+            )
+
+        # then
+        trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+        if asserted_spans:
+            assert_trace_payload(
+                trace_payload,
+                asserted_spans,
+                1,
+            )
+
+        event = trace_payload.events[0]
+        aws_lambda_invocation = [
+            x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
+        ][0]
+        assert event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
+        assert event.event_name == "telemetry.error.generated.v1"
+        assert event.tags.error.type == 2
+        assert event.tags.error.name == "Exception"
+        assert event.tags.error.message == "Captured error"
+        assert event.custom_tags == json.dumps(
+            {"user": {"tag": "example"}, "invocationid": invocation}
+        )
+        assert trace_payload.custom_tags == json.dumps(
+            {"user.tag": f"example:{invocation}"}
         )
 
-    # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
-    assert_trace_payload(
-        trace_payload,
+    _test_once(
+        1,
         [
             "aws.lambda",
             "aws.lambda.initialization",
             "aws.lambda.invocation",
             "user.span",
         ],
-        1,
     )
-
-    event = trace_payload.events[0]
-    aws_lambda_invocation = [
-        x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
-    ][0]
-    assert event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
-    assert event.event_name == "telemetry.error.generated.v1"
-    assert event.tags.error.type == 2
-    assert event.tags.error.name == "Exception"
-    assert event.tags.error.message == "Captured error"
-    assert event.custom_tags == json.dumps(
-        {"user": {"tag": "example"}, "invocationid": 1}
-    )
+    _test_once(2)

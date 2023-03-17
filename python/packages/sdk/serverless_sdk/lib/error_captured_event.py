@@ -26,6 +26,7 @@ def create(
     name=None,
     stack=None,
     origin: Optional[str] = None,
+    fingerprint: Optional[str] = None,
 ):
     timestamp = timestamp or time.perf_counter_ns()
     tags = tags or Tags()
@@ -34,6 +35,7 @@ def create(
         timestamp=timestamp,
         custom_tags=tags,
         origin=origin,
+        custom_fingerprint=fingerprint,
     )
     _tags = {
         "type": TYPE_MAP[type],
@@ -51,19 +53,20 @@ def create(
     from .. import serverlessSdk
 
     if (
-        origin == "nodeConsole"
+        origin == "pythonConsole"
         or type != "handledUser"
         or serverlessSdk._settings.disable_captured_events_stdout
     ):
         return captured_event
 
-    logger.error(
-        {
-            "source": "serverlessSdk",
-            "type": "ERROR_TYPE_CAUGHT_USER",
-            "name": _tags["name"],
-            "message": _tags["message"],
-            "stack": _tags["stacktrace"],
-        }
-    )
+    error_log_data = {
+        "source": "serverlessSdk",
+        "type": "ERROR_TYPE_CAUGHT_USER",
+        "name": _tags["name"],
+        "message": _tags["message"],
+        "stack": _tags["stacktrace"],
+    }
+    if fingerprint:
+        error_log_data["fingerprint"] = fingerprint
+    logger.error(error_log_data)
     return captured_event

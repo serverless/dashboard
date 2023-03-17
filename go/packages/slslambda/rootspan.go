@@ -32,10 +32,6 @@ func (rs *rootSpan) Close(t ...time.Time) {
 	rs.basicSpan.Close(t...)
 }
 
-func (rs *rootSpan) CloseWithError(err error, t ...time.Time) {
-	rs.basicSpan.Close(t...)
-}
-
 func (rs *rootSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID string, tags tags) *instrumentationv1.Span {
 	proto := rs.basicSpan.ToProto(traceID, spanID, parentSpanID, requestID, tags)
 	proto.Tags.Aws = &tagsv1.AwsTags{

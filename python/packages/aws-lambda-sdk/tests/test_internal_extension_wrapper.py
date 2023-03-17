@@ -24,7 +24,6 @@ HANDLER_MODULE_DIR: Final[str] = str(Path(__file__).parent.resolve())
 def test_raises_exception_when_handler_is_not_set(reset_sdk):
     # given
     from serverless_aws_lambda_sdk.exceptions import HandlerNotFound
-    from serverless_aws_lambda_sdk.internal_extension.base import Env
 
     env = dict(os.environ)
     reset_sdk.setattr(os, "environ", env)
