@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.1 (2023-03-16)
+
+### Features
+
+- Add `serverlessSdk.capture_warning` method, providing a way to report warnings.
+- Add `origin` & `fingerprint` parameters to `serverlessSdk.capture_error`
+
 ## 0.3.0 (2023-03-15)
 
 ### Features
