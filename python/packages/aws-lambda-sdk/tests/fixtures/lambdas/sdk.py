@@ -21,6 +21,11 @@ def handler(event, context):
         tags={"user.tag": "example", "invocationid": invocation_id},
     )
 
+    sdk.capture_warning(
+        "Captured warning",
+        tags={"user.tag": "example", "invocationid": invocation_id},
+    )
+
     sdk.set_tag("user.tag", f"example:{invocation_id}")
 
     return {

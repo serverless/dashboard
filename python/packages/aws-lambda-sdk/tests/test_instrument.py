@@ -198,19 +198,33 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
                 asserted_spans,
                 1,
             )
-
-        event = trace_payload.events[0]
         aws_lambda_invocation = [
             x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
         ][0]
-        assert event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
-        assert event.event_name == "telemetry.error.generated.v1"
-        assert event.tags.error.type == 2
-        assert event.tags.error.name == "Exception"
-        assert event.tags.error.message == "Captured error"
-        assert event.custom_tags == json.dumps(
-            {"user": {"tag": "example"}, "invocationid": invocation}
+
+        error_event = trace_payload.events[0]
+        assert (
+            error_event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
         )
+        assert error_event.event_name == "telemetry.error.generated.v1"
+        assert error_event.tags.error.type == 2
+        assert error_event.tags.error.name == "Exception"
+        assert error_event.tags.error.message == "Captured error"
+        assert error_event.custom_tags == json.dumps(
+            {"user.tag": "example", "invocationid": invocation}
+        )
+
+        warning_event = trace_payload.events[1]
+        assert (
+            warning_event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
+        )
+        assert warning_event.event_name == "telemetry.warning.generated.v1"
+        assert warning_event.tags.warning.type == 1
+        assert warning_event.tags.warning.message == "Captured warning"
+        assert warning_event.custom_tags == json.dumps(
+            {"user.tag": "example", "invocationid": invocation}
+        )
+
         assert trace_payload.custom_tags == json.dumps(
             {"user.tag": f"example:{invocation}"}
         )
