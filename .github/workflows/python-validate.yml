@@ -99,15 +99,6 @@ jobs:
           source .venv/bin/activate
           python3 -m pytest
 
-      - name: Install SDK Schema
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
-        run: |
-          cd python/packages/sdk-schema
-          python3 -m venv .venv
-          source .venv/bin/activate
-          python3 -m pip install poethepoet pytest
-          python3 -m poethepoet install
-
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
@@ -124,17 +115,23 @@ jobs:
       - name: Build Protobufs
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
-          source python/packages/sdk-schema/.venv/bin/activate
           cd ./proto
-          python3 -m pip install "betterproto[compiler]"
-          buf generate --template=buf.gen.python.yaml 
+          buf generate --template=buf.gen.python.yaml
+
+      - name: Install SDK Schema
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          cd python/packages/sdk-schema
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install . pytest
 
       - name: Run SDK Schema unit tests
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
           source .venv/bin/activate
-          python3 -m poethepoet test
+          python3 -m pytest
 
       - name: Install AWS Lambda SDK project and dependencies
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
