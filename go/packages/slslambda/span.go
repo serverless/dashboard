@@ -19,14 +19,6 @@ type (
 		invocation   *basicSpan
 		spanTreeRoot *rootSpan
 	}
-	errorEvent struct {
-		timestamp time.Time
-		error
-	}
-	warningEvent struct {
-		timestamp time.Time
-		message   string
-	}
 )
 
 func newRootContext(ctx context.Context, initializationStart, invocationStart time.Time) *rootContext {
@@ -42,6 +34,16 @@ func newRootContext(ctx context.Context, initializationStart, invocationStart ti
 		invocation:   invocation,
 		spanTreeRoot: root,
 	}
+}
+
+func (rc *rootContext) captureHandledErr(err error) {
+	if err == nil {
+		return
+	}
+	rc.invocation.Lock()
+	defer rc.invocation.Unlock()
+	rc.invocation.errors = append(rc.invocation.errors, newUncaughtError(err, time.Now()))
+	rc.spanTreeRoot.isHandledErr = true
 }
 
 func isColdStart(initializationStart time.Time) bool {

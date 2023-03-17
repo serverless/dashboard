@@ -66,6 +66,26 @@ describe('Go: integration', function () {
         ]),
       },
     ],
+    [
+      'error-handled',
+      {
+        variants: new Map([
+          [
+            'go1-x',
+            {
+              deferredConfiguration: buildZipFile('error-handled', 'amd64'),
+            },
+          ],
+          [
+            'provided-al2',
+            {
+              deferredConfiguration: buildZipFile('error-handled', 'arm64'),
+            },
+          ],
+        ]),
+        config: { expectedOutcome: 'error:handled' },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig, {
@@ -202,7 +222,6 @@ describe('Go: integration', function () {
               (event) => event.tags.error && event.tags.error.type === 1
             ).tags.error;
             expect(typeof errorTags.message).to.equal('string');
-            expect(typeof errorTags.stacktrace).to.equal('string');
             if (!capturedEvents) {
               expect(normalizedEvents).deep.equal([
                 {

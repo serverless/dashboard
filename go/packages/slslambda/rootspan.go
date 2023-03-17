@@ -9,7 +9,8 @@ import (
 
 type rootSpan struct {
 	*basicSpan
-	isColdStart bool
+	isColdStart  bool
+	isHandledErr bool
 }
 
 func (rs *rootSpan) Span() *basicSpan {
@@ -18,11 +19,13 @@ func (rs *rootSpan) Span() *basicSpan {
 
 func newRootSpan(initializationStart, invocationStart time.Time, isColdStart bool) *rootSpan {
 	return &rootSpan{
-		&basicSpan{
+		basicSpan: &basicSpan{
 			name:       rootSpanName,
 			start:      rootSpanStartTime(isColdStart, initializationStart, invocationStart),
 			customTags: map[string]string{}},
-		isColdStart}
+		isColdStart:  isColdStart,
+		isHandledErr: false,
+	}
 }
 
 func (rs *rootSpan) Close(t ...time.Time) {
@@ -41,8 +44,7 @@ func (rs *rootSpan) ToProto(traceID, spanID, parentSpanID []byte, requestID stri
 			RequestId:     requestID,
 			IsColdstart:   rs.isColdStart,
 			Version:       string(tags.FunctionVersion),
-			// TODO: adjust the outcome accordingly
-			Outcome: tagsv1.AwsLambdaTags_OUTCOME_SUCCESS,
+			Outcome:       rs.outcome(),
 		},
 		Region:       (*string)(&tags.AWSRegion),
 		RequestId:    &requestID,
@@ -59,4 +61,11 @@ func rootSpanStartTime(isColdStart bool, initializationStart, invocationStart ti
 	} else {
 		return invocationStart
 	}
+}
+
+func (rs *rootSpan) outcome() tagsv1.AwsLambdaTags_Outcome {
+	if rs.isHandledErr {
+		return tagsv1.AwsLambdaTags_OUTCOME_ERROR_HANDLED
+	}
+	return tagsv1.AwsLambdaTags_OUTCOME_SUCCESS
 }

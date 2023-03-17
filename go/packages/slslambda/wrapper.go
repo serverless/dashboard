@@ -66,12 +66,13 @@ func (w wrapper) Wrap(userHandler lambda.Handler, initializationStart time.Time)
 			}
 		}()
 
-		slsCtx := ctxWithRootSpan(ctx, initializationStart)
+		slsCtx, rootCtx := ctxWithRootSpan(ctx, initializationStart)
 
 		output, userHandlerErr = userHandler.Invoke(slsCtx, payload)
 		userHandlerInvoked = true
 
-		if err := w.closeRootSpan(slsCtx); err != nil {
+		rootCtx.captureHandledErr(userHandlerErr)
+		if err := w.closeRootSpan(rootCtx); err != nil {
 			debugLog("closeRootSpan:", err)
 		}
 
@@ -83,19 +84,15 @@ func (w wrapper) Wrap(userHandler lambda.Handler, initializationStart time.Time)
 	}
 }
 
-func ctxWithRootSpan(ctx context.Context, initializationStart time.Time) context.Context {
+func ctxWithRootSpan(ctx context.Context, initializationStart time.Time) (context.Context, *rootContext) {
 	rootCtx := newRootContext(ctx, initializationStart, time.Now())
 	withRootCtx := context.WithValue(ctx, rootContextKey, rootCtx)
-	return context.WithValue(withRootCtx, currentSpanContextKey, rootCtx.invocation)
+	return context.WithValue(withRootCtx, currentSpanContextKey, rootCtx.invocation), rootCtx
 }
 
-func (w wrapper) closeRootSpan(ctx context.Context) error {
-	root, err := rootFromContext(ctx)
-	if err != nil {
-		return fmt.Errorf("close root span: %w", err)
-	}
-	root.spanTreeRoot.Close()
-	if err := w.printTrace(root); err != nil {
+func (w wrapper) closeRootSpan(rootCtx *rootContext) error {
+	rootCtx.spanTreeRoot.Close()
+	if err := w.printTrace(rootCtx); err != nil {
 		return fmt.Errorf("print trace: %w", err)
 	}
 	return nil
