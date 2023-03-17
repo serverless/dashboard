@@ -86,7 +86,9 @@
     "prettier-check:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier -c",
     "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
     "prettify:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml --base=main -- prettier --write",
-    "test:dev-mode:integration": "mocha \"test/go/dev-mode/test/integration/**/*.test.js\""
+    "test:dev-mode:integration": "mocha \"test/go/dev-mode/test/integration/**/*.test.js\"",
+    "test:aws-lambda-sdk:integration:python": "mocha \"test/python/aws-lambda-sdk/integration.test.js\"",
+    "test:aws-lambda-sdk:integration:go": "mocha \"test/go/aws-lambda-sdk/integration.test.js\""
   },
   "engines": {
     "node": ">=14.0"

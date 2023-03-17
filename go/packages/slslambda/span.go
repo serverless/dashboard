@@ -11,7 +11,7 @@ import (
 type (
 	span interface {
 		Span() *basicSpan
-		Close()
+		Close(...time.Time)
 		ToProto(traceID, spanID, parentSpanID []byte, requestID string, tags tags) *instrumentationv1.Span
 	}
 	rootContext struct {
