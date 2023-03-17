@@ -34,11 +34,16 @@ describe('Python: integration', function () {
 
   const sdkTestConfig = {
     isCustomResponse: true,
-    capturedEvents: [{ name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' }],
+    capturedEvents: [
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+    ],
     test: ({ invocationsData }) => {
       for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
-        const { spans, customTags } = trace;
+        const { spans, events, customTags } = trace;
+        let awsLambdaInvocationSpan;
         if (index === 0) {
+          awsLambdaInvocationSpan = spans[2];
           expect(spans.map(({ name }) => name)).to.deep.equal([
             'aws.lambda',
             'aws.lambda.initialization',
@@ -46,6 +51,7 @@ describe('Python: integration', function () {
             'user.span',
           ]);
         } else {
+          awsLambdaInvocationSpan = spans[1];
           expect(spans.map(({ name }) => name)).to.deep.equal([
             'aws.lambda',
             'aws.lambda.invocation',
@@ -57,6 +63,52 @@ describe('Python: integration', function () {
         expect(payload.version).to.equal(pyProjectToml.project.version);
         expect(payload.rootSpanName).to.equal('aws.lambda');
         expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': `example:${index + 1}` });
+
+        const normalizeEvent = (event) => {
+          event = { ...event };
+          expect(Buffer.isBuffer(event.id)).to.be.true;
+          expect(typeof event.timestampUnixNano).to.equal('number');
+          if (event.tags.error) {
+            delete event.tags.error.stacktrace;
+            if (event.tags.error.message) {
+              event.tags.error.message = event.tags.error.message.split('\n')[0];
+            }
+          }
+          if (event.tags.warning) {
+            delete event.tags.warning.stacktrace;
+          }
+          delete event.id;
+          delete event.timestampUnixNano;
+          event.customTags = JSON.stringify(JSON.parse(event.customTags));
+          return event;
+        };
+        expect(events.map(normalizeEvent)).to.deep.equal([
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.error.generated.v1',
+            customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
+            tags: {
+              error: {
+                name: 'Exception',
+                message: 'Captured error',
+                type: 2,
+              },
+            },
+          },
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.warning.generated.v1',
+            customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
+            tags: {
+              warning: {
+                message: 'Captured warning',
+                type: 1,
+              },
+            },
+          },
+        ]);
       }
     },
   };
