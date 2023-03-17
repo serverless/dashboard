@@ -25,10 +25,10 @@ jobs:
           cache-dependency-path: |
             **/pyproject.toml
 
-      - name: Install main project dependencies
+      - name: Install Buf dependencies
         run: |
           cd python/packages/sdk-schema
-          python3 -m pip install .
+          python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
 
       - name: Buf Setup
         uses: bufbuild/buf-setup-action@v1
