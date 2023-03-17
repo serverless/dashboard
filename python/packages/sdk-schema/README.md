@@ -6,15 +6,25 @@ This is the auto generated Python package from the Serverless Protobufs. Serverl
 To build the sdk-schema package from source, follow these steps:
 
 ```bash
+# cd to the root directory of repo
+python3.9 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
+
 brew install bufbuild/buf/buf
 cd ./proto
 buf build
 buf generate --template=buf.gen.python.yaml
 
 cd ../python/packages/sdk-schema
-python3.9 -m venv .venv
-source .venv/bin/activate
 pip install . --target=./dist
 python -m build --wheel --sdist .
+```
 
+## Unit tests
+To run the unit tests, replace the last two steps of the `Build` step with these:
+
+```bash
+pip install . pytest
+python3 -m pytest
 ```

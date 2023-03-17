@@ -64,7 +64,7 @@ TEST_PAYLOAD: Final[Dict[str, Any]] = {
 
 def test_trace_payload_exported():
     try:
-        from .. import TracePayload
+        from serverless_sdk_schema import TracePayload
 
     except ImportError as e:
         raise AssertionError("TracePayload not exported") from e
@@ -72,14 +72,14 @@ def test_trace_payload_exported():
 
 def test_request_response_exported():
     try:
-        from .. import RequestResponse
+        from serverless_sdk_schema import RequestResponse
 
     except ImportError as e:
         raise AssertionError("RequestResponse not exported") from e
 
 
 def test_trace_payload():
-    from .. import TracePayload
+    from serverless_sdk_schema import TracePayload
 
     payload = TracePayload()
     assert payload.from_dict(TEST_PAYLOAD)
