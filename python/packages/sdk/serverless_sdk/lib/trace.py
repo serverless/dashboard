@@ -6,6 +6,7 @@ from typing import List, Optional
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
+import json
 from .timing import to_protobuf_epoch_timestamp
 from ..base import Nanoseconds, TraceId
 from ..exceptions import (
@@ -215,7 +216,7 @@ class TraceSpan:
             "input": self.input,
             "output": self.output,
             "tags": convert_tags_to_protobuf(self.tags),
-            "customTags": convert_tags_to_protobuf(self.custom_tags),
+            "customTags": json.dumps(self.custom_tags),
         }
 
 

@@ -1,5 +1,6 @@
 import pytest
 import time
+import json
 from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 from serverless_sdk.lib.trace import TraceSpan
 
@@ -128,7 +129,7 @@ def test_span_protobuf():
                 "numbers": [12, 23],
             },
         },
-        "customTags": {"elo": "marko"},
+        "customTags": json.dumps({"elo": "marko"}),
     }, "should stringify to JSON"
 
 
