@@ -10,7 +10,7 @@ def test_captured_event():
     # given
     timestamp = time.perf_counter_ns()
     tags = Tags()
-    tags.update({"foo": "bar"})
+    tags.update({"foo.bar": "baz"})
     event_name = "foo.bar.event"
     fingerprint = "foo_bar"
     origin = "python-test"
@@ -35,7 +35,7 @@ def test_captured_event():
         "timestampUnixNano": to_protobuf_epoch_timestamp(timestamp),
         "eventName": event_name,
         "tags": convert_tags_to_protobuf(captured_event.tags),
-        "customTags": json.dumps(convert_tags_to_protobuf(tags)),
+        "customTags": json.dumps(tags),
         "customFingerprint": fingerprint,
     }
     assert captured_event.origin == origin
