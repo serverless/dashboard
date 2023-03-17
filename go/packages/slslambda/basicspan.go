@@ -16,7 +16,7 @@ type basicSpan struct {
 	end        time.Time
 	children   []span
 	customTags map[string]string
-	errors     []errorEvent
+	errors     []protoEvent
 	warnings   []warningEvent
 
 	// Mutex is needed because the consumer may add data to the span from multiple goroutines.
@@ -76,12 +76,12 @@ func (s *basicSpan) newChild(ctx context.Context, name string) context.Context {
 	return context.WithValue(ctx, currentSpanContextKey, span)
 }
 func (s *basicSpan) captureError(err error) {
+	if err == nil {
+		return
+	}
 	s.Lock()
 	defer s.Unlock()
-	s.errors = append(s.errors, errorEvent{
-		timestamp: time.Now(),
-		error:     err,
-	})
+	s.errors = append(s.errors, newCaughtError(err, time.Now()))
 }
 
 func (s *basicSpan) captureWarning(msg string) {
