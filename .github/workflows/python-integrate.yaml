@@ -66,6 +66,14 @@ jobs:
           source .venv/bin/activate
           python3 -m pytest
 
+      - name: Initialize Python Environment
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          cd python/packages/sdk-schema
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
+
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
@@ -83,21 +91,22 @@ jobs:
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd ./proto
+          source ../python/packages/sdk-schema/.venv/bin/activate
           buf generate --template=buf.gen.python.yaml
 
       - name: Install SDK Schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
-          python3 -m venv .venv
           source .venv/bin/activate
-          python3 -m pip install . pytest
+          python3 -m pip install .
 
       - name: Run SDK Schema unit tests
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
           source .venv/bin/activate
+          python3 -m pip install pytest
           python3 -m pytest
 
       - name: Install AWS Lambda SDK project and dependencies
