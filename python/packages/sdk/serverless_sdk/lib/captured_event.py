@@ -73,6 +73,6 @@ class CapturedEvent:
             "timestampUnixNano": to_protobuf_epoch_timestamp(self.timestamp),
             "eventName": self.name,
             "tags": convert_tags_to_protobuf(self.tags),
-            "customTags": json.dumps(convert_tags_to_protobuf(self.custom_tags)),
+            "customTags": json.dumps(self.custom_tags),
             "customFingerprint": self.custom_fingerprint,
         }

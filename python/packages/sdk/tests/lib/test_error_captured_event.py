@@ -21,7 +21,7 @@ def assert_protobuf_dict(captured_event, tags, fingerprint=None):
         "eventName": "telemetry.error.generated.v1",
         "timestampUnixNano": to_protobuf_epoch_timestamp(captured_event.timestamp),
         "tags": convert_tags_to_protobuf(captured_event.tags),
-        "customTags": json.dumps(convert_tags_to_protobuf(tags)),
+        "customTags": json.dumps(tags),
         "customFingerprint": fingerprint,
     }
 
