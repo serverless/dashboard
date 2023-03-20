@@ -239,3 +239,35 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
         ],
     )
     _test_once(2)
+
+
+@pytest.mark.parametrize("sampled_out", [True, False])
+def test_instrument_sdk_sampled_out(monkeypatch, instrumenter, reset_sdk, sampled_out):
+    # given
+    monkeypatch.setattr("random.random", lambda: 0.9 if sampled_out else 0.1)
+    from .fixtures.lambdas.sdk_sampled_out import handler
+
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        instrumented({}, context)
+        serialized = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
+        )
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ]
+        + (["user.span"] if not sampled_out else []),
+        1,
+    )
+    assert (sampled_out and trace_payload.custom_tags is None) or (
+        not sampled_out and trace_payload.custom_tags is not None
+    )

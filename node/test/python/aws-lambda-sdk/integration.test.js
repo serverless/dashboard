@@ -120,6 +120,20 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          [
+            'sampled',
+            {
+              configuration: {
+                Environment: {
+                  Variables: {
+                    SLS_ORG_ID: process.env.SLS_ORG_ID,
+                    SLS_CRASH_ON_SDK_ERROR: '1',
+                    AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-python/exec_wrapper.py',
+                  },
+                },
+              },
+            },
+          ],
         ]),
       },
     ],

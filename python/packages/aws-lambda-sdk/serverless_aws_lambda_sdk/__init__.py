@@ -33,6 +33,7 @@ TraceSpans.aws_lambda_initialization = next(
 
 
 baseSdk._is_dev_mode = bool(os.environ.get("SLS_DEV_MODE_ORG_ID"))
+baseSdk._is_debug_mode = bool(os.environ.get("SLS_SDK_DEBUG"))
 
 
 class AwsLambdaTraceSpans(TraceSpans):
@@ -44,6 +45,7 @@ class AwsLambdaTraceSpans(TraceSpans):
 class AwsLambdaSdk(ServerlessSdk):
     trace_spans: AwsLambdaTraceSpans
     _is_dev_mode: bool
+    _is_debug_mode: bool
 
 
 serverlessSdk: AwsLambdaSdk = baseSdk

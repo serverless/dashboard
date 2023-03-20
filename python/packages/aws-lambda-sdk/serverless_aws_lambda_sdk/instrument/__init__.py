@@ -6,11 +6,12 @@ from functools import wraps
 from typing import List, Optional, Any
 import logging
 from typing_extensions import Final
-
+import random
 from .. import serverlessSdk
 from ..base import Handler
 from ..trace_spans.aws_lambda import reset as reset_aws_lambda_span
 from serverless_sdk_schema import TracePayload
+from serverless_sdk.lib.trace import TraceSpan
 import base64
 
 
@@ -84,8 +85,41 @@ class Instrumenter:
     def _captured_event_handler(self, captured_event):
         serverlessSdk._captured_events.append(captured_event)
 
-    def _report_trace(self):
+    def _report_trace(self, is_error_outcome: bool):
+        is_sampled_out = (
+            (not is_error_outcome)
+            and (not serverlessSdk._is_debug_mode)
+            and (not serverlessSdk._is_dev_mode)
+            and (
+                not [
+                    e
+                    for e in serverlessSdk._captured_events
+                    if e.name
+                    in [
+                        "telemetry.error.generated.v1",
+                        "telemetry.warning.generated.v1",
+                    ]
+                ]
+            )
+            and random.random() > 0.2
+        )
+
+        def _map_span(span: TraceSpan) -> Optional[TraceSpan]:
+            nonlocal is_sampled_out
+            core_trace_span_names = [
+                "aws.lambda",
+                "aws.lambda.initialization",
+                "aws.lambda.invocation",
+            ]
+            if is_sampled_out and span.name not in core_trace_span_names:
+                return None
+            span_payload = span.to_protobuf_dict()
+            del span_payload["input"]
+            del span_payload["output"]
+            return span_payload
+
         payload_dct = {
+            "isSampledOut": is_sampled_out or None,
             "slsTags": {
                 "orgId": serverlessSdk.org_id,
                 "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
@@ -94,9 +128,13 @@ class Instrumenter:
                     "version": serverlessSdk.version,
                 },
             },
-            "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
-            "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events],
-            "customTags": json.dumps(serverlessSdk._custom_tags),
+            "spans": [s for s in map(_map_span, self.aws_lambda.spans) if s],
+            "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events]
+            if not is_sampled_out
+            else [],
+            "customTags": json.dumps(serverlessSdk._custom_tags)
+            if not is_sampled_out
+            else None,
         }
         payload = _get_payload(payload_dct)
         print(
@@ -127,7 +165,7 @@ class Instrumenter:
 
             self.aws_lambda.close(end_time=end_time)
 
-            self._report_trace()
+            self._report_trace(is_error_outcome)
             self._clear_root_span()
             debug_log(
                 "Overhead duration: Internal response:"
