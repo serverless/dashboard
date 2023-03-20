@@ -2,4 +2,4 @@
 
 _Disable with `SLS_DISABLE_PYTHON_LOG_MONITORING` environment variable_
 
-All `logging.error` invocations are monitored and propagated as [captured errors](../sdk.md#capture_errorerror-tags) to the Serverless Console
+All `logging.error`, `logging.warning` & `logging.warn` invocations are monitored and propagated as [captured errors](../sdk.md#capture_errorerror-tags) to the Serverless Console
