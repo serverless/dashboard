@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import json
 from . import compare_handlers, context
 from .test_assertions import assert_trace_payload
@@ -204,8 +204,19 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
     instrumented = instrumenter.instrument(handler)
 
     def _test_once(invocation, asserted_spans=[]):
+        from logging import Logger
+
+        original_error_logger = Logger.error
+        original_warning_logger = Logger.warning
+
         # when
-        with patch("builtins.print") as mocked_print:
+        with patch("builtins.print") as mocked_print, patch.object(
+            Logger, "error", autospec=True
+        ) as mock_error_logger, patch.object(
+            Logger, "warning", autospec=True
+        ) as mock_warning_logger:
+            mock_error_logger.side_effect = original_error_logger
+            mock_warning_logger.side_effect = original_warning_logger
             instrumented({}, context)
             target_log_prefix = "SERVERLESS_TELEMETRY.T."
             serialized = [
@@ -267,6 +278,9 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
         assert trace_payload.custom_tags == json.dumps(
             {"user.tag": f"example:{invocation}"}
         )
+
+        assert mock_error_logger.call_count == 2
+        assert mock_warning_logger.call_count == 2
 
     _test_once(
         1,
