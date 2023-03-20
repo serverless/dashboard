@@ -80,7 +80,7 @@ def test_create_error_captured_event_from_python_console():
     # given
     error = Exception("Captured error")
     tags = {"user.tag": "example"}
-    origin = "pythonConsole"
+    origin = "pythonLogging"
 
     # when
     with mock.patch.object(logger, "error") as mock_logger:

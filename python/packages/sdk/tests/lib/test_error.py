@@ -34,7 +34,7 @@ def test_error_with_exception(monkeypatch):
         name="Exception",
         stack="Exception: Something went wrong\n",
         type="handledSdkInternal",
-        origin="pythonConsole",
+        origin="pythonLogging",
     )
 
 
@@ -67,7 +67,7 @@ def test_error_with_custom_object(monkeypatch):
     # then
     create_error_captured_event.assert_called_once()
     create_error_captured_event.assert_called_once_with(
-        str(error), name=ANY, stack=ANY, type="handledSdkUser", origin="pythonConsole"
+        str(error), name=ANY, stack=ANY, type="handledSdkUser", origin="pythonLogging"
     )
 
 

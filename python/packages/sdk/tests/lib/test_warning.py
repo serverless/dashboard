@@ -33,5 +33,5 @@ def test_report_warning(monkeypatch):
         "Something went wrong",
         fingerprint=code,
         type="sdkInternal",
-        origin="pythonConsole",
+        origin="pythonLogging",
     )

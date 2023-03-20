@@ -53,7 +53,7 @@ def create(
     from .. import serverlessSdk
 
     if (
-        origin == "pythonConsole"
+        origin == "pythonLogging"
         or type != "handledUser"
         or serverlessSdk._settings.disable_captured_events_stdout
     ):
