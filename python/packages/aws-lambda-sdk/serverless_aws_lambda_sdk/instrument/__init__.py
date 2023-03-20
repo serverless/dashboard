@@ -1,10 +1,10 @@
 from __future__ import annotations
 import os
 import time
+import sys
 import json
 from functools import wraps
 from typing import List, Optional, Any
-import logging
 from typing_extensions import Final
 import random
 from .. import serverlessSdk
@@ -15,11 +15,9 @@ from serverless_sdk.lib.trace import TraceSpan
 import base64
 
 
-logger = logging.getLogger(__name__)
-
-
 def debug_log(msg):
-    return logger.debug(f"⚡ SDK: {msg}")
+    if serverlessSdk._is_debug_mode:
+        print(f"⚡ SDK: {msg}", file=sys.stderr)
 
 
 __all__: Final[List[str]] = [
@@ -142,7 +140,7 @@ class Instrumenter:
         )
 
     def _close_trace(self, outcome: str, outcomeResult: Optional[Any] = None):
-        self.isRootSpanReset = False
+        self.is_root_span_reset = False
         try:
             end_time = time.perf_counter_ns()
             is_error_outcome = outcome.startswith("error:")
@@ -172,8 +170,10 @@ class Instrumenter:
                 + f"{int((time.perf_counter_ns() - end_time) / 1000_000)}ms"
             )
 
-        except Exception:
-            logging.exception("Error while closing the trace.")
+        except Exception as ex:
+            serverlessSdk._report_error(ex)
+            if not self.is_root_span_reset:
+                self._clear_root_span()
 
     def _clear_root_span(self):
         reset_aws_lambda_span()
@@ -182,7 +182,7 @@ class Instrumenter:
         del self.aws_lambda.end_time
         serverlessSdk._captured_events = []
         serverlessSdk._custom_tags.clear()
-        self.isRootSpanReset = True
+        self.is_root_span_reset = True
 
     def instrument(self, user_handler: Handler) -> Handler:
         @wraps(user_handler)
