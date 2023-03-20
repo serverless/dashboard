@@ -76,6 +76,7 @@ def test_initialize_favors_env_var(sdk: ServerlessSdk):
 
     environ[SLS_ORG_ID] = env
 
+    sdk._is_initialized = False
     sdk._initialize(org_id=org_id)
     assert sdk.org_id != org_id
     assert sdk.org_id == env
