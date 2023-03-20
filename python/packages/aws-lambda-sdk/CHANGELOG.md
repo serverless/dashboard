@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.9 (2023-03-20)
+
+### Features
+
+- Enforce 20% sampling on successful invocations in prod environment
+
+### Bug Fixes
+
+- Fix wrapper logging and error reporting
+
+### Maintenance Improvements
+
+- Improve wrapper script to use the current process and not spawn a new process
+- Reduce lambda layer size by upgrading to `serverless-sdk-schema v0.1.1`
+
 ## 0.1.8 (2023-03-16)
 
 ### Features
