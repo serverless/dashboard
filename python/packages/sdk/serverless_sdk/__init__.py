@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import sys
 from os import environ
 from typing import List, Optional
 from typing_extensions import Final
@@ -52,6 +52,7 @@ class ServerlessSdk:
     _settings: ServerlessSdkSettings
     _custom_tags: Tags
     _is_initialized: bool
+    _is_debug_mode: bool
 
     def __init__(self):
         self._is_initialized = False
@@ -67,6 +68,7 @@ class ServerlessSdk:
         if self._is_initialized:
             return
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
+        self._is_debug_mode = bool(environ.get("SLS_SDK_DEBUG"))
         if not self._settings.disable_python_log_monitoring:
             install_logging()
 
@@ -81,6 +83,10 @@ class ServerlessSdk:
         tags: Optional[Tags] = None,
     ) -> trace.TraceSpan:
         return trace.TraceSpan(name, input, output, start_time, tags)
+
+    def _debug_log(self, *args):
+        if self._is_debug_mode:
+            print("⚡ SDK:", *args, file=sys.stderr)
 
     def capture_error(self, error, **kwargs):
         try:
