@@ -176,6 +176,27 @@ def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
     )
 
 
+def _assert_event(
+    event,
+    timestamp,
+    event_name,
+    type,
+    message,
+    custom_tags,
+    error_name=None,
+):
+    assert event.timestamp_unix_nano < timestamp
+    assert event.event_name == event_name
+    if event.tags.error:
+        assert event.tags.error.type == type
+        assert event.tags.error.name == error_name
+        assert event.tags.error.message == message
+    else:
+        assert event.tags.warning.type == type
+        assert event.tags.warning.message == message
+    assert event.custom_tags == json.dumps(custom_tags)
+
+
 def test_instrument_lambda_sdk(instrumenter, reset_sdk):
     # given
     from .fixtures.lambdas.sdk import handler
@@ -186,9 +207,12 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
         # when
         with patch("builtins.print") as mocked_print:
             instrumented({}, context)
-            serialized = mocked_print.call_args_list[0][0][0].replace(
-                "SERVERLESS_TELEMETRY.T.", ""
-            )
+            target_log_prefix = "SERVERLESS_TELEMETRY.T."
+            serialized = [
+                x[0][0]
+                for x in mocked_print.call_args_list
+                if x[0][0].startswith(target_log_prefix)
+            ][0].replace(target_log_prefix, "")
 
         # then
         trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -202,27 +226,42 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
             x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
         ][0]
 
-        error_event = trace_payload.events[0]
-        assert (
-            error_event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
-        )
-        assert error_event.event_name == "telemetry.error.generated.v1"
-        assert error_event.tags.error.type == 2
-        assert error_event.tags.error.name == "Exception"
-        assert error_event.tags.error.message == "Captured error"
-        assert error_event.custom_tags == json.dumps(
-            {"user.tag": "example", "invocationid": invocation}
+        _assert_event(
+            trace_payload.events[0],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.error.generated.v1",
+            2,
+            "Captured error",
+            {"user.tag": "example", "invocationid": invocation},
+            "Exception",
         )
 
-        warning_event = trace_payload.events[1]
-        assert (
-            warning_event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
+        _assert_event(
+            trace_payload.events[1],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.error.generated.v1",
+            2,
+            "My error:",
+            {},
+            "str",
         )
-        assert warning_event.event_name == "telemetry.warning.generated.v1"
-        assert warning_event.tags.warning.type == 1
-        assert warning_event.tags.warning.message == "Captured warning"
-        assert warning_event.custom_tags == json.dumps(
-            {"user.tag": "example", "invocationid": invocation}
+
+        _assert_event(
+            trace_payload.events[2],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.warning.generated.v1",
+            1,
+            "Captured warning",
+            {"user.tag": "example", "invocationid": invocation},
+        )
+
+        _assert_event(
+            trace_payload.events[3],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.warning.generated.v1",
+            1,
+            "Consoled warning 12 True",
+            {},
         )
 
         assert trace_payload.custom_tags == json.dumps(
