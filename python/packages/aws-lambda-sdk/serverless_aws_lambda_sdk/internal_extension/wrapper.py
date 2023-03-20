@@ -60,8 +60,7 @@ def _get_sdk() -> ServerlessSdk:
     try:
         sdk._initialize()
     except Exception as ex:
-        # TODO: call _reportError on sdk
-        logging.error(ex)
+        sdk._report_error(ex)
 
     return sdk
 
@@ -83,14 +82,13 @@ def _get_instrumented_handler() -> Handler:
     _check_original_handler_and_reset_vars()
 
     handler = _get_handler_function()
-    _get_sdk()
+    sdk = _get_sdk()
 
     try:
         instrumenter = Instrumenter()
         return instrumenter.instrument(handler)
     except Exception as ex:
-        # TODO: call _reportError on sdk
-        logging.error(ex)
+        sdk._report_error(ex)
         return handler
 
 

@@ -69,10 +69,11 @@ def initialize(handler: Optional[str] = HANDLER):
         handler = handler.replace("/", ".")
 
         if not SLS_ORG_ID:
-            logger.error(
+            print(
                 "Serverless SDK Warning: "
                 "Cannot instrument function: "
                 'Missing "SLS_ORG_ID" environment variable',
+                file=sys.stderr,
             )
             return
 
@@ -137,8 +138,9 @@ def initialize(handler: Optional[str] = HANDLER):
 
         debug_log(f"Overhead duration: Internal initialization: {ms}ms")
     except Exception:
-        logger.exception(
+        print(
             "Fatal Serverless SDK Error: "
             "Please report at https://github.com/serverless/console/issues: "
-            "Internal extension setup failed."
+            "Internal extension setup failed.",
+            file=sys.stderr,
         )
