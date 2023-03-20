@@ -1,5 +1,4 @@
 from __future__ import annotations
-import logging
 from os import environ
 from pathlib import Path
 from typing import Optional, Tuple
@@ -42,19 +41,14 @@ LAMBDA_TASK_ROOT: Final[Optional[str]] = environ.get(Env.LAMBDA_TASK_ROOT)
 
 # Serverless env vars
 SLS_ORG_ID: Final[Optional[str]] = environ.get(Env.SLS_ORG_ID)
-SLS_SDK_DEBUG: Final[Optional[str]] = environ.get(Env.SLS_SDK_DEBUG)
+_is_debug_mode: Final[bool] = bool(environ.get(Env.SLS_SDK_DEBUG))
 
 DEFAULT_TASK_ROOT: Final[str] = "/var/task"
 
 
-logger = logging.getLogger(__name__)
-
-if SLS_SDK_DEBUG:
-    logger.setLevel(logging.DEBUG)
-
-
 def debug_log(msg):
-    return logger.debug(f"⚡ SDK: {msg}")
+    if _is_debug_mode:
+        print(f"⚡ SDK: {msg}", file=sys.stderr)
 
 
 def initialize(handler: Optional[str] = HANDLER):
@@ -75,10 +69,11 @@ def initialize(handler: Optional[str] = HANDLER):
         handler = handler.replace("/", ".")
 
         if not SLS_ORG_ID:
-            logger.error(
+            print(
                 "Serverless SDK Warning: "
                 "Cannot instrument function: "
                 'Missing "SLS_ORG_ID" environment variable',
+                file=sys.stderr,
             )
             return
 
@@ -143,8 +138,9 @@ def initialize(handler: Optional[str] = HANDLER):
 
         debug_log(f"Overhead duration: Internal initialization: {ms}ms")
     except Exception:
-        logger.exception(
+        print(
             "Fatal Serverless SDK Error: "
             "Please report at https://github.com/serverless/console/issues: "
-            "Internal extension setup failed."
+            "Internal extension setup failed.",
+            file=sys.stderr,
         )
