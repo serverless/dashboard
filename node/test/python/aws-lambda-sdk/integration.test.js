@@ -36,6 +36,8 @@ describe('Python: integration', function () {
     isCustomResponse: true,
     capturedEvents: [
       { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
       { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
     ],
     test: ({ invocationsData }) => {
@@ -99,11 +101,36 @@ describe('Python: integration', function () {
           {
             traceId: awsLambdaInvocationSpan.traceId,
             spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.error.generated.v1',
+            customTags: JSON.stringify({}),
+            tags: {
+              error: {
+                name: 'str',
+                message: 'My error:',
+                type: 2,
+              },
+            },
+          },
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
             eventName: 'telemetry.warning.generated.v1',
             customTags: JSON.stringify({ 'user.tag': 'example', 'invocationid': index + 1 }),
             tags: {
               warning: {
                 message: 'Captured warning',
+                type: 1,
+              },
+            },
+          },
+          {
+            traceId: awsLambdaInvocationSpan.traceId,
+            spanId: awsLambdaInvocationSpan.id,
+            eventName: 'telemetry.warning.generated.v1',
+            customTags: JSON.stringify({}),
+            tags: {
+              warning: {
+                message: 'Consoled warning 12 True',
                 type: 1,
               },
             },
