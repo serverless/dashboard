@@ -41,7 +41,7 @@ def report(error, type: str = "INTERNAL"):
             name=error_data["name"],
             stack=error_data["stack"],
             type="handledSdkUser" if type == "USER" else "handledSdkInternal",
-            origin="pythonConsole",
+            origin="pythonLogging",
         )
     except:
         # ignore

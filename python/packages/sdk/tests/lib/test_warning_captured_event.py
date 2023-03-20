@@ -77,7 +77,7 @@ def test_create_warning_captured_event_from_python_console():
     # given
     message = "Warning message"
     tags = {"user.tag": "example"}
-    origin = "pythonConsole"
+    origin = "pythonLogging"
 
     # when
     with mock.patch.object(logger, "warning") as mock_logger:
