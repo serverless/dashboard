@@ -13,6 +13,7 @@ from .lib.error_captured_event import create as create_error_captured_event
 from .lib.warning_captured_event import create as create_warning_captured_event
 from .lib.error import report as report_error
 from .lib.warning import report as report_warning
+from .lib.instrumentation.logging import install as install_logging
 
 
 __all__: Final[List[str]] = [
@@ -28,10 +29,14 @@ class TraceSpans(SimpleNamespace):
 
 class ServerlessSdkSettings:
     disable_captured_events_stdout: bool
+    disable_python_log_monitoring: bool
 
     def __init__(self):
         self.disable_captured_events_stdout = bool(
             environ.get("SLS_DISABLE_CAPTURED_EVENTS_STDOUT")
+        )
+        self.disable_python_log_monitoring = bool(
+            environ.get("SLS_DISABLE_PYTHON_LOG_MONITORING")
         )
 
 
@@ -46,8 +51,10 @@ class ServerlessSdk:
     org_id: Optional[str] = None
     _settings: ServerlessSdkSettings
     _custom_tags: Tags
+    _is_initialized: bool
 
     def __init__(self):
+        self._is_initialized = False
         self.trace_spans = TraceSpans()
         self._event_emitter = event_emitter
         self._settings = ServerlessSdkSettings()
@@ -57,7 +64,13 @@ class ServerlessSdk:
         self._report_warning = report_warning
 
     def _initialize(self, org_id: Optional[str] = None):
+        if self._is_initialized:
+            return
         self.org_id = environ.get(SLS_ORG_ID, default=org_id)
+        if not self._settings.disable_python_log_monitoring:
+            install_logging()
+
+        self._is_initialized = True
 
     def _create_trace_span(
         self,
