@@ -1,4 +1,5 @@
 from serverless_sdk import serverlessSdk as sdk
+import logging
 
 
 counter = 0
@@ -21,7 +22,19 @@ def handler(event, context):
         tags={"user.tag": "example", "invocationid": invocation_id},
     )
 
+    try:
+        raise Exception("Consoled error")
+    except Exception:
+        logging.error("My error:", exc_info=True)
+
+    sdk.capture_warning(
+        "Captured warning",
+        tags={"user.tag": "example", "invocationid": invocation_id},
+    )
+
     sdk.set_tag("user.tag", f"example:{invocation_id}")
+
+    logging.warning("Consoled warning %s %s", 12, True)
 
     return {
         "name": sdk.name,

@@ -1,24 +1,23 @@
 from __future__ import annotations
 import os
 import time
+import sys
 import json
 from functools import wraps
 from typing import List, Optional, Any
-import logging
 from typing_extensions import Final
-
+import random
 from .. import serverlessSdk
 from ..base import Handler
 from ..trace_spans.aws_lambda import reset as reset_aws_lambda_span
 from serverless_sdk_schema import TracePayload
+from serverless_sdk.lib.trace import TraceSpan
 import base64
 
 
-logger = logging.getLogger(__name__)
-
-
 def debug_log(msg):
-    return logger.debug(f"⚡ SDK: {msg}")
+    if serverlessSdk._is_debug_mode:
+        print(f"⚡ SDK: {msg}", file=sys.stderr)
 
 
 __all__: Final[List[str]] = [
@@ -84,8 +83,41 @@ class Instrumenter:
     def _captured_event_handler(self, captured_event):
         serverlessSdk._captured_events.append(captured_event)
 
-    def _report_trace(self):
+    def _report_trace(self, is_error_outcome: bool):
+        is_sampled_out = (
+            (not is_error_outcome)
+            and (not serverlessSdk._is_debug_mode)
+            and (not serverlessSdk._is_dev_mode)
+            and (
+                not [
+                    e
+                    for e in serverlessSdk._captured_events
+                    if e.name
+                    in [
+                        "telemetry.error.generated.v1",
+                        "telemetry.warning.generated.v1",
+                    ]
+                ]
+            )
+            and random.random() > 0.2
+        )
+
+        def _map_span(span: TraceSpan) -> Optional[TraceSpan]:
+            nonlocal is_sampled_out
+            core_trace_span_names = [
+                "aws.lambda",
+                "aws.lambda.initialization",
+                "aws.lambda.invocation",
+            ]
+            if is_sampled_out and span.name not in core_trace_span_names:
+                return None
+            span_payload = span.to_protobuf_dict()
+            del span_payload["input"]
+            del span_payload["output"]
+            return span_payload
+
         payload_dct = {
+            "isSampledOut": is_sampled_out or None,
             "slsTags": {
                 "orgId": serverlessSdk.org_id,
                 "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
@@ -94,9 +126,13 @@ class Instrumenter:
                     "version": serverlessSdk.version,
                 },
             },
-            "spans": [s.to_protobuf_dict() for s in self.aws_lambda.spans],
-            "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events],
-            "customTags": json.dumps(serverlessSdk._custom_tags),
+            "spans": [s for s in map(_map_span, self.aws_lambda.spans) if s],
+            "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events]
+            if not is_sampled_out
+            else [],
+            "customTags": json.dumps(serverlessSdk._custom_tags)
+            if not is_sampled_out
+            else None,
         }
         payload = _get_payload(payload_dct)
         print(
@@ -104,7 +140,7 @@ class Instrumenter:
         )
 
     def _close_trace(self, outcome: str, outcomeResult: Optional[Any] = None):
-        self.isRootSpanReset = False
+        self.is_root_span_reset = False
         try:
             end_time = time.perf_counter_ns()
             is_error_outcome = outcome.startswith("error:")
@@ -127,15 +163,17 @@ class Instrumenter:
 
             self.aws_lambda.close(end_time=end_time)
 
-            self._report_trace()
+            self._report_trace(is_error_outcome)
             self._clear_root_span()
             debug_log(
                 "Overhead duration: Internal response:"
                 + f"{int((time.perf_counter_ns() - end_time) / 1000_000)}ms"
             )
 
-        except Exception:
-            logging.exception("Error while closing the trace.")
+        except Exception as ex:
+            serverlessSdk._report_error(ex)
+            if not self.is_root_span_reset:
+                self._clear_root_span()
 
     def _clear_root_span(self):
         reset_aws_lambda_span()
@@ -144,7 +182,7 @@ class Instrumenter:
         del self.aws_lambda.end_time
         serverlessSdk._captured_events = []
         serverlessSdk._custom_tags.clear()
-        self.isRootSpanReset = True
+        self.is_root_span_reset = True
 
     def instrument(self, user_handler: Handler) -> Handler:
         @wraps(user_handler)
@@ -166,8 +204,8 @@ class Instrumenter:
                 diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
                 debug_log("Overhead duration: Internal request:" + f"{diff}ms")
 
-            except Exception:
-                logger.exception("Unhandled exception during instrumentation.")
+            except Exception as ex:
+                serverlessSdk._report_error(ex)
                 return user_handler(event, context)
 
             # Invocation of customer code

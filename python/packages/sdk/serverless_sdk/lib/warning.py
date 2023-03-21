@@ -18,6 +18,6 @@ def report(message: str, code, type: str = "INTERNAL"):
     create_warning_captured_event(
         message,
         type=("sdkUser" if type == "USER" else "sdkInternal"),
-        origin="pythonConsole",
+        origin="pythonLogging",
         fingerprint=code,
     )

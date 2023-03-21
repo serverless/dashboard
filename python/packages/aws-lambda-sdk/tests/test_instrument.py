@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import json
 from . import compare_handlers, context
 from .test_assertions import assert_trace_payload
@@ -176,6 +176,27 @@ def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
     )
 
 
+def _assert_event(
+    event,
+    timestamp,
+    event_name,
+    type,
+    message,
+    custom_tags,
+    error_name=None,
+):
+    assert event.timestamp_unix_nano < timestamp
+    assert event.event_name == event_name
+    if event.tags.error:
+        assert event.tags.error.type == type
+        assert event.tags.error.name == error_name
+        assert event.tags.error.message == message
+    else:
+        assert event.tags.warning.type == type
+        assert event.tags.warning.message == message
+    assert event.custom_tags == json.dumps(custom_tags)
+
+
 def test_instrument_lambda_sdk(instrumenter, reset_sdk):
     # given
     from .fixtures.lambdas.sdk import handler
@@ -183,12 +204,26 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
     instrumented = instrumenter.instrument(handler)
 
     def _test_once(invocation, asserted_spans=[]):
+        from logging import Logger
+
+        original_error_logger = Logger.error
+        original_warning_logger = Logger.warning
+
         # when
-        with patch("builtins.print") as mocked_print:
+        with patch("builtins.print") as mocked_print, patch.object(
+            Logger, "error", autospec=True
+        ) as mock_error_logger, patch.object(
+            Logger, "warning", autospec=True
+        ) as mock_warning_logger:
+            mock_error_logger.side_effect = original_error_logger
+            mock_warning_logger.side_effect = original_warning_logger
             instrumented({}, context)
-            serialized = mocked_print.call_args_list[0][0][0].replace(
-                "SERVERLESS_TELEMETRY.T.", ""
-            )
+            target_log_prefix = "SERVERLESS_TELEMETRY.T."
+            serialized = [
+                x[0][0]
+                for x in mocked_print.call_args_list
+                if x[0][0].startswith(target_log_prefix)
+            ][0].replace(target_log_prefix, "")
 
         # then
         trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -198,22 +233,54 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
                 asserted_spans,
                 1,
             )
-
-        event = trace_payload.events[0]
         aws_lambda_invocation = [
             x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
         ][0]
-        assert event.timestamp_unix_nano < aws_lambda_invocation.end_time_unix_nano
-        assert event.event_name == "telemetry.error.generated.v1"
-        assert event.tags.error.type == 2
-        assert event.tags.error.name == "Exception"
-        assert event.tags.error.message == "Captured error"
-        assert event.custom_tags == json.dumps(
-            {"user": {"tag": "example"}, "invocationid": invocation}
+
+        _assert_event(
+            trace_payload.events[0],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.error.generated.v1",
+            2,
+            "Captured error",
+            {"user.tag": "example", "invocationid": invocation},
+            "Exception",
         )
+
+        _assert_event(
+            trace_payload.events[1],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.error.generated.v1",
+            2,
+            "My error:",
+            {},
+            "str",
+        )
+
+        _assert_event(
+            trace_payload.events[2],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.warning.generated.v1",
+            1,
+            "Captured warning",
+            {"user.tag": "example", "invocationid": invocation},
+        )
+
+        _assert_event(
+            trace_payload.events[3],
+            aws_lambda_invocation.end_time_unix_nano,
+            "telemetry.warning.generated.v1",
+            1,
+            "Consoled warning 12 True",
+            {},
+        )
+
         assert trace_payload.custom_tags == json.dumps(
             {"user.tag": f"example:{invocation}"}
         )
+
+        assert mock_error_logger.call_count == 2
+        assert mock_warning_logger.call_count == 2
 
     _test_once(
         1,
@@ -225,3 +292,35 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
         ],
     )
     _test_once(2)
+
+
+@pytest.mark.parametrize("sampled_out", [True, False])
+def test_instrument_sdk_sampled_out(monkeypatch, instrumenter, reset_sdk, sampled_out):
+    # given
+    monkeypatch.setattr("random.random", lambda: 0.9 if sampled_out else 0.1)
+    from .fixtures.lambdas.sdk_sampled_out import handler
+
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        instrumented({}, context)
+        serialized = mocked_print.call_args_list[0][0][0].replace(
+            "SERVERLESS_TELEMETRY.T.", ""
+        )
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ]
+        + (["user.span"] if not sampled_out else []),
+        1,
+    )
+    assert (sampled_out and trace_payload.custom_tags is None) or (
+        not sampled_out and trace_payload.custom_tags is not None
+    )

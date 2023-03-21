@@ -54,7 +54,7 @@ This package comes with instrumentation for following areas.
 
 _Note: instrumentation is enabled via environment specific SDK instance, relying just on `serverless-sdk` doesn't enable any instrumentation)_
 
-- N/A
+- [Python logging module](docs/instrumentation/python-logging.md)
 
 ### API
 
