@@ -165,3 +165,29 @@ def test_sdk_set_tag_does_not_crash_on_invalid_input(sdk: ServerlessSdk):
 
     # then
     assert not failed
+
+
+def test_initialize_all_options(sdk: ServerlessSdk, monkeypatch):
+    # given
+    _settings = sdk._settings
+    org_id: str = "test"
+    monkeypatch.setenv("SLS_ORG_ID", org_id)
+    monkeypatch.setenv("SLS_SDK_DEBUG", "1")
+    monkeypatch.setenv("SLS_DEV_MODE_ORG_ID", org_id)
+    monkeypatch.setenv("SLS_DISABLE_CAPTURED_EVENTS_STDOUT", "1")
+    monkeypatch.setenv("SLS_DISABLE_PYTHON_LOG_MONITORING", "1")
+    monkeypatch.setenv("SLS_DISABLE_REQUEST_RESPONSE_MONITORING", "1")
+
+    # when
+    sdk._is_initialized = False
+    sdk._initialize()
+
+    # then
+    assert sdk.org_id == org_id
+    assert sdk._settings.disable_captured_events_stdout
+    assert sdk._settings.disable_python_log_monitoring
+    assert sdk._settings.disable_request_response_monitoring
+    assert sdk._is_dev_mode
+    assert sdk._is_debug_mode
+
+    sdk._settings = _settings

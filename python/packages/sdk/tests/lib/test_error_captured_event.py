@@ -7,7 +7,7 @@ from serverless_sdk.lib.error_captured_event import (
     logger,
 )
 from serverless_sdk import serverlessSdk
-from serverless_sdk.lib.tags import Tags, convert_tags_to_protobuf
+from serverless_sdk.lib.tags import convert_tags_to_protobuf
 from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 
 
