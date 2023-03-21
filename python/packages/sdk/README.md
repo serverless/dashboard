@@ -40,11 +40,15 @@ See [Environment extensions](#environment-extensions)
 
 _Common options supported by all environments:_
 
-###### `SLS_ORG_ID` (or `options.orgId`)
+###### `SLS_ORG_ID` (or `org_id`)
 
 Required setting. Id of your organization in Serverless Console.
 
-##### `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` (or `options.disableCapturedEventsStdout`)
+##### `SLS_DISABLE_REQUEST_RESPONSE_MONITORING` (or `disable_request_response_monitoring`)
+
+(Dev mode only) Disable monitoring requests and reponses (function, AWS SDK requests and HTTP(S) requests)
+
+##### `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` (or `disable_captured_events_stdout`)
 
 Disable writing captured events registered via `.capture_error` and `.capture_warning` to stdout
 
