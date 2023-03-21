@@ -32,6 +32,22 @@ describe('Python: integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
+  const devModeConfiguration = {
+    configuration: {
+      Environment: {
+        Variables: {
+          AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-python/exec_wrapper.py',
+          SLS_ORG_ID: process.env.SLS_ORG_ID,
+          SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID,
+          SLS_SDK_DEBUG: '1',
+        },
+      },
+    },
+    deferredConfiguration: () => ({
+      Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
+    }),
+  };
+
   const sdkTestConfig = {
     isCustomResponse: true,
     capturedEvents: [
@@ -190,6 +206,7 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['dev-mode', devModeConfiguration],
         ]),
         config: sdkTestConfig,
       },
