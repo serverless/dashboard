@@ -25,6 +25,6 @@ python -m build --wheel --sdist .
 To run the unit tests, replace the last two steps of the `Build` step with these:
 
 ```bash
-pip install . pytest
+pip install '.[tests]'
 python3 -m pytest
 ```
