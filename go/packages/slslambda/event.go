@@ -2,7 +2,7 @@ package slslambda
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/aws/aws-lambda-go/lambda/messages"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -60,11 +60,7 @@ func convertToProtoErrorEvent(event errorEvent, traceID, spanID []byte, errType 
 		TimestampUnixNano: uint64(event.timestamp.UnixNano()),
 		EventName:         telemetryErrorGeneratedV1,
 		Tags: &tagsv1.Tags{
-			Error: &tagsv1.ErrorTags{
-				Name:    errorType(event.error),
-				Message: aws.String(event.Error()),
-				Type:    errType,
-			},
+			Error: toErrorTags(event.error, errType),
 		},
 	}
 	return &protoEvent, nil
@@ -92,10 +88,17 @@ func convertToProtoWarningEvent(event warningEvent, traceID, spanID []byte) (*in
 	return &protoEvent, nil
 }
 
-func errorType(err error) string {
-	if errorType := reflect.TypeOf(err); errorType.Kind() == reflect.Ptr {
-		return errorType.Elem().Name()
-	} else {
-		return errorType.Name()
+func toErrorTags(err error, tagErrType tagsv1.ErrorTags_ErrorType) *tagsv1.ErrorTags {
+	if respErr, ok := err.(messages.InvokeResponse_Error); ok {
+		return &tagsv1.ErrorTags{
+			Name:    respErr.Type,
+			Message: &respErr.Message,
+			Type:    tagErrType,
+		}
+	}
+	return &tagsv1.ErrorTags{
+		Name:    getErrorType(err),
+		Message: aws.String(err.Error()),
+		Type:    tagErrType,
 	}
 }

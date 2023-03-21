@@ -86,6 +86,26 @@ describe('Go: integration', function () {
         config: { expectedOutcome: 'error:handled' },
       },
     ],
+    [
+      'error-unhandled-panic',
+      {
+        variants: new Map([
+          [
+            'go1-x',
+            {
+              deferredConfiguration: buildZipFile('error-unhandled-panic', 'amd64'),
+            },
+          ],
+          [
+            'provided-al2',
+            {
+              deferredConfiguration: buildZipFile('error-unhandled-panic', 'arm64'),
+            },
+          ],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig, {

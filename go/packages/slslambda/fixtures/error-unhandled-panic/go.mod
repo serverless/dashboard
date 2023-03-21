@@ -1,4 +1,4 @@
-module error-handled
+module error-unhandled-panic
 
 go 1.20
 
