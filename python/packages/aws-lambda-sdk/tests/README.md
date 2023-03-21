@@ -9,8 +9,7 @@ cd python/packages/aws-lambda-sdk
 python3 -m venv .venv
 source .venv/bin/activate
 
-python3 -m pip install --editable .
-python3 -m pip install pytest strenum
+python3 -m pip install --editable '.[tests]'
 python3 -m pytest
 ```
 
