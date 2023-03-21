@@ -7,7 +7,6 @@ from serverless_sdk.lib.trace import TraceSpan
 
 __all__ = [
     "aws_lambda_span",
-    "reset",
 ]
 
 
@@ -49,7 +48,10 @@ if os.environ.get("AWS_LAMBDA_INITIALIZATION_TYPE") == "on-demand":
     aws_lambda_span.tags["aws.lambda.is_coldstart"] = True
 
 
-def reset():
-    aws_lambda_span.tags.clear()
-    aws_lambda_span.tags.update(IMMUTABLE_TAGS)
-    aws_lambda_span.sub_spans.clear()
+def _clear(self: TraceSpan):
+    self.tags.clear()
+    self.tags.update(IMMUTABLE_TAGS)
+    self.sub_spans.clear()
+
+
+TraceSpan.clear = _clear

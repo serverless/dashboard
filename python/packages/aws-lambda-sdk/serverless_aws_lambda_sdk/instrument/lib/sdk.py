@@ -1,0 +1,3 @@
+import serverless_aws_lambda_sdk
+
+serverlessSdk = serverless_aws_lambda_sdk.serverlessSdk

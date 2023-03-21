@@ -1,11 +1,15 @@
 from __future__ import annotations
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import json
-from . import compare_handlers, context
+from .. import compare_handlers, context
 from .test_assertions import assert_trace_payload
-from serverless_sdk_schema import TracePayload
+from serverless_sdk_schema import TracePayload, RequestResponse
 import base64
+from werkzeug.wrappers import Request, Response
+from pytest_httpserver import HTTPServer
+
+_TARGET_LOG_PREFIX = "SERVERLESS_TELEMETRY.T."
 
 
 @pytest.fixture()
@@ -48,18 +52,19 @@ def test_instrument_works_with_all_callables(instrumenter, reset_sdk):
     compare_handlers(example, instrumented)
 
 
-def test_instrument_lambda_success(instrumenter, reset_sdk):
+def test_instrument_lambda_success(instrumenter, reset_sdk, mocked_print):
     # given
-    from .fixtures.lambdas.success import handler
+    from ..fixtures.lambdas.success import handler
 
     instrumented = instrumenter.instrument(handler)
 
     # when
-    with patch("builtins.print") as mocked_print:
-        instrumented({}, context)
-        serialized = mocked_print.call_args_list[0][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
-        )
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -76,20 +81,29 @@ def test_instrument_lambda_success(instrumenter, reset_sdk):
 
 def test_instrument_subsequent_calls(instrumenter):
     # given
-    from .fixtures.lambdas.success import handler
+    from ..fixtures.lambdas.success import handler
 
     instrumented = instrumenter.instrument(handler)
+    from builtins import print
 
     # when
     with patch("builtins.print") as mocked_print:
+        mocked_print.side_effect = print
         instrumented({}, context)
+        first = [
+            x[0][0]
+            for x in mocked_print.call_args_list
+            if x[0][0].startswith(_TARGET_LOG_PREFIX)
+        ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    with patch("builtins.print") as mocked_print:
+        mocked_print.side_effect = print
         instrumented({}, context)
-        first = mocked_print.call_args_list[0][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
-        )
-        second = mocked_print.call_args_list[1][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
-        )
+        second = [
+            x[0][0]
+            for x in mocked_print.call_args_list
+            if x[0][0].startswith(_TARGET_LOG_PREFIX)
+        ][0].replace(_TARGET_LOG_PREFIX, "")
 
     # then
     first_trace_payload = TracePayload.FromString(base64.b64decode(first))
@@ -122,19 +136,20 @@ def test_instrument_subsequent_calls(instrumenter):
     assert aws_lambda.start_time_unix_nano == aws_lambda_invocation.start_time_unix_nano
 
 
-def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk):
+def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk, mocked_print):
     # given
-    from .fixtures.lambdas.error_unhandled import handler
+    from ..fixtures.lambdas.error_unhandled import handler
 
     instrumented = instrumenter.instrument(handler)
 
     # when
-    with patch("builtins.print") as mocked_print:
-        with pytest.raises(SystemExit):
-            instrumented({}, context)
-        serialized = mocked_print.call_args_list[0][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
-        )
+    with pytest.raises(SystemExit):
+        instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -149,19 +164,20 @@ def test_instrument_lambda_unhandled_error(instrumenter, reset_sdk):
     )
 
 
-def test_instrument_lambda_handled_error(instrumenter, reset_sdk):
+def test_instrument_lambda_handled_error(instrumenter, reset_sdk, mocked_print):
     # given
-    from .fixtures.lambdas.error import handler
+    from ..fixtures.lambdas.error import handler
 
     instrumented = instrumenter.instrument(handler)
 
     # when
-    with patch("builtins.print") as mocked_print:
-        with pytest.raises(Exception):
-            instrumented({}, context)
-        serialized = mocked_print.call_args_list[0][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
-        )
+    with pytest.raises(Exception):
+        instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -199,7 +215,7 @@ def _assert_event(
 
 def test_instrument_lambda_sdk(instrumenter, reset_sdk):
     # given
-    from .fixtures.lambdas.sdk import handler
+    from ..fixtures.lambdas.sdk import handler
 
     instrumented = instrumenter.instrument(handler)
 
@@ -218,12 +234,12 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
             mock_error_logger.side_effect = original_error_logger
             mock_warning_logger.side_effect = original_warning_logger
             instrumented({}, context)
-            target_log_prefix = "SERVERLESS_TELEMETRY.T."
+
             serialized = [
                 x[0][0]
                 for x in mocked_print.call_args_list
-                if x[0][0].startswith(target_log_prefix)
-            ][0].replace(target_log_prefix, "")
+                if x[0][0].startswith(_TARGET_LOG_PREFIX)
+            ][0].replace(_TARGET_LOG_PREFIX, "")
 
         # then
         trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -295,19 +311,22 @@ def test_instrument_lambda_sdk(instrumenter, reset_sdk):
 
 
 @pytest.mark.parametrize("sampled_out", [True, False])
-def test_instrument_sdk_sampled_out(monkeypatch, instrumenter, reset_sdk, sampled_out):
+def test_instrument_sdk_sampled_out(
+    monkeypatch, instrumenter, reset_sdk, sampled_out, mocked_print
+):
     # given
     monkeypatch.setattr("random.random", lambda: 0.9 if sampled_out else 0.1)
-    from .fixtures.lambdas.sdk_sampled_out import handler
+    from ..fixtures.lambdas.sdk_sampled_out import handler
 
     instrumented = instrumenter.instrument(handler)
 
     # when
-    with patch("builtins.print") as mocked_print:
-        instrumented({}, context)
-        serialized = mocked_print.call_args_list[0][0][0].replace(
-            "SERVERLESS_TELEMETRY.T.", ""
-        )
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
 
     # then
     trace_payload = TracePayload.FromString(base64.b64decode(serialized))
@@ -324,3 +343,90 @@ def test_instrument_sdk_sampled_out(monkeypatch, instrumenter, reset_sdk, sample
     assert (sampled_out and trace_payload.custom_tags is None) or (
         not sampled_out and trace_payload.custom_tags is not None
     )
+
+
+def test_instrument_lambda_success_dev_mode_without_server(
+    reset_sdk_dev_mode, mocked_print
+):
+    # given
+    from ..fixtures.lambdas.success import handler
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
+
+    instrumenter = Instrumenter()
+    instrumented = instrumenter.instrument(handler)
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
+
+
+def test_instrument_lambda_success_dev_mode_with_server(
+    reset_sdk_dev_mode, mocked_print, httpserver_listen_address, httpserver: HTTPServer
+):
+    # given
+    payload_type = None
+    payloads = []
+
+    def handler(request: Request):
+        nonlocal payload_type
+        payload_type = request.url.split("/")[-1]
+        if payload_type == "request-response":
+            payloads.append(RequestResponse().parse(request.data))
+        elif payload_type == "trace":
+            payloads.append(TracePayload().parse(request.data))
+        else:
+            raise Exception(f"Unexpected payload type: {payload_type}")
+        return Response(str("OK"))
+
+    httpserver.expect_request("/request-response").respond_with_handler(handler)
+    httpserver.expect_request("/trace").respond_with_handler(handler)
+
+    from ..fixtures.lambdas.success import handler
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
+
+    instrumenter = Instrumenter()
+    instrumented = instrumenter.instrument(handler)
+
+    event = {
+        "foo": "bar",
+    }
+
+    # when
+    instrumented(event, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
+    assert [(p.origin, json.loads(p.body)) for p in payloads] == [
+        (1, event),
+        (2, "ok"),
+    ]

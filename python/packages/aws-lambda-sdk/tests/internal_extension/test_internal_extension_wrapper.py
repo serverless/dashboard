@@ -6,7 +6,7 @@ from typing_extensions import Final
 from pathlib import Path
 
 
-from .fixtures import (
+from ..fixtures import (
     SUBMODULE_HANDLER,
     SUCCESS_HANDLER,
     ERROR_HANDLER,

@@ -1,8 +1,8 @@
 from typing import List
 from serverless_sdk_schema import TracePayload
 from serverless_sdk_schema.schema.serverless.instrumentation.v1 import Span
-from .conftest import TEST_FUNCTION, TEST_ORG
-from . import context
+from ..conftest import TEST_FUNCTION, TEST_ORG
+from .. import context
 
 
 def assert_error_event(
