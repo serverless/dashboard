@@ -68,8 +68,10 @@ def _get_trace_payload(payload_dct: dict) -> TracePayload:
 def _get_request_response_payload(payload_dct: dict) -> RequestResponse:
     payload = RequestResponse()
     payload.from_dict(payload_dct)
-    payload.span_id = str.encode(payload_dct["spanId"])
-    payload.trace_id = str.encode(payload_dct["traceId"])
+    if payload_dct["spanId"]:
+        payload.span_id = str.encode(payload_dct["spanId"])
+    if payload_dct["traceId"]:
+        payload.trace_id = str.encode(payload_dct["traceId"])
     return payload
 
 

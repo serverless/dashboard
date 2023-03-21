@@ -27,7 +27,7 @@ if serverlessSdk._is_dev_mode:
         _semaphore = asyncio.Semaphore(10)
         _session = requests.Session()
 
-    async def _send(name, body):
+    async def _send(name: str, body: bytes):
         async with _semaphore:
             request_start_time = time.perf_counter_ns()
             serverlessSdk._debug_log(f"Telemetry send {name}")
