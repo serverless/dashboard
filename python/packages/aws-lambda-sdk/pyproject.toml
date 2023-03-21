@@ -24,7 +24,7 @@ tests = [
     "black>=22.12",
     "pytest>=7.2",
     "pytest-httpserver>=1.0.6",
-    "requests_mock>=1.10.0",
+    "requests_mock>=1.10",
     "ruff>=0.0.199",
 ]
 [project.urls]
