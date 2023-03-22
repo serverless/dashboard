@@ -4,7 +4,7 @@ const path = require('path');
 const spawn = require('child-process-ext/spawn');
 const createCoreResources = require('../../../lib/create-core-resources');
 
-const buildDummyDevMode = require('../../../../packages/aws-lambda-sdk/test/lib/build-dummy-dev-mode-extension');
+const buildDummyDevMode = require('../../../lib/build-dummy-dev-mode-extension');
 const basename = require('./basename');
 
 const awsLambdaSdkDirname = path.resolve(
@@ -26,7 +26,9 @@ module.exports = async (config, options = {}) => {
             build: () => path.resolve(process.env.TEST_EXTERNAL_LAYER_FILENAME),
           });
         } else {
-          layersConfig.set(layerType, { build: buildDummyDevMode });
+          layersConfig.set(layerType, {
+            build: () => buildDummyDevMode(null, { isRuntimeAgnostic: true }),
+          });
         }
         break;
       case 'internal':

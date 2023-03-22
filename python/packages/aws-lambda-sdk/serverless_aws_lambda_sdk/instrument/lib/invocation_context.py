@@ -1,7 +1,7 @@
-_context: any = None
+_context = None
 
 
-def set(context: any):
+def set(context):
     global _context
     _context = context
 

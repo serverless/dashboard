@@ -108,7 +108,7 @@ class Instrumenter:
     def _captured_event_handler(self, captured_event):
         serverlessSdk._captured_events.append(captured_event)
 
-    def _report_request(self, event, context):
+    async def _report_request(self, event, context):
         payload_dct = serverlessSdk._last_request = {
             "slsTags": {
                 "orgId": serverlessSdk.org_id,
@@ -137,7 +137,7 @@ class Instrumenter:
             )
         )
 
-    def _report_response(self, response, context, end_time):
+    async def _report_response(self, response, context, end_time):
         response_string = _resolve_body_string(response, "OUTPUT")
         payload_dct = serverlessSdk._last_request = {
             "slsTags": {

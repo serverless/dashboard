@@ -4,7 +4,7 @@ const path = require('path');
 const buildLayer = require('../../scripts/lib/build');
 const createCoreResources = require('../../../../test/lib/create-core-resources');
 
-const buildDummyDevMode = require('./build-dummy-dev-mode-extension');
+const buildDummyDevMode = require('../../../../test/lib/build-dummy-dev-mode-extension');
 const basename = require('./basename');
 
 module.exports = async (config, options = {}) => {
