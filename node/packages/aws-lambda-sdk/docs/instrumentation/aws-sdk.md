@@ -36,7 +36,7 @@ Tags that apply to all AWS SDK requests:
 | `aws.sdk.request_id`        | AWS reqeust id                                                                         |
 | `aws.sdk.error`             | If request ends with error, the error message                                          |
 
-## `aws.sdk.sns` span tags`
+## `aws.sdk.sns` span tags
 
 Tags that apply to requests that go to SNS service
 
@@ -45,7 +45,7 @@ Tags that apply to requests that go to SNS service
 | `aws.sdk.sns.topic_name`  | Topic name               |
 | `aws.sdk.sns.message_ids` | Ids of affected messages |
 
-## `aws.sdk.sqs` span tags`
+## `aws.sdk.sqs` span tags
 
 Tags that apply to requests that go to SQS service
 
@@ -54,7 +54,7 @@ Tags that apply to requests that go to SQS service
 | `aws.sdk.sqs.queue_name`  | Queue name               |
 | `aws.sdk.sqs.message_ids` | Ids of affected messages |
 
-## `aws.sdk.dynamodb` span tags`
+## `aws.sdk.dynamodb` span tags
 
 Tags that apply to requests that go to DynamoDb service
 
