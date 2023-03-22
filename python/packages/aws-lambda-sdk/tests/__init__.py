@@ -21,6 +21,7 @@ context.aws_request_id = "test-request"
 TEST_ORG = "test-org"
 TEST_FUNCTION = "test-function"
 TEST_FUNCTION_VERSION = "1"
+TEST_DEV_MODE_ORG_ID = "test-dev-mode-org-id"
 
 
 def get_params(func: Callable) -> Params:

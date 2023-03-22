@@ -6,7 +6,7 @@ from pathlib import Path
 
 import importlib
 
-from .fixtures import (
+from ..fixtures import (
     SUBMODULE_HANDLER,
     SUCCESS_HANDLER,
     NOT_CALLABLE_HANDLER,

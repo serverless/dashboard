@@ -26,7 +26,7 @@ def test_exec_wrapper_succeeds(monkeypatch):
     sys.path.append(
         str(
             (
-                Path(__file__).parent.parent
+                Path(__file__).parent.parent.parent
                 / "serverless_aws_lambda_sdk/internal_extension"
             ).resolve()
         )
