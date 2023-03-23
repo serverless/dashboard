@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.6 (2023-03-23)
+
+### Features
+
+- Add `_report_notice` method
+- Emit `trace-span-close` event when a span is closed 
+
 ## 0.3.5 (2023-03-22)
 
 ### Features
