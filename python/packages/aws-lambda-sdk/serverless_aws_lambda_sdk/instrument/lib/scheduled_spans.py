@@ -28,7 +28,7 @@ if serverlessSdk._is_dev_mode:
             del span_payload["output"]
             return span_payload
 
-        # If flush is not forced and last flush was dobe 50ms ago, do nothing
+        # If flush is not forced and last flush was done 50ms ago, do nothing
         if not force and time.perf_counter_ns() - _last_flush_time < 50_000_000:
             return
 
