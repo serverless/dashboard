@@ -324,3 +324,21 @@ def test_instrument_sdk_sampled_out(monkeypatch, instrumenter, reset_sdk, sample
     assert (sampled_out and trace_payload.custom_tags is None) or (
         not sampled_out and trace_payload.custom_tags is not None
     )
+
+
+def test_instrument_lambda_success_close_trace_failure(instrumenter, reset_sdk):
+    # given
+    from .fixtures.lambdas.success import handler
+
+    instrumented = instrumenter.instrument(handler)
+    _original = instrumenter._close_trace
+    instrumenter._close_trace = MagicMock()
+    instrumenter._close_trace.side_effect = Exception("_close_trace failed")
+
+    # when
+    with pytest.raises(Exception, match="_close_trace failed"):
+        instrumented({}, context)
+
+    # then
+    instrumenter._close_trace.assert_called_once_with("success", "ok")
+    instrumenter._close_trace = _original
