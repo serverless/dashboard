@@ -435,3 +435,34 @@ def test_instrument_lambda_success_dev_mode_with_server(
         "aws.lambda.invocation",
         "aws.lambda",
     ]
+
+    # when
+    request_response_payloads = []
+    trace_payloads = []
+    instrumented(event, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
+
+    assert [(p.origin, json.loads(p.body)) for p in request_response_payloads] == [
+        (1, event),
+        (2, "ok"),
+    ]
+    assert [s.name for t in trace_payloads for s in t.spans] == [
+        "aws.lambda.invocation",
+        "aws.lambda",
+    ]

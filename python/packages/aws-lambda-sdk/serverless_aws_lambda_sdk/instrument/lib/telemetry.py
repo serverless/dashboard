@@ -14,7 +14,7 @@ if serverlessSdk._is_dev_mode:
 
     _TELEMETRY_SERVER_URL = "http://localhost:2773/"
 
-    def _send(name: str, body: bytes):
+    def _send(name: str, body: bytes, on_request=None):
         request_start_time = time.perf_counter_ns()
         serverlessSdk._debug_log(f"Telemetry send {name}")
         try:
@@ -31,6 +31,8 @@ if serverlessSdk._is_dev_mode:
                 data=body,
                 stream=False,
             )
+            on_request and on_request()
+
             if response.status_code != 200:
                 serverlessSdk._report_warning(
                     "Cannot propagate telemetry, "
@@ -38,6 +40,7 @@ if serverlessSdk._is_dev_mode:
                     "DEV_MODE_SERVER_REJECTION",
                 )
         except Exception as ex:
+            on_request and on_request()
             serverlessSdk._report_warning(
                 f"Cannot propagate telemetry: {ex}", "DEV_MODE_SERVER_ERROR"
             )
