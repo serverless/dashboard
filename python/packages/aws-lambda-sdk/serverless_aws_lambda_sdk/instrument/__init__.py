@@ -248,7 +248,7 @@ class Instrumenter:
         serverlessSdk._custom_tags.clear()
         self.is_root_span_reset = True
 
-    def _async_handler(self, user_handler, event, context):
+    def _handler(self, user_handler, event, context):
         request_start_time = time.perf_counter_ns()
         self.current_invocation_id += 1
         try:
@@ -291,6 +291,6 @@ class Instrumenter:
     def instrument(self, user_handler):
         @wraps(user_handler)
         def stub(event, context):
-            return self._async_handler(user_handler, event, context)
+            return self._handler(user_handler, event, context)
 
         return stub
