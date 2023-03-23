@@ -51,8 +51,9 @@ if serverlessSdk._is_dev_mode:
             payload["spans"] = [
                 s for s in payload["spans"] if s["name"] != "aws.lambda"
             ]
-        _last_flush_time = time.perf_counter_ns()
+
         send_telemetry("trace", bytes(to_trace_payload(payload)))
+        _last_flush_time = time.perf_counter_ns()
 
     def _should_force_flush():
         context = get_invocation_context()
