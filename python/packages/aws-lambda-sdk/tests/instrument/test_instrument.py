@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import json
 from .. import compare_handlers, context
 from .test_assertions import assert_trace_payload
@@ -466,3 +466,21 @@ def test_instrument_lambda_success_dev_mode_with_server(
         "aws.lambda.invocation",
         "aws.lambda",
     ]
+
+
+def test_instrument_lambda_success_close_trace_failure(instrumenter, reset_sdk):
+    # given
+    from ..fixtures.lambdas.success import handler
+
+    instrumented = instrumenter.instrument(handler)
+    _original = instrumenter._close_trace
+    instrumenter._close_trace = MagicMock()
+    instrumenter._close_trace.side_effect = Exception("_close_trace failed")
+
+    # when
+    with pytest.raises(Exception, match="_close_trace failed"):
+        instrumented({}, context)
+
+    # then
+    instrumenter._close_trace.assert_called_once_with("success", "ok")
+    instrumenter._close_trace = _original
