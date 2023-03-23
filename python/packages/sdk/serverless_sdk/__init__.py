@@ -13,6 +13,7 @@ from .lib.error_captured_event import create as create_error_captured_event
 from .lib.warning_captured_event import create as create_warning_captured_event
 from .lib.error import report as report_error
 from .lib.warning import report as report_warning
+from .lib.notice import report as report_notice
 from .lib.instrumentation.logging import install as install_logging
 
 
@@ -75,6 +76,7 @@ class ServerlessSdk:
 
         self._report_error = report_error
         self._report_warning = report_warning
+        self._report_notice = report_notice
 
     def _initialize(
         self,

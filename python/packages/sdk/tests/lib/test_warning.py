@@ -1,7 +1,7 @@
 from __future__ import annotations
 from unittest.mock import MagicMock, patch
 from serverless_sdk.lib.warning import report as report_warning, logger
-import serverless_sdk.lib.error
+import serverless_sdk.lib.warning
 
 
 def test_report_warning(monkeypatch):
