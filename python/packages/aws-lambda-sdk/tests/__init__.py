@@ -14,6 +14,9 @@ Params = Dict[str, inspect.Parameter]
 class Context:
     aws_request_id: str
 
+    def get_remaining_time_in_millis(self):
+        return 100
+
 
 context = Context()
 context.aws_request_id = "test-request"

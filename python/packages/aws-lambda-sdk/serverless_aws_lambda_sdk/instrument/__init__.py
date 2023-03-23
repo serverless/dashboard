@@ -2,12 +2,12 @@ from __future__ import annotations
 import os
 import time
 import sys
+import copy
 import json
 from functools import wraps
 from typing import List, Optional, Any
 from typing_extensions import Final
 import random
-import asyncio
 from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 from .lib.sdk import serverlessSdk
 from .lib.invocation_context import (
@@ -15,8 +15,8 @@ from .lib.invocation_context import (
     get as get_invocation_context,
 )
 from .lib.scheduled_spans import flush as flush_spans
-from .lib.telemetry import send as send_telemetry, init as init_telemetry
-from serverless_sdk_schema import TracePayload, RequestResponse
+from .lib.telemetry import send as send_telemetry
+from .lib.payload_conversion import to_trace_payload, to_request_response_payload
 from serverless_sdk.lib.trace import TraceSpan
 import base64
 
@@ -41,43 +41,17 @@ def _resolve_outcome_enum_value(outcome: str) -> int:
     raise Exception(f"Unexpected outcome value: {outcome}")
 
 
-def _get_trace_payload(payload_dct: dict) -> TracePayload:
-    payload = TracePayload()
-    payload.from_dict(payload_dct)
-    spans = payload_dct["spans"]
-    events = payload_dct["events"]
-    for index, span in enumerate(payload.spans):
-        span.id = str.encode(spans[index]["id"])
-        span.trace_id = str.encode(spans[index]["traceId"])
-        span.parent_span_id = (
-            str.encode(spans[index]["parentSpanId"])
-            if spans[index]["parentSpanId"]
-            else None
-        )
-    for index, event in enumerate(payload.events):
-        event.id = str.encode(events[index]["id"])
-        event.span_id = (
-            str.encode(events[index]["spanId"]) if events[index]["spanId"] else None
-        )
-        event.trace_id = (
-            str.encode(events[index]["traceId"]) if events[index]["traceId"] else None
-        )
-    return payload
-
-
-def _get_request_response_payload(payload_dct: dict) -> RequestResponse:
-    payload = RequestResponse()
-    payload.from_dict(payload_dct)
-    if payload_dct["spanId"]:
-        payload.span_id = str.encode(payload_dct["spanId"])
-    if payload_dct["traceId"]:
-        payload.trace_id = str.encode(payload_dct["traceId"])
-    return payload
-
-
 def _resolve_body_string(data, prefix):
     if data is None:
         return None
+    if (
+        serverlessSdk.trace_spans.aws_lambda.tags.get("aws.lambda.event_source")
+        == "aws.apigateway"
+    ):
+        if "body" in data and isinstance(data["body"], str):
+            if "isBase64Encoded" in data and data["isBase64Encoded"]:
+                data = copy.copy(data)
+                del data["body"]
     stringified_body = json.dumps(data)
     if len(stringified_body) > 1024 * 127:
         return None
@@ -108,7 +82,7 @@ class Instrumenter:
     def _captured_event_handler(self, captured_event):
         serverlessSdk._captured_events.append(captured_event)
 
-    async def _report_request(self, event, context):
+    def _report_request(self, event, context):
         payload_dct = serverlessSdk._last_request = {
             "slsTags": {
                 "orgId": serverlessSdk.org_id,
@@ -129,15 +103,13 @@ class Instrumenter:
         }
         payload_buffer = (
             serverlessSdk._last_request_buffer
-        ) = _get_request_response_payload(payload_dct)
-        return asyncio.create_task(
-            send_telemetry(
-                "request-response",
-                bytes(payload_buffer),
-            )
+        ) = to_request_response_payload(payload_dct)
+        return send_telemetry(
+            "request-response",
+            bytes(payload_buffer),
         )
 
-    async def _report_response(self, response, context, end_time):
+    def _report_response(self, response, context, end_time):
         response_string = _resolve_body_string(response, "OUTPUT")
         payload_dct = serverlessSdk._last_request = {
             "slsTags": {
@@ -157,12 +129,10 @@ class Instrumenter:
         }
         payload_buffer = (
             serverlessSdk._last_response_buffer
-        ) = _get_request_response_payload(payload_dct)
-        return asyncio.create_task(
-            send_telemetry(
-                "request-response",
-                bytes(payload_buffer),
-            )
+        ) = to_request_response_payload(payload_dct)
+        return send_telemetry(
+            "request-response",
+            bytes(payload_buffer),
         )
 
     def _report_trace(self, is_error_outcome: bool):
@@ -216,12 +186,12 @@ class Instrumenter:
             if not is_sampled_out
             else None,
         }
-        payload = _get_trace_payload(payload_dct)
+        payload = to_trace_payload(payload_dct)
         print(
             f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
         )
 
-    async def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
+    def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
         self.is_root_span_reset = False
         try:
             end_time = time.perf_counter_ns()
@@ -240,12 +210,9 @@ class Instrumenter:
                 and not serverlessSdk._settings.disable_request_response_monitoring
                 and not is_error_outcome
             ):
-                serverlessSdk._deferred_telemetry_requests.append(
-                    self._report_response(
-                        outcome_result, get_invocation_context(), end_time
-                    )
+                self._report_response(
+                    outcome_result, get_invocation_context(), end_time
                 )
-
             if not serverlessSdk.trace_spans.aws_lambda_initialization.end_time:
                 serverlessSdk.trace_spans.aws_lambda_initialization.close(
                     end_time=end_time
@@ -262,7 +229,6 @@ class Instrumenter:
             flush_spans()
             self._clear_root_span()
 
-            await asyncio.gather(*serverlessSdk._deferred_telemetry_requests)
             debug_log(
                 "Overhead duration: Internal response:"
                 + f"{int((time.perf_counter_ns() - end_time) / 1000_000)}ms"
@@ -272,8 +238,6 @@ class Instrumenter:
             serverlessSdk._report_error(ex)
             if not self.is_root_span_reset:
                 self._clear_root_span()
-        finally:
-            serverlessSdk._deferred_telemetry_requests = []
 
     def _clear_root_span(self):
         self.aws_lambda.clear()
@@ -284,9 +248,8 @@ class Instrumenter:
         serverlessSdk._custom_tags.clear()
         self.is_root_span_reset = True
 
-    async def _async_handler(self, user_handler, event, context):
+    def _async_handler(self, user_handler, event, context):
         request_start_time = time.perf_counter_ns()
-        await init_telemetry()
         self.current_invocation_id += 1
         try:
             debug_log("Invocation: start")
@@ -304,9 +267,7 @@ class Instrumenter:
                 serverlessSdk._is_dev_mode
                 and not serverlessSdk._settings.disable_request_response_monitoring
             ):
-                serverlessSdk._deferred_telemetry_requests.append(
-                    self._report_request(event, context)
-                )
+                self._report_request(event, context)
 
             diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
             debug_log("Overhead duration: Internal request:" + f"{diff}ms")
@@ -318,18 +279,18 @@ class Instrumenter:
         # Invocation of customer code
         try:
             result = user_handler(event, context)
-            await self._close_trace("success", result)
+            self._close_trace("success", result)
             return result
         except BaseException as ex:  # catches all exceptions, including SystemExit.
             if isinstance(ex, Exception):
-                await self._close_trace("error:handled", ex)
+                self._close_trace("error:handled", ex)
             else:
-                await self._close_trace("error:unhandled", ex)
+                self._close_trace("error:unhandled", ex)
             raise
 
     def instrument(self, user_handler):
         @wraps(user_handler)
         def stub(event, context):
-            return asyncio.run(self._async_handler(user_handler, event, context))
+            return self._async_handler(user_handler, event, context)
 
         return stub

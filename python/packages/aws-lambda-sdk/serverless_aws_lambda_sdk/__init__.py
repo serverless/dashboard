@@ -33,9 +33,6 @@ TraceSpans.aws_lambda_initialization = next(
 
 
 baseSdk._is_dev_mode = bool(os.environ.get("SLS_DEV_MODE_ORG_ID"))
-baseSdk._settings.disable_request_response_monitoring = bool(
-    os.environ.get("SLS_DISABLE_REQUEST_RESPONSE_MONITORING")
-)
 
 
 class AwsLambdaTraceSpans(TraceSpans):

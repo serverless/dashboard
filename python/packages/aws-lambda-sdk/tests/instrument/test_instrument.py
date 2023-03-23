@@ -380,16 +380,15 @@ def test_instrument_lambda_success_dev_mode_with_server(
     reset_sdk_dev_mode, mocked_print, httpserver_listen_address, httpserver: HTTPServer
 ):
     # given
-    payload_type = None
-    payloads = []
+    request_response_payloads = []
+    trace_payloads = []
 
     def handler(request: Request):
-        nonlocal payload_type
         payload_type = request.url.split("/")[-1]
         if payload_type == "request-response":
-            payloads.append(RequestResponse().parse(request.data))
+            request_response_payloads.append(RequestResponse().parse(request.data))
         elif payload_type == "trace":
-            payloads.append(TracePayload().parse(request.data))
+            trace_payloads.append(TracePayload().parse(request.data))
         else:
             raise Exception(f"Unexpected payload type: {payload_type}")
         return Response(str("OK"))
@@ -426,7 +425,13 @@ def test_instrument_lambda_success_dev_mode_with_server(
         ],
         1,
     )
-    assert [(p.origin, json.loads(p.body)) for p in payloads] == [
+
+    assert [(p.origin, json.loads(p.body)) for p in request_response_payloads] == [
         (1, event),
         (2, "ok"),
+    ]
+    assert [s.name for t in trace_payloads for s in t.spans] == [
+        "aws.lambda.initialization",
+        "aws.lambda.invocation",
+        "aws.lambda",
     ]
