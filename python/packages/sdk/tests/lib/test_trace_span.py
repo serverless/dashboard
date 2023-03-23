@@ -1,8 +1,10 @@
 import pytest
 import time
 import json
+from unittest.mock import patch, call
 from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 from serverless_sdk.lib.trace import TraceSpan
+from serverless_sdk.lib.emitter import event_emitter
 
 
 # root span that lives throughout the test session
@@ -182,20 +184,29 @@ def test_spans():
 
 
 def test_span_closure():
-    # given
-    aws_lambda = TraceSpan(
-        "aws.lambda", immediate_descendants=["aws.lambda.initialization"]
+    with patch.object(event_emitter, "emit") as mock_emit:
+        # given
+        aws_lambda = TraceSpan(
+            "aws.lambda", immediate_descendants=["aws.lambda.initialization"]
+        )
+        aws_lambda_initialization = next(iter(aws_lambda.sub_spans))
+        aws_lambda_initialization.close()
+
+        aws_lambda_invocation = TraceSpan("aws.lambda.invocation")
+
+        # when
+        aws_lambda_invocation.close()
+
+        # then
+        aws_lambda.close()
+
+    mock_emit.assert_has_calls(
+        [
+            call("trace-span-close", aws_lambda_initialization),
+            call("trace-span-close", aws_lambda_invocation),
+            call("trace-span-close", aws_lambda),
+        ]
     )
-    aws_lambda_initialization = next(iter(aws_lambda.sub_spans))
-    aws_lambda_initialization.close()
-
-    aws_lambda_invocation = TraceSpan("aws.lambda.invocation")
-
-    # when
-    aws_lambda_invocation.close()
-
-    # then
-    aws_lambda.close()
 
 
 def test_root_span_reuse():
