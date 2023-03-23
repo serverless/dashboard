@@ -211,13 +211,14 @@ class Instrumenter:
             # Invocation of customer code
             try:
                 result = user_handler(event, context)
-                self._close_trace("success", result)
-                return result
             except BaseException as ex:  # catches all exceptions, including SystemExit.
                 if isinstance(ex, Exception):
                     self._close_trace("error:handled", ex)
                 else:
                     self._close_trace("error:unhandled", ex)
                 raise
+
+            self._close_trace("success", result)
+            return result
 
         return stub
