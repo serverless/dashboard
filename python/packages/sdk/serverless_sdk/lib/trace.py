@@ -17,6 +17,7 @@ from ..exceptions import (
     PastSpanEndTime,
     FutureSpanEndTime,
 )
+from .emitter import event_emitter
 from .id import generate_id
 from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
@@ -203,6 +204,7 @@ class TraceSpan:
                 if not found:
                     self._set_ctx(root_span)
 
+        event_emitter.emit("trace-span-close", self)
         return self
 
     def to_protobuf_dict(self):
