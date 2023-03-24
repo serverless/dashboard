@@ -68,10 +68,10 @@ func (w wrapper) Wrap(userHandler lambda.Handler, initializationStart time.Time)
 
 		slsCtx, rootCtx := ctxWithRootSpan(ctx, initializationStart)
 
-		output, userHandlerErr = userHandler.Invoke(slsCtx, payload)
+		output, userHandlerErr = invoke(slsCtx, userHandler, payload)
 		userHandlerInvoked = true
 
-		rootCtx.captureHandledErr(userHandlerErr)
+		rootCtx.captureUncaughtErr(userHandlerErr)
 		if err := w.closeRootSpan(rootCtx); err != nil {
 			debugLog("closeRootSpan:", err)
 		}
@@ -82,6 +82,15 @@ func (w wrapper) Wrap(userHandler lambda.Handler, initializationStart time.Time)
 		// return outputs from user handler
 		return output, userHandlerErr
 	}
+}
+
+func invoke(slsCtx context.Context, userHandler lambda.Handler, payload []byte) (output []byte, userHandlerErr error) {
+	defer func() {
+		if r := recover(); r != nil {
+			userHandlerErr = lambdaPanicResponse(r)
+		}
+	}()
+	return userHandler.Invoke(slsCtx, payload)
 }
 
 func ctxWithRootSpan(ctx context.Context, initializationStart time.Time) (context.Context, *rootContext) {

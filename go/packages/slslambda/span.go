@@ -3,7 +3,9 @@ package slslambda
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"time"
 )
@@ -36,14 +38,22 @@ func newRootContext(ctx context.Context, initializationStart, invocationStart ti
 	}
 }
 
-func (rc *rootContext) captureHandledErr(err error) {
+func (rc *rootContext) captureUncaughtErr(err error) {
 	if err == nil {
 		return
 	}
 	rc.invocation.Lock()
 	defer rc.invocation.Unlock()
 	rc.invocation.errors = append(rc.invocation.errors, newUncaughtError(err, time.Now()))
-	rc.spanTreeRoot.isHandledErr = true
+	rc.setOutcome(err)
+}
+
+func (rc *rootContext) setOutcome(err error) {
+	if respErr, ok := err.(messages.InvokeResponse_Error); ok && respErr.ShouldExit {
+		rc.spanTreeRoot.outcome = tagsv1.AwsLambdaTags_OUTCOME_ERROR_UNHANDLED
+		return
+	}
+	rc.spanTreeRoot.outcome = tagsv1.AwsLambdaTags_OUTCOME_ERROR_HANDLED
 }
 
 func isColdStart(initializationStart time.Time) bool {
@@ -55,14 +65,6 @@ func requestID(ctx context.Context) string {
 		return lambdaContext.AwsRequestID
 	}
 	return ""
-}
-
-func rootFromContext(ctx context.Context) (*rootContext, error) {
-	span, ok := ctx.Value(rootContextKey).(*rootContext)
-	if !ok {
-		return nil, errors.New("no root span in context")
-	}
-	return span, nil
 }
 
 func currentSpanFromContext(ctx context.Context) (*basicSpan, error) {
