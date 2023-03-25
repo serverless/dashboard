@@ -18,7 +18,6 @@ def reset_sdk_dev_mode(monkeypatch, request):
 def _reset_sdk(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
-    modules = sys.modules.copy()
     for key in list(sys.modules.keys()):
         if key.startswith("serverless_"):
             del sys.modules[key]

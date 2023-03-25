@@ -26,7 +26,7 @@ def test_telemetry_dev_mode_enabled(reset_sdk_dev_mode, aiohttp_server):
     # when
     with loop_context() as loop:
 
-        def _mock_server(request):
+        async def _mock_server(request):
             nonlocal path
             path = request.path
             return web.Response(text="OK")

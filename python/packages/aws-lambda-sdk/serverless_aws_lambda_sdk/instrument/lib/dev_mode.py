@@ -72,9 +72,9 @@ class SynchronizedVariable:
 
 class EventLoop(Thread):
     """
-    This class is used to send telemetry data to dev-mode extension, in a separate thread.
+    Used to send telemetry data to dev-mode extension, in a separate thread.
     The thread executes an asyncio loop.
-    There are four types of communication between the main thread and the EventLoop thread:
+    Communication between the main thread and the EventLoop thread:
     1. Main thread can add spans and captured events to the buffer.
     2. Main thread can schedule a task to be executed in the asyncio loop.
     3. Main thread can flush the buffer.
