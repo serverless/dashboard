@@ -14,10 +14,9 @@ from .lib.invocation_context import (
     set as set_invocation_context,
     get as get_invocation_context,
 )
-from .lib.scheduled_spans import flush as flush_spans
-from .lib.telemetry import send as send_telemetry
 from .lib.payload_conversion import to_trace_payload, to_request_response_payload
 from serverless_sdk.lib.trace import TraceSpan
+from serverless_sdk.lib.captured_event import CapturedEvent
 import base64
 
 
@@ -52,8 +51,18 @@ def _resolve_body_string(data, prefix):
             if "isBase64Encoded" in data and data["isBase64Encoded"]:
                 data = copy.copy(data)
                 del data["body"]
+                serverlessSdk._report_notice(
+                    "Binary body excluded",
+                    f"{prefix}_BODY_BINARY",
+                    serverlessSdk.trace_spans.aws_lambda,
+                )
     stringified_body = json.dumps(data)
     if len(stringified_body) > 1024 * 127:
+        serverlessSdk._report_notice(
+            "Large body excluded",
+            f"{prefix}_BODY_TOO_LARGE",
+            serverlessSdk.trace_spans.aws_lambda,
+        )
         return None
     return stringified_body
 
@@ -67,8 +76,13 @@ class Instrumenter:
     def __init__(self):
         self.current_invocation_id = 0
         serverlessSdk._captured_events = []
+        self.event_loop = None
         serverlessSdk._event_emitter.on("captured-event", self._captured_event_handler)
+        serverlessSdk._event_emitter.on(
+            "trace-span-close", self._trace_span_close_handler
+        )
         serverlessSdk._initialize()
+
         self.aws_lambda = serverlessSdk.trace_spans.aws_lambda
         if not serverlessSdk.org_id:
             raise Exception(
@@ -77,10 +91,27 @@ class Instrumenter:
                 + 'Ensure "SLS_ORG_ID" environment variable is set, '
                 + "or pass it with the options\n"
             )
+
+        if serverlessSdk._is_dev_mode:
+            from .lib.dev_mode import get_event_loop
+
+            self.event_loop = get_event_loop()
+
         serverlessSdk.trace_spans.aws_lambda_initialization.close()
 
-    def _captured_event_handler(self, captured_event):
+    def _captured_event_handler(self, captured_event: CapturedEvent):
         serverlessSdk._captured_events.append(captured_event)
+        # Only report captured events, if dev mode is active and the event is not
+        # a dev mode server issue, to prevent infinite loops.
+        if self.event_loop and not (
+            captured_event.custom_fingerprint
+            and captured_event.custom_fingerprint.startswith("DEV_MODE_SERVER")
+        ):
+            self.event_loop.add_captured_event(captured_event)
+
+    def _trace_span_close_handler(self, span):
+        if self.event_loop:
+            self.event_loop.add_span(span)
 
     def _report_request(self, event, context):
         payload_dct = serverlessSdk._last_request = {
@@ -104,7 +135,7 @@ class Instrumenter:
         payload_buffer = (
             serverlessSdk._last_request_buffer
         ) = to_request_response_payload(payload_dct)
-        return send_telemetry(
+        return self.event_loop.send_telemetry(
             "request-response",
             bytes(payload_buffer),
         )
@@ -130,10 +161,7 @@ class Instrumenter:
         payload_buffer = (
             serverlessSdk._last_response_buffer
         ) = to_request_response_payload(payload_dct)
-        return send_telemetry(
-            "request-response",
-            bytes(payload_buffer),
-        )
+        self.event_loop.send_telemetry("request-response", bytes(payload_buffer))
 
     def _report_trace(self, is_error_outcome: bool):
         is_sampled_out = (
@@ -226,7 +254,9 @@ class Instrumenter:
             if get_invocation_context():
                 self._report_trace(is_error_outcome)
 
-            flush_spans()
+            if self.event_loop:
+                self.event_loop.flush()
+
             self._clear_root_span()
 
             debug_log(
@@ -263,6 +293,7 @@ class Instrumenter:
                     "aws.lambda.invocation", start_time=request_start_time
                 )
             )
+
             if (
                 serverlessSdk._is_dev_mode
                 and not serverlessSdk._settings.disable_request_response_monitoring

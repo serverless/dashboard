@@ -12,10 +12,12 @@ def reset_sdk(monkeypatch, request):
 
 @pytest.fixture()
 def reset_sdk_dev_mode(monkeypatch, request):
-    yield _reset_sdk(monkeypatch, request, True)
+    yield _reset_sdk(monkeypatch, request, True, True)
 
 
-def _reset_sdk(monkeypatch, request, is_dev_mode: bool = False):
+def _reset_sdk(
+    monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
+):
     modules = sys.modules.copy()
     for key in list(sys.modules.keys()):
         if key.startswith("serverless_"):
@@ -26,14 +28,17 @@ def _reset_sdk(monkeypatch, request, is_dev_mode: bool = False):
     monkeypatch.setenv("SLS_ORG_ID", TEST_ORG)
     if is_dev_mode:
         monkeypatch.setenv("SLS_DEV_MODE_ORG_ID", TEST_DEV_MODE_ORG_ID)
+    else:
+        monkeypatch.delenv("SLS_DEV_MODE_ORG_ID", False)
+
+    if is_debug_mode:
+        monkeypatch.setenv("SLS_SDK_DEBUG", "1")
+    else:
+        monkeypatch.delenv("SLS_SDK_DEBUG", False)
 
     if hasattr(request, "param") and type(request.param) is dict:
         for key in request.param:
             monkeypatch.setenv(key, request.param[key])
-
-    for key in list(modules.keys()):
-        if key.startswith("serverless_"):
-            importlib.import_module(key)
 
     # make sure the SDK is imported
     importlib.import_module("serverless_aws_lambda_sdk")
