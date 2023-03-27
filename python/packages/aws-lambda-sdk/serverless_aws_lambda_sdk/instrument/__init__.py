@@ -2,16 +2,21 @@ from __future__ import annotations
 import os
 import time
 import sys
+import copy
 import json
 from functools import wraps
 from typing import List, Optional, Any
 from typing_extensions import Final
 import random
-from .. import serverlessSdk
-from ..base import Handler
-from ..trace_spans.aws_lambda import reset as reset_aws_lambda_span
-from serverless_sdk_schema import TracePayload
+from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
+from .lib.sdk import serverlessSdk
+from .lib.invocation_context import (
+    set as set_invocation_context,
+    get as get_invocation_context,
+)
+from .lib.payload_conversion import to_trace_payload, to_request_response_payload
 from serverless_sdk.lib.trace import TraceSpan
+from serverless_sdk.lib.captured_event import CapturedEvent
 import base64
 
 
@@ -35,28 +40,31 @@ def _resolve_outcome_enum_value(outcome: str) -> int:
     raise Exception(f"Unexpected outcome value: {outcome}")
 
 
-def _get_payload(payload_dct: dict) -> TracePayload:
-    payload = TracePayload()
-    payload.from_dict(payload_dct)
-    spans = payload_dct["spans"]
-    events = payload_dct["events"]
-    for index, span in enumerate(payload.spans):
-        span.id = str.encode(spans[index]["id"])
-        span.trace_id = str.encode(spans[index]["traceId"])
-        span.parent_span_id = (
-            str.encode(spans[index]["parentSpanId"])
-            if spans[index]["parentSpanId"]
-            else None
+def _resolve_body_string(data, prefix):
+    if data is None:
+        return None
+    if (
+        serverlessSdk.trace_spans.aws_lambda.tags.get("aws.lambda.event_source")
+        == "aws.apigateway"
+    ):
+        if "body" in data and isinstance(data["body"], str):
+            if "isBase64Encoded" in data and data["isBase64Encoded"]:
+                data = copy.copy(data)
+                del data["body"]
+                serverlessSdk._report_notice(
+                    "Binary body excluded",
+                    f"{prefix}_BODY_BINARY",
+                    serverlessSdk.trace_spans.aws_lambda,
+                )
+    stringified_body = json.dumps(data)
+    if len(stringified_body) > 1024 * 127:
+        serverlessSdk._report_notice(
+            "Large body excluded",
+            f"{prefix}_BODY_TOO_LARGE",
+            serverlessSdk.trace_spans.aws_lambda,
         )
-    for index, event in enumerate(payload.events):
-        event.id = str.encode(events[index]["id"])
-        event.span_id = (
-            str.encode(events[index]["spanId"]) if events[index]["spanId"] else None
-        )
-        event.trace_id = (
-            str.encode(events[index]["traceId"]) if events[index]["traceId"] else None
-        )
-    return payload
+        return None
+    return stringified_body
 
 
 class Instrumenter:
@@ -68,8 +76,13 @@ class Instrumenter:
     def __init__(self):
         self.current_invocation_id = 0
         serverlessSdk._captured_events = []
+        self.event_loop = None
         serverlessSdk._event_emitter.on("captured-event", self._captured_event_handler)
+        serverlessSdk._event_emitter.on(
+            "trace-span-close", self._trace_span_close_handler
+        )
         serverlessSdk._initialize()
+
         self.aws_lambda = serverlessSdk.trace_spans.aws_lambda
         if not serverlessSdk.org_id:
             raise Exception(
@@ -78,10 +91,77 @@ class Instrumenter:
                 + 'Ensure "SLS_ORG_ID" environment variable is set, '
                 + "or pass it with the options\n"
             )
+
+        if serverlessSdk._is_dev_mode:
+            from .lib.dev_mode import get_event_loop
+
+            self.event_loop = get_event_loop()
+
         serverlessSdk.trace_spans.aws_lambda_initialization.close()
 
-    def _captured_event_handler(self, captured_event):
+    def _captured_event_handler(self, captured_event: CapturedEvent):
         serverlessSdk._captured_events.append(captured_event)
+        # Only report captured events, if dev mode is active and the event is not
+        # a dev mode server issue, to prevent infinite loops.
+        if self.event_loop and not (
+            captured_event.custom_fingerprint
+            and captured_event.custom_fingerprint.startswith("DEV_MODE_SERVER")
+        ):
+            self.event_loop.add_captured_event(captured_event)
+
+    def _trace_span_close_handler(self, span):
+        if self.event_loop:
+            self.event_loop.add_span(span)
+
+    def _report_request(self, event, context):
+        payload_dct = serverlessSdk._last_request = {
+            "slsTags": {
+                "orgId": serverlessSdk.org_id,
+                "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
+                "sdk": {
+                    "name": serverlessSdk.name,
+                    "version": serverlessSdk.version,
+                },
+            },
+            "traceId": self.aws_lambda.trace_id,
+            "spanId": self.aws_lambda.id,
+            "requestId": context.aws_request_id,
+            "timestamp": to_protobuf_epoch_timestamp(
+                serverlessSdk.trace_spans.aws_lambda_invocation.start_time
+            ),
+            "body": _resolve_body_string(event, "INPUT"),
+            "origin": 1,
+        }
+        payload_buffer = (
+            serverlessSdk._last_request_buffer
+        ) = to_request_response_payload(payload_dct)
+        return self.event_loop.send_telemetry(
+            "request-response",
+            bytes(payload_buffer),
+        )
+
+    def _report_response(self, response, context, end_time):
+        response_string = _resolve_body_string(response, "OUTPUT")
+        payload_dct = serverlessSdk._last_request = {
+            "slsTags": {
+                "orgId": serverlessSdk.org_id,
+                "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
+                "sdk": {
+                    "name": serverlessSdk.name,
+                    "version": serverlessSdk.version,
+                },
+            },
+            "traceId": self.aws_lambda.trace_id,
+            "spanId": self.aws_lambda.id,
+            "requestId": context.aws_request_id,
+            "timestamp": to_protobuf_epoch_timestamp(end_time),
+            "body": response_string,
+            "origin": 2,
+        }
+        payload_buffer = (
+            serverlessSdk._last_response_buffer
+        ) = to_request_response_payload(payload_dct)
+        self.event_loop.send_telemetry("request-response", bytes(payload_buffer))
 
     def _report_trace(self, is_error_outcome: bool):
         is_sampled_out = (
@@ -134,12 +214,12 @@ class Instrumenter:
             if not is_sampled_out
             else None,
         }
-        payload = _get_payload(payload_dct)
+        payload = to_trace_payload(payload_dct)
         print(
             f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
         )
 
-    def _close_trace(self, outcome: str, outcomeResult: Optional[Any] = None):
+    def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
         self.is_root_span_reset = False
         try:
             end_time = time.perf_counter_ns()
@@ -150,9 +230,17 @@ class Instrumenter:
             )
             if is_error_outcome:
                 serverlessSdk.capture_error(
-                    outcomeResult, type="unhandled", timestamp=end_time
+                    outcome_result, type="unhandled", timestamp=end_time
                 )
 
+            if (
+                serverlessSdk._is_dev_mode
+                and not serverlessSdk._settings.disable_request_response_monitoring
+                and not is_error_outcome
+            ):
+                self._report_response(
+                    outcome_result, get_invocation_context(), end_time
+                )
             if not serverlessSdk.trace_spans.aws_lambda_initialization.end_time:
                 serverlessSdk.trace_spans.aws_lambda_initialization.close(
                     end_time=end_time
@@ -163,8 +251,11 @@ class Instrumenter:
 
             self.aws_lambda.close(end_time=end_time)
 
-            self._report_trace(is_error_outcome)
+            if get_invocation_context():
+                self._report_trace(is_error_outcome)
+
             self._clear_root_span()
+
             debug_log(
                 "Overhead duration: Internal response:"
                 + f"{int((time.perf_counter_ns() - end_time) / 1000_000)}ms"
@@ -176,7 +267,7 @@ class Instrumenter:
                 self._clear_root_span()
 
     def _clear_root_span(self):
-        reset_aws_lambda_span()
+        self.aws_lambda.clear()
         del self.aws_lambda.id
         del self.aws_lambda.trace_id
         del self.aws_lambda.end_time
@@ -184,41 +275,63 @@ class Instrumenter:
         serverlessSdk._custom_tags.clear()
         self.is_root_span_reset = True
 
-    def instrument(self, user_handler: Handler) -> Handler:
+    def _handler(self, user_handler, event, context):
+        request_start_time = time.perf_counter_ns()
+        self.current_invocation_id += 1
+        try:
+            debug_log("Invocation: start")
+            set_invocation_context(context)
+            if self.current_invocation_id > 1:
+                self.aws_lambda.start_time = request_start_time
+
+            self.aws_lambda.tags["aws.lambda.request_id"] = context.aws_request_id
+
+            # Event loop may already be active in case of a cold start
+            # That's why we create it only if it's not already set
+            if serverlessSdk._is_dev_mode and self.event_loop is None:
+                from .lib.dev_mode import get_event_loop
+
+                self.event_loop = get_event_loop()
+
+            serverlessSdk.trace_spans.aws_lambda_invocation = (
+                serverlessSdk._create_trace_span(
+                    "aws.lambda.invocation", start_time=request_start_time
+                )
+            )
+
+            if (
+                serverlessSdk._is_dev_mode
+                and not serverlessSdk._settings.disable_request_response_monitoring
+            ):
+                self._report_request(event, context)
+
+            diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
+            debug_log("Overhead duration: Internal request:" + f"{diff}ms")
+
+        except Exception as ex:
+            serverlessSdk._report_error(ex)
+            return user_handler(event, context)
+
+        # Invocation of customer code
+        try:
+            result = user_handler(event, context)
+        except BaseException as ex:  # catches all exceptions, including SystemExit.
+            if isinstance(ex, Exception):
+                self._close_trace("error:handled", ex)
+            else:
+                self._close_trace("error:unhandled", ex)
+            raise
+        self._close_trace("success", result)
+        return result
+
+    def instrument(self, user_handler):
         @wraps(user_handler)
         def stub(event, context):
-            request_start_time = time.perf_counter_ns()
-            self.current_invocation_id += 1
             try:
-                debug_log("Invocation: start")
-                if self.current_invocation_id > 1:
-                    self.aws_lambda.start_time = request_start_time
-
-                self.aws_lambda.tags["aws.lambda.request_id"] = context.aws_request_id
-                serverlessSdk.trace_spans.aws_lambda_invocation = (
-                    serverlessSdk._create_trace_span(
-                        "aws.lambda.invocation", start_time=request_start_time
-                    )
-                )
-
-                diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
-                debug_log("Overhead duration: Internal request:" + f"{diff}ms")
-
-            except Exception as ex:
-                serverlessSdk._report_error(ex)
-                return user_handler(event, context)
-
-            # Invocation of customer code
-            try:
-                result = user_handler(event, context)
-            except BaseException as ex:  # catches all exceptions, including SystemExit.
-                if isinstance(ex, Exception):
-                    self._close_trace("error:handled", ex)
-                else:
-                    self._close_trace("error:unhandled", ex)
-                raise
-
-            self._close_trace("success", result)
-            return result
+                return self._handler(user_handler, event, context)
+            finally:
+                if self.event_loop:
+                    self.event_loop.terminate()
+                    self.event_loop = None
 
         return stub

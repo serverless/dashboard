@@ -18,7 +18,7 @@ const layerBuildScriptFilename = path.resolve(
 
 module.exports = async (config, options = {}) => {
   const layersConfig = new Map();
-  for (const layerType of options.layerTypes || ['internal']) {
+  for (const layerType of options.layerTypes || ['internal', 'external']) {
     switch (layerType) {
       case 'external':
         if (process.env.TEST_EXTERNAL_LAYER_FILENAME) {
