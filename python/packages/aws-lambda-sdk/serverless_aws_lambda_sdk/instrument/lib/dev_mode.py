@@ -6,6 +6,19 @@ from .telemetry import send_async, close_session, open_session
 from .sdk import serverlessSdk
 from .invocation_context import get as get_invocation_context
 from .payload_conversion import to_trace_payload
+import builtins
+import logging
+
+_original_print = builtins.print
+
+
+def _print(self, *args, **kwargs):
+    # to make sure print & logging calls from multiple threads are serialized properly
+    with logging._lock:
+        _original_print(self, *args, **kwargs)
+
+
+builtins.print = _print
 
 
 class ThreadSafeBuffer:
