@@ -120,7 +120,7 @@ The traces, spans, and events are binary encoded and logged in CloudWatch
 where Serverless Console can consume the events via CloudWatch log subscription
 groups.
 
-Currently this is limited to Node.js 14+ runtime only. 
+Currently this is limited to the Node.js 14+ and Python 3.8+ runtimes only. 
 
 ### Automatic updating of layers
 

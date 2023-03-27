@@ -113,7 +113,7 @@ displayed with pretty formatting.
 Events, like Spans, are displayed on the timeline. Events can be selected to
 view the details.
 
-Events include a `name`, `message`, and `stack` when available. The Node.js SDK
-captures the stacktraces for all requests when possible. It also captures
-`Error` objects, so the `name`, `message`, and `stack` from the `Error` are made
-available as an error in the Inspector.
+Events include a `name`, `message`, and `stack` when available. The Node.js and
+Python Serverless SDKs capture the stacktraces for all requests when possible.
+It also captures `Error` objects, so the `name`, `message`, and `stack` from the
+`Error` are made available as an error in the Inspector.

@@ -40,8 +40,8 @@ By default, all strings and Errors are captured with `console.warn` and
 `console.error`. Unlike `console.log`, these methods will capture structured
 logs, including the stack trace and Error name, if applicable.
 
-For further customization, you can use the [Node.js SDK](../nodejs.md) methods
-to capture Events with custom tags.
+For further customization, you can use the [Node.js SDK](../nodejs-sdk.md)
+methods to capture Events with custom tags.
 
 ## Real Time Traces & Spans
 

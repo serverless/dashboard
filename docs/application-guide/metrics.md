@@ -16,8 +16,8 @@ and [enable Dev or Prod Instrumentation Mode](./instrumentation.md).
 Once instrumentation is enabled, go to the **Metrics** page to view all of your
 AWS Lambda function metrics including durations, invocations, and event counts.
 
-Currently Metrics are supported on the Node.js 14+ runtime on AWS Lambda only.
-Support for Python and Go runtimes is coming soon.
+Currently Metrics are supported on the Node.js 14+ and Python 3.8+ runtimes on
+AWS Lambda only. Support for other runtimes is coming soon.
 
 ## Metric Aggregation
 
@@ -75,4 +75,5 @@ cold start.
 - **Duration** - Filters based on the AWS Lambda response duration.
 - **Custom Tags** - Filters for metrics on invocations that had the provided
 custom tags. Custom tags on traces, errors, and warnings are all queried. Use
-the [Serverless SDK](../nodejs.md) to set custom tags.
+the [Node.js](../nodejs-sdk.md) or [Python](./python-sdk.md) Serverless SDK to set
+custom tags.
