@@ -8,6 +8,7 @@
     - [AwsApiGatewayTags.AwsApiGatewayRequestTags](#serverless-instrumentation-tags-v1-AwsApiGatewayTags-AwsApiGatewayRequestTags)
     - [AwsLambdaInitializationTags](#serverless-instrumentation-tags-v1-AwsLambdaInitializationTags)
     - [AwsLambdaInvocationTags](#serverless-instrumentation-tags-v1-AwsLambdaInvocationTags)
+    - [AwsLambdaRuntimeTags](#serverless-instrumentation-tags-v1-AwsLambdaRuntimeTags)
     - [AwsLambdaTags](#serverless-instrumentation-tags-v1-AwsLambdaTags)
     - [AwsSdkDynamodbTags](#serverless-instrumentation-tags-v1-AwsSdkDynamodbTags)
     - [AwsSdkSnsTags](#serverless-instrumentation-tags-v1-AwsSdkSnsTags)
@@ -145,6 +146,23 @@
 
 
 
+<a name="serverless-instrumentation-tags-v1-AwsLambdaRuntimeTags"></a>
+
+### AwsLambdaRuntimeTags
+Describes the AWS Lambda runtime details
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identifier | [string](#string) |  | Runtime identifier |
+| version | [string](#string) |  | Runtime version |
+| arn | [string](#string) |  | Runtime ARN |
+
+
+
+
+
+
 <a name="serverless-instrumentation-tags-v1-AwsLambdaTags"></a>
 
 ### AwsLambdaTags
@@ -177,6 +195,7 @@
 | http_router | [HttpRouterTags](#serverless-instrumentation-tags-v1-HttpRouterTags) | optional | Will be set if function is handling HTTP requests and there&#39;s routing functionality setup |
 | initialization | [AwsLambdaInitializationTags](#serverless-instrumentation-tags-v1-AwsLambdaInitializationTags) | optional | The root AWS Lambda Span tags. |
 | invocation | [AwsLambdaInvocationTags](#serverless-instrumentation-tags-v1-AwsLambdaInvocationTags) | optional | The AWS Lambda Invocation tags. |
+| runtime | [AwsLambdaRuntimeTags](#serverless-instrumentation-tags-v1-AwsLambdaRuntimeTags) | optional | The AWS Lambda Runtime tags. |
 
 
 
@@ -514,6 +533,7 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | The Name of the Serverless SDK used to instrument. |
 | version | [string](#string) |  | The version of the Serverless SDK used to instrument. |
+| runtime | [string](#string) | optional | SDK runtime (e.g. nodejs) |
 
 
 
