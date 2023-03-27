@@ -41,6 +41,8 @@ def test_dev_mode(reset_sdk_dev_mode, monkeypatch):
     send_async.side_effect = lambda x, y: _sleep()
     close_session = MagicMock()
     close_session.side_effect = lambda: _sleep()
+    open_session = MagicMock()
+    open_session.side_effect = lambda: _sleep()
     monkeypatch.setattr(
         serverless_aws_lambda_sdk.instrument.lib.dev_mode, "send_async", send_async
     )
@@ -48,6 +50,11 @@ def test_dev_mode(reset_sdk_dev_mode, monkeypatch):
         serverless_aws_lambda_sdk.instrument.lib.dev_mode,
         "close_session",
         close_session,
+    )
+    monkeypatch.setattr(
+        serverless_aws_lambda_sdk.instrument.lib.dev_mode,
+        "open_session",
+        open_session,
     )
     loop = serverless_aws_lambda_sdk.instrument.lib.dev_mode.get_event_loop()
     trace_body1 = b"trace-body-1"
@@ -72,7 +79,7 @@ def test_dev_mode(reset_sdk_dev_mode, monkeypatch):
 
     loop.add_span(TraceSpan("span2"))
 
-    loop._terminate()
+    loop.terminate()
 
     # then
     assert loop._buffered_data._pending_spans == []
@@ -93,6 +100,7 @@ def test_dev_mode(reset_sdk_dev_mode, monkeypatch):
     assert [x.name for x in trace_payload3.spans] == ["span1", "span2"]
 
     close_session.assert_called_once_with()
+    open_session.assert_called_once_with()
 
 
 def test_dev_mode_close_timing(reset_sdk_dev_mode, monkeypatch):
@@ -107,6 +115,8 @@ def test_dev_mode_close_timing(reset_sdk_dev_mode, monkeypatch):
     send_async.side_effect = lambda x, y: _sleep()
     close_session = MagicMock()
     close_session.side_effect = lambda: _sleep()
+    open_session = MagicMock()
+    open_session.side_effect = lambda: _sleep()
     monkeypatch.setattr(
         serverless_aws_lambda_sdk.instrument.lib.dev_mode, "send_async", send_async
     )
@@ -114,6 +124,11 @@ def test_dev_mode_close_timing(reset_sdk_dev_mode, monkeypatch):
         serverless_aws_lambda_sdk.instrument.lib.dev_mode,
         "close_session",
         close_session,
+    )
+    monkeypatch.setattr(
+        serverless_aws_lambda_sdk.instrument.lib.dev_mode,
+        "open_session",
+        open_session,
     )
     loop = serverless_aws_lambda_sdk.instrument.lib.dev_mode.get_event_loop()
     trace_body1 = b"trace-body-1"
@@ -128,7 +143,7 @@ def test_dev_mode_close_timing(reset_sdk_dev_mode, monkeypatch):
     loop.add_captured_event(CapturedEvent("event3"))
     loop.add_span(TraceSpan("span2"))
 
-    loop._terminate()
+    loop.terminate()
 
     # then
     assert loop._buffered_data._pending_spans == []

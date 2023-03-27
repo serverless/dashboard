@@ -2,7 +2,7 @@ from __future__ import annotations
 import pytest
 from unittest.mock import patch, MagicMock
 import json
-import time
+import importlib
 from .. import compare_handlers, context
 from .test_assertions import assert_trace_payload
 from serverless_sdk_schema import TracePayload, RequestResponse
@@ -18,15 +18,6 @@ def instrumenter(reset_sdk):
     from serverless_aws_lambda_sdk.instrument import Instrumenter
 
     return Instrumenter()
-
-
-@pytest.fixture()
-def instrumenter_dev_mode(reset_sdk_dev_mode):
-    from serverless_aws_lambda_sdk.instrument import Instrumenter
-
-    instrumenter = Instrumenter()
-    yield instrumenter
-    instrumenter.event_loop._terminate()
 
 
 def test_instrument_is_callable(instrumenter):
@@ -356,13 +347,16 @@ def test_instrument_sdk_sampled_out(
 
 
 def test_instrument_lambda_success_dev_mode_without_server(
-    instrumenter_dev_mode, mocked_print
+    reset_sdk_dev_mode, mocked_print
 ):
     # given
-    from ..fixtures.lambdas.success import handler
-    from serverless_aws_lambda_sdk.instrument import Instrumenter
+    import serverless_aws_lambda_sdk.instrument
 
-    instrumented = instrumenter_dev_mode.instrument(handler)
+    importlib.reload(serverless_aws_lambda_sdk.instrument)
+    from ..fixtures.lambdas.success import handler as lambda_handler
+
+    instrumenter_dev_mode = serverless_aws_lambda_sdk.instrument.Instrumenter()
+    instrumented = instrumenter_dev_mode.instrument(lambda_handler)
 
     # when
     instrumented({}, context)
@@ -386,7 +380,7 @@ def test_instrument_lambda_success_dev_mode_without_server(
 
 
 def test_instrument_lambda_success_dev_mode_with_server(
-    instrumenter_dev_mode,
+    reset_sdk_dev_mode,
     mocked_print,
     httpserver_listen_address,
     httpserver: HTTPServer,
@@ -394,6 +388,7 @@ def test_instrument_lambda_success_dev_mode_with_server(
     # given
     request_response_payloads = []
     trace_payloads = []
+    capture_error_count = 1
 
     def handler(request: Request):
         payload_type = request.url.split("/")[-1]
@@ -408,10 +403,21 @@ def test_instrument_lambda_success_dev_mode_with_server(
     httpserver.expect_request("/request-response").respond_with_handler(handler)
     httpserver.expect_request("/trace").respond_with_handler(handler)
 
-    from ..fixtures.lambdas.success import handler
-    from serverless_aws_lambda_sdk.instrument import Instrumenter
+    import serverless_aws_lambda_sdk.instrument
 
-    instrumented = instrumenter_dev_mode.instrument(handler)
+    importlib.reload(serverless_aws_lambda_sdk.instrument)
+
+    def lambda_handler(event, context):
+        from serverless_aws_lambda_sdk import serverlessSdk
+        import time
+
+        for i in range(capture_error_count):
+            time.sleep(0.02)
+            serverlessSdk.capture_error(f"error {i}")
+        return "ok"
+
+    instrumenter_dev_mode = serverless_aws_lambda_sdk.instrument.Instrumenter()
+    instrumented = instrumenter_dev_mode.instrument(lambda_handler)
 
     event = {
         "foo": "bar",
@@ -419,8 +425,6 @@ def test_instrument_lambda_success_dev_mode_with_server(
 
     # when
     instrumented(event, context)
-    instrumenter_dev_mode.event_loop.flush()
-    time.sleep(0.5)
 
     serialized = [
         x[0][0]
@@ -452,6 +456,11 @@ def test_instrument_lambda_success_dev_mode_with_server(
         "aws.lambda.invocation",
         "aws.lambda",
     ]
+
+    assert (
+        len([e.event_name for t in trace_payloads for e in t.events])
+        == capture_error_count
+    )
 
     # when
     request_response_payloads = []

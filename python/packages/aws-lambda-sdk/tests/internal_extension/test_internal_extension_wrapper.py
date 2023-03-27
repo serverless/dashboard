@@ -1,11 +1,9 @@
 from __future__ import annotations
-
 import os
-
 from typing_extensions import Final
 from pathlib import Path
 
-
+from .. import context
 from ..fixtures import (
     SUBMODULE_HANDLER,
     SUCCESS_HANDLER,
@@ -16,6 +14,8 @@ from ..fixtures import (
 )
 import importlib
 import pytest
+from pytest_httpserver import HTTPServer
+from werkzeug.wrappers import Response
 
 
 HANDLER_MODULE_DIR: Final[str] = str(Path(__file__).parent.resolve())
@@ -108,10 +108,62 @@ def test_can_instrument_handler(reset_sdk):
     from serverless_aws_lambda_sdk.internal_extension import wrapper
 
     importlib.reload(wrapper)
-    response = wrapper.handler({}, {})
+    response = wrapper.handler({}, context)
 
     # then
     assert response == "ok", "handler return should not be tampered with"
+
+
+def test_can_instrument_handler_dev_mode_without_running_server(reset_sdk_dev_mode):
+    # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
+    env = os.environ
+    env[Env.HANDLER] = f"{SUCCESS_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_BASENAME] = f"{SUCCESS_HANDLER}"
+    env[Env.HANDLER_BASENAME] = f"{SUCCESS_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
+    env[Env.HANDLER_FUNCTION_NAME] = "handler"
+    reset_sdk_dev_mode.setattr(os, "environ", env)
+
+    # when
+    from serverless_aws_lambda_sdk.internal_extension import wrapper
+
+    responses = [wrapper.handler({}, context), wrapper.handler({}, context)]
+
+    # then
+    assert responses == ["ok", "ok"], "handler return should not be tampered with"
+
+
+def test_can_instrument_handler_dev_mode_with_running_server(
+    reset_sdk_dev_mode,
+    httpserver_listen_address,
+    httpserver: HTTPServer,
+):
+    # given
+    from serverless_aws_lambda_sdk.internal_extension.base import Env
+
+    env = os.environ
+    env[Env.HANDLER] = f"{SUCCESS_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_BASENAME] = f"{SUCCESS_HANDLER}"
+    env[Env.HANDLER_BASENAME] = f"{SUCCESS_HANDLER}.handler"
+    env[Env.HANDLER_MODULE_DIR] = HANDLER_MODULE_DIR
+    env[Env.HANDLER_FUNCTION_NAME] = "handler"
+    reset_sdk_dev_mode.setattr(os, "environ", env)
+
+    def http_handler(request):
+        return Response(str("OK"))
+
+    httpserver.expect_request("/request-response").respond_with_handler(http_handler)
+    httpserver.expect_request("/trace").respond_with_handler(http_handler)
+
+    # when
+    from serverless_aws_lambda_sdk.internal_extension import wrapper
+
+    responses = [wrapper.handler({}, context), wrapper.handler({}, context)]
+
+    # then
+    assert responses == ["ok", "ok"], "handler return should not be tampered with"
 
 
 def test_can_instrument_handler_with_submodule(reset_sdk):
@@ -130,7 +182,7 @@ def test_can_instrument_handler_with_submodule(reset_sdk):
     from serverless_aws_lambda_sdk.internal_extension import wrapper
 
     importlib.reload(wrapper)
-    response = wrapper.handler({}, {})
+    response = wrapper.handler({}, context)
 
     # then
     assert response == "ok", "handler return should not be tampered with"
@@ -154,7 +206,7 @@ def test_can_instrument_handler_when_handler_fails(reset_sdk):
     importlib.reload(wrapper)
 
     with pytest.raises(Exception, match=r"Stop"):
-        wrapper.handler({}, {})
+        wrapper.handler({}, context)
 
 
 def test_can_instrument_handler_when_handler_exits_with_error(reset_sdk):
@@ -176,4 +228,4 @@ def test_can_instrument_handler_when_handler_exits_with_error(reset_sdk):
 
     # then
     with pytest.raises(SystemExit, match=r"1"):
-        wrapper.handler({}, {})
+        wrapper.handler({}, context)

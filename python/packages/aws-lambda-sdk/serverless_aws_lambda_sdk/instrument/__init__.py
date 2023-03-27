@@ -254,9 +254,6 @@ class Instrumenter:
             if get_invocation_context():
                 self._report_trace(is_error_outcome)
 
-            if self.event_loop:
-                self.event_loop.flush()
-
             self._clear_root_span()
 
             debug_log(
@@ -288,6 +285,14 @@ class Instrumenter:
                 self.aws_lambda.start_time = request_start_time
 
             self.aws_lambda.tags["aws.lambda.request_id"] = context.aws_request_id
+
+            # Event loop may already be active in case of a cold start
+            # That's why we create it only if it's not already set
+            if serverlessSdk._is_dev_mode and self.event_loop is None:
+                from .lib.dev_mode import get_event_loop
+
+                self.event_loop = get_event_loop()
+
             serverlessSdk.trace_spans.aws_lambda_invocation = (
                 serverlessSdk._create_trace_span(
                     "aws.lambda.invocation", start_time=request_start_time
@@ -322,6 +327,11 @@ class Instrumenter:
     def instrument(self, user_handler):
         @wraps(user_handler)
         def stub(event, context):
-            return self._handler(user_handler, event, context)
+            try:
+                return self._handler(user_handler, event, context)
+            finally:
+                if self.event_loop:
+                    self.event_loop.terminate()
+                    self.event_loop = None
 
         return stub
