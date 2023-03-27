@@ -11,10 +11,9 @@ version = "0.1.1"
 description = "The protobuf generated Serverless SDK Schema"
 readme = "README.md"
 authors = [{ name = "serverlessinc" }]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "betterproto<3.0.0,>=2.0.0b5", # This version supports proto3 optional fields
-    "typing-extensions>=4.4", # included in Python 3.8 - 3.11
 ]
 [project.optional-dependencies]
 tests = [
