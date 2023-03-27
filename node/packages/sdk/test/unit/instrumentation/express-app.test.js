@@ -15,7 +15,7 @@ describe('instrumentation/expres-app.js', () => {
     delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
   });
 
-  it('should instrument `console.error`', () => {
+  it('should instrument express app', () => {
     const app = express();
     // Sanity check
     instrumentExpressApp.install(app)();
