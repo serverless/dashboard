@@ -109,4 +109,43 @@ describe('lib/instrumentation/http.js', () => {
     expect(tags.get('http.request_header_names')).to.deep.equal(['someHeader']);
     expect(tags.get('http.status_code')).to.equal(200);
   });
+
+  it('should support `options.path`', async () => {
+    let httpRequestSpan;
+    serverlessSdk._eventEmitter.once(
+      'trace-span-close',
+      (traceSpan) => (httpRequestSpan = traceSpan)
+    );
+    await new Promise((resolve, reject) => {
+      http
+        .request(
+          {
+            hostname: 'localhost',
+            path: '/other?foo=bar',
+            port: TEST_SERVER_PORT,
+            headers: { someHeader: 'bar' },
+          },
+          (response) => {
+            let body = '';
+            response.on('data', (data) => {
+              body += data;
+            });
+            response.on('end', () => {
+              resolve(JSON.parse(body));
+            });
+          }
+        )
+        .end()
+        .on('error', reject);
+    });
+    expect(httpRequestSpan.name).to.equal('node.http.request');
+    const { tags } = httpRequestSpan;
+    expect(tags.get('http.method')).to.equal('GET');
+    expect(tags.get('http.protocol')).to.equal('HTTP/1.1');
+    expect(tags.get('http.host')).to.equal('localhost:3177');
+    expect(tags.get('http.path')).to.equal('/other');
+    expect(tags.get('http.query_parameter_names')).to.deep.equal(['foo']);
+    expect(tags.get('http.request_header_names')).to.deep.equal(['someHeader']);
+    expect(tags.get('http.status_code')).to.equal(200);
+  });
 });

@@ -164,9 +164,19 @@ const install = (protocol, httpModule) => {
 
     if (typeof options === 'function') {
       --cbIndex;
-      options = url || {};
+      options = { ...url };
     } else {
-      options = Object.assign(url || {}, options);
+      options = { ...url, ...options };
+    }
+    if (options.path) {
+      try {
+        const resolvedUrl = new URL(options.path, 'http://localhost');
+        options.pathname = resolvedUrl.pathname;
+        options.search = resolvedUrl.search;
+      } catch {
+        shouldIgnoreFollowingRequest = false;
+        return originalRequest.apply(this, args);
+      }
     }
 
     const originalCb = args[cbIndex];
