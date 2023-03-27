@@ -131,6 +131,8 @@ message AwsLambdaTags {
   optional AwsLambdaInitializationTags initialization = 104;
   // The AWS Lambda Invocation tags.
   optional AwsLambdaInvocationTags invocation = 105;
+  // The AWS Lambda Runtime tags.
+  optional AwsLambdaRuntimeTags runtime = 107;
 }
 
 // Describe routing of incoming HTTP requests.
@@ -153,6 +155,16 @@ message AwsSnsEventTags {
   string topic_name = 1;
   // Introspected from the events records
   repeated string message_ids = 2;
+}
+
+// Describes the AWS Lambda runtime details
+message AwsLambdaRuntimeTags {
+  // Runtime identifier
+  string identifier = 1;
+  // Runtime version
+  string version = 2;
+  // Runtime ARN
+  string arn = 3;
 }
 
 message AwsLambdaInitializationTags {
