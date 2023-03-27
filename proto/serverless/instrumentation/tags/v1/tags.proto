@@ -78,4 +78,6 @@ message SdkTags {
   string name = 1;
   // The version of the Serverless SDK used to instrument.
   string version = 2;
+  // SDK runtime (e.g. nodejs)
+  optional string runtime = 3;
 }
