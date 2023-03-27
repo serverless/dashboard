@@ -1,8 +1,8 @@
 from __future__ import annotations
+from functools import cached_property
 from typing import List, Optional
 import time
 import json
-from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final
 from .timing import to_protobuf_epoch_timestamp
 from .id import generate_id
