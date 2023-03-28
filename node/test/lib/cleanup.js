@@ -199,6 +199,9 @@ module.exports = async (basename, options = {}) => {
       deleteLayers(basename),
       deleteLayers(`${basename}-internal`),
       deleteLayers(`${basename}-external`),
+      ...(options.extraLayerNames || []).map((layerName) =>
+        deleteLayers(`${basename}-${layerName}`)
+      ),
     ]);
 
   const deleteRole = async () => {
