@@ -51,7 +51,7 @@ jobs:
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
           #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
-          cache: 'pip'
+          cache: "pip"
           cache-dependency-path: |
             **/pyproject.toml
 
@@ -67,9 +67,9 @@ jobs:
         if: steps.pathChanges.outputs.packages == 'true'
         run: |
           cd python/packages
-          
+
           python3 -m pip install pyproject-fmt
-          
+
           for directory in */; do
             if [ -f "$directory/pyproject.toml" ]; then
               python3 -m pyproject_fmt --indent 4 $directory/pyproject.toml
@@ -105,18 +105,11 @@ jobs:
         with:
           github_token: ${{ github.token }}
 
-      - name: Buf Lint
-        if: steps.pathChanges.outputs.proto == 'true'
-        uses: bufbuild/buf-lint-action@v1
-        with:
-          input: "proto"
-          github_token: ${{ github.token }}
-
       - name: Cache protobuf
         id: cache-protobuf
         uses: actions/cache@v3
         with:
-          path:  ~/protobuf
+          path: ~/protobuf
           key: "protobuf:protoc-22.2-linux-x86_32.zip"
 
       - name: Install protoc compiler
@@ -130,11 +123,19 @@ jobs:
         run: |
           echo ~/protobuf/bin >> $GITHUB_PATH
 
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
+          github_token: ${{ github.token }}
+
       - name: Build Protobufs
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
-          cd python/packages/sdk-schema
-          ./scripts/compile-protobuf.sh
+          cd ./proto
+          buf build
+          buf generate --template=buf.gen.python.yaml
 
       - name: Install SDK Schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'

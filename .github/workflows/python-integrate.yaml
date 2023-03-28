@@ -4,7 +4,7 @@ name: "Python: Integrate"
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - python/**
       - proto/**
@@ -47,7 +47,7 @@ jobs:
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
           #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
-          cache: 'pip'
+          cache: "pip"
           cache-dependency-path: |
             **/pyproject.toml
 
@@ -72,18 +72,11 @@ jobs:
         with:
           github_token: ${{ github.token }}
 
-      - name: Buf Lint
-        if: steps.pathChanges.outputs.proto == 'true'
-        uses: bufbuild/buf-lint-action@v1
-        with:
-          input: "proto"
-          github_token: ${{ github.token }}
-
       - name: Cache protobuf
         id: cache-protobuf
         uses: actions/cache@v3
         with:
-          path:  ~/protobuf
+          path: ~/protobuf
           key: "protobuf:protoc-22.2-linux-x86_32.zip"
 
       - name: Install protoc compiler
@@ -97,11 +90,19 @@ jobs:
         run: |
           echo ~/protobuf/bin >> $GITHUB_PATH
 
+      - name: Buf Lint
+        if: steps.pathChanges.outputs.proto == 'true'
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
+          github_token: ${{ github.token }}
+
       - name: Build Protobufs
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
-          cd python/packages/sdk-schema
-          ./scripts/compile-protobuf.sh
+          cd ./proto
+          buf build
+          buf generate --template=buf.gen.python.yaml
 
       - name: Install SDK Schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
@@ -136,7 +137,7 @@ jobs:
   integratePythonSdk:
     name: Integrate Python SDK
     runs-on: ubuntu-latest
-    needs: [ validate ]
+    needs: [validate]
     if: needs.validate.outputs.pathChangedSdk == 'true'
     timeout-minutes: 5 # Default is 360
     steps:
@@ -162,7 +163,7 @@ jobs:
   integrateAwsLambdaSdk:
     name: Integrate Python AWS Lambda SDK
     runs-on: ubuntu-latest
-    needs: [ validate ]
+    needs: [validate]
     if: needs.validate.outputs.pathChangedAwsLambdaSdk == 'true'
     timeout-minutes: 5 # Default is 360
     env:
@@ -184,8 +185,8 @@ jobs:
       - name: Install Python 3.7
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
-          cache: 'pip'
+          python-version: "3.7"
+          cache: "pip"
           cache-dependency-path: |
             **/pyproject.toml
 
@@ -222,7 +223,7 @@ jobs:
   integratePythonSdkSchema:
     name: Integrate Python SDK Schema
     runs-on: ubuntu-latest
-    needs: [ validate ]
+    needs: [validate]
     if: needs.validate.outputs.pathChangedSdkSchema == 'true'
     timeout-minutes: 5 # Default is 360
     steps:

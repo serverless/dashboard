@@ -9,9 +9,14 @@ To build the sdk-schema package from source, follow these steps:
 # cd to the root directory of repo
 python3.9 -m venv .venv
 source .venv/bin/activate
+
 brew install protobuf
-cd ./python/packages/sdk-schema
-scripts/compile-protobuf.sh
+brew install bufbuild/buf/buf
+cd ./proto
+buf build
+buf generate --template=buf.gen.python.yaml
+
+cd ../python/packages/sdk-schema
 pip install . --target=./dist
 python -m build --wheel --sdist .
 ```
