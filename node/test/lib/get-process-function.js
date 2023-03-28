@@ -42,7 +42,7 @@ module.exports = async (basename, coreConfig, options) => {
   const { TracePayload, LogPayload, DevModePayload } = options;
   ensurePlainFunction(TracePayload.encode);
 
-  if (!baseLambdaConfiguration.Code) {
+  if (!baseLambdaConfiguration.Code && options.fixturesDirname) {
     baseLambdaConfiguration.Code = { ZipFile: await resolveDirZipBuffer(options.fixturesDirname) };
   }
 
