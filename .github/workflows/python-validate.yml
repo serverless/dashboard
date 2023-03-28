@@ -112,12 +112,23 @@ jobs:
           input: "proto"
           github_token: ${{ github.token }}
 
+      - name: Cache protobuf
+        id: cache-protobuf
+        uses: actions/cache@v3
+        with:
+          path:  ~/protobuf
+          key: "protobuf:protoc-22.2-linux-x86_32.zip"
+
       - name: Install protoc compiler
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        if: steps.cache-protobuf.outputs.cache-hit != 'true' && (steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true')
         run: |
           curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v22.2/protoc-22.2-linux-x86_32.zip
-          unzip protoc-22.2-linux-x86_32.zip -d $GITHUB_WORKSPACE
-          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+          unzip protoc-22.2-linux-x86_32.zip -d ~/protobuf
+
+      - name: Add protobuf to PATH
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          echo ~/protobuf/bin >> $GITHUB_PATH
 
       - name: Build Protobufs
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
