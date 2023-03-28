@@ -204,7 +204,7 @@ def _assert_event(
 ):
     assert event.timestamp_unix_nano < timestamp
     assert event.event_name == event_name
-    if event.tags.error:
+    if event.tags.HasField("error"):
         assert event.tags.error.type == type
         assert event.tags.error.name == error_name
         assert event.tags.error.message == message
@@ -341,8 +341,9 @@ def test_instrument_sdk_sampled_out(
         + (["user.span"] if not sampled_out else []),
         1,
     )
-    assert (sampled_out and trace_payload.custom_tags is None) or (
-        not sampled_out and trace_payload.custom_tags is not None
+
+    assert (sampled_out and not trace_payload.HasField("custom_tags")) or (
+        not sampled_out and trace_payload.HasField("custom_tags")
     )
 
 
@@ -393,9 +394,9 @@ def test_instrument_lambda_success_dev_mode_with_server(
     def handler(request: Request):
         payload_type = request.url.split("/")[-1]
         if payload_type == "request-response":
-            request_response_payloads.append(RequestResponse().parse(request.data))
+            request_response_payloads.append(RequestResponse.FromString(request.data))
         elif payload_type == "trace":
-            trace_payloads.append(TracePayload().parse(request.data))
+            trace_payloads.append(TracePayload.FromString(request.data))
         else:
             raise Exception(f"Unexpected payload type: {payload_type}")
         return Response(str("OK"))

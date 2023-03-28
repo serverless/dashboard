@@ -137,7 +137,7 @@ class Instrumenter:
         ) = to_request_response_payload(payload_dct)
         return self.event_loop.send_telemetry(
             "request-response",
-            bytes(payload_buffer),
+            payload_buffer.SerializeToString(),
         )
 
     def _report_response(self, response, context, end_time):
@@ -161,7 +161,9 @@ class Instrumenter:
         payload_buffer = (
             serverlessSdk._last_response_buffer
         ) = to_request_response_payload(payload_dct)
-        self.event_loop.send_telemetry("request-response", bytes(payload_buffer))
+        self.event_loop.send_telemetry(
+            "request-response", payload_buffer.SerializeToString()
+        )
 
     def _report_trace(self, is_error_outcome: bool):
         is_sampled_out = (

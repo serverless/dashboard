@@ -1,6 +1,6 @@
 from typing import List
 from serverless_sdk_schema import TracePayload
-from serverless_sdk_schema.schema.serverless.instrumentation.v1 import Span
+from serverless_sdk_schema.schema.serverless.instrumentation.v1.trace_pb2 import Span
 from ..conftest import TEST_FUNCTION, TEST_ORG
 from .. import context
 
@@ -20,8 +20,11 @@ def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome:
     assert trace_payload.sls_tags.org_id == TEST_ORG
     assert trace_payload.sls_tags.service == TEST_FUNCTION
     aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
-    assert aws_lambda.tags.aws.lambda_.outcome == outcome
-    assert aws_lambda.tags.aws.lambda_.request_id == context.aws_request_id
+    lambda_tag = [
+        val for x, val in aws_lambda.tags.aws.ListFields() if x.name == "lambda"
+    ][0]
+    assert lambda_tag.outcome == outcome
+    assert lambda_tag.request_id == context.aws_request_id
 
     aws_lambda_initialization = [
         x for x in trace_payload.spans if x.name == "aws.lambda.initialization"
