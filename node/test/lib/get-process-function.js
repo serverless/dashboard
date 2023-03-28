@@ -25,7 +25,7 @@ module.exports = async (basename, coreConfig, options) => {
   const baseLambdaConfiguration = _.merge(
     {
       Role: coreConfig.roleArn,
-      MemorySize: 1024,
+      MemorySize: Number(options.lambdaMemorySize || 1024),
       Layers: [coreConfig.layerInternalArn],
       Environment: {
         Variables: {
