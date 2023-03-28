@@ -25,26 +25,19 @@ jobs:
           cache-dependency-path: |
             **/pyproject.toml
 
-      - name: Install Buf dependencies
+      - name: Install protoc compiler
         run: |
-          cd python/packages/sdk-schema
-          python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
-
-      - name: Buf Setup
-        uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ github.token }}
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v22.2/protoc-22.2-linux-x86_32.zip
+          unzip protoc-22.2-linux-x86_32.zip -d $GITHUB_WORKSPACE
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
       - name: Publish New Version
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_AUTH_TOKEN }}
         run: |
-          cd ./proto
-          buf build
-          buf generate --template=buf.gen.python.yaml 
-
-          cd ../python/packages/sdk-schema
+          cd python/packages/sdk-schema
+          ./scripts/compile-protobuf.sh
           python3 -m pip install --upgrade build twine wheel
           python3 -m build --wheel --sdist .
           twine upload dist/*.tar.gz dist/*.whl

@@ -66,14 +66,6 @@ jobs:
           source .venv/bin/activate
           python3 -m pytest
 
-      - name: Initialize Python Environment
-        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
-        run: |
-          cd python/packages/sdk-schema
-          python3 -m venv .venv
-          source .venv/bin/activate
-          python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
-
       - name: Buf Setup
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         uses: bufbuild/buf-setup-action@v1
@@ -87,18 +79,24 @@ jobs:
           input: "proto"
           github_token: ${{ github.token }}
 
+      - name: Install protoc compiler
+        if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
+        run: |
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v22.2/protoc-22.2-linux-x86_32.zip
+          unzip protoc-22.2-linux-x86_32.zip -d $GITHUB_WORKSPACE
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
       - name: Build Protobufs
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
-          cd ./proto
-          source ../python/packages/sdk-schema/.venv/bin/activate
-          buf build
-          buf generate --template=buf.gen.python.yaml
+          cd python/packages/sdk-schema
+          ./scripts/compile-protobuf.sh
 
       - name: Install SDK Schema
         if: steps.pathChanges.outputs.sdkSchema == 'true' || steps.pathChanges.outputs.proto == 'true'
         run: |
           cd python/packages/sdk-schema
+          python3 -m venv .venv
           source .venv/bin/activate
           python3 -m pip install '.[tests]'
 
