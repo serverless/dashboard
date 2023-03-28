@@ -28,12 +28,11 @@ You now have a built package that you can either link locally or publish.
 1. cd to the root directory of the repo
 2. `python3.9 -m venv .venv`
 3. `source .venv/bin/activate`
-4. `python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"`
-5. `cd ./proto`
-6. `buf build`
-7. `buf generate --template=buf.gen.python.yaml`
-8. `cd ../python/packages/sdk-schema`
-9. `pip install . --target=./dist`
-10. `python -m build --wheel --sdist .`
+4. `cd ./proto`
+5. `buf build`
+6. `buf generate --template=buf.gen.python.yaml`
+7. `cd ../python/packages/sdk-schema`
+8. `pip install . --target=./dist`
+9. `python -m build --wheel --sdist .`
 
 You now have a built package that can be published. For more details, see [sdk-schema/README.md](../python/packages/sdk-schema/README.md).

@@ -1,7 +1,6 @@
 from typing import Any, Dict
-
 from typing_extensions import Final
-
+from google.protobuf import json_format
 
 OUTCOME_SUCCESS: Final[int] = 1
 
@@ -81,5 +80,5 @@ def test_request_response_exported():
 def test_trace_payload():
     from serverless_sdk_schema import TracePayload
 
-    payload = TracePayload()
-    assert payload.from_dict(TEST_PAYLOAD)
+    payload = json_format.ParseDict(TEST_PAYLOAD, TracePayload())
+    assert payload

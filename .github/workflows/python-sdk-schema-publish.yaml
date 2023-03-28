@@ -16,24 +16,36 @@ jobs:
       - name: Install Python and Pip
         uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: "3.7"
 
           # ensure project dependencies are cached
           # When using only `pyproject.toml` for dependencies, see:
           #  https://github.com/actions/setup-python/issues/529#issuecomment-1367029699
-          cache: 'pip'
+          cache: "pip"
           cache-dependency-path: |
             **/pyproject.toml
-
-      - name: Install Buf dependencies
-        run: |
-          cd python/packages/sdk-schema
-          python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
 
       - name: Buf Setup
         uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
+
+      - name: Cache protobuf
+        id: cache-protobuf
+        uses: actions/cache@v3
+        with:
+          path: ~/protobuf
+          key: "protobuf:protoc-22.2-linux-x86_32.zip"
+
+      - name: Install protoc compiler
+        if: steps.cache-protobuf.outputs.cache-hit != 'true'
+        run: |
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v22.2/protoc-22.2-linux-x86_32.zip
+          unzip protoc-22.2-linux-x86_32.zip -d ~/protobuf
+
+      - name: Add protobuf to PATH
+        run: |
+          echo ~/protobuf/bin >> $GITHUB_PATH
 
       - name: Publish New Version
         env:
@@ -42,8 +54,7 @@ jobs:
         run: |
           cd ./proto
           buf build
-          buf generate --template=buf.gen.python.yaml 
-
+          buf generate --template=buf.gen.python.yaml
           cd ../python/packages/sdk-schema
           python3 -m pip install --upgrade build twine wheel
           python3 -m build --wheel --sdist .

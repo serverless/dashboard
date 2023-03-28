@@ -9,8 +9,8 @@ To build the sdk-schema package from source, follow these steps:
 # cd to the root directory of repo
 python3.9 -m venv .venv
 source .venv/bin/activate
-python3 -m pip install "betterproto[compiler]<3.0.0,>=2.0.0b5"
 
+brew install protobuf
 brew install bufbuild/buf/buf
 cd ./proto
 buf build
