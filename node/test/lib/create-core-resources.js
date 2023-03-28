@@ -31,7 +31,7 @@ module.exports = async (basename, config, options = {}) => {
         Content: { ZipFile: await fsp.readFile(filename) },
       })
     ).LayerVersionArn;
-    config[`layer${capitalize.call(hyphenName)}Arn`] = arn;
+    config[`layer${capitalize.call(name)}Arn`] = arn;
     log.info('Layer ready %s', arn);
   };
 
