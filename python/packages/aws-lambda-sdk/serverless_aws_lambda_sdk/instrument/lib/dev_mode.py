@@ -133,7 +133,7 @@ class EventLoop(Thread):
                 s for s in payload["spans"] if s["name"] != "aws.lambda"
             ]
 
-        self.send_telemetry("trace", bytes(to_trace_payload(payload)))
+        self.send_telemetry("trace", to_trace_payload(payload).SerializeToString())
 
     def _schedule_eventually(self):
         """
