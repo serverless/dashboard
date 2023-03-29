@@ -31,7 +31,11 @@ const sendData = () => {
       slsTags: {
         orgId: serverlessSdk.orgId,
         service: process.env.AWS_LAMBDA_FUNCTION_NAME,
-        sdk: { name: '@serverless/aws-lambda-sdk', version: serverlessSdk.version },
+        sdk: {
+          name: '@serverless/aws-lambda-sdk',
+          version: serverlessSdk.version,
+          runtime: 'nodejs',
+        },
       },
       spans: pendingSpans.map((span) => span.toProtobufObject()),
       events: pendingCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
