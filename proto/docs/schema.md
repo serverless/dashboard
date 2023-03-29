@@ -188,6 +188,8 @@ Describes the AWS Lambda runtime details
 | duration | [uint32](#uint32) | optional | The billed duration of the invocation in milliseconds. This will not be available when instrumented, this will be upserted into this tag set after the report log from Cloudwatch is available. |
 | request_body | [string](#string) | optional | Request body |
 | response_body | [string](#string) | optional | Response body |
+| logs_start_time_unix | [uint64](#uint64) | optional | The Unix timestamp in milliseconds of the START log event of the invocation. |
+| logs_end_time_unix | [uint64](#uint64) | optional | The Unix timestamp in milliseconds of the REPORT log event of the invocation. |
 | sqs | [AwsSqsEventTags](#serverless-instrumentation-tags-v1-AwsSqsEventTags) | optional | Will be set if the function is handling a SQS event |
 | sns | [AwsSnsEventTags](#serverless-instrumentation-tags-v1-AwsSnsEventTags) | optional | Will be set if the function is handling a SNS event |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | Will be set if the function is handling HTTP requests via any method, API GW, Function URLs, etc. |
