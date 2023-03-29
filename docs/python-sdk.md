@@ -190,6 +190,24 @@ Errors.
 Tag keys on `capture_warning` are validated the same way as tag keys on
 `set_tag`.
 
+### Capturing Unhandled Exceptions with Flask
+
+Serverless Console will capture unhandled exceptions thrown from the handler
+method. This can be achieved without including the `serverless_sdk` package, as
+it this is provided by the AWS Lambda Layer added to your Lambda function when
+instrumentation is enabled.
+
+If you are using Flask, it will automatically handle unhandled exceptions. As a
+result, the exceptions do not propagate to the handler or the Serverless Console
+instrumentation layer. You can set the `PROPAGATE_EXCEPTIONS` configuration
+property in Flask for it to propagate the exception and make it available to
+Serverless Console. This will enable you to search for traces with unhandled
+exceptions in Serverless Console.
+
+```python
+app.config['PROPAGATE_EXCEPTIONS'] = True
+```
+
 ### Structured Logs with capture_error and capture_warning
 
 The `capture_warning` and `capture_error` methods will send the content to
