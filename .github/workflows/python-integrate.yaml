@@ -210,6 +210,11 @@ jobs:
           cd node
           npx mocha test/python/aws-lambda-sdk/integration.test.js
 
+      - name: Performance tests
+        run: |
+          cd node
+          npx mocha test/python/aws-lambda-sdk/benchmark/performance.test.js
+
       - name: Tag if new version
         run: |
           NEW_VERSION=`git diff -U0 ${{ github.event.before }} python/packages/aws-lambda-sdk/pyproject.toml | grep 'version = ' | tail -n 1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+"` || :
