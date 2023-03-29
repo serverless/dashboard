@@ -84,7 +84,7 @@ const reportResponse = async (response, context, endTime) => {
     slsTags: {
       orgId: serverlessSdk.orgId,
       service: process.env.AWS_LAMBDA_FUNCTION_NAME,
-      sdk: { name: pkgJson.name, version: pkgJson.version },
+      sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
     },
     traceId: Buffer.from(awsLambdaSpan.traceId),
     spanId: Buffer.from(awsLambdaSpan.id),
