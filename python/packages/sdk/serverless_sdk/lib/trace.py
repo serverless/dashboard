@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 import logging
 import time
-from typing import List, Optional
+from typing import List, Optional, Callable
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
@@ -47,6 +47,7 @@ class TraceSpan:
     tags: Tags
     custom_tags: Tags
     sub_spans: List[Self]
+    _on_close_by_root: Optional[Callable] = None
 
     def __init__(
         self,
@@ -56,6 +57,7 @@ class TraceSpan:
         start_time: Optional[Nanoseconds] = None,
         tags: Optional[Tags] = None,
         immediate_descendants: Optional[List[str]] = None,
+        on_close_by_root: Optional[Callable] = None,
     ):
         self.name = get_resource_name(name)
         self.input = input
@@ -65,6 +67,7 @@ class TraceSpan:
         self._set_start_time(start_time)
         self._set_tags(tags)
         self._set_spans(immediate_descendants)
+        self._on_close_by_root = on_close_by_root
 
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
@@ -177,6 +180,8 @@ class TraceSpan:
             left_over_spans = []
             for sub_span in self.spans:
                 if not sub_span.end_time:
+                    if sub_span._on_close_by_root:
+                        sub_span._on_close_by_root()
                     sub_span.close(end_time=self.end_time)
                     left_over_spans.append(sub_span)
 

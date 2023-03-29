@@ -15,6 +15,7 @@ from .lib.error import report as report_error
 from .lib.warning import report as report_warning
 from .lib.notice import report as report_notice
 from .lib.instrumentation.logging import install as install_logging
+from .lib.instrumentation.http import install as install_http
 
 
 __all__: Final[List[str]] = [
@@ -32,12 +33,14 @@ class ServerlessSdkSettings:
     disable_captured_events_stdout: bool
     disable_python_log_monitoring: bool
     disable_request_response_monitoring: bool
+    disable_http_monitoring: bool
 
     def __init__(
         self,
         disable_captured_events_stdout=False,
         disable_python_log_monitoring=False,
         disable_request_response_monitoring=False,
+        disable_http_monitoring=False,
     ):
         self.disable_captured_events_stdout = (
             bool(environ.get("SLS_DISABLE_CAPTURED_EVENTS_STDOUT"))
@@ -50,6 +53,9 @@ class ServerlessSdkSettings:
         self.disable_request_response_monitoring = (
             bool(environ.get("SLS_DISABLE_REQUEST_RESPONSE_MONITORING"))
             or disable_request_response_monitoring
+        )
+        self.disable_http_monitoring = (
+            bool(environ.get("SLS_DISABLE_HTTP_MONITORING")) or disable_http_monitoring
         )
 
 
@@ -84,6 +90,7 @@ class ServerlessSdk:
         disable_captured_events_stdout: Optional[bool] = False,
         disable_python_log_monitoring: Optional[bool] = False,
         disable_request_response_monitoring: Optional[bool] = False,
+        disable_http_monitoring: Optional[bool] = False,
     ):
         if self._is_initialized:
             return
@@ -94,10 +101,14 @@ class ServerlessSdk:
             disable_captured_events_stdout,
             disable_python_log_monitoring,
             disable_request_response_monitoring,
+            disable_http_monitoring,
         )
 
         if not self._settings.disable_python_log_monitoring:
             install_logging()
+
+        if not self._settings.disable_http_monitoring:
+            install_http()
 
         self._is_initialized = True
 
