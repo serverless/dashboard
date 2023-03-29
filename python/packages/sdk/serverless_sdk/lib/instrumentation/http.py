@@ -13,7 +13,7 @@ _original_getresponse = None
 def _instrumented_request(self, *args, **kwargs):
     start_time = time.perf_counter_ns()
     serverless_sdk.serverlessSdk._debug_log("HTTP request")
-    protocol = self._protocol
+    protocol = "https" if self.__class__.__name__ == "HTTPSConnection" else "http"
     (method, path) = (args[0], args[1])
     parsed_path = urlparse(path)
     query = parse_qs(parsed_path.query)
@@ -27,7 +27,7 @@ def _instrumented_request(self, *args, **kwargs):
             "method": method,
             "protocol": "HTTP/1.1",
             "host": self.host,
-            "path": f"/{parsed_path.path}",
+            "path": parsed_path.path,
             "request_header_names": [h for h in kwargs.get("headers", {}).keys()],
             "query_parameter_names": [q for q in query.keys()],
         },
@@ -38,8 +38,10 @@ def _instrumented_request(self, *args, **kwargs):
         _original_request(self, *args, **kwargs)
     except Exception as ex:
         self._sls_trace_span.tags["http.error_code"] = ex.__class__.__name__
-        self._sls_trace_span.close()
+        if self._sls_trace_span.end_time is None:
+            self._sls_trace_span.close()
         del self._sls_trace_span
+        raise
 
 
 def _instrumented_getresponse(self, *args, **kwargs):
