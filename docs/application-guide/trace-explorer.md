@@ -62,8 +62,10 @@ Serverless.
 - `WARNING_TYPE_USER` - This is a warning message that was generated in the
 handler and collected by the SDK. For example, `console.warn("record lookup
 failed")`, would result in this type of warning.
-- `WARNING_TYPE_SDK_USER` - This is an internal SDK warning that was reported
-due to misuse of the SDK.
+- `WARNING_TYPE_SDK_USER` - A warning reported by the SDK due to user misuse in
+the handler, but not due to misuse of the SDK. For example, if both a callback
+and Promise resolution is attached this will cause unwanted side-effects on the
+SDK.
 - `WARNING_TYPE_SDK_INTERNAL` - An internal SDK warning that was reported due to
 an internal issue impacting the SDK but not caused by SDK usage. These are
 non-fatal issues that may result in partial data collection.
