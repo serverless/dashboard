@@ -14,7 +14,7 @@ Serverless Console generates a default org name which you can change. You can
 create any number of orgs. Members can be added to an org, and a member can
 belong to multiple orgs.
 
-## Adding Team Members
+## Adding Members
 
 Serverless Console currently supports the following basic roles which are shared
 across your org.
@@ -24,7 +24,7 @@ Org Settings. Only one owner per account can be present.
 - **Contributor** - Contributors can use all of console but can not add other
 users or access the Org Settings directly.
 
-## Changing Org Name
+## Changing Org name
 
 Org names can be changed from the Org Settings section of Console. Keep in mind
 that org names do need to be globally unique across Serverless, so your desired
