@@ -5,7 +5,7 @@ import json
 import importlib
 from .. import compare_handlers, context
 from .test_assertions import assert_trace_payload
-from sls_sdk._schema import TracePayload, RequestResponse
+from serverless_sdk_schema import TracePayload, RequestResponse
 import base64
 from werkzeug.wrappers import Request, Response
 from pytest_httpserver import HTTPServer

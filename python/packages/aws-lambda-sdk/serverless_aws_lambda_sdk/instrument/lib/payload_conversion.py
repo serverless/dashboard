@@ -1,4 +1,4 @@
-from sls_sdk._schema import TracePayload, RequestResponse
+from serverless_sdk_schema import TracePayload, RequestResponse
 from google.protobuf import json_format
 
 
