@@ -1,22 +1,22 @@
 import pytest
 from unittest.mock import MagicMock
-import serverless_sdk.lib.instrumentation.logging
+import sls_sdk.lib.instrumentation.logging
 import logging
-from serverless_sdk import serverlessSdk
+from sls_sdk import serverlessSdk
 
 
 @pytest.fixture(autouse=True)
 def instrumentation_setup():
-    serverless_sdk.lib.instrumentation.logging.install()
+    sls_sdk.lib.instrumentation.logging.install()
     yield
-    serverless_sdk.lib.instrumentation.logging.uninstall()
+    sls_sdk.lib.instrumentation.logging.uninstall()
 
 
 def test_instrument_error(monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.instrumentation.logging, "create_error_captured_event", mock
+        sls_sdk.lib.instrumentation.logging, "create_error_captured_event", mock
     )
     error = Exception("My error")
 
@@ -31,7 +31,7 @@ def test_instrument_error_with_multiple_arguments(monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.instrumentation.logging, "create_error_captured_event", mock
+        sls_sdk.lib.instrumentation.logging, "create_error_captured_event", mock
     )
     error = "%s %s went wrong"
     args = ("logging", "test")
@@ -47,7 +47,7 @@ def test_instrument_warning(monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.instrumentation.logging,
+        sls_sdk.lib.instrumentation.logging,
         "create_warning_captured_event",
         mock,
     )
@@ -64,7 +64,7 @@ def test_instrument_warn(monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.instrumentation.logging,
+        sls_sdk.lib.instrumentation.logging,
         "create_warning_captured_event",
         mock,
     )
@@ -81,7 +81,7 @@ def test_instrument_warning_recognize_sdk_warning(monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.instrumentation.logging,
+        sls_sdk.lib.instrumentation.logging,
         "create_warning_captured_event",
         mock,
     )
@@ -98,7 +98,7 @@ def test_instrument_warning_recognize_sdk_error(monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.instrumentation.logging,
+        sls_sdk.lib.instrumentation.logging,
         "create_error_captured_event",
         mock,
     )
