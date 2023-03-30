@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing_extensions import Final
 import pytest
 
-from serverless_sdk.exceptions import InvalidTraceSpanName
-from serverless_sdk.lib.name import get_resource_name, is_valid_name
+from sls_sdk.exceptions import InvalidTraceSpanName
+from sls_sdk.lib.name import get_resource_name, is_valid_name
 
 
 VALID_NAME: Final[str] = "valid.name"
