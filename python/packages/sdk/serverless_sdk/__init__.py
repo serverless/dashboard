@@ -129,7 +129,7 @@ class ServerlessSdk:
 
     def set_tag(self, name: str, value: ValidTags):
         try:
-            self._custom_tags[name] = value
+            self._custom_tags._set(name, value)
         except Exception as ex:
             report_error(ex, type="USER")
 

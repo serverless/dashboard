@@ -1,9 +1,10 @@
 from __future__ import annotations
 from types import MethodType
-
+from unittest.mock import MagicMock
 import pytest
 
 from . import get_params
+import serverless_sdk
 from serverless_sdk import ServerlessSdk
 from serverless_sdk.base import SLS_ORG_ID
 from serverless_sdk.lib.error_captured_event import TYPE_MAP as ERROR_TYPE_MAP
@@ -170,8 +171,10 @@ def test_sdk_exposes_set_tag(sdk: ServerlessSdk):
     assert sdk._custom_tags[tag_name] == tag_value
 
 
-def test_sdk_set_tag_does_not_crash_on_invalid_input(sdk: ServerlessSdk):
+def test_sdk_set_tag_does_not_crash_on_invalid_input(sdk: ServerlessSdk, monkeypatch):
     # given
+    mock = MagicMock()
+    monkeypatch.setattr(serverless_sdk, "report_error", mock)
     tag_name = ""
     tag_value = "value"
 
@@ -184,6 +187,7 @@ def test_sdk_set_tag_does_not_crash_on_invalid_input(sdk: ServerlessSdk):
 
     # then
     assert not failed
+    mock.assert_called_once()
 
 
 def test_initialize_all_options(sdk: ServerlessSdk, monkeypatch):
