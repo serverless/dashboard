@@ -11,8 +11,8 @@ Once you have added the AWS Account Integration, you will need to enable
 instrumentation on each AWS Lambda function to enable metric, log, trace, span,
 and events collection in Serverless Console.
 
-Currently Instrumentation is supported for the Node.js 12+ and Python 3.8+
-runtimes only; however, other runtime support is coming soon.
+Currently Instrumentation is supported for the Node.js 12+ runtimes only.
+Support for Python and Go runtimes is coming soon.
 
 ## Enabling instrumentation for a function
 
@@ -72,5 +72,5 @@ Instrumentation will continue to work, even if the trace was successful.
 In addition to the automatic instrumentation of your AWS Lambda functions, you
 can also add custom instrumentation for setting tags, and events in your code. 
 
-Use the [Node.js](./nodejs-sdk.md) and [Python](./python-sdk.md) Serverless SDK
-to add custom instrumentation.
+Use the [Node.js](./nodejs-sdk.md) Serverless SDK to add custom instrumentation.
+Support for Python and Go runtimes is coming soon.
