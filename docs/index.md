@@ -10,7 +10,7 @@ menuOrder: 1
 Welcome to Serverless Console, a developer-first observability service for apps
 built on serverless architectures.
 
-Here's what you need to start using Serverless Console.
+Here's what you need to start using console.
 
 ## Onboard using the browser
 
@@ -22,7 +22,7 @@ and follow the prompts to [add an AWS account integration](./integrations/aws.md
 If you are a Serverless Framework user, you can onboard to Serverless Console
 from the CLI.
 
-Upgrade to version 3.24.0+.
+Upgrade to version 3.24.0+
 
 ```text
 npm install -g serverless
@@ -48,18 +48,19 @@ If you haven't already enabled instrumentation on a function while onboarding,
 you'll need to instrument an AWS Lambda function to enable logs, traces, spans,
 and events, in Serverless Console.
 
-Follow these [Instrumentation steps](./instrumentation.md#instrumentation-mode-prod) to enable
+Follow these [Instrumentation steps](./instrumentation.md) to enable
 instrumentation on your function.
 
-## Add custom instrumentation (optional)
+## Add custom instrumentation (Optional)
 
 In addition to the automatic instrumentation of your AWS Lambda functions, you
 can also add custom instrumentation for setting tags, and events in your code. 
 
-Use the [Node.js](./nodejs-sdk.md) Serverless SDK to add custom instrumentation
-to Node.js 12+. Support for Python and Go runtimes is coming soon.
+Use the [Node.js](./nodejs-sdk.md) or [Python](./python-sdk.js) Serverless SDK
+to add custom instrumentation to Node.js 12+ and Python 3.8+. Other runtime
+support is coming soon.
 
-## Invoke & observe
+## Invoke & Observe
 
 Now you are ready to see your data in Serverless Console.
 
