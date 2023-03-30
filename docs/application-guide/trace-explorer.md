@@ -65,8 +65,8 @@ failed")`, would result in this type of warning.
 - `WARNING_TYPE_SDK_USER` - This is an internal SDK warning that was reported
 due to misuse of the SDK.
 - `WARNING_TYPE_SDK_INTERNAL` - An internal SDK warning that was reported due to
-an internal issue not caused by user input. These are non-fatal issues that may
-result in partial data collection. For example, approaching EMFILE problems.
+an internal issue impacting the SDK but not caused by SDK usage. These are
+non-fatal issues that may result in partial data collection.
 - `NOTICE_TYPE_SDK_INTERNAL` - An internal SDK notice is a valid condition but
 results in limited functionality. These are non-fatal issues that are
 informative and can be ignored. For example, if a binary input payload is used
