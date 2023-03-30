@@ -5,4 +5,4 @@
 require('essentials');
 require('log-node')();
 
-require('./lib/cleanup')();
+require('../lib/cleanup')();

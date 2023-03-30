@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.3](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.2...@serverless/sdk-schema@0.15.3) (2023-03-29)
+
+### Features
+
+- AWS Lambda runtime related tags ([f239b44](https://github.com/serverless/console/commit/f239b442dd8a2d53ee7ea2e75a1b43f5ffc120f8))
+
 ### [0.15.2](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.1...@serverless/sdk-schema@0.15.2) (2023-03-08)
 
 ### Features

@@ -116,6 +116,11 @@ message AwsLambdaTags {
   // Response body
   optional string response_body = 19;
 
+  // The Unix timestamp in milliseconds of the START log event of the invocation.
+  optional uint64 logs_start_time_unix = 20;
+  // The Unix timestamp in milliseconds of the REPORT log event of the invocation.
+  optional uint64 logs_end_time_unix = 21;
+
   // Will be set if the function is handling a SQS event
   optional AwsSqsEventTags sqs = 100;
   // Will be set if the function is handling a SNS event

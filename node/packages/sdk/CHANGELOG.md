@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.4](https://github.com/serverless/console/compare/@serverless/sdk@0.5.3...@serverless/sdk@0.5.4) (2023-03-29)
+
+### Bug Fixes
+
+- Fix resolution of url data from `options.path` in HTTP instrumentation ([e5a4ccd](https://github.com/serverless/console/commit/e5a4ccda713f02de771bdc381bb72e5ee39c374a))
+
 ### [0.5.3](https://github.com/serverless/console/compare/@serverless/sdk@0.5.2...@serverless/sdk@0.5.3) (2023-03-01)
 
 ### Maintenance Improvements

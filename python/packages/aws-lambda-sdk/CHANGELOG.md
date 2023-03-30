@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.10 (2023-03-29)
+
+### Features
+
+- Dev mode
+- Performance improvements
+
+### Bug Fixes
+
+- Fix SDK crash handling
+
 ## 0.1.9 (2023-03-20)
 
 ### Features

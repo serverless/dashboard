@@ -4,15 +4,16 @@ from datetime import datetime
 from math import inf, nan
 from re import Pattern
 from typing import Dict, List, Mapping, Tuple, Optional
-
 from js_regex import compile
 from typing_extensions import Final, get_args
 
+from .error import report as report_error
 from ..base import TagType, ValidTags
 from ..exceptions import (
     DuplicateTraceSpanName,
     InvalidTraceSpanTagName,
     InvalidTraceSpanTagValue,
+    SdkException,
 )
 
 # from https://github.com/serverless/console/blob/fe64a4f53529285e89a64f7d50ec9528a3c4ce57/node/packages/sdk/lib/tags.js#L12
@@ -21,7 +22,7 @@ RE_C: Final[Pattern] = compile(RE)
 
 
 class Tags(Dict[str, ValidTags]):
-    def __setitem__(self, key: str, value: ValidTags):
+    def _set(self, key: str, value: ValidTags):
         if value is None:
             return
 
@@ -40,14 +41,46 @@ class Tags(Dict[str, ValidTags]):
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
-    def update(
+    def set(self, key: str, value: ValidTags):
+        try:
+            self._set(key, value)
+        except Exception as ex:
+            report_error(ex)
+
+    def __setitem__(self, key: str, value: ValidTags):
+        self.set(key, value)
+
+    def _update(
         self, mapping: Mapping[str, ValidTags], prefix: Optional[str] = None
     ) -> None:
         _prefix = ""
+        errors = []
         if prefix:
             _prefix = ensure_tag_name(prefix) + "."
         for key, value in mapping.items():
-            self[f"{_prefix}{key}"] = value
+            try:
+                self._set(f"{_prefix}{key}", value)
+            except Exception as ex:
+                errors.append(ex)
+        if len(errors) == 0:
+            return
+        if len(errors) == 1:
+            raise errors[0]
+        message = "\n\t- ".join(
+            map(
+                lambda e: e.args[0] if hasattr(e, "args") and len(e.args) else "",
+                errors,
+            )
+        )
+        raise SdkException(f"Cannot set Tags:\n\t- {message}")
+
+    def update(
+        self, mapping: Mapping[str, ValidTags], prefix: Optional[str] = None
+    ) -> None:
+        try:
+            self._update(mapping, prefix)
+        except Exception as ex:
+            report_error(ex)
 
 
 def is_valid_name(name: str) -> bool:
