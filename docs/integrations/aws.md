@@ -59,7 +59,7 @@ To set the Namespace tag go to Settings -> Integrations -> Edit Integration.
 Each function will have the ability to select a pre-populated set of Namespaces
 or add a new one. Only one namespace tag can be added per function. 
 
-## AWS Account Infrastructure updates and data collection
+## AWS Account Infrastructure Updates and Data Collection
 
 The following is an overview of the changes Serverless Console makes to your
 AWS Infrastructure, including IAM Roles, and the data it collects, when you add
@@ -122,7 +122,7 @@ groups.
 
 Currently this is limited to the Node.js 12+ and Python 3.8+ runtimes only. 
 
-### Automatic updating of layers
+### Automatic updating of AWS Lambda Layers
 
 If instrumentation is enabled on a function and a new version of the lambda
 layers is released, the layers on the AWS Account will automatically be upgraded

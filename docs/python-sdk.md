@@ -37,7 +37,7 @@ Terraform, CDK, SAM, Pulumi, etc, as as they do with Serverless Framework.
 ### Install the package
 
 When Tracing is enabled in Serverless Console, an  AWS Lambda Layer is added to
-your AWS Lambda function with the `serverless_sdk` package. While the AWS
+your AWS Lambda function with the `sls_sdk` package. While the AWS
 Lambda layer is added by Serverless Console, it is possible for the layer to be
 removed temporarily if you deploy manually or with some infrastructure as code
 tools. As such, we recommend bundling the SDK with your handler to avoid
@@ -59,11 +59,11 @@ The package does not require any configuration as the credentials are
 automatically set on the AWS Lambda function environment variables when Tracing
 is enabled in Serverless Console.
 
-To use the Serverless SDK you must import the `serverless_sdk` package in your
+To use the Serverless SDK you must import the `sls_sdk` package in your
 AWS Lambda function handler.
 
 ```python
-from serverless_sdk import serverlessSdk as serverless_sdk
+from sls_sdk import serverlessSdk as sls_sdk
 ```
 
 ### Capturing Errors
@@ -74,7 +74,7 @@ There are two mechanisms for capturing handled errors.
 #### Using capture_error
 
 ```python
-serverless_sdk.capture_error(Exception("Unexpected"))
+sls_sdk.capture_error(Exception("Unexpected"))
 ```
 
 #### Using logging
@@ -100,7 +100,7 @@ stack trace of the `logging.error` will be captured.
 #### Using capture_warning
 
 ```python
-serverless_sdk.capture_warning("Captured warning")
+sls_sdk.capture_warning("Captured warning")
 ```
 
 #### Using logging.warning
@@ -129,7 +129,7 @@ is easy to identify in Console.
 #### Setting Tags on the Trace
 
 ```python
-serverless_sdk.set_tag("userId", user_id)
+sls_sdk.set_tag("userId", user_id)
 ```
 
 Using the `set_tag` method will create Tags associated with the entire Trace.
@@ -147,7 +147,7 @@ an SDK error will be made available in Dev Mode and Trace Details.
 ```python
 import logging
 
-serverless_sdk.set_tag("userId", user_id)
+sls_sdk.set_tag("userId", user_id)
 
 logging.error("Logged error")
 logging.warning("Logged warning %s %s", 12, True)
@@ -162,7 +162,7 @@ created using `logging.error` and `logging.warning`.
 #### Setting Tags on Captured Errors
 
 ```python
-serverless_sdk.capture_error(
+sls_sdk.capture_error(
     Exception("Captured error"),
     tags={"userId": "example", "invocationId": invocation_id},
 )
@@ -178,7 +178,7 @@ Tag keys on `capture_error` are validated the same way as tag keys on
 #### Setting Tags on Captured Warnings
 
 ```python
-serverless_sdk.capture_warning(
+sls_sdk.capture_warning(
     "Captured warning",
     tags={"userId": "example", "invocationid": invocation_id},
 )
@@ -193,7 +193,7 @@ Tag keys on `capture_warning` are validated the same way as tag keys on
 ### Capturing Unhandled Exceptions with Flask
 
 Serverless Console will capture unhandled exceptions thrown from the handler
-method. This can be achieved without including the `serverless_sdk` package, as
+method. This can be achieved without including the `sls_sdk` package, as
 it is provided by the AWS Lambda Layer added to your Lambda function when
 instrumentation is enabled.
 
