@@ -2,7 +2,7 @@ from __future__ import annotations
 import pytest
 from unittest.mock import MagicMock, patch, ANY
 from serverless_sdk.lib.error import report as report_error, logger
-import serverless_sdk.lib.error
+import serverless_sdk.lib.error_captured_event
 
 
 def test_error_with_exception(monkeypatch):
@@ -10,8 +10,8 @@ def test_error_with_exception(monkeypatch):
     error = Exception("Something went wrong")
     create_error_captured_event = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.error,
-        "create_error_captured_event",
+        serverless_sdk.lib.error_captured_event,
+        "create",
         create_error_captured_event,
     )
 
@@ -46,8 +46,8 @@ def test_error_with_custom_object(monkeypatch):
     }
     create_error_captured_event = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.error,
-        "create_error_captured_event",
+        serverless_sdk.lib.error_captured_event,
+        "create",
         create_error_captured_event,
     )
 

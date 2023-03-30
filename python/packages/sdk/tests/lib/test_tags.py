@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from math import inf, nan
 from typing import Tuple, Any
-
+from unittest.mock import MagicMock
 import pytest
 from typing_extensions import Final
 
@@ -12,8 +12,10 @@ from serverless_sdk.exceptions import (
     DuplicateTraceSpanName,
     InvalidTraceSpanTagName,
     InvalidTraceSpanTagValue,
+    SdkException,
 )
 from serverless_sdk.lib.tags import ensure_tag_name, ensure_tag_value, Tags
+import serverless_sdk.lib.tags
 
 
 VALID_NAMES: Final[Tuple[str, ...]] = (
@@ -124,28 +126,83 @@ def test_tags_update_with_prefix():
     assert tags == {"test.a": 0, "test.b": 1}
 
 
-def test_tags_invalid_names_and_values(tags: Tags):
+def test_tags_invalid_names_and_values(tags: Tags, monkeypatch):
+    mock = MagicMock()
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
+    for name in INVALID_NAMES:
+        for value in VALID_VALUES:
+            tags[name] = value
+
+    for name in INVALID_NAMES:
+        for value in INVALID_VALUES:
+            tags[name] = value
+
+    for name in VALID_NAMES:
+        for value in INVALID_VALUES:
+            tags[name] = value
+
+    mock.assert_called()
+
+
+def test_tags_invalid_names_and_values_internal_method_raises_exception(tags: Tags):
     for name in INVALID_NAMES:
         for value in VALID_VALUES:
             with pytest.raises(InvalidTraceSpanTagName):
-                tags[name] = value
+                tags._set(name, value)
 
     for name in INVALID_NAMES:
         for value in INVALID_VALUES:
             with pytest.raises(InvalidTraceSpanTagName):
-                tags[name] = value
+                tags._set(name, value)
 
     for name in VALID_NAMES:
         for value in INVALID_VALUES:
             with pytest.raises(InvalidTraceSpanTagValue):
-                tags[name] = value
+                tags._set(name, value)
 
 
-def test_tags_duplicate(tags: Tags):
+def test_tags_duplicate(tags: Tags, monkeypatch):
+    mock = MagicMock()
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
+    for name in VALID_NAMES:
+        tags[name] = "example"
+
+    for name in VALID_NAMES:
+        for value in VALID_VALUES:
+            tags[name] = value
+
+    mock.assert_called()
+
+
+def test_tags_duplicate_internal_method_raises_exception(tags: Tags):
     for name in VALID_NAMES:
         tags[name] = "example"
 
     for name in VALID_NAMES:
         for value in VALID_VALUES:
             with pytest.raises(DuplicateTraceSpanName):
-                tags[name] = value
+                tags._set(name, value)
+
+
+def test_tags_invalid_names_and_values_bulk(tags: Tags, monkeypatch):
+    # given
+    mock = MagicMock()
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
+
+    # when
+    tags.update({name: "" for name in INVALID_NAMES})
+
+    # then
+    mock.assert_called()
+
+
+def test_tags_invalid_names_and_values_bulk_internal_method_raises_exception(
+    tags: Tags, monkeypatch
+):
+    # given
+    mock = MagicMock()
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
+
+    # when
+    with pytest.raises(SdkException):
+        tags._update({name: "" for name in INVALID_NAMES})

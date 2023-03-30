@@ -55,6 +55,7 @@ def test_create_warning_captured_event():
 
 def test_create_warning_captured_event_disabled(monkeypatch):
     # given
+    serverlessSdk._initialize()
     message = "Warning message"
     tags = {"user.tag": "example"}
     settings = MagicMock()

@@ -11,7 +11,7 @@ from .tags import Tags, convert_tags_to_protobuf
 from .trace import TraceSpan
 from ..exceptions import FutureEventTimestamp
 from .emitter import event_emitter
-
+from .error import report as report_error
 
 __all__: Final[List[str]] = [
     "CapturedEvent",
@@ -55,8 +55,11 @@ class CapturedEvent:
             self.tags.update(tags)
 
         self.custom_tags = Tags()
-        if custom_tags:
-            self.custom_tags.update(custom_tags)
+        try:
+            if custom_tags:
+                self.custom_tags._update(custom_tags)
+        except Exception as ex:
+            report_error(ex, type="USER")
 
         self.trace_span = trace_span
         event_emitter.emit("captured-event", self)
