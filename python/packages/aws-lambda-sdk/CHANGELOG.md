@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.11 (2023-03-30)
+### ⚠ BREAKING CHANGES
+
+- Change name of package module from `sls_sdk.` to `sls_sdk`
+
 ## 0.1.10 (2023-03-29)
 
 ### Features
