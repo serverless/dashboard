@@ -17,7 +17,7 @@ and [enable the Dev Instrumentation Mode](./instrumentation.md).
 Once instrumentation is enabled, go to the **Dev Mode** page to view the
 real-time stream of traces, spans, and events.
 
-Currently Dev Mode is supported on the Node.js 14+ runtime on AWS Lambda only.
+Currently Dev Mode is supported on the Node.js 12+ runtime on AWS Lambda only.
 Support for Python and Go runtimes is coming soon.
 
 ## Real-time Logging

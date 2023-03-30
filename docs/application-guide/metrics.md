@@ -16,7 +16,7 @@ and [enable Dev or Prod Instrumentation Mode](./instrumentation.md).
 Once instrumentation is enabled, go to the **Metrics** page to view all of your
 AWS Lambda function metrics including durations, invocations, and event counts.
 
-Currently Metrics are supported on the Node.js 14+ and Python 3.8+ runtimes on
+Currently Metrics are supported on the Node.js 12+ and Python 3.8+ runtimes on
 AWS Lambda only. Support for other runtimes is coming soon.
 
 ## Metric Aggregation
