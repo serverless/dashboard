@@ -15,7 +15,7 @@ from ..exceptions import HandlerNotFound
 from ..instrument import Instrumenter
 
 if TYPE_CHECKING:
-    from serverless_sdk.sdk.base import ServerlessSdk
+    from sls_sdk.sdk.base import ServerlessSdk
 
 else:
     ServerlessSdk: TypeAlias = "ServerlessSdk"

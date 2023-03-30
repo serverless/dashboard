@@ -7,7 +7,7 @@ def handler(event, context):
     counter += 1
     invocation_id = counter
 
-    from serverless_sdk import serverlessSdk as sdk
+    from sls_sdk. import serverlessSdk as sdk
     from serverless_aws_lambda_sdk import serverlessSdk
 
     if sdk is not serverlessSdk:

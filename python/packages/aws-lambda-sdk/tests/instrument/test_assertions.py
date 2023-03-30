@@ -1,6 +1,6 @@
 from typing import List
-from serverless_sdk_schema import TracePayload
-from serverless_sdk_schema.schema.serverless.instrumentation.v1.trace_pb2 import Span
+from sls_sdk._schema import TracePayload
+from sls_sdk._schema.schema.serverless.instrumentation.v1.trace_pb2 import Span
 from ..conftest import TEST_FUNCTION, TEST_ORG
 from .. import context
 

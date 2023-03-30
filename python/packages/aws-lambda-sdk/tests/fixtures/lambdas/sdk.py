@@ -1,4 +1,4 @@
-from serverless_sdk import serverlessSdk as sdk
+from sls_sdk. import serverlessSdk as sdk
 import logging
 
 

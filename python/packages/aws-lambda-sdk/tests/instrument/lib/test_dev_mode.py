@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, call
-from serverless_sdk.lib.captured_event import CapturedEvent
-from serverless_sdk.lib.trace import TraceSpan
-from serverless_sdk_schema import TracePayload
+from sls_sdk.lib.captured_event import CapturedEvent
+from sls_sdk.lib.trace import TraceSpan
+from sls_sdk._schema import TracePayload
 import asyncio
 import time
 import base64
