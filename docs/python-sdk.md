@@ -17,9 +17,9 @@ Lambda function handler.
 
 - An **Event** is an instance of an error, warning, or notice that is captured
 as a part of a Trace. Multiple events can be captured in a single trace.
-- A **Captured Error** is a one instance of an error that is sent to Serverless
+- A **Captured Error** is an instance of an error that is sent to Serverless
 Console as an Event. It can be viewed in Dev Mode or the Trace Explorer Details.
-- A **Captured Warning** is one instance of a string in Node.js that is sent to
+- A **Captured Warning** is one instance of a string in Python that is sent to
 Serverless Console as an Event, much like a Captured Error.
 - A **Tag** is a key/value-pair that can be set on the Trace or an individual
 Event, and sent to Serverless Console. Tags can be viewed on the Trace Explorer
@@ -92,7 +92,7 @@ using `logging.error` to display the errors.
 This method can be used to capture `Exception` objects, as well as any
 combination of strings. If only an `Exception` object is provided, then the
 stack trace in Console will show the stack trace of the error object. If a
-string, or a combination of a string and `Exception`, are provided, then then
+string, or a combination of a string and `Exception`, are provided, then the
 stack trace of the `logging.error` will be captured.
 
 ### Capturing Warnings
@@ -194,7 +194,7 @@ Tag keys on `capture_warning` are validated the same way as tag keys on
 
 Serverless Console will capture unhandled exceptions thrown from the handler
 method. This can be achieved without including the `serverless_sdk` package, as
-it this is provided by the AWS Lambda Layer added to your Lambda function when
+it is provided by the AWS Lambda Layer added to your Lambda function when
 instrumentation is enabled.
 
 If you are using Flask, it will automatically handle unhandled exceptions. As a
