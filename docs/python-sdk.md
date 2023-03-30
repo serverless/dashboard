@@ -208,6 +208,9 @@ exceptions in Serverless Console.
 app.config['PROPAGATE_EXCEPTIONS'] = True
 ```
 
+Note, changing this behavior changes the behavior of the handler response so
+other updates may be necessary.
+
 ### Structured Logs with capture_error and capture_warning
 
 The `capture_warning` and `capture_error` methods will send the content to
