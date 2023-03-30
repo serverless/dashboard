@@ -2,25 +2,28 @@
 title: Node.js SDK
 menuText: Node.js SDK
 description: 
-menuOrder: 4
+menuOrder: 5
 -->
 
 # Node.js SDK
 
-Serverless Console, when Tracing is enabled on an AWS Lambda function, will hook
-into the AWS Lambda runtime environment and automatically report Traces and
-Spans. To capture handled errors, warnings, and to set custom tags, the SDK
-library must be added and instrumented in your AWS Lambda function handler.
+Serverless Console, when Instrumentation is enabled on an AWS Lambda function,
+will hook into the AWS Lambda runtime environment and automatically report
+metrics, traces, spans, and events. To capture handled errors, warnings, and to
+set custom tags, the SDK library must be added and instrumented in your AWS
+Lambda function handler.
 
 ## Key terms
 
-- A **Captured Error** is one instance of an error that is sent to Serverless
-Console. It can be viewed in Dev Mode or the Trace Explorer Details.
+- An **Event** is an instance of an error, warning, or notice that is captured
+as a part of a Trace. Multiple events can be captured in a single trace.
+- A **Captured Error** is an instance of an error that is sent to Serverless
+Console as an Event. It can be viewed in Dev Mode or the Trace Explorer Details.
 - A **Captured Warning** is one instance of a string in Node.js that is sent to
-Serverless Console, much like a Captured Error.
+Serverless Console as an Event, much like a Captured Error.
 - A **Tag** is a key/value-pair that can be set on the Trace or an individual
-Captured Error or Captured Warning, and sent to Serverless Console. Tags can be
-viewed on the Trace Explorer Details and Dev Mode.
+Event, and sent to Serverless Console. Tags can be viewed on the Trace Explorer
+Details and Dev Mode.
 
 ## Compatibility
 
@@ -33,7 +36,7 @@ Terraform, CDK, SAM, Pulumi, etc, as as they do with Serverless Framework.
 
 ### Install the package
 
-When Tracing is enabled in Servelress Console, an  AWS Lambda Layer is added to
+When Tracing is enabled in Serverless Console, an  AWS Lambda Layer is added to
 your AWS Lambda function with the `@serverless/sdk` package. While the AWS
 Lambda layer is added by Serverless Console, it is possible for the layer to be
 removed temporarily if you deploy manually or with some infrastructure as code
@@ -80,13 +83,11 @@ serverlessSdk.instrumentation.awsSdkV3Client.install(client)
 serverlessSdk.instrumentation.expressApp.install(expressApp)
 ```
 
-### Enable Tracing, Logging, and Dev Mode
+### Enable Instrumentation
 
-The SDK will merely generate the necessary Tags, Captured Errors, and Captured
-Warnings; however, Tracing, Logging, and Dev Mode must be enabled on your org on
-Serverless Console in order for the data to be ingested.
-
-[Enable Tracing, Logging, and Dev Mode](/console/docs/integrations/enable-monitoring-features)
+The SDK will merely generate the necessary Tags, Spans, and Events; however,
+you must [Enable Instrumentation](/console/docs/instrumentation) for each of
+your functions for Serverless Console to ingest the data.
 
 ## Usage
 
@@ -128,12 +129,12 @@ try {
 
 The Serverless SDK automatically instruments the `console.error` method to
 capture errors. This makes instrumentation much easier as you may already be
-using `console.error` to dispaly the errors.
+using `console.error` to display the errors.
 
 This method can be used to capture `Error` objects, as well as any combination
 of strings. If only an `Error` object is provided, then the stack trace in
 Console will show the stack trace of the error object. If a string, or a
-combination of a string and `Error`, are provided, then then stack trace of the
+combination of a string and `Error`, are provided, then the stack trace of the
 `console.error` will be captured.
 
 ### Capturing Warnings
@@ -171,11 +172,11 @@ is easy to identify in Console.
 serverlessSdk.setTag("userId", "bd86489cf036")
 ```
 
-Using the `setTag()` method will create Tags associated with the entire Trace.
+Using the `setTag` method will create Tags associated with the entire Trace.
 You'll be able to see the Tags on the Trace Details page in the Trace Explorer
 and the Invocation Started/Stopped even on Dev Mode.
 
-All Tags set with `setTag()` are also inherited by all the Captured Errors and
+All Tags set with `setTag` are also inherited by all the Captured Errors and
 Captured Warnings. 
 
 Tag keys may only contain alphanumeric, `.`, `-`, and `_` characters. Tag values
@@ -190,11 +191,11 @@ console.warn("warning message")
 console.error(new Error("some error"))
 ```
 
-Using `setTag()` sets the Tag values on both the Trace and all Captured Errors
+Using `setTag` sets the Tag values on both the Trace and all Captured Errors
 and Captured Warnings. Captured Errors and Captured Warnings can be created
 using the `console.error` and `console.warn` methods. Therefore, Tags set with
-`setTag()` will therefore apply to all Captured Errors and Captured Warnings
-created using `console.error` and `console.warn`.
+`setTag` will apply to all Captured Errors and Captured Warnings created using
+`console.error` and `console.warn`.
 
 #### Setting Tags on Captured Errors
 
@@ -203,10 +204,10 @@ serverlessSdk.captureError(ex, {tags:{userId:"1b8b4c6b4b14"}})
 ```
 
 Tags can also be set on the individual error. If you previously set a Tag using
-`setTag()` then the Tags set on `captureError` will override the Tags on the
+`setTag` then the Tags set on `captureError` will override the Tags on the
 Captured Error, while keeping the Tag on the trace unmodified.
 
-Tag keys on `captureError` are validated the same way as tag keys on `setTag()`.
+Tag keys on `captureError` are validated the same way as tag keys on `setTag`.
 
 
 #### Setting Tags on Captured Warnings
@@ -219,12 +220,12 @@ Tags can also be added on the individual Captured Warnings, just like Captured
 Errors.
 
 Tag keys on `captureWarning` are validated the same way as tag keys on
-`setTag()`.
+`setTag`.
 
 ### Structured Logs with captureError and captureWarning
 
 The `captureWarning` and `captureError` methods will send the content to
-Serverless Console in a binary format. To enable humand readability these
+Serverless Console in a binary format. To enable human-readability these
 methods will also output a structured-log JSON string, like the one shown
 below.
 
