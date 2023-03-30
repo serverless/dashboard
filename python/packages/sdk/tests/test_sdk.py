@@ -120,6 +120,25 @@ def test_sdk_exposes_capture_error(sdk: ServerlessSdk):
     assert captured.tags["error.type"] == ERROR_TYPE_MAP["handledUser"]
 
 
+def test_sdk_capture_unhandled_error(sdk: ServerlessSdk):
+    # given
+    error = Exception("My error")
+    captured = None
+
+    def _captured_event_handler(event):
+        nonlocal captured
+        captured = event
+
+    # when
+    sdk._event_emitter.on("captured-event", _captured_event_handler)
+    sdk.capture_error(error, type="unhandled", tags={"user.tag": "somevalue"})
+
+    # then
+    assert captured.tags["error.message"] == "My error"
+    assert captured.custom_tags["user.tag"] == "somevalue"
+    assert captured.tags["error.type"] == ERROR_TYPE_MAP["unhandled"]
+
+
 def test_sdk_exposes_capture_warning(sdk: ServerlessSdk):
     # given
     warning = "My warning"

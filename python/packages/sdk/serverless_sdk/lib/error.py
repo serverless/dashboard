@@ -2,7 +2,6 @@ import os
 from builtins import type as builtins_type
 from .stack_trace_string import resolve as resolve_stack_trace_string
 
-from .error_captured_event import create as create_error_captured_event
 import logging
 
 
@@ -36,6 +35,9 @@ def report(error, type: str = "INTERNAL"):
     logger.error(error_data)
 
     try:
+        # Require on spot to avoid otherwise difficult to mitigate circular dependency
+        from .error_captured_event import create as create_error_captured_event
+
         create_error_captured_event(
             error_data["message"],
             name=error_data["name"],
