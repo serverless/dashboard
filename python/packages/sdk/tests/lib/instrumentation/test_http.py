@@ -1,10 +1,12 @@
 import pytest
+from unittest.mock import patch
 import asyncio
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Request, Response
+import sys
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def instrumented_sdk(reset_sdk):
     import serverless_sdk
 
@@ -74,3 +76,22 @@ def test_instrument_http_using_aiohttp(
         "http.request_header_names": ["User-Agent"],
         "http.query_parameter_names": ["baz"],
     }
+
+
+def test_instrument_http_using_aiohttp_noops_if_aiohttp_is_not_installed():
+    with patch.dict(sys.modules, {"aiohttp": None}):
+        # given
+        import serverless_sdk
+
+        # when
+        serverless_sdk.serverlessSdk._initialize()
+
+        # then
+        instrumenter = [
+            x
+            for x in serverless_sdk.lib.instrumentation.http._instrumenters
+            if x._target_module == "aiohttp"
+        ][0]
+        assert not instrumenter._is_installed
+
+        serverless_sdk.lib.instrumentation.http.uninstall()

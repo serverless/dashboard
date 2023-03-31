@@ -1,17 +1,22 @@
-import http.client
-import aiohttp
 import time
+import importlib
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 import serverless_sdk
 
 
 class BaseInstrumenter:
-    def __init__(self):
+    def __init__(self, target_module):
         self._is_installed = False
+        self._target_module = target_module
 
     def install(self):
         if self._is_installed:
+            return
+
+        try:
+            self._module = importlib.import_module(self._target_module)
+        except ImportError:
             return
 
         self._install()
@@ -33,7 +38,7 @@ class BaseInstrumenter:
 
 class AIOHTTPInstrumenter(BaseInstrumenter):
     def __init__(self):
-        super().__init__()
+        super().__init__("aiohttp")
         self._original_request = None
 
     def _instrumented_request(self):
@@ -90,16 +95,16 @@ class AIOHTTPInstrumenter(BaseInstrumenter):
         return _func
 
     def _install(self):
-        self._original_request = aiohttp.ClientSession._request
-        aiohttp.ClientSession._request = self._instrumented_request()
+        self._original_request = self._module.ClientSession._request
+        self._module.ClientSession._request = self._instrumented_request()
 
     def _uninstall(self):
-        aiohttp.ClientSession._request = self._original_request
+        self._module.ClientSession._request = self._original_request
 
 
 class NativeHTTPInstrumenter(BaseInstrumenter):
     def __init__(self):
-        super().__init__()
+        super().__init__("http")
         self._original_request = None
         self._original_getresponse = None
 
@@ -160,14 +165,16 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         return _func
 
     def _install(self):
-        self._original_request = http.client.HTTPConnection.request
-        self._original_getresponse = http.client.HTTPConnection.getresponse
-        http.client.HTTPConnection.request = self._instrumented_request()
-        http.client.HTTPConnection.getresponse = self._instrumented_getresponse()
+        self._original_request = self._module.client.HTTPConnection.request
+        self._original_getresponse = self._module.client.HTTPConnection.getresponse
+        self._module.client.HTTPConnection.request = self._instrumented_request()
+        self._module.client.HTTPConnection.getresponse = (
+            self._instrumented_getresponse()
+        )
 
     def _uninstall(self):
-        http.client.HTTPConnection.request = self._original_request
-        http.client.HTTPConnection.getresponse = self._original_getresponse
+        self._module.client.HTTPConnection.request = self._original_request
+        self._module.client.HTTPConnection.getresponse = self._original_getresponse
 
 
 _instrumenters = [NativeHTTPInstrumenter(), AIOHTTPInstrumenter()]
