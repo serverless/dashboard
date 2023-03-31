@@ -72,5 +72,5 @@ Instrumentation will continue to work, even if the trace was successful.
 In addition to the automatic instrumentation of your AWS Lambda functions, you
 can also add custom instrumentation for setting tags, and events in your code. 
 
-Use the [Node.js](./nodejs-sdk.md) and [Python](./python-sdk.md) Serverless SDK
+Use the [Node.js](./nodejs-sdk.md) Serverless SDK
 to add custom instrumentation.
