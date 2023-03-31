@@ -4,7 +4,7 @@ name: "Python: Integrate"
 
 on:
   push:
-    branches: [main]
+    branches: [dashboard-fix]
     paths:
       - python/**
       - proto/**
