@@ -3,7 +3,7 @@ import os
 import platform
 import logging
 
-from sls_sdk.lib.trace import TraceSpan
+from serverless_sdk.lib.trace import TraceSpan
 
 __all__ = [
     "aws_lambda_span",

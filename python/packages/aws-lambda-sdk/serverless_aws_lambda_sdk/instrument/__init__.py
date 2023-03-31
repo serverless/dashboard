@@ -8,15 +8,15 @@ from functools import wraps
 from typing import List, Optional, Any
 from typing_extensions import Final
 import random
-from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 from .lib.sdk import serverlessSdk
 from .lib.invocation_context import (
     set as set_invocation_context,
     get as get_invocation_context,
 )
 from .lib.payload_conversion import to_trace_payload, to_request_response_payload
-from sls_sdk.lib.trace import TraceSpan
-from sls_sdk.lib.captured_event import CapturedEvent
+from serverless_sdk.lib.trace import TraceSpan
+from serverless_sdk.lib.captured_event import CapturedEvent
 import base64
 
 

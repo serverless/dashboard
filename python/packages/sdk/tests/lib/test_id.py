@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sls_sdk.lib.id import generate_id
+from serverless_sdk.lib.id import generate_id
 
 
 def test_generate_id():

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from unittest.mock import MagicMock, patch
-from sls_sdk.lib.warning import report as report_warning, logger
-import sls_sdk.lib.warning
+from serverless_sdk.lib.warning import report as report_warning, logger
+import serverless_sdk.lib.warning
 
 
 def test_report_warning(monkeypatch):
@@ -10,7 +10,7 @@ def test_report_warning(monkeypatch):
     code = "WARN_CODE"
     create_warning_captured_event = MagicMock()
     monkeypatch.setattr(
-        sls_sdk.lib.warning,
+        serverless_sdk.lib.warning,
         "create_warning_captured_event",
         create_warning_captured_event,
     )

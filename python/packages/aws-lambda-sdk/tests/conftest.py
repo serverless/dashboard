@@ -19,7 +19,7 @@ def _reset_sdk(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
     for key in list(sys.modules.keys()):
-        if key.startswith("serverless_") or key.startswith("sls_"):
+        if key.startswith("serverless_"):
             del sys.modules[key]
 
     monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", TEST_FUNCTION)

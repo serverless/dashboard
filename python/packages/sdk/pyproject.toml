@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "serverless-sdk"
-version = "0.3.8"
+version = "0.3.7"
 description = "Serverless SDK for Python"
 readme = "README.md"
 authors = [{ name = "serverlessinc" }]
