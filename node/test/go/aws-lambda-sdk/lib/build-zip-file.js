@@ -3,7 +3,6 @@
 const path = require('path');
 const spawn = require('child-process-ext/spawn');
 const resolveDirZipBuffer = require('../../../utils/resolve-dir-zip-buffer');
-const log = require('log').get('test');
 
 const slslambdaDirname = path.resolve(__dirname, '../../../../../go/packages/slslambda');
 const fixturesDirname = path.resolve(slslambdaDirname, 'fixtures');
@@ -15,7 +14,6 @@ module.exports = function buildZipFile(functionName, architecture) {
     await spawn(script, [moduleDir, architecture]);
     const outputDir = path.resolve(moduleDir, 'build', architecture);
     const zipFile = await resolveDirZipBuffer(outputDir);
-    log.info('building Golang zip');
     const isArm64 = architecture === 'arm64';
     return {
       Handler: 'bootstrap',
