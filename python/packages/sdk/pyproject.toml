@@ -25,6 +25,7 @@ tests = [
     "black>=22.12",
     "pytest>=7.2",
     "pytest-httpserver>=1.0.6",
+    "requests>=2.28.2",
     "ruff>=0.0.199",
     "urllib3>=1.26.15",
 ]

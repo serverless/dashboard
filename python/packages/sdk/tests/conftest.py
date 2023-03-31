@@ -17,7 +17,13 @@ def reset_sdk_dev_mode(monkeypatch, request):
 def _reset_sdk(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
-    module_prefixes_to_delete = ["serverless_sdk", "http.client", "urllib3", "aiohttp"]
+    module_prefixes_to_delete = [
+        "serverless_sdk",
+        "http.client",
+        "urllib3",
+        "aiohttp",
+        "requests",
+    ]
     deleted_modules = []
     for key in list(sys.modules.keys()):
         if [prefix for prefix in module_prefixes_to_delete if key.startswith(prefix)]:

@@ -15,7 +15,7 @@ def instrumented_sdk(reset_sdk):
     serverless_sdk.lib.instrumentation.http.uninstall()
 
 
-def test_instrument_http_using_urllib3(
+def test_instrument_urllib3(
     instrumented_sdk,
     httpserver: HTTPServer,
 ):
@@ -42,7 +42,42 @@ def test_instrument_http_using_urllib3(
     }
 
 
-def test_instrument_http_using_aiohttp(
+def test_instrument_requests(
+    instrumented_sdk,
+    httpserver: HTTPServer,
+):
+    # given
+    def handler(request: Request):
+        return Response(str("OK"))
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import requests
+
+    requests.get(httpserver.url_for("/foo/bar?baz=qux"), headers={"User-Agent": "foo"})
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "GET",
+                "http.protocol": "HTTP/1.1",
+                "http.host": "127.0.0.1",
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+
+
+def test_instrument_aiohttp(
     instrumented_sdk,
     httpserver: HTTPServer,
 ):
@@ -78,7 +113,7 @@ def test_instrument_http_using_aiohttp(
     }
 
 
-def test_instrument_http_using_aiohttp_noops_if_aiohttp_is_not_installed():
+def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
     with patch.dict(sys.modules, {"aiohttp": None}):
         # given
         import serverless_sdk
