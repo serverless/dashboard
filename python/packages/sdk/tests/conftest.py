@@ -20,6 +20,7 @@ def _reset_sdk(
     module_prefixes_to_delete = [
         "serverless_sdk",
         "http.client",
+        "urllib",
         "urllib3",
         "aiohttp",
         "requests",

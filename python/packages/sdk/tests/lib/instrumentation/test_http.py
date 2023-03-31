@@ -15,6 +15,47 @@ def instrumented_sdk(reset_sdk):
     serverless_sdk.lib.instrumentation.http.uninstall()
 
 
+def test_instrument_urllib(
+    instrumented_sdk,
+    httpserver: HTTPServer,
+):
+    # given
+    def handler(request: Request):
+        return Response(str("OK"))
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import urllib.parse
+    import urllib.request
+
+    url = httpserver.url_for("/foo/bar?baz=qux")
+    headers = {"User-Agent": "foo"}
+
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        response.read()
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "GET",
+                "http.protocol": "HTTP/1.1",
+                "http.host": "127.0.0.1",
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+
+
 def test_instrument_urllib3(
     instrumented_sdk,
     httpserver: HTTPServer,
