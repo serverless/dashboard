@@ -13,6 +13,13 @@ module.exports = async () => {
     [
       'goSuccess-consoleProd',
       {
+        configuration: {
+          Environment: {
+            Variables: {
+              SLS_ORG_ID: process.env.SLS_ORG_ID,
+            },
+          },
+        },
         deferredConfiguration: buildZipFile('success', 'amd64'),
       },
     ],
