@@ -43,7 +43,7 @@ logs, including the stack trace and Error name, if applicable.
 For further customization, you can use the [Node.js SDK](../nodejs-sdk.md)
 methods to capture Events with custom tags.
 
-## Real-time Traces & Spans
+## Real Time Traces & Spans
 
 Traces and Spans are available in Dev Mode, just like they are in the Trace
 Explorer when Prod Instrumentation Mode is enabled.
