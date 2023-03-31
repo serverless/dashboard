@@ -6,6 +6,7 @@ const run = require('./lib/run');
 const resolveUseCasesConfig = {
   node: require('./lib/resolve-use-cases-config/node'),
   python: require('./lib/resolve-use-cases-config/python'),
+  go: require('./lib/resolve-use-cases-config/go'),
 };
 
 module.exports = async (options = {}) => {
@@ -15,6 +16,7 @@ module.exports = async (options = {}) => {
   const allUseCasesConfig = new Map([
     ...Array.from(await resolveUseCasesConfig.node(coreConfig, options)),
     ...Array.from(await resolveUseCasesConfig.python(coreConfig, options)),
+    ...Array.from(await resolveUseCasesConfig.go(coreConfig, options)),
   ]);
 
   const useCasesConfig = options.useCases
