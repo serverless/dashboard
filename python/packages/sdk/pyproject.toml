@@ -21,10 +21,12 @@ dependencies = [
 ]
 [project.optional-dependencies]
 tests = [
+    "aiohttp>=3.8.4",
     "black>=22.12",
     "pytest>=7.2",
     "pytest-httpserver>=1.0.6",
     "ruff>=0.0.199",
+    "urllib3>=1.26.15",
 ]
 [project.urls]
 changelog = "https://github.com/serverless/console/blob/main/python/packages/sdk/CHANGELOG.md"

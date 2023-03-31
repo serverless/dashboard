@@ -59,7 +59,7 @@ class TraceSpan:
         immediate_descendants: Optional[List[str]] = None,
         on_close_by_root: Optional[Callable] = None,
     ):
-        self.name = get_resource_name(name)
+        self._set_name(name)
         self.input = input
         self.output = output
         self.sub_spans = []
@@ -105,6 +105,9 @@ class TraceSpan:
     def _set_ctx(self, override: Optional[TraceSpan] = None):
         global ctx
         ctx.set(override or self)
+
+    def _set_name(self, name):
+        self.name = get_resource_name(name)
 
     def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()

@@ -17,8 +17,11 @@ def reset_sdk_dev_mode(monkeypatch, request):
 def _reset_sdk(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
+    module_prefixes_to_delete = ["serverless_sdk", "http.client", "urllib3", "aiohttp"]
+    deleted_modules = []
     for key in list(sys.modules.keys()):
-        if key.startswith("serverless_"):
+        if [prefix for prefix in module_prefixes_to_delete if key.startswith(prefix)]:
+            deleted_modules.append(key)
             del sys.modules[key]
 
     monkeypatch.setenv("SLS_ORG_ID", TEST_ORG)
@@ -36,8 +39,9 @@ def _reset_sdk(
         for key in request.param:
             monkeypatch.setenv(key, request.param[key])
 
-    # make sure the SDK is imported
-    importlib.import_module("serverless_sdk")
+    # make sure the SDK & other deleted modules are reimported
+    for module in deleted_modules + module_prefixes_to_delete:
+        importlib.import_module(module)
     return monkeypatch
 
 

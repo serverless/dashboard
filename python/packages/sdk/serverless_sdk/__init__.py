@@ -15,7 +15,6 @@ from .lib.error import report as report_error
 from .lib.warning import report as report_warning
 from .lib.notice import report as report_notice
 from .lib.instrumentation.logging import install as install_logging
-from .lib.instrumentation.http import install as install_http
 
 
 __all__: Final[List[str]] = [
@@ -108,6 +107,8 @@ class ServerlessSdk:
             install_logging()
 
         if not self._settings.disable_http_monitoring:
+            from .lib.instrumentation.http import install as install_http
+
             install_http()
 
         self._is_initialized = True
