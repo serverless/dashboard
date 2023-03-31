@@ -110,7 +110,7 @@ func getAwsRegion() awsRegion {
 
 func newArchitecture(s string) (architecture, error) {
 	var architectures = map[string]architecture{
-		"arm":   architectureARM,
+		"arm64": architectureARM,
 		"amd64": architectureAMD64,
 	}
 	mappedArchitecture, ok := architectures[s]
