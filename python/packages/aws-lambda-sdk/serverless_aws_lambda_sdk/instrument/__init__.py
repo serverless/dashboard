@@ -4,7 +4,6 @@ import time
 import sys
 import copy
 import json
-from functools import wraps
 from typing import List, Optional, Any
 from typing_extensions import Final
 import random
@@ -326,10 +325,10 @@ class Instrumenter:
         self._close_trace("success", result)
         return result
 
-    def instrument(self, user_handler):
-        @wraps(user_handler)
+    def instrument(self, user_handler_generator):
         def stub(event, context):
             try:
+                user_handler = user_handler_generator()
                 return self._handler(user_handler, event, context)
             finally:
                 if self.event_loop:
