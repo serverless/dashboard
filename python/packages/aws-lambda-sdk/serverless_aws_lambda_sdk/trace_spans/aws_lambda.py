@@ -4,6 +4,7 @@ import platform
 import logging
 
 from serverless_sdk.lib.trace import TraceSpan
+from serverless_sdk.lib.timing import _DIFF
 
 __all__ = [
     "aws_lambda_span",
@@ -39,7 +40,7 @@ if arch:
 
 aws_lambda_span = TraceSpan(
     "aws.lambda",
-    start_time=int(os.environ.get("_SLS_PROCESS_START_TIME", 0)),
+    start_time=int(os.environ.get("_SLS_PROCESS_START_TIME", 0)) - _DIFF,
     immediate_descendants=["aws.lambda.initialization"],
     tags=IMMUTABLE_TAGS,
 )
