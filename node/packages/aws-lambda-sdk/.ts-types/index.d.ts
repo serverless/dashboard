@@ -18,4 +18,5 @@ interface AwsLambdaSdk extends Sdk {
   instrumentation: AwsLambdaInstrumentation;
 }
 
-export default AwsLambdaSdk;
+declare const sdk: AwsLambdaSdk;
+export default sdk;
