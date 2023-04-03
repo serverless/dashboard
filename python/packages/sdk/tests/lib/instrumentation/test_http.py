@@ -4,20 +4,41 @@ import asyncio
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Request, Response
 import sys
+import json
 
 
-@pytest.fixture()
-def instrumented_sdk(reset_sdk):
+@pytest.fixture(params=[False, True])
+def instrumented_sdk(reset_sdk, request, monkeypatch):
+    # if dev mode is enabled in the fixture
+    if request.param:
+        monkeypatch.setenv("SLS_DEV_MODE_ORG_ID", "test-org")
     import serverless_sdk
 
-    serverless_sdk.serverlessSdk._initialize()
+    serverless_sdk.serverlessSdk._initialize(
+        disable_request_response_monitoring=not request.param
+    )
     yield serverless_sdk.serverlessSdk
     serverless_sdk.lib.instrumentation.http.uninstall()
 
 
+def _assert_request_response_body(sdk, request_body, response_body):
+    assert (
+        not sdk._is_dev_mode
+        or isinstance(request_body, str)
+        or sdk.trace_spans.root.input == json.dumps(request_body)
+    )
+    assert (
+        not sdk._is_dev_mode
+        or isinstance(request_body, str)
+        or sdk.trace_spans.root.output == response_body
+    )
+
+
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
 def test_instrument_urllib(
     instrumented_sdk,
     httpserver: HTTPServer,
+    request_body,
 ):
     # given
     def handler(request: Request):
@@ -33,7 +54,9 @@ def test_instrument_urllib(
     headers = {"User-Agent": "foo"}
 
     req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as response:
+    with urllib.request.urlopen(
+        req, data=json.dumps(request_body).encode()
+    ) as response:
         response.read()
 
     # then
@@ -42,11 +65,12 @@ def test_instrument_urllib(
         instrumented_sdk.trace_spans.root.tags.items()
         >= dict(
             {
-                "http.method": "GET",
+                "http.method": "POST",
                 "http.protocol": "HTTP/1.1",
                 "http.host": "127.0.0.1",
                 "http.path": "/foo/bar",
                 "http.query_parameter_names": ["baz"],
+                "http.status_code": 200,
             }
         ).items()
     )
@@ -54,11 +78,14 @@ def test_instrument_urllib(
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
+    _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
 def test_instrument_urllib3(
     instrumented_sdk,
     httpserver: HTTPServer,
+    request_body,
 ):
     # given
     def handler(request: Request):
@@ -69,24 +96,38 @@ def test_instrument_urllib3(
     # when
     import urllib3
 
-    urllib3.PoolManager().request("GET", httpserver.url_for("/foo/bar?baz=qux"))
+    urllib3.PoolManager().request(
+        "POST",
+        httpserver.url_for("/foo/bar?baz=qux"),
+        body=json.dumps(request_body).encode(),
+    )
 
     # then
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert instrumented_sdk.trace_spans.root.tags == {
-        "http.method": "GET",
+        "http.method": "POST",
         "http.protocol": "HTTP/1.1",
         "http.host": "127.0.0.1",
         "http.path": "/foo/bar",
         "http.request_header_names": ["User-Agent"],
         "http.query_parameter_names": ["baz"],
+        "http.status_code": 200,
     }
+    assert (
+        not instrumented_sdk._is_dev_mode
+        or isinstance(request_body, str)
+        or instrumented_sdk.trace_spans.root.input == json.dumps(request_body)
+    )
+    assert (
+        not instrumented_sdk._is_dev_mode
+        or isinstance(request_body, str)
+        or instrumented_sdk.trace_spans.root.output == "OK"
+    )
+    _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
-def test_instrument_requests(
-    instrumented_sdk,
-    httpserver: HTTPServer,
-):
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
+def test_instrument_requests(instrumented_sdk, httpserver: HTTPServer, request_body):
     # given
     def handler(request: Request):
         return Response(str("OK"))
@@ -96,7 +137,11 @@ def test_instrument_requests(
     # when
     import requests
 
-    requests.get(httpserver.url_for("/foo/bar?baz=qux"), headers={"User-Agent": "foo"})
+    requests.get(
+        httpserver.url_for("/foo/bar?baz=qux"),
+        headers={"User-Agent": "foo"},
+        data=json.dumps({"foo": "bar"}).encode(),
+    )
 
     # then
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
@@ -109,6 +154,7 @@ def test_instrument_requests(
                 "http.host": "127.0.0.1",
                 "http.path": "/foo/bar",
                 "http.query_parameter_names": ["baz"],
+                "http.status_code": 200,
             }
         ).items()
     )
@@ -116,11 +162,14 @@ def test_instrument_requests(
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
+    _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
 def test_instrument_aiohttp(
     instrumented_sdk,
     httpserver: HTTPServer,
+    request_body,
 ):
     # given
     def handler(request: Request):
@@ -136,7 +185,9 @@ def test_instrument_aiohttp(
 
     async def _get():
         async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
-            async with session.get(httpserver.url_for("/foo/bar?baz=qux")) as resp:
+            async with session.get(
+                httpserver.url_for("/foo/bar?baz=qux"), data=request_body
+            ) as resp:
                 print(resp.status)
                 print(await resp.text())
 
@@ -151,7 +202,9 @@ def test_instrument_aiohttp(
         "http.path": "/foo/bar",
         "http.request_header_names": ["User-Agent"],
         "http.query_parameter_names": ["baz"],
+        "http.status_code": 200,
     }
+    _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
 def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():

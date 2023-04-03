@@ -42,8 +42,8 @@ class TraceSpan:
     name: str
     start_time: Nanoseconds
     end_time: Optional[Nanoseconds] = None
-    input: Optional[str] = None
-    output: Optional[str] = None
+    _input: Optional[str] = None
+    _output: Optional[str] = None
     tags: Tags
     custom_tags: Tags
     sub_spans: List[Self]
@@ -155,6 +155,17 @@ class TraceSpan:
             raise InvalidType("`output` must be a string.")
 
         self._output = value
+
+    @property
+    def input(self) -> str:
+        return self._input
+
+    @input.setter
+    def input(self, value: str):
+        if value is not None and not isinstance(value, str):
+            raise InvalidType("`input` must be a string.")
+
+        self._input = value
 
     def close(self, end_time: Optional[Nanoseconds] = None):
         global root_span, ctx

@@ -72,6 +72,7 @@ class ServerlessSdk:
     _is_initialized: bool
     _is_debug_mode: bool
     _is_dev_mode: bool
+    _maximum_body_byte_length: int
 
     def __init__(self):
         self._is_initialized = False
@@ -82,6 +83,7 @@ class ServerlessSdk:
         self._report_error = report_error
         self._report_warning = report_warning
         self._report_notice = report_notice
+        self._maximum_body_byte_length = 1024 * 127  # 127 KB
 
     def _initialize(
         self,
