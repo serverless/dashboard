@@ -1,4 +1,4 @@
-from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
+from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
 import time
 
 
