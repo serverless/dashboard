@@ -39,3 +39,6 @@ testpaths = [
 [tool.ruff]
 ignore = ["F401", "E722"]
 #fix = true
+
+[tool.setuptools.packages.find]
+include = ["sls_sdk*", "serverless_sdk*"]
