@@ -28,7 +28,7 @@ def test_instrument_wraps_callable(instrumenter):
     def example(event, context):
         pass
 
-    result = instrumenter.instrument(example)
+    result = instrumenter.instrument(lambda: example)
     assert callable(result)
     result({}, context)
 
@@ -37,7 +37,7 @@ def test_instrumented_callable_behaves_like_original(instrumenter):
     def example(event, context) -> str:
         return context.aws_request_id
 
-    instrumented = instrumenter.instrument(example)
+    instrumented = instrumenter.instrument(lambda: example)
 
     compare_handlers(example, instrumented)
 
@@ -48,7 +48,7 @@ def test_instrument_works_with_all_callables(instrumenter):
             return context.aws_request_id
 
     example = Example()
-    instrumented = instrumenter.instrument(example)
+    instrumented = instrumenter.instrument(lambda: example)
 
     compare_handlers(example, instrumented)
 
@@ -57,7 +57,7 @@ def test_instrument_lambda_success(instrumenter, mocked_print):
     # given
     from ..fixtures.lambdas.success import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
 
     # when
     instrumented({}, context)
@@ -84,7 +84,7 @@ def test_instrument_subsequent_calls(instrumenter):
     # given
     from ..fixtures.lambdas.success import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
     from builtins import print
 
     # when
@@ -141,7 +141,7 @@ def test_instrument_lambda_unhandled_error(instrumenter, mocked_print):
     # given
     from ..fixtures.lambdas.error_unhandled import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
 
     # when
     with pytest.raises(SystemExit):
@@ -169,7 +169,7 @@ def test_instrument_lambda_handled_error(instrumenter, mocked_print):
     # given
     from ..fixtures.lambdas.error import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
 
     # when
     with pytest.raises(Exception):
@@ -218,7 +218,7 @@ def test_instrument_lambda_sdk(instrumenter):
     # given
     from ..fixtures.lambdas.sdk import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
 
     def _test_once(invocation, asserted_spans=[]):
         from logging import Logger
@@ -319,7 +319,7 @@ def test_instrument_sdk_sampled_out(
     monkeypatch.setattr("random.random", lambda: 0.9 if sampled_out else 0.1)
     from ..fixtures.lambdas.sdk_sampled_out import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
 
     # when
     instrumented({}, context)
@@ -357,7 +357,7 @@ def test_instrument_lambda_success_dev_mode_without_server(
     from ..fixtures.lambdas.success import handler as lambda_handler
 
     instrumenter_dev_mode = serverless_aws_lambda_sdk.instrument.Instrumenter()
-    instrumented = instrumenter_dev_mode.instrument(lambda_handler)
+    instrumented = instrumenter_dev_mode.instrument(lambda: lambda_handler)
 
     # when
     instrumented({}, context)
@@ -418,7 +418,7 @@ def test_instrument_lambda_success_dev_mode_with_server(
         return "ok"
 
     instrumenter_dev_mode = serverless_aws_lambda_sdk.instrument.Instrumenter()
-    instrumented = instrumenter_dev_mode.instrument(lambda_handler)
+    instrumented = instrumenter_dev_mode.instrument(lambda: lambda_handler)
 
     event = {
         "foo": "bar",
@@ -499,7 +499,7 @@ def test_instrument_lambda_success_close_trace_failure(instrumenter):
     # given
     from ..fixtures.lambdas.success import handler
 
-    instrumented = instrumenter.instrument(handler)
+    instrumented = instrumenter.instrument(lambda: handler)
     _original = instrumenter._close_trace
     instrumenter._close_trace = MagicMock()
     instrumenter._close_trace.side_effect = Exception("_close_trace failed")
