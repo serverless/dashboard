@@ -31,6 +31,9 @@ documentation = "https://github.com/serverless/console/tree/main/python/packages
 homepage = "https://www.serverless.com/console"
 repository = "https://github.com/serverless/console"
 
+[tool.setuptools.packages.find]
+include = ["sls_sdk*", "serverless_sdk*"]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
