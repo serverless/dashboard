@@ -83,6 +83,12 @@ serverlessSdk.instrumentation.awsSdkV3Client.install(client)
 serverlessSdk.instrumentation.expressApp.install(expressApp)
 ```
 
+Additionally in some instrumentation cases it's important to ensure that bundler doesn't change
+function names, as span names and tags are resolved from them, e.g. that's it's the case
+for the AWS SDK.
+(In [esbuild](https://esbuild.github.io/) this can be ensured with
+[`--keep-names`](https://esbuild.github.io/api/#keep-names) option)
+
 ### Enable Instrumentation
 
 The SDK will merely generate the necessary Tags, Spans, and Events; however,
