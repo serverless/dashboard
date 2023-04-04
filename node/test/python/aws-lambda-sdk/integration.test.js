@@ -211,6 +211,15 @@ describe('Python: integration', function () {
         config: sdkTestConfig,
       },
     ],
+    [
+      'dashboard/s_hello',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+        ]),
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
