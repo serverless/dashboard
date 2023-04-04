@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Bug Fixes
 
 - Fix customer module initialization
+- Revert breaking rename of `serverless_sdk` into `sls_sdk`
 
 ### Maintenance Improvements
 
