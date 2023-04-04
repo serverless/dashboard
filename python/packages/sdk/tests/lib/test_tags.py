@@ -7,15 +7,15 @@ from unittest.mock import MagicMock
 import pytest
 from typing_extensions import Final
 
-from sls_sdk.base import ValidTags
-from sls_sdk.exceptions import (
+from serverless_sdk.base import ValidTags
+from serverless_sdk.exceptions import (
     DuplicateTraceSpanName,
     InvalidTraceSpanTagName,
     InvalidTraceSpanTagValue,
     SdkException,
 )
-from sls_sdk.lib.tags import ensure_tag_name, ensure_tag_value, Tags
-import sls_sdk.lib.tags
+from serverless_sdk.lib.tags import ensure_tag_name, ensure_tag_value, Tags
+import serverless_sdk.lib.tags
 
 
 VALID_NAMES: Final[Tuple[str, ...]] = (
@@ -128,7 +128,7 @@ def test_tags_update_with_prefix():
 
 def test_tags_invalid_names_and_values(tags: Tags, monkeypatch):
     mock = MagicMock()
-    monkeypatch.setattr(sls_sdk.lib.tags, "report_error", mock)
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
     for name in INVALID_NAMES:
         for value in VALID_VALUES:
             tags[name] = value
@@ -163,7 +163,7 @@ def test_tags_invalid_names_and_values_internal_method_raises_exception(tags: Ta
 
 def test_tags_duplicate(tags: Tags, monkeypatch):
     mock = MagicMock()
-    monkeypatch.setattr(sls_sdk.lib.tags, "report_error", mock)
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
     for name in VALID_NAMES:
         tags[name] = "example"
 
@@ -187,7 +187,7 @@ def test_tags_duplicate_internal_method_raises_exception(tags: Tags):
 def test_tags_invalid_names_and_values_bulk(tags: Tags, monkeypatch):
     # given
     mock = MagicMock()
-    monkeypatch.setattr(sls_sdk.lib.tags, "report_error", mock)
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
 
     # when
     tags.update({name: "" for name in INVALID_NAMES})
@@ -201,7 +201,7 @@ def test_tags_invalid_names_and_values_bulk_internal_method_raises_exception(
 ):
     # given
     mock = MagicMock()
-    monkeypatch.setattr(sls_sdk.lib.tags, "report_error", mock)
+    monkeypatch.setattr(serverless_sdk.lib.tags, "report_error", mock)
 
     # when
     with pytest.raises(SdkException):

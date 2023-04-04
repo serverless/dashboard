@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 - Add `_report_notice` method
-- Emit `trace-span-close` event when a span is closed 
+- Emit `trace-span-close` event when a span is closed
 
 ## 0.3.5 (2023-03-22)
 

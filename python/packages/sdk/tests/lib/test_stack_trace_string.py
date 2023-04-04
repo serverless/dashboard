@@ -1,5 +1,5 @@
 import traceback
-from sls_sdk.lib.stack_trace_string import resolve
+from serverless_sdk.lib.stack_trace_string import resolve
 
 
 def test_resolve_stack_trace_string_from_error():

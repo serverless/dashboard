@@ -2,13 +2,13 @@ from __future__ import annotations
 from unittest import mock
 from unittest.mock import MagicMock
 import json
-from sls_sdk.lib.warning_captured_event import (
+from serverless_sdk.lib.warning_captured_event import (
     create as create_warning_captured_event,
     logger,
 )
-from sls_sdk import serverlessSdk
-from sls_sdk.lib.tags import Tags, convert_tags_to_protobuf
-from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+from serverless_sdk import serverlessSdk
+from serverless_sdk.lib.tags import Tags, convert_tags_to_protobuf
+from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
 
 
 def assert_protobuf_dict(captured_event, tags, fingerprint=None):
