@@ -2,10 +2,10 @@ from __future__ import annotations
 import time
 import json
 from unittest.mock import MagicMock
-from serverless_sdk.lib.captured_event import CapturedEvent
-from serverless_sdk.lib.tags import Tags, convert_tags_to_protobuf
-from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
-import serverless_sdk.lib.captured_event
+from sls_sdk.lib.captured_event import CapturedEvent
+from sls_sdk.lib.tags import Tags, convert_tags_to_protobuf
+from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+import sls_sdk.lib.captured_event
 
 
 def test_captured_event():
@@ -46,7 +46,7 @@ def test_captured_event():
 def test_captured_event_invalid_custom_tags(monkeypatch):
     # given
     mock = MagicMock()
-    monkeypatch.setattr(serverless_sdk.lib.captured_event, "report_error", mock)
+    monkeypatch.setattr(sls_sdk.lib.captured_event, "report_error", mock)
     timestamp = time.perf_counter_ns()
     tags = {"foo- !": "bar"}
     event_name = "foo.bar.event"
