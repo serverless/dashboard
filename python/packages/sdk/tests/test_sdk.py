@@ -4,24 +4,24 @@ from unittest.mock import MagicMock
 import pytest
 
 from . import get_params
-import sls_sdk
-from sls_sdk import ServerlessSdk
-from sls_sdk.base import SLS_ORG_ID
-from sls_sdk.lib.error_captured_event import TYPE_MAP as ERROR_TYPE_MAP
-from sls_sdk.lib.warning_captured_event import TYPE_MAP as WARNING_TYPE_MAP
-from sls_sdk.lib.emitter import event_emitter
+import serverless_sdk
+from serverless_sdk import ServerlessSdk
+from serverless_sdk.base import SLS_ORG_ID
+from serverless_sdk.lib.error_captured_event import TYPE_MAP as ERROR_TYPE_MAP
+from serverless_sdk.lib.warning_captured_event import TYPE_MAP as WARNING_TYPE_MAP
+from serverless_sdk.lib.emitter import event_emitter
 
 
 @pytest.fixture
 def sdk() -> ServerlessSdk:
-    from sls_sdk import serverlessSdk
+    from serverless_sdk import serverlessSdk
 
     return serverlessSdk
 
 
 def test_can_import_serverless_sdk():
     try:
-        from sls_sdk import serverlessSdk
+        from serverless_sdk import serverlessSdk
 
     except ImportError as e:
         raise AssertionError("Cannot import `serverlessSdk`") from e
@@ -95,7 +95,7 @@ def test_has_create_trace_span_method(sdk: ServerlessSdk):
 
 
 def test_create_trace_span_returns_trace_span(sdk: ServerlessSdk):
-    from sls_sdk.lib.trace import TraceSpan
+    from serverless_sdk.lib.trace import TraceSpan
 
     span = sdk._create_trace_span("name", "input", "output")
 
@@ -174,7 +174,7 @@ def test_sdk_exposes_set_tag(sdk: ServerlessSdk):
 def test_sdk_set_tag_does_not_crash_on_invalid_input(sdk: ServerlessSdk, monkeypatch):
     # given
     mock = MagicMock()
-    monkeypatch.setattr(sls_sdk, "report_error", mock)
+    monkeypatch.setattr(serverless_sdk, "report_error", mock)
     tag_name = ""
     tag_value = "value"
 

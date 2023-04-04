@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from sls_sdk.lib.emitter import EventEmitter, EVENT_TYPE
+from serverless_sdk.lib.emitter import EventEmitter, EVENT_TYPE
 
 
 @pytest.mark.parametrize("event_type", EVENT_TYPE.__args__)
