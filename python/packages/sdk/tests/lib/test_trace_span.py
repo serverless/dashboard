@@ -1,21 +1,16 @@
-import pytest
 import time
 import json
 from unittest.mock import patch, call
-from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
-from sls_sdk.lib.trace import TraceSpan
-from sls_sdk.lib.emitter import event_emitter
 
 
-# root span that lives throughout the test session
-@pytest.fixture(scope="session")
-def root_span():
-    span = TraceSpan("test")
-    yield span
-    span.close()
+def test_root_span(sdk):
+    # given
+    from sls_sdk.lib.trace import TraceSpan
 
+    # when
+    root_span = TraceSpan("root")
 
-def test_root_span(root_span: TraceSpan):
+    # then
     assert type(root_span.trace_id) == str, "should automatically generate `trace_id`"
     assert type(root_span.id) == str, "should automatically generate `id`"
     assert (
@@ -23,8 +18,11 @@ def test_root_span(root_span: TraceSpan):
     ), "should automatically generate `start_time`"
 
 
-def test_sub_span(root_span: TraceSpan):
+def test_sub_span(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
+    root_span = TraceSpan("root")
     child_span = TraceSpan("child")
 
     # when
@@ -46,8 +44,10 @@ def test_sub_span(root_span: TraceSpan):
     assert child_span in root_span.sub_spans
 
 
-def test_span_init_start_time():
+def test_span_init_start_time(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     start_time = time.perf_counter_ns()
 
     # when
@@ -57,8 +57,10 @@ def test_span_init_start_time():
     assert span.start_time == start_time, "should support injection of `start_time`"
 
 
-def test_span_init_tags():
+def test_span_init_tags(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     tags = {"foo": "bar"}
 
     # when
@@ -68,8 +70,10 @@ def test_span_init_tags():
     assert span.tags == tags, "should support initial `tags`"
 
 
-def test_span_init_end_time():
+def test_span_init_end_time(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     span = TraceSpan("child")
     end_time = time.perf_counter_ns()
 
@@ -80,8 +84,10 @@ def test_span_init_end_time():
     assert span.end_time == end_time, "should support injection of `end_time`"
 
 
-def test_span_init_input():
+def test_span_init_input(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     input = "foo"
 
     # when
@@ -91,8 +97,12 @@ def test_span_init_input():
     assert span.input == input, "should support `input`"
 
 
-def test_span_protobuf():
+def test_span_protobuf(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+    from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+
+    parent_span = TraceSpan("parent")
     child_span = TraceSpan("child")
     child_span.input = "some input"
     child_span.output = "some output"
@@ -113,7 +123,7 @@ def test_span_protobuf():
     # then
     assert proto_dict == {
         "traceId": child_span.trace_id,
-        "parentSpanId": child_span.parent_span.id,
+        "parentSpanId": parent_span.id,
         "id": child_span.id,
         "name": child_span.name,
         "startTimeUnixNano": to_protobuf_epoch_timestamp(child_span.start_time),
@@ -135,8 +145,10 @@ def test_span_protobuf():
     }, "should stringify to JSON"
 
 
-def test_creation_of_immediate_descendant_spans():
+def test_creation_of_immediate_descendant_spans(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     child_span = TraceSpan(
         "child", immediate_descendants=["grandchild", "grandgrandchild"]
     )
@@ -162,16 +174,20 @@ def test_creation_of_immediate_descendant_spans():
     child_span.close()
 
 
-def test_leaf_span():
+def test_leaf_span(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     span = TraceSpan("child").close()
 
     # then
     assert list(span.spans) == [span], "should resolve just self when no subspans"
 
 
-def test_spans():
+def test_spans(sdk):
     # given
+    from sls_sdk.lib.trace import TraceSpan
+
     span = TraceSpan("child")
     sub_span_1 = TraceSpan("subchild1")
     sub_sub_span = TraceSpan("subsubchild").close()
@@ -183,7 +199,10 @@ def test_spans():
     assert span.spans == [span, sub_span_1, sub_sub_span, sub_span_2]
 
 
-def test_span_closure():
+def test_span_closure(sdk):
+    from sls_sdk.lib.trace import TraceSpan
+    from sls_sdk.lib.emitter import event_emitter
+
     with patch.object(event_emitter, "emit") as mock_emit:
         # given
         aws_lambda = TraceSpan(
@@ -209,12 +228,13 @@ def test_span_closure():
     )
 
 
-def test_root_span_reuse():
+def test_root_span_reuse(sdk):
     # given
     from importlib import reload
     import sls_sdk.lib.trace
 
     reload(sls_sdk.lib.trace)
+    from sls_sdk.lib.trace import TraceSpan
 
     span = TraceSpan("root")
     TraceSpan("child1").close()
