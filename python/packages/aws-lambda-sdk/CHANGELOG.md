@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.12 (2023-04-05)
+
+### Bug Fixes
+
+- Fix customer module initialization
+
+### Maintenance Improvements
+
+- Use internal module name when importing base SDK to prevent name collision
+
 ## 0.1.11 (2023-03-30)
 
 - Change name of package module from `sls_sdk.` to `sls_sdk`
