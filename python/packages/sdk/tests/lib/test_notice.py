@@ -1,7 +1,7 @@
 from __future__ import annotations
 from unittest.mock import MagicMock, patch
-from serverless_sdk.lib.notice import report as report_notice
-from serverless_sdk.lib.emitter import event_emitter
+from sls_sdk.lib.notice import report as report_notice
+from sls_sdk.lib.emitter import event_emitter
 
 
 def test_report_notice():

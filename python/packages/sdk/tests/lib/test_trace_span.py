@@ -2,9 +2,9 @@ import pytest
 import time
 import json
 from unittest.mock import patch, call
-from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
-from serverless_sdk.lib.trace import TraceSpan
-from serverless_sdk.lib.emitter import event_emitter
+from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+from sls_sdk.lib.trace import TraceSpan
+from sls_sdk.lib.emitter import event_emitter
 
 
 # root span that lives throughout the test session
@@ -212,25 +212,25 @@ def test_span_closure():
 def test_root_span_reuse():
     # given
     from importlib import reload
-    import serverless_sdk.lib.trace
+    import sls_sdk.lib.trace
 
-    reload(serverless_sdk.lib.trace)
+    reload(sls_sdk.lib.trace)
 
     span = TraceSpan("root")
     TraceSpan("child1").close()
     TraceSpan("child2").close()
     span.close()
     span.sub_spans.clear()
-    del serverless_sdk.lib.trace.root_span.end_time
+    del sls_sdk.lib.trace.root_span.end_time
 
     # when
     span.start_time = time.perf_counter_ns()
     TraceSpan("otherchild").close()
-    serverless_sdk.lib.trace.root_span.close()
+    sls_sdk.lib.trace.root_span.close()
 
     # then
-    assert [x.name for x in serverless_sdk.lib.trace.root_span.spans] == [
+    assert [x.name for x in sls_sdk.lib.trace.root_span.spans] == [
         "root",
         "otherchild",
     ]
-    serverless_sdk.lib.trace.root_span.sub_spans.clear()
+    sls_sdk.lib.trace.root_span.sub_spans.clear()
