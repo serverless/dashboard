@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.10 (2023-04-04)
+
+### Maintenance Improvements
+
+- Rename module as `sls_sdk` and alias public api as `serverless_sdk`
+
 ## 0.3.9 (2023-04-04)
 
 - Revert breaking rename of package module from `serverless_sdk` to `sls_sdk`
