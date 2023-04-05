@@ -3,9 +3,9 @@ import importlib
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 from ..error import report as report_error
-import serverless_sdk
+import sls_sdk
 
-SDK = serverless_sdk.serverlessSdk
+SDK = sls_sdk.serverlessSdk
 
 
 class BaseInstrumenter:
