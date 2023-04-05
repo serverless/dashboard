@@ -90,6 +90,16 @@ const httpApiV2EventMap = [
   'isBase64Encoded',
 ];
 
+const albEventMap = [
+  'path',
+  'httpMethod',
+  'headers',
+  'queryStringParameters',
+  ['requestContext', ['elb']],
+  'body',
+  'isBase64Encoded',
+];
+
 const sqsEventMap = [
   [
     'Records',
@@ -244,6 +254,29 @@ module.exports = (event) => {
       },
       { prefix: 'aws.lambda.http' }
     );
+    return;
+  }
+  if (doesObjectMatchMap(event, albEventMap)) {
+    // Application Load Balancer event
+    awsLambdaSpan.tags.setMany(
+      {
+        event_source: 'aws.elasticloadbalancing',
+        event_type: 'aws.elasticloadbalancing.http',
+      },
+      { prefix: 'aws.lambda' }
+    );
+    awsLambdaSpan.tags.setMany(
+      {
+        method: event.httpMethod,
+        protocol: 'http', // Not provided by ALB, yet required property
+        host: 'unknown', // Not provided by ALB, yet required property
+        path: event.path,
+        query_parameter_names: Object.keys(event.queryStringParameters || {}),
+        request_header_names: Object.keys(event.headers || {}),
+      },
+      { prefix: 'aws.lambda.http' }
+    );
+    awsLambdaSpan.tags.set('aws.lambda.http_router.path', event.path);
     return;
   }
 
