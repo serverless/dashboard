@@ -101,12 +101,13 @@ const reportResponse = async (response, context, endTime) => {
 const reportTrace = ({ isErrorOutcome }) => {
   // Sample out 80% of traces in production mode if no warning or error event was reported
   const isSampledOut =
-    (!isErrorOutcome &&
-      !serverlessSdk._isDebugMode &&
-      !serverlessSdk._isDevMode &&
-      !capturedEvents.some(({ name }) => alertEventNames.has(name)) &&
-      Math.random() > 0.2) ||
-    undefined;
+    (() => {
+      if (isErrorOutcome) return false;
+      if (serverlessSdk._isDebugMode) return false;
+      if (serverlessSdk._isDevMode) return false;
+      if (capturedEvents.some(({ name }) => alertEventNames.has(name))) return false;
+      return Math.random() > 0.2;
+    })() || undefined;
   const payload = (serverlessSdk._lastTrace = {
     isSampledOut,
     slsTags: {
