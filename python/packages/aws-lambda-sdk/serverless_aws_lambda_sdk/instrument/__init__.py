@@ -4,19 +4,18 @@ import time
 import sys
 import copy
 import json
-from functools import wraps
 from typing import List, Optional, Any
 from typing_extensions import Final
 import random
-from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
+from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
 from .lib.sdk import serverlessSdk
 from .lib.invocation_context import (
     set as set_invocation_context,
     get as get_invocation_context,
 )
 from .lib.payload_conversion import to_trace_payload, to_request_response_payload
-from serverless_sdk.lib.trace import TraceSpan
-from serverless_sdk.lib.captured_event import CapturedEvent
+from sls_sdk.lib.trace import TraceSpan
+from sls_sdk.lib.captured_event import CapturedEvent
 import base64
 
 
@@ -326,10 +325,10 @@ class Instrumenter:
         self._close_trace("success", result)
         return result
 
-    def instrument(self, user_handler):
-        @wraps(user_handler)
+    def instrument(self, user_handler_generator):
         def stub(event, context):
             try:
+                user_handler = user_handler_generator()
                 return self._handler(user_handler, event, context)
             finally:
                 if self.event_loop:

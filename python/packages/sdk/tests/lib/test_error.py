@@ -1,16 +1,17 @@
 from __future__ import annotations
 import pytest
 from unittest.mock import MagicMock, patch, ANY
-from serverless_sdk.lib.error import report as report_error, logger
-import serverless_sdk.lib.error_captured_event
 
 
-def test_error_with_exception(monkeypatch):
+def test_error_with_exception(sdk, monkeypatch):
     # given
+    import sls_sdk.lib.error_captured_event
+    from sls_sdk.lib.error import report as report_error, logger
+
     error = Exception("Something went wrong")
     create_error_captured_event = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.error_captured_event,
+        sls_sdk.lib.error_captured_event,
         "create",
         create_error_captured_event,
     )
@@ -38,15 +39,18 @@ def test_error_with_exception(monkeypatch):
     )
 
 
-def test_error_with_custom_object(monkeypatch):
+def test_error_with_custom_object(sdk, monkeypatch):
     # given
+    import sls_sdk.lib.error_captured_event
+    from sls_sdk.lib.error import report as report_error, logger
+
     error = {
         "code": "Foo",
         "message": "Bar",
     }
     create_error_captured_event = MagicMock()
     monkeypatch.setattr(
-        serverless_sdk.lib.error_captured_event,
+        sls_sdk.lib.error_captured_event,
         "create",
         create_error_captured_event,
     )
@@ -71,8 +75,10 @@ def test_error_with_custom_object(monkeypatch):
     )
 
 
-def test_error_with_crash_exception(monkeypatch):
+def test_error_with_crash_exception(sdk, monkeypatch):
     # given
+    from sls_sdk.lib.error import report as report_error, logger
+
     error = Exception("Something went wrong")
     monkeypatch.setenv("SLS_CRASH_ON_SDK_ERROR", "1")
 
@@ -82,8 +88,10 @@ def test_error_with_crash_exception(monkeypatch):
         assert ex is error
 
 
-def test_error_with_crash_custom_object(monkeypatch):
+def test_error_with_crash_custom_object(sdk, monkeypatch):
     # given
+    from sls_sdk.lib.error import report as report_error, logger
+
     error = "Something went wrong"
     monkeypatch.setenv("SLS_CRASH_ON_SDK_ERROR", "1")
 

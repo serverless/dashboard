@@ -25,10 +25,8 @@ DIST=$(mktemp -d)  # directory to store intermediate artifacts
 mkdir -p $DIST/{$SITE_PACKAGES_DIR,sls-sdk-python}
 
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/__init__.py $DIST/sls-sdk-python
-cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/base.py $DIST/sls-sdk-python
 cp $INSTALL_DIR/serverless_aws_lambda_sdk/internal_extension/exec_wrapper.py $DIST/sls-sdk-python
 cp $INSTALL_DIR/typing_extensions.py $DIST/sls-sdk-python
-cp -R $INSTALL_DIR/strenum $DIST/sls-sdk-python
 cp -R $INSTALL_DIR/* $DIST/$SITE_PACKAGES_DIR
 
 mkdir -p $(dirname $OUTPUT)

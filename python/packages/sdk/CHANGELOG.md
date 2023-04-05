@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.10 (2023-04-04)
+
+### Maintenance Improvements
+
+- Rename module as `sls_sdk` and alias public api as `serverless_sdk`
+
+## 0.3.9 (2023-04-04)
+
+- Revert breaking rename of package module from `serverless_sdk` to `sls_sdk`
+
+## 0.3.8 (2023-03-30)
+
+- Change name of package module from `serverless_sdk` to `sls_sdk`
+
 ## 0.3.7 (2023-03-27)
 
 ### Maintenance Improvements
@@ -13,7 +27,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 - Add `_report_notice` method
-- Emit `trace-span-close` event when a span is closed 
+- Emit `trace-span-close` event when a span is closed
 
 ## 0.3.5 (2023-03-22)
 

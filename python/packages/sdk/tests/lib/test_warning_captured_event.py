@@ -2,13 +2,12 @@ from __future__ import annotations
 from unittest import mock
 from unittest.mock import MagicMock
 import json
-from serverless_sdk.lib.warning_captured_event import (
+from sls_sdk.lib.warning_captured_event import (
     create as create_warning_captured_event,
     logger,
 )
-from serverless_sdk import serverlessSdk
-from serverless_sdk.lib.tags import Tags, convert_tags_to_protobuf
-from serverless_sdk.lib.timing import to_protobuf_epoch_timestamp
+from sls_sdk.lib.tags import convert_tags_to_protobuf
+from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
 
 
 def assert_protobuf_dict(captured_event, tags, fingerprint=None):
@@ -53,14 +52,13 @@ def test_create_warning_captured_event():
     assert_protobuf_dict(captured_event, tags, fingerprint=fingerprint)
 
 
-def test_create_warning_captured_event_disabled(monkeypatch):
+def test_create_warning_captured_event_disabled(sdk, monkeypatch):
     # given
-    serverlessSdk._initialize()
     message = "Warning message"
     tags = {"user.tag": "example"}
     settings = MagicMock()
     settings.disable_captured_events_stdout = "1"
-    monkeypatch.setattr(serverlessSdk, "_settings", settings)
+    monkeypatch.setattr(sdk, "_settings", settings)
 
     # when
     with mock.patch.object(logger, "warning") as mock_logger:

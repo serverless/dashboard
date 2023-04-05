@@ -61,7 +61,7 @@ jobs:
           cd python/packages
 
           python3 -m pip install black
-          python3 -m black --check --extend-exclude syntax_error.py .
+          python3 -m black --check --extend-exclude 'syntax_error.py|tests/fixtures/lambda' .
 
       - name: Validate metadata formatting
         if: steps.pathChanges.outputs.packages == 'true'

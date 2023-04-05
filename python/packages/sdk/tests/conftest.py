@@ -5,20 +5,30 @@ from . import TEST_ORG, TEST_DEV_MODE_ORG_ID
 
 
 @pytest.fixture()
+def sdk(monkeypatch, request):
+    _reset_sdk_reimport(monkeypatch, request, False, True)
+    from serverless_sdk import serverlessSdk
+
+    serverlessSdk._initialize()
+    yield serverlessSdk
+
+
+@pytest.fixture()
 def reset_sdk(monkeypatch, request):
-    yield _reset_sdk(monkeypatch, request)
+    _reset_sdk_reimport(monkeypatch, request)
 
 
 @pytest.fixture()
 def reset_sdk_dev_mode(monkeypatch, request):
-    yield _reset_sdk(monkeypatch, request, True, True)
+    _reset_sdk_reimport(monkeypatch, request, True, True)
 
 
-def _reset_sdk(
+def _reset_sdk_reimport(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
     module_prefixes_to_delete = [
         "serverless_sdk",
+        "sls_sdk",
         "http.client",
         "urllib",
         "urllib3",
@@ -49,7 +59,9 @@ def _reset_sdk(
     # make sure the SDK & other deleted modules are reimported
     for module in deleted_modules + module_prefixes_to_delete:
         importlib.import_module(module)
-    return monkeypatch
+
+    # make sure the SDK is imported
+    importlib.import_module("serverless_sdk")
 
 
 @pytest.fixture(scope="session")

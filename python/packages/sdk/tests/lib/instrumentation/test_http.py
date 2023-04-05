@@ -6,19 +6,21 @@ from werkzeug.wrappers import Request, Response
 import sys
 import json
 
+LARGE_PAYLOAD = "a" * 1024 * 128
+
 
 @pytest.fixture(params=[False, True])
 def instrumented_sdk(reset_sdk, request, monkeypatch):
     # if dev mode is enabled in the fixture
     if request.param:
         monkeypatch.setenv("SLS_DEV_MODE_ORG_ID", "test-org")
-    import serverless_sdk
+    import sls_sdk
 
-    serverless_sdk.serverlessSdk._initialize(
+    sls_sdk.serverlessSdk._initialize(
         disable_request_response_monitoring=not request.param
     )
-    yield serverless_sdk.serverlessSdk
-    serverless_sdk.lib.instrumentation.http.uninstall()
+    yield sls_sdk.serverlessSdk
+    sls_sdk.lib.instrumentation.http.uninstall()
 
 
 def _assert_request_response_body(sdk, request_body, response_body):
@@ -34,7 +36,7 @@ def _assert_request_response_body(sdk, request_body, response_body):
     )
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
 def test_instrument_urllib(
     instrumented_sdk,
     httpserver: HTTPServer,
@@ -81,7 +83,7 @@ def test_instrument_urllib(
     _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
 def test_instrument_urllib3(
     instrumented_sdk,
     httpserver: HTTPServer,
@@ -126,7 +128,7 @@ def test_instrument_urllib3(
     _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
 def test_instrument_requests(instrumented_sdk, httpserver: HTTPServer, request_body):
     # given
     def handler(request: Request):
@@ -165,7 +167,7 @@ def test_instrument_requests(instrumented_sdk, httpserver: HTTPServer, request_b
     _assert_request_response_body(instrumented_sdk, request_body, "OK")
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, "a" * 1024 * 128])
+@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
 def test_instrument_aiohttp(
     instrumented_sdk,
     httpserver: HTTPServer,
@@ -176,9 +178,9 @@ def test_instrument_aiohttp(
         return Response(str("OK"))
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
-    import serverless_sdk.lib.trace
+    import sls_sdk.lib.trace
 
-    serverless_sdk.lib.trace.root_span = None
+    sls_sdk.lib.trace.root_span = None
 
     # when
     import aiohttp
@@ -210,17 +212,17 @@ def test_instrument_aiohttp(
 def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
     with patch.dict(sys.modules, {"aiohttp": None}):
         # given
-        import serverless_sdk
+        import sls_sdk
 
         # when
-        serverless_sdk.serverlessSdk._initialize()
+        sls_sdk.serverlessSdk._initialize()
 
         # then
         instrumenter = [
             x
-            for x in serverless_sdk.lib.instrumentation.http._instrumenters
+            for x in sls_sdk.lib.instrumentation.http._instrumenters
             if x._target_module == "aiohttp"
         ][0]
         assert not instrumenter._is_installed
 
-        serverless_sdk.lib.instrumentation.http.uninstall()
+        sls_sdk.lib.instrumentation.http.uninstall()

@@ -6,7 +6,7 @@ from re import Pattern
 from typing import Dict, List, Mapping, Tuple, Optional
 from js_regex import compile
 from typing_extensions import Final, get_args
-
+from threading import Lock
 from .error import report as report_error
 from ..base import TagType, ValidTags
 from ..exceptions import (
@@ -22,6 +22,10 @@ RE_C: Final[Pattern] = compile(RE)
 
 
 class Tags(Dict[str, ValidTags]):
+    def __init__(self):
+        super().__init__()
+        self._lock = Lock()
+
     def _set(self, key: str, value: ValidTags):
         if value is None:
             return
@@ -29,15 +33,16 @@ class Tags(Dict[str, ValidTags]):
         name = ensure_tag_name(key)
         value = ensure_tag_value(name, value)
 
-        if name not in self:
-            super().__setitem__(name, value)
-            return
-
-        current: ValidTags = self[name]
-
-        if isinstance(current, list):
-            if value != current:
+        with self._lock:
+            if name not in self:
+                super().__setitem__(name, value)
                 return
+
+            current: ValidTags = self[name]
+
+            if isinstance(current, list):
+                if value != current:
+                    return
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
