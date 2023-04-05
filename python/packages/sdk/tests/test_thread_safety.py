@@ -3,6 +3,7 @@ from time import sleep
 import concurrent.futures
 import asyncio
 import random
+import pytest
 
 
 def print_spans(root, length=100):
@@ -55,9 +56,11 @@ def test_overlapping_spans_multithreaded(sdk):
     assert len(root_span.sub_spans) == parallelism
     sub_spans = sorted(root_span.sub_spans, key=lambda span: span.index)
     for idx, sub_span in enumerate(sub_spans):
+        assert sub_span.parent_span is root_span
         assert sub_span.name == f"child{idx}"
         assert len(sub_span.sub_spans) == 1
         assert sub_span.sub_spans[0].name == f"grandchild{idx}"
+        assert sub_span.sub_spans[0].parent_span is sub_span
 
 
 def test_overlapping_spans_async(sdk):
@@ -90,9 +93,11 @@ def test_overlapping_spans_async(sdk):
     assert len(root_span.sub_spans) == parallelism
     sub_spans = sorted(root_span.sub_spans, key=lambda span: span.name)
     for idx, sub_span in enumerate(sub_spans):
+        assert sub_span.parent_span is root_span
         assert sub_span.name == f"child{idx}"
         assert len(sub_span.sub_spans) == 1
         assert sub_span.sub_spans[0].name == f"grandchild{idx}"
+        assert sub_span.sub_spans[0].parent_span is sub_span
 
 
 def test_overlapping_spans_async_with_multithreading(sdk):
@@ -140,14 +145,72 @@ def test_overlapping_spans_async_with_multithreading(sdk):
     assert len(root_span.sub_spans) == parallelism
     sub_spans = sorted(root_span.sub_spans, key=lambda span: span.index)
     for idx, sub_span in enumerate(sub_spans):
+        assert sub_span.parent_span is root_span
         assert sub_span.name == f"thread{idx}"
         assert len(sub_span.sub_spans) == parallelism
         for sub_idx, sub_sub_span in enumerate(sub_span.sub_spans):
+            assert sub_sub_span.parent_span is sub_span
             assert sub_sub_span.name == f"thread{idx}.async{sub_idx}"
             assert len(sub_sub_span.sub_spans) == 1
 
 
-def test_captured_events_async_with_multithreading(sdk):
+def test_overlapping_spans_async_with_multithreading_large_scale(sdk):
+    # given
+    parallelism = 10
+    scale = 1000
+
+    async def _create_span_and_sleep(thread_index, async_index):
+        await asyncio.sleep(0)
+        span = sdk._create_trace_span(f"thread{thread_index}.async{async_index}")
+        span.index = thread_index * scale * 10 + async_index + 1
+        await asyncio.sleep(0)
+        inner_span = sdk._create_trace_span(
+            f"thread{thread_index}.async{async_index}.child"
+        )
+        await asyncio.sleep(0)
+        inner_span.close()
+        await asyncio.sleep(0)
+        span.close()
+
+    root_span = sdk._create_trace_span("root")
+
+    # when
+    async def _run(thread_index):
+        await asyncio.sleep(0.1)
+        span = sdk._create_trace_span(f"thread{thread_index}")
+        span.index = thread_index * scale * 10
+        await asyncio.gather(
+            *[_create_span_and_sleep(thread_index, i) for i in range(scale)]
+        )
+        await asyncio.sleep(0.1)
+        span.close()
+
+    def _thread_run(index):
+        asyncio.run(_run(index))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
+        futures = [executor.submit(_thread_run, i) for i in range(parallelism)]
+        for future in concurrent.futures.as_completed(futures):
+            assert future.exception() is None
+
+    root_span.close()
+
+    # then
+    print_spans(root_span)
+    assert len(root_span.sub_spans) == parallelism
+    sub_spans = sorted(root_span.sub_spans, key=lambda span: span.index)
+    for idx, sub_span in enumerate(sub_spans):
+        assert sub_span.parent_span is root_span
+        assert sub_span.name == f"thread{idx}"
+        assert len(sub_span.sub_spans) == scale
+        for sub_idx, sub_sub_span in enumerate(sub_span.sub_spans):
+            assert sub_sub_span.parent_span is sub_span
+            assert sub_sub_span.name == f"thread{idx}.async{sub_idx}"
+            assert len(sub_sub_span.sub_spans) == 1
+
+
+@pytest.mark.parametrize("is_error", [True, False])
+def test_captured_events_async_with_multithreading(sdk, is_error):
     # given
     parallelism = 5
     scale = 1000
@@ -160,10 +223,16 @@ def test_captured_events_async_with_multithreading(sdk):
 
     async def _create_captured_event_and_sleep(thread_index, async_index):
         await asyncio.sleep(0)
-        sdk.capture_error(
-            Exception("Captured error"),
-            tags={"threadIndex": thread_index, "asyncIndex": async_index},
-        )
+        if is_error:
+            sdk.capture_error(
+                Exception("Captured error"),
+                tags={"threadIndex": thread_index, "asyncIndex": async_index},
+            )
+        else:
+            sdk.capture_warning(
+                "Captured warning",
+                tags={"threadIndex": thread_index, "asyncIndex": async_index},
+            )
 
     # when
     async def _run(thread_index):
