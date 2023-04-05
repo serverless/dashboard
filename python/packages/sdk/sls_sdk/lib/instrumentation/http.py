@@ -53,7 +53,7 @@ class AIOHTTPInstrumenter(BaseInstrumenter):
             parsed_path = urlparse(path)
             query = parse_qs(parsed_path.query)
             trace_span = SDK._create_trace_span(
-                "python.https.request",
+                f"python.{parsed_path.scheme}.request",
                 start_time=start_time,
             )
             try:
