@@ -82,9 +82,21 @@ def test_instrument_lambda_success(instrumenter, mocked_print):
 
 def test_instrument_subsequent_calls(instrumenter):
     # given
-    from ..fixtures.lambdas.success import handler
+    generator_call_count = 0
+    handler_call_count = 0
 
-    instrumented = instrumenter.instrument(lambda: handler)
+    def handler_generator():
+        nonlocal generator_call_count
+        generator_call_count += 1
+
+        def handler(event, context):
+            nonlocal handler_call_count
+            handler_call_count += 1
+            return "ok"
+
+        return handler
+
+    instrumented = instrumenter.instrument(handler_generator)
     from builtins import print
 
     # when
@@ -96,6 +108,8 @@ def test_instrument_subsequent_calls(instrumenter):
             for x in mocked_print.call_args_list
             if x[0][0].startswith(_TARGET_LOG_PREFIX)
         ][0].replace(_TARGET_LOG_PREFIX, "")
+    assert generator_call_count == 1
+    assert handler_call_count == 1
 
     with patch("builtins.print") as mocked_print:
         mocked_print.side_effect = print
@@ -105,6 +119,8 @@ def test_instrument_subsequent_calls(instrumenter):
             for x in mocked_print.call_args_list
             if x[0][0].startswith(_TARGET_LOG_PREFIX)
         ][0].replace(_TARGET_LOG_PREFIX, "")
+    assert generator_call_count == 1
+    assert handler_call_count == 2
 
     # then
     first_trace_payload = TracePayload.FromString(base64.b64decode(first))
