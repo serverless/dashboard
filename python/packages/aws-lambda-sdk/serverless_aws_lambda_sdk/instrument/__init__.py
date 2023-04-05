@@ -326,9 +326,13 @@ class Instrumenter:
         return result
 
     def instrument(self, user_handler_generator):
+        user_handler = None
+
         def stub(event, context):
+            nonlocal user_handler
             try:
-                user_handler = user_handler_generator()
+                if not user_handler:
+                    user_handler = user_handler_generator()
                 return self._handler(user_handler, event, context)
             finally:
                 if self.event_loop:
