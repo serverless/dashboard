@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 from urllib.parse import parse_qs
 from ..error import report as report_error
 import serverless_sdk
-import json
 
 SDK = serverless_sdk.serverlessSdk
 
@@ -40,77 +39,17 @@ class BaseInstrumenter:
         raise NotImplementedError
 
 
-class AIOHTTPInstrumenter(BaseInstrumenter):
+class NativeAIOHTTPInstrumenter(BaseInstrumenter):
     def __init__(self):
         super().__init__("aiohttp")
-        self._original_request = None
-
-    def _instrumented_request(self):
-        async def _func(_self, *args, **kwargs):
-            start_time = time.perf_counter_ns()
-            SDK._debug_log("HTTP request")
-            (method, path) = (args[0], args[1])
-            parsed_path = urlparse(path)
-            query = parse_qs(parsed_path.query)
-            trace_span = SDK._create_trace_span(
-                f"python.{parsed_path.scheme}.request",
-                start_time=start_time,
-            )
-            try:
-                self._capture_request_body(
-                    trace_span,
-                    kwargs.get("data"),
-                )
-                response = await self._original_request(_self, *args, **kwargs)
-                trace_span._set_name(f"python.{response.url.scheme}.request")
-                trace_span.tags.update(
-                    {
-                        "method": method,
-                        "protocol": "HTTP/1.1",
-                        "host": response.host,
-                        "path": parsed_path.path,
-                        "request_header_names": [h for h in _self.headers.keys()],
-                        "query_parameter_names": [q for q in query.keys()],
-                        "status_code": response.status,
-                    },
-                    prefix="http",
-                )
-                await self._capture_response_body(trace_span, response)
-                return response
-            except Exception as ex:
-                if ex.args and hasattr(ex.args[0], "host"):
-                    trace_span.tags.update(
-                        {
-                            "method": method,
-                            "protocol": "HTTP/1.1",
-                            "host": ex.args[0].host,
-                            "path": parsed_path.path,
-                            "request_header_names": [h for h in _self.headers.keys()],
-                            "query_parameter_names": [q for q in query.keys()],
-                            "error_code": ex.os_error.__class__.__name__
-                            if hasattr(ex, "os_error")
-                            else ex.__class__.__name__,
-                        },
-                        prefix="http",
-                    )
-                    trace_span._set_name(
-                        f"python.{'https' if ex.args[0].is_ssl else 'http'}.request"
-                    )
-                raise
-            finally:
-                if trace_span.end_time is None:
-                    trace_span.close()
-                del trace_span
-
-        return _func
+        self._original_init = None
 
     def _capture_request_body(self, trace_span, body):
         if not body:
             return
         if not self.should_monitor_request_response:
             return
-        _body = json.dumps(body).encode("utf-8")
-        if len(_body) > SDK._maximum_body_byte_length:
+        if len(body) > SDK._maximum_body_byte_length:
             SDK._report_notice(
                 "Large body excluded",
                 "INPUT_BODY_TOO_LARGE",
@@ -118,14 +57,17 @@ class AIOHTTPInstrumenter(BaseInstrumenter):
             )
             return
         try:
-            trace_span.input = _body.decode("utf-8")
-        except Exception as ex:
-            report_error(ex)
+            trace_span.input = body.decode("utf-8")
+        except Exception:
+            pass
 
     async def _capture_response_body(self, trace_span, response):
         if not self.should_monitor_request_response:
             return
-        if response.content_length > SDK._maximum_body_byte_length:
+        if (
+            response.content_length
+            and response.content_length > SDK._maximum_body_byte_length
+        ):
             SDK._report_notice(
                 "Large body excluded",
                 "OUTPUT_BODY_TOO_LARGE",
@@ -139,16 +81,85 @@ class AIOHTTPInstrumenter(BaseInstrumenter):
         except Exception as ex:
             report_error(ex)
 
+    async def _on_request_start(self, session, trace_config_ctx, params):
+        if hasattr(session, "_sls_ignore") and session._sls_ignore:
+            return
+        trace_config_ctx.start_time = time.perf_counter_ns()
+        SDK._debug_log("HTTP request")
+        trace_config_ctx.trace_span = SDK._create_trace_span(
+            f"python.{params.url.scheme}.request",
+            start_time=trace_config_ctx.start_time,
+        )
+        trace_config_ctx.trace_span.tags.update(
+            {
+                "method": params.method,
+                "protocol": "HTTP/1.1",
+                "host": params.url.host,
+                "path": params.url.path,
+                "request_header_names": list(params.headers.keys()),
+                "query_parameter_names": list(params.url.query.keys()),
+            },
+            prefix="http",
+        )
+        trace_config_ctx.request_body = None
+
+    async def _on_request_chunk_sent(self, session, trace_config_ctx, params):
+        if not hasattr(trace_config_ctx, "trace_span"):
+            return
+        if trace_config_ctx.request_body is None:
+            trace_config_ctx.request_body = params.chunk
+        else:
+            trace_config_ctx.request_body += params.chunk
+
+    async def _on_request_exception(self, session, trace_config_ctx, params):
+        if not hasattr(trace_config_ctx, "trace_span"):
+            return
+        self._capture_request_body(
+            trace_config_ctx.trace_span, trace_config_ctx.request_body
+        )
+        trace_config_ctx.trace_span.tags.update(
+            {"error_code": params.exception.__class__.__name__}, prefix="http"
+        )
+        if trace_config_ctx.trace_span.end_time is None:
+            trace_config_ctx.trace_span.close()
+
+    async def _on_request_end(self, session, trace_config_ctx, params):
+        if not hasattr(trace_config_ctx, "trace_span"):
+            return
+        self._capture_request_body(
+            trace_config_ctx.trace_span, trace_config_ctx.request_body
+        )
+        trace_config_ctx.trace_span.tags.update(
+            {"status_code": params.response.status}, prefix="http"
+        )
+        await self._capture_response_body(trace_config_ctx.trace_span, params.response)
+        if trace_config_ctx.trace_span.end_time is None:
+            trace_config_ctx.trace_span.close()
+
+    def _instrumented_init(self, trace_config):
+        def _init(_self, *args, **kwargs):
+            if "trace_configs" in kwargs:
+                kwargs["trace_configs"].append(trace_config)
+            else:
+                kwargs["trace_configs"] = [trace_config]
+            self._original_init(_self, *args, **kwargs)
+
+        return _init
+
     def _install(self):
-        if hasattr(self._module, "ClientSession") and hasattr(
-            self._module.ClientSession, "_request"
-        ):
-            self._original_request = self._module.ClientSession._request
-            self._module.ClientSession._request = self._instrumented_request()
+        if hasattr(self._module, "TraceConfig"):
+            trace_config = self._module.TraceConfig()
+            trace_config.on_request_start.append(self._on_request_start)
+            trace_config.on_request_chunk_sent.append(self._on_request_chunk_sent)
+            trace_config.on_request_end.append(self._on_request_end)
+            trace_config.on_request_exception.append(self._on_request_exception)
+
+            self._original_init = self._module.ClientSession.__init__
+            self._module.ClientSession.__init__ = self._instrumented_init(trace_config)
 
     def _uninstall(self):
-        if self._original_request:
-            self._module.ClientSession._request = self._original_request
+        if self._original_init:
+            self._module.ClientSession.__init__ = self._original_init
 
 
 class NativeHTTPInstrumenter(BaseInstrumenter):
@@ -214,8 +225,8 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
             return
         try:
             self._trace_span.input = body.decode("utf-8")
-        except Exception as ex:
-            report_error(ex)
+        except Exception:
+            pass
 
     def _instrumented_getresponse(self):
         def _func(_self, *args, **kwargs):
@@ -263,7 +274,7 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         self._module.client.HTTPConnection.getresponse = self._original_getresponse
 
 
-_instrumenters = [NativeHTTPInstrumenter(), AIOHTTPInstrumenter()]
+_instrumenters = [NativeHTTPInstrumenter(), NativeAIOHTTPInstrumenter()]
 _is_installed = False
 
 

@@ -4,10 +4,14 @@ import asyncio
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Request, Response
 import sys
-import json
 from types import SimpleNamespace
+import uuid
 
-LARGE_PAYLOAD = "a" * 1024 * 128
+LARGE_REQUEST_PAYLOAD = b"a" * 1024 * 128
+SMALL_REQUEST_PAYLOAD = b"a"
+
+LARGE_RESPONSE_PAYLOAD = b"r" * 1024 * 128
+SMALL_RESPONSE_PAYLOAD = b"r"
 
 
 @pytest.fixture(params=[False, True])
@@ -27,25 +31,34 @@ def instrumented_sdk(reset_sdk, request, monkeypatch):
 def _assert_request_response_body(sdk, request_body, response_body):
     assert (
         not sdk._is_dev_mode
-        or isinstance(request_body, str)
-        or sdk.trace_spans.root.input == json.dumps(request_body)
+        or (request_body is None and sdk.trace_spans.root.input is None)
+        or (len(request_body) > 1024 * 127 and sdk.trace_spans.root.input is None)
+        or sdk.trace_spans.root.input == request_body.decode("utf-8")
     )
     assert (
         not sdk._is_dev_mode
-        or isinstance(request_body, str)
-        or sdk.trace_spans.root.output == response_body
+        or (response_body is None and sdk.trace_spans.root.output is None)
+        or (len(response_body) > 1024 * 127 and sdk.trace_spans.root.output is None)
+        or sdk.trace_spans.root.output == response_body.decode("utf-8")
     )
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+    ],
+)
 def test_instrument_urllib(
     instrumented_sdk,
     httpserver: HTTPServer,
     request_body,
+    response_body,
 ):
     # given
     def handler(request: Request):
-        return Response(str("OK"))
+        return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
 
@@ -57,9 +70,7 @@ def test_instrument_urllib(
     headers = {"User-Agent": "foo"}
 
     req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(
-        req, data=json.dumps(request_body).encode()
-    ) as response:
+    with urllib.request.urlopen(req, data=request_body) as response:
         response.read()
 
     # then
@@ -81,18 +92,25 @@ def test_instrument_urllib(
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
-    _assert_request_response_body(instrumented_sdk, request_body, "OK")
+    _assert_request_response_body(instrumented_sdk, request_body, response_body)
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+    ],
+)
 def test_instrument_urllib3(
     instrumented_sdk,
     httpserver: HTTPServer,
     request_body,
+    response_body,
 ):
     # given
     def handler(request: Request):
-        return Response(str("OK"))
+        return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
 
@@ -102,7 +120,7 @@ def test_instrument_urllib3(
     urllib3.PoolManager().request(
         "POST",
         httpserver.url_for("/foo/bar?baz=qux"),
-        body=json.dumps(request_body).encode(),
+        body=request_body,
     )
 
     # then
@@ -116,24 +134,22 @@ def test_instrument_urllib3(
         "http.query_parameter_names": ["baz"],
         "http.status_code": 200,
     }
-    assert (
-        not instrumented_sdk._is_dev_mode
-        or isinstance(request_body, str)
-        or instrumented_sdk.trace_spans.root.input == json.dumps(request_body)
-    )
-    assert (
-        not instrumented_sdk._is_dev_mode
-        or isinstance(request_body, str)
-        or instrumented_sdk.trace_spans.root.output == "OK"
-    )
-    _assert_request_response_body(instrumented_sdk, request_body, "OK")
+    _assert_request_response_body(instrumented_sdk, request_body, response_body)
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
-def test_instrument_requests(instrumented_sdk, httpserver: HTTPServer, request_body):
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+    ],
+)
+def test_instrument_requests(
+    instrumented_sdk, httpserver: HTTPServer, request_body, response_body
+):
     # given
     def handler(request: Request):
-        return Response(str("OK"))
+        return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
 
@@ -143,7 +159,7 @@ def test_instrument_requests(instrumented_sdk, httpserver: HTTPServer, request_b
     requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
-        data=json.dumps({"foo": "bar"}).encode(),
+        data=request_body,
     )
 
     # then
@@ -165,18 +181,25 @@ def test_instrument_requests(instrumented_sdk, httpserver: HTTPServer, request_b
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
-    _assert_request_response_body(instrumented_sdk, request_body, "OK")
+    _assert_request_response_body(instrumented_sdk, request_body, response_body)
 
 
-@pytest.mark.parametrize("request_body", [{"foo": "bar"}, LARGE_PAYLOAD])
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+    ],
+)
 def test_instrument_aiohttp(
     instrumented_sdk,
     httpserver: HTTPServer,
     request_body,
+    response_body,
 ):
     # given
     def handler(request: Request):
-        return Response(str("OK"))
+        return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
     import sls_sdk.lib.trace
@@ -207,7 +230,91 @@ def test_instrument_aiohttp(
         "http.query_parameter_names": ["baz"],
         "http.status_code": 200,
     }
-    _assert_request_response_body(instrumented_sdk, request_body, "OK")
+    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+
+
+@pytest.mark.parametrize(
+    "request_body",
+    [
+        (SMALL_REQUEST_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD),
+    ],
+)
+def test_instrument_native_http_error(
+    instrumented_sdk,
+    request_body,
+):
+    # given
+    import urllib.parse
+    import urllib.request
+
+    host = str(uuid.uuid4())
+    url = f"https://{host}:1234/foo/bar?baz=qux"
+    headers = {"User-Agent": "foo"}
+
+    # when
+    req = urllib.request.Request(url, headers=headers)
+    with pytest.raises(urllib.error.URLError):
+        with urllib.request.urlopen(req, data=request_body) as response:
+            response.read()
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.https.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "POST",
+                "http.protocol": "HTTP/1.1",
+                "http.host": host,
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+                "http.error_code": "gaierror",
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+    _assert_request_response_body(instrumented_sdk, request_body, None)
+
+
+def test_instrument_aiohttp_error(
+    instrumented_sdk,
+):
+    # given
+    import sls_sdk.lib.trace
+
+    sls_sdk.lib.trace.root_span = None
+
+    host = str(uuid.uuid4())
+    url = f"https://{host}:1234/foo/bar?baz=qux"
+
+    # when
+    import aiohttp
+
+    async def _get():
+        async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
+            async with session.get(url) as resp:
+                print(resp.status)
+                print(await resp.text())
+
+    with pytest.raises(aiohttp.client_exceptions.ClientConnectorError):
+        asyncio.run(_get())
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.https.request"
+    assert instrumented_sdk.trace_spans.root.tags == {
+        "http.method": "GET",
+        "http.protocol": "HTTP/1.1",
+        "http.host": host,
+        "http.path": "/foo/bar",
+        "http.request_header_names": ["User-Agent"],
+        "http.query_parameter_names": ["baz"],
+        "http.error_code": "ClientConnectorError",
+    }
+    _assert_request_response_body(instrumented_sdk, None, None)
 
 
 def test_instrument_aiohttp_unsupported_version(instrumented_sdk):
@@ -216,15 +323,15 @@ def test_instrument_aiohttp_unsupported_version(instrumented_sdk):
 
     with patch.dict(sys.modules, {"aiohttp": mock_aiohttp}):
         # given
-        from sls_sdk.lib.instrumentation.http import AIOHTTPInstrumenter
+        from sls_sdk.lib.instrumentation.http import NativeAIOHTTPInstrumenter
 
-        instrumenter = AIOHTTPInstrumenter()
+        instrumenter = NativeAIOHTTPInstrumenter()
 
         # when
         instrumenter.install(True)
 
         # then
-        assert instrumenter._original_request is None
+        assert instrumenter._original_init is None
 
 
 def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
@@ -244,3 +351,42 @@ def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
         assert not instrumenter._is_installed
 
         sls_sdk.lib.instrumentation.http.uninstall()
+
+
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+    ],
+)
+def test_instrument_aiohttp_sls_ignore(
+    instrumented_sdk,
+    httpserver: HTTPServer,
+    request_body,
+    response_body,
+):
+    # given
+    def handler(request: Request):
+        return Response(response_body)
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+    import sls_sdk.lib.trace
+
+    sls_sdk.lib.trace.root_span = None
+
+    # when
+    import aiohttp
+
+    async def _get():
+        async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
+            session._sls_ignore = True
+            async with session.get(
+                httpserver.url_for("/foo/bar?baz=qux"), data=request_body
+            ) as resp:
+                print(resp.status)
+                print(await resp.text())
+
+    asyncio.run(_get())
+
+    # then
+    assert instrumented_sdk.trace_spans.root is None
