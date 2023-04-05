@@ -5,6 +5,7 @@ from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Request, Response
 import sys
 import json
+from types import SimpleNamespace
 
 LARGE_PAYLOAD = "a" * 1024 * 128
 
@@ -207,6 +208,23 @@ def test_instrument_aiohttp(
         "http.status_code": 200,
     }
     _assert_request_response_body(instrumented_sdk, request_body, "OK")
+
+
+def test_instrument_aiohttp_unsupported_version(instrumented_sdk):
+    mock_aiohttp = SimpleNamespace()
+    mock_aiohttp.ClientSession = SimpleNamespace()
+
+    with patch.dict(sys.modules, {"aiohttp": mock_aiohttp}):
+        # given
+        from sls_sdk.lib.instrumentation.http import AIOHTTPInstrumenter
+
+        instrumenter = AIOHTTPInstrumenter()
+
+        # when
+        instrumenter.install(True)
+
+        # then
+        assert instrumenter._original_request is None
 
 
 def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():

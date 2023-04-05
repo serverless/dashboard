@@ -140,11 +140,15 @@ class AIOHTTPInstrumenter(BaseInstrumenter):
             report_error(ex)
 
     def _install(self):
-        self._original_request = self._module.ClientSession._request
-        self._module.ClientSession._request = self._instrumented_request()
+        if hasattr(self._module, "ClientSession") and hasattr(
+            self._module.ClientSession, "_request"
+        ):
+            self._original_request = self._module.ClientSession._request
+            self._module.ClientSession._request = self._instrumented_request()
 
     def _uninstall(self):
-        self._module.ClientSession._request = self._original_request
+        if self._original_request:
+            self._module.ClientSession._request = self._original_request
 
 
 class NativeHTTPInstrumenter(BaseInstrumenter):
