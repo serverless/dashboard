@@ -150,6 +150,7 @@ def test_overlapping_spans_async_with_multithreading(sdk):
 def test_captured_events_async_with_multithreading(sdk):
     # given
     parallelism = 5
+    scale = 1000
     captured_events = []
 
     def _captured_event_handler(captured_event):
@@ -158,7 +159,7 @@ def test_captured_events_async_with_multithreading(sdk):
     sdk._event_emitter.on("captured-event", _captured_event_handler)
 
     async def _create_captured_event_and_sleep(thread_index, async_index):
-        await asyncio.sleep(0.05 + random.random() * 0.05)
+        await asyncio.sleep(0)
         sdk.capture_error(
             Exception("Captured error"),
             tags={"threadIndex": thread_index, "asyncIndex": async_index},
@@ -168,10 +169,7 @@ def test_captured_events_async_with_multithreading(sdk):
     async def _run(thread_index):
         await asyncio.sleep(0.1 + random.random() * 0.1)
         await asyncio.gather(
-            *[
-                _create_captured_event_and_sleep(thread_index, i)
-                for i in range(parallelism)
-            ]
+            *[_create_captured_event_and_sleep(thread_index, i) for i in range(scale)]
         )
         await asyncio.sleep(0.1 + random.random() * 0.1)
 
@@ -184,14 +182,35 @@ def test_captured_events_async_with_multithreading(sdk):
             assert future.exception() is None
 
     # then
-    assert len(captured_events) == parallelism * parallelism
+    assert len(captured_events) == parallelism * scale
     for thread_index in range(parallelism):
         events = [
             event
             for event in captured_events
             if event.custom_tags["threadIndex"] == thread_index
         ]
-        assert len(events) == parallelism
+        assert len(events) == scale
         events = sorted(events, key=lambda event: event.custom_tags["asyncIndex"])
-        for async_index in range(parallelism):
+        for async_index in range(scale):
             assert events[async_index].custom_tags["asyncIndex"] == async_index
+
+
+def test_set_tag_multithreaded(sdk):
+    # given
+    parallelism = 10
+    scale = 10000
+
+    def _set_tag_and_sleep(thread_index):
+        sleep(0.05)
+        for i in range(scale):
+            unique_value = thread_index * scale * 10 + i
+            sdk.set_tag(f"tag{unique_value}", unique_value)
+
+    # when
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
+        futures = [executor.submit(_set_tag_and_sleep, i) for i in range(parallelism)]
+        for future in concurrent.futures.as_completed(futures):
+            assert future.exception() is None
+
+    # then
+    assert len(sdk._custom_tags) == parallelism * scale
