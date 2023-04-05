@@ -39,3 +39,7 @@ Set custom (user defined) trace tag
 
 - `name` _(str)_ - Tag name, can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters
 - `value` (any) - Tag value. Can be _str_, _bool_, _int_, _float_, _datetime_ or _List_ containing any values of prior listed types
+
+## Thread safety
+
+Public properties and methods of the `serverlessSdk` object is intended to be thread-safe without need for any special measurements to be taken by consumers.
