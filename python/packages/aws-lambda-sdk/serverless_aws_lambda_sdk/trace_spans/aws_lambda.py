@@ -3,8 +3,8 @@ import os
 import platform
 import logging
 
-from serverless_sdk.lib.trace import TraceSpan
-from serverless_sdk.lib.timing import _DIFF
+from sls_sdk.lib.trace import TraceSpan
+from sls_sdk.lib.timing import _DIFF
 
 __all__ = [
     "aws_lambda_span",

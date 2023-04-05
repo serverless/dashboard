@@ -7,12 +7,6 @@ from typing_extensions import Final, TypeAlias, TYPE_CHECKING
 
 from ..instrument import Instrumenter
 
-if TYPE_CHECKING:
-    from serverless_sdk.sdk.base import ServerlessSdk
-
-else:
-    ServerlessSdk: TypeAlias = "ServerlessSdk"
-
 __all__: Final[List[str]] = [
     "handler",
 ]
@@ -24,7 +18,7 @@ environ["_HANDLER"] = environ.get("_ORIGIN_HANDLER")
 del environ["_ORIGIN_HANDLER"]
 
 try:
-    from serverless_sdk import serverlessSdk
+    from serverless_aws_lambda_sdk import serverlessSdk
 except ModuleNotFoundError:
     from .. import serverlessSdk
 
