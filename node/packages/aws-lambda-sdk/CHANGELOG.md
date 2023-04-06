@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.11](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.10...@serverless/aws-lambda-sdk@0.14.11) (2023-04-06)
+
+### Features
+
+- Improve sampling algorithm ([0428512](https://github.com/serverless/console/commit/0428512e1f01ec5d323fc488304839cc129b1b73))
+- Recognize ALB events ([4ceaca3](https://github.com/serverless/console/commit/4ceaca3001f03cca9ba0afecc67bc8378c5a97bb))
+
+### Bug Fixes
+
+- Ensure to clear root span in case of internal error ([#611](https://github.com/serverless/console/issues/611)) ([7c7856e](https://github.com/serverless/console/commit/7c7856ed99b0fffee92a3bf5151148978cc6ec25))
+
+### Maintenance Improvements
+
+- Improve configurablity of sampling function ([e26be68](https://github.com/serverless/console/commit/e26be682a7defad5d203819006021d4259266eb2))
+- Seclude `isApiEvent` util ([81d7e4a](https://github.com/serverless/console/commit/81d7e4ab1da508edf4a5bb9a580f967cecc47bd4))
+
 ### [0.14.10](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.9...@serverless/aws-lambda-sdk@0.14.10) (2023-04-03)
 
 ### Bug Fixes
