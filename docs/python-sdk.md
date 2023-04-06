@@ -63,7 +63,7 @@ To use the Serverless SDK you must import the `sls_sdk` package in your
 AWS Lambda function handler.
 
 ```python
-from sls_sdk import serverlessSdk as sls_sdk
+from sls_sdk import serverlessSdk
 ```
 
 ### Capturing Errors
@@ -74,7 +74,7 @@ There are two mechanisms for capturing handled errors.
 #### Using capture_error
 
 ```python
-sls_sdk.capture_error(Exception("Unexpected"))
+serverlessSdk.capture_error(Exception("Unexpected"))
 ```
 
 #### Using logging
@@ -100,7 +100,7 @@ stack trace of the `logging.error` will be captured.
 #### Using capture_warning
 
 ```python
-sls_sdk.capture_warning("Captured warning")
+serverlessSdk.capture_warning("Captured warning")
 ```
 
 #### Using logging.warning
@@ -129,7 +129,7 @@ is easy to identify in Console.
 #### Setting Tags on the Trace
 
 ```python
-sls_sdk.set_tag("userId", user_id)
+serverlessSdk.set_tag("userId", user_id)
 ```
 
 Using the `set_tag` method will create Tags associated with the entire Trace.
@@ -147,7 +147,7 @@ an SDK error will be made available in Dev Mode and Trace Details.
 ```python
 import logging
 
-sls_sdk.set_tag("userId", user_id)
+serverlessSdk.set_tag("userId", user_id)
 
 logging.error("Logged error")
 logging.warning("Logged warning %s %s", 12, True)
@@ -162,7 +162,7 @@ created using `logging.error` and `logging.warning`.
 #### Setting Tags on Captured Errors
 
 ```python
-sls_sdk.capture_error(
+serverlessSdk.capture_error(
     Exception("Captured error"),
     tags={"userId": "example", "invocationId": invocation_id},
 )
@@ -178,7 +178,7 @@ Tag keys on `capture_error` are validated the same way as tag keys on
 #### Setting Tags on Captured Warnings
 
 ```python
-sls_sdk.capture_warning(
+serverlessSdk.capture_warning(
     "Captured warning",
     tags={"userId": "example", "invocationid": invocation_id},
 )
