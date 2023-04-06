@@ -53,7 +53,7 @@ module.exports = (error, options = {}) => {
     stack: tags.stacktrace,
   };
   if (options.fingerprint) errorLogData.fingerprint = options.fingerprint;
-  console.error(errorLogData);
+  console.error(JSON.stringify(errorLogData));
 
   return capturedEvent;
 };

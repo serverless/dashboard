@@ -28,7 +28,7 @@ module.exports = (error, options = {}) => {
   errorData.message = message;
   if (error.code) errorData.code = error.code;
   if (error.stack) errorData.stack = resolveStackTraceString(error);
-  console.error(errorData);
+  console.error(JSON.stringify(errorData));
   try {
     // Require on spot to avoid otherwise difficult to mitigate circular dependency
     require('./create-error-captured-event')(errorData.message, {

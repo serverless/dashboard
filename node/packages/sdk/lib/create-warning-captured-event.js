@@ -45,7 +45,7 @@ module.exports = (message, options = {}) => {
     stack: stackTrace,
   };
   if (options.fingerprint) warnLogData.fingerprint = options.fingerprint;
-  console.warn(warnLogData);
+  console.warn(JSON.stringify(warnLogData));
 
   return capturedEvent;
 };
