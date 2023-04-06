@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.11 (2023-04-06)
+
+### Bug Fixes
+
+- Ensure thread-safety of public attributes/methods
+- Do not include `custom_tags` field when there are no custom tags set
+- Write structured logs as json serialized string
+
 ## 0.3.10 (2023-04-04)
 
 ### Maintenance Improvements
