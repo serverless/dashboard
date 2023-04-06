@@ -145,6 +145,35 @@ def test_span_protobuf(sdk):
     }, "should stringify to JSON"
 
 
+def test_span_protobuf_no_custom_tags(sdk):
+    # given
+    from sls_sdk.lib.trace import TraceSpan
+    from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+
+    parent_span = TraceSpan("parent")
+    child_span = TraceSpan("child")
+    child_span.input = "some input"
+    child_span.output = "some output"
+
+    child_span.close()
+
+    # when
+    proto_dict = child_span.to_protobuf_dict()
+
+    # then
+    assert proto_dict == {
+        "traceId": child_span.trace_id,
+        "parentSpanId": parent_span.id,
+        "id": child_span.id,
+        "name": child_span.name,
+        "startTimeUnixNano": to_protobuf_epoch_timestamp(child_span.start_time),
+        "endTimeUnixNano": to_protobuf_epoch_timestamp(child_span.end_time),
+        "input": child_span.input,
+        "output": child_span.output,
+        "tags": {},
+    }, "should stringify to JSON"
+
+
 def test_creation_of_immediate_descendant_spans(sdk):
     # given
     from sls_sdk.lib.trace import TraceSpan
