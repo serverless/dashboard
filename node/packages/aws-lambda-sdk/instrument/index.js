@@ -151,20 +151,19 @@ const resolveOutcomeEnumValue = (value) => {
 
 let isCurrentInvocationResolved = false;
 
+const clearRootSpan = () => {
+  delete awsLambdaSpan.traceId;
+  delete awsLambdaSpan.id;
+  delete awsLambdaSpan.endTime;
+  awsLambdaSpan.tags.reset();
+  awsLambdaSpan.subSpans.clear();
+  capturedEvents.length = 0;
+  if (objHasOwnProperty.call(serverlessSdk, '_customTags')) serverlessSdk._customTags.clear();
+};
+
 const closeTrace = async (outcome, outcomeResult) => {
   isCurrentInvocationResolved = true;
   let isRootSpanReset = false;
-  const clearRootSpan = () => {
-    delete awsLambdaSpan.traceId;
-    delete awsLambdaSpan.id;
-    delete awsLambdaSpan.endTime;
-    awsLambdaSpan.tags.reset();
-    awsLambdaSpan.subSpans.clear();
-    capturedEvents.length = 0;
-    if (objHasOwnProperty.call(serverlessSdk, '_customTags')) serverlessSdk._customTags.clear();
-    isRootSpanReset = true;
-  };
-
   try {
     const endTime = process.hrtime.bigint();
     const isErrorOutcome = outcome.startsWith('error:');
@@ -195,6 +194,7 @@ const closeTrace = async (outcome, outcomeResult) => {
     if (invocationContextAccessor.value) reportTrace({ isErrorOutcome });
     flushSpans();
     clearRootSpan();
+    isRootSpanReset = true;
 
     await Promise.all(serverlessSdk._deferredTelemetryRequests);
     serverlessSdk._deferredTelemetryRequests.length = 0;
@@ -284,6 +284,7 @@ module.exports = (originalHandler, options = {}) => {
       );
     } catch (error) {
       serverlessSdk._reportError(error);
+      clearRootSpan();
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }
