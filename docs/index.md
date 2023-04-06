@@ -56,8 +56,8 @@ instrumentation on your function.
 In addition to the automatic instrumentation of your AWS Lambda functions, you
 can also add custom instrumentation for setting tags, and events in your code. 
 
-Use the [Node.js](./nodejs-sdk.md) Serverless SDK
-to add custom instrumentation to Node.js 12+. Other runtime
+Use the [Node.js](./nodejs-sdk.md) or [Python](./python-sdk.js) Serverless SDK
+to add custom instrumentation to Node.js 12+ and Python 3.8+. Other runtime
 support is coming soon.
 
 ## Invoke & Observe
