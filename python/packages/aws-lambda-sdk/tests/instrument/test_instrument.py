@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import json
 import importlib
 from .. import compare_handlers, context
-from .test_assertions import assert_trace_payload
+from .test_assertions import assert_trace_payload, assert_lambda_tags
 from serverless_sdk_schema import TracePayload, RequestResponse
 import base64
 from werkzeug.wrappers import Request, Response
@@ -479,6 +479,11 @@ def test_instrument_lambda_success_dev_mode_with_server(
         == capture_error_count
     )
 
+    dev_mode_trace_payload_lambda_span = [
+        span for t in trace_payloads for span in t.spans if span.name == "aws.lambda"
+    ][0]
+    assert_lambda_tags(dev_mode_trace_payload_lambda_span, 1)
+
     # when
     request_response_payloads = []
     trace_payloads = []
@@ -509,6 +514,11 @@ def test_instrument_lambda_success_dev_mode_with_server(
         "aws.lambda.invocation",
         "aws.lambda",
     ]
+
+    dev_mode_trace_payload_lambda_span = [
+        span for t in trace_payloads for span in t.spans if span.name == "aws.lambda"
+    ][0]
+    assert_lambda_tags(dev_mode_trace_payload_lambda_span, 1)
 
 
 def test_instrument_lambda_success_close_trace_failure(instrumenter):
