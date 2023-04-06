@@ -45,3 +45,23 @@ def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome:
 
     if outcome != 1:
         assert_error_event(trace_payload, aws_lambda_invocation, outcome)
+
+    [assert_hexadecimal(s.id) for s in trace_payload.spans]
+    [assert_hexadecimal(s.trace_id) for s in trace_payload.spans]
+    [
+        assert_hexadecimal(s.parent_span_id)
+        for s in trace_payload.spans
+        if s.parent_span_id
+    ]
+    [assert_hexadecimal(e.id) for e in trace_payload.events]
+    [assert_hexadecimal(e.trace_id) for e in trace_payload.events]
+    [assert_hexadecimal(e.span_id) for e in trace_payload.events]
+
+
+def assert_hexadecimal(id):
+    assert isinstance(id, bytes)
+    try:
+        assert int(id, 16)
+    except ValueError:
+        assert False
+    assert len(id) == 32
