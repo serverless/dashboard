@@ -208,7 +208,7 @@ class TraceSpan:
         return self
 
     def to_protobuf_dict(self):
-        return {
+        result = {
             "id": self.id,
             "traceId": self.trace_id,
             "parentSpanId": self.parent_span.id if self.parent_span else None,
@@ -218,8 +218,10 @@ class TraceSpan:
             "input": self.input,
             "output": self.output,
             "tags": convert_tags_to_protobuf(self.tags),
-            "customTags": json.dumps(self.custom_tags),
         }
+        if self.custom_tags:
+            result["customTags"] = json.dumps(self.custom_tags)
+        return result
 
 
 def _flatten(xs):
