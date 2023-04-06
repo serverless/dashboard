@@ -57,7 +57,7 @@ describe('lib/instrumentation/node-console.js', () => {
     let capturedEvent = null;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
     // eslint-disable-next-line no-console
-    console.warn({ source: 'serverlessSdk', message: 'Something is wrong' });
+    console.warn(JSON.stringify({ source: 'serverlessSdk', message: 'Something is wrong' }));
 
     expect(capturedEvent).to.be.null;
   });
@@ -66,15 +66,17 @@ describe('lib/instrumentation/node-console.js', () => {
     let capturedEvent = null;
     serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
     // eslint-disable-next-line no-console
-    console.error({
-      source: 'serverlessSdk',
-      type: 'ERROR_TYPE_CAUGHT_SDK_INTERNAL',
-      description: 'Internal Serverless SDK Error',
-      name: 'Error',
-      message: 'Something failed',
-      code: 'ERROR_CODE',
-      stack: 'at /foo.js:12:1\nat /bar.js:13:1',
-    });
+    console.error(
+      JSON.stringify({
+        source: 'serverlessSdk',
+        type: 'ERROR_TYPE_CAUGHT_SDK_INTERNAL',
+        description: 'Internal Serverless SDK Error',
+        name: 'Error',
+        message: 'Something failed',
+        code: 'ERROR_CODE',
+        stack: 'at /foo.js:12:1\nat /bar.js:13:1',
+      })
+    );
     expect(capturedEvent).to.be.null;
   });
 });
