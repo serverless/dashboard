@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.13 (2023-04-06)
+
+### Bug Fixes
+
+- Fix dev-mode trace reporting
+- Fix generated span IDs to be hexadecimal strings
+
+### Maintenance Improvements
+
+- Improve and clean up wrapper logic
+
 ## 0.1.12 (2023-04-05)
 
 ### Bug Fixes
