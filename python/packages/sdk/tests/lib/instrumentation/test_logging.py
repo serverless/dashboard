@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 import sls_sdk.lib.instrumentation.logging
 import logging
-from sls_sdk import serverlessSdk
+import json
 
 
 @pytest.fixture(autouse=True)
@@ -85,13 +85,17 @@ def test_instrument_warning_recognize_sdk_warning(monkeypatch):
         "create_warning_captured_event",
         mock,
     )
+    mock_json = MagicMock()
+    monkeypatch.setattr(json, "dumps", mock_json)
     message = "Something is wrong"
 
     # when
-    logging.warning({"source": "serverlessSdk", "message": message})
+    data = {"source": "serverlessSdk", "message": message}
+    logging.warning(data)
 
     # then
     mock.assert_not_called()
+    mock_json.assert_called_once_with(data, indent=2)
 
 
 def test_instrument_warning_recognize_sdk_error(monkeypatch):
@@ -102,10 +106,14 @@ def test_instrument_warning_recognize_sdk_error(monkeypatch):
         "create_error_captured_event",
         mock,
     )
+    mock_json = MagicMock()
+    monkeypatch.setattr(json, "dumps", mock_json)
     message = "Something is wrong"
 
     # when
-    logging.error({"source": "serverlessSdk", "message": message})
+    data = {"source": "serverlessSdk", "message": message}
+    logging.error(data)
 
     # then
     mock.assert_not_called()
+    mock_json.assert_called_once_with(data, indent=2)
