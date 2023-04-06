@@ -7,7 +7,7 @@ from . import TEST_ORG, TEST_DEV_MODE_ORG_ID
 @pytest.fixture()
 def sdk(monkeypatch, request):
     _reset_sdk(monkeypatch, request, False, True)
-    from serverless_sdk import serverlessSdk
+    from sls_sdk import serverlessSdk
 
     serverlessSdk._initialize()
     yield serverlessSdk
@@ -36,4 +36,4 @@ def _reset_sdk(
             monkeypatch.setenv(key, request.param[key])
 
     # make sure the SDK is imported
-    importlib.import_module("serverless_sdk")
+    importlib.import_module("sls_sdk")
