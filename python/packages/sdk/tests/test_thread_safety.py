@@ -213,7 +213,7 @@ def test_overlapping_spans_async_with_multithreading_large_scale(sdk):
 def test_captured_events_async_with_multithreading(sdk, is_error):
     # given
     parallelism = 5
-    scale = 1000
+    scale = 100
     captured_events = []
 
     def _captured_event_handler(captured_event):

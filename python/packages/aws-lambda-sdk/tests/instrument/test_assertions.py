@@ -15,16 +15,24 @@ def assert_error_event(
     assert event.tags.error.name == "Exception" if outcome == 5 else "SystemExit"
 
 
-def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome: int):
-    assert [s.name for s in trace_payload.spans] == spans
-    assert trace_payload.sls_tags.org_id == TEST_ORG
-    assert trace_payload.sls_tags.service == TEST_FUNCTION
-    aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
+def assert_lambda_tags(aws_lambda: Span, outcome: int):
     lambda_tag = [
         val for x, val in aws_lambda.tags.aws.ListFields() if x.name == "lambda"
     ][0]
     assert lambda_tag.outcome == outcome
     assert lambda_tag.request_id == context.aws_request_id
+    assert lambda_tag.name == TEST_FUNCTION
+    assert hasattr(lambda_tag, "arch")
+    assert hasattr(lambda_tag, "version")
+    assert hasattr(lambda_tag, "is_coldstart")
+
+
+def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome: int):
+    assert [s.name for s in trace_payload.spans] == spans
+    assert trace_payload.sls_tags.org_id == TEST_ORG
+    assert trace_payload.sls_tags.service == TEST_FUNCTION
+    aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
+    assert_lambda_tags(aws_lambda, outcome)
 
     aws_lambda_initialization = [
         x for x in trace_payload.spans if x.name == "aws.lambda.initialization"
@@ -45,3 +53,23 @@ def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome:
 
     if outcome != 1:
         assert_error_event(trace_payload, aws_lambda_invocation, outcome)
+
+    [assert_hexadecimal(s.id) for s in trace_payload.spans]
+    [assert_hexadecimal(s.trace_id) for s in trace_payload.spans]
+    [
+        assert_hexadecimal(s.parent_span_id)
+        for s in trace_payload.spans
+        if s.parent_span_id
+    ]
+    [assert_hexadecimal(e.id) for e in trace_payload.events]
+    [assert_hexadecimal(e.trace_id) for e in trace_payload.events]
+    [assert_hexadecimal(e.span_id) for e in trace_payload.events]
+
+
+def assert_hexadecimal(id):
+    assert isinstance(id, bytes)
+    try:
+        assert int(id, 16)
+    except ValueError:
+        assert False
+    assert len(id) == 32

@@ -220,6 +220,11 @@ class Instrumenter:
             f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
         )
 
+    def _flush_and_close_event_loop(self):
+        if self.event_loop:
+            self.event_loop.terminate()
+            self.event_loop = None
+
     def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
         self.is_root_span_reset = False
         try:
@@ -254,7 +259,7 @@ class Instrumenter:
 
             if get_invocation_context():
                 self._report_trace(is_error_outcome)
-
+            self._flush_and_close_event_loop()
             self._clear_root_span()
 
             debug_log(
@@ -326,13 +331,15 @@ class Instrumenter:
         return result
 
     def instrument(self, user_handler_generator):
+        user_handler = None
+
         def stub(event, context):
+            nonlocal user_handler
             try:
-                user_handler = user_handler_generator()
+                if not user_handler:
+                    user_handler = user_handler_generator()
                 return self._handler(user_handler, event, context)
             finally:
-                if self.event_loop:
-                    self.event_loop.terminate()
-                    self.event_loop = None
+                self._flush_and_close_event_loop()
 
         return stub

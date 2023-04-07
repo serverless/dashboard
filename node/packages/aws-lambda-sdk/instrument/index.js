@@ -11,6 +11,7 @@ const sendTelemetry = require('./lib/send-telemetry');
 const flushSpans = require('./lib/auto-send-spans').flush;
 const filterCapturedEvent = require('./lib/filter-captured-event');
 const invocationContextAccessor = require('./lib/invocation-context-accessor');
+const isApiEvent = require('./lib/is-api-event');
 const pkgJson = require('../package');
 
 const serverlessSdk = require('./lib/sdk');
@@ -98,15 +99,35 @@ const reportResponse = async (response, context, endTime) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
+let requestCounter = 0;
+let lastCounterResetTime = 0;
+
 const reportTrace = ({ isErrorOutcome }) => {
-  // Sample out 80% of traces in production mode if no warning or error event was reported
   const isSampledOut =
-    (!isErrorOutcome &&
-      !serverlessSdk._isDebugMode &&
-      !serverlessSdk._isDevMode &&
-      !capturedEvents.some(({ name }) => alertEventNames.has(name)) &&
-      Math.random() > 0.2) ||
-    undefined;
+    (() => {
+      // This function determines if a trace should be sampled or not
+      //
+      // Do not sample when invocation ends with error
+      if (isErrorOutcome) return false;
+      // Do not sample when in debug mode
+      if (serverlessSdk._isDebugMode) return false;
+      // Do not sample when in dev mode
+      if (serverlessSdk._isDevMode) return false;
+      // Do not sample when any error or warning event is captured
+      if (capturedEvents.some(({ name }) => alertEventNames.has(name))) return false;
+      const currentTime = Date.now();
+      if (currentTime - lastCounterResetTime > 1000) {
+        lastCounterResetTime = currentTime;
+        requestCounter = 0;
+      }
+      ++requestCounter;
+      // In case of API backed function sample out 3rd and following invocations,
+      // that happen in a frame of a second
+      if (isApiEvent()) return requestCounter > 2;
+      // In other cases do not sample 1st invocation, and sample out 90% of following invocations
+      if (requestCounter === 1) return false;
+      return Math.random() > 0.1;
+    })() || undefined;
   const payload = (serverlessSdk._lastTrace = {
     isSampledOut,
     slsTags: {
@@ -151,20 +172,19 @@ const resolveOutcomeEnumValue = (value) => {
 
 let isCurrentInvocationResolved = false;
 
+const clearRootSpan = () => {
+  delete awsLambdaSpan.traceId;
+  delete awsLambdaSpan.id;
+  delete awsLambdaSpan.endTime;
+  awsLambdaSpan.tags.reset();
+  awsLambdaSpan.subSpans.clear();
+  capturedEvents.length = 0;
+  if (objHasOwnProperty.call(serverlessSdk, '_customTags')) serverlessSdk._customTags.clear();
+};
+
 const closeTrace = async (outcome, outcomeResult) => {
   isCurrentInvocationResolved = true;
   let isRootSpanReset = false;
-  const clearRootSpan = () => {
-    delete awsLambdaSpan.traceId;
-    delete awsLambdaSpan.id;
-    delete awsLambdaSpan.endTime;
-    awsLambdaSpan.tags.reset();
-    awsLambdaSpan.subSpans.clear();
-    capturedEvents.length = 0;
-    if (objHasOwnProperty.call(serverlessSdk, '_customTags')) serverlessSdk._customTags.clear();
-    isRootSpanReset = true;
-  };
-
   try {
     const endTime = process.hrtime.bigint();
     const isErrorOutcome = outcome.startsWith('error:');
@@ -195,6 +215,7 @@ const closeTrace = async (outcome, outcomeResult) => {
     if (invocationContextAccessor.value) reportTrace({ isErrorOutcome });
     flushSpans();
     clearRootSpan();
+    isRootSpanReset = true;
 
     await Promise.all(serverlessSdk._deferredTelemetryRequests);
     serverlessSdk._deferredTelemetryRequests.length = 0;
@@ -284,6 +305,7 @@ module.exports = (originalHandler, options = {}) => {
       );
     } catch (error) {
       serverlessSdk._reportError(error);
+      clearRootSpan();
       if (originalDone) contextDone = originalDone;
       return originalHandler(event, context, awsCallback);
     }

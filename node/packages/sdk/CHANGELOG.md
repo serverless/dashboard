@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.5](https://github.com/serverless/console/compare/@serverless/sdk@0.5.4...@serverless/sdk@0.5.5) (2023-04-06)
+
+### Maintenance Improvements
+
+- Write JSON strings as structured logs ([e5f5162](https://github.com/serverless/console/commit/e5f51629ea079308559c343937f27280949ec9ab))
+
 ### [0.5.4](https://github.com/serverless/console/compare/@serverless/sdk@0.5.3...@serverless/sdk@0.5.4) (2023-03-29)
 
 ### Bug Fixes

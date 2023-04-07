@@ -2,12 +2,16 @@ from __future__ import annotations
 import os
 import logging
 from typing import Optional
+from importlib_metadata import version
+from typing_extensions import Final
 from sls_sdk import serverlessSdk as baseSdk
 from .trace_spans.aws_lambda import aws_lambda_span
 from sls_sdk import ServerlessSdk, TraceSpans
 from sls_sdk.lib.trace import TraceSpan
-from .base import NAME, __version__
 
+# module metadata
+__name__: Final[str] = "serverless-aws-lambda-sdk"
+__version__: Final[str] = version(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +23,7 @@ __all__ = [
     "serverlessSdk",
 ]
 
-baseSdk.name = NAME
+baseSdk.name = __name__
 baseSdk.version = __version__
 TraceSpans.aws_lambda = aws_lambda_span
 TraceSpans.aws_lambda_initialization = next(
