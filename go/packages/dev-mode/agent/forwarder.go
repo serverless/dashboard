@@ -212,7 +212,7 @@ func extractDefaultMessageValues(arr []string) (string, string, string) {
 }
 
 func IsWarnOrError(logLevel string) bool {
-	if logLevel == "WARN" || logLevel == "ERROR" {
+	if logLevel == "WARNING" || logLevel == "WARN" || logLevel == "ERROR" {
 		return true
 	}
 	return false
