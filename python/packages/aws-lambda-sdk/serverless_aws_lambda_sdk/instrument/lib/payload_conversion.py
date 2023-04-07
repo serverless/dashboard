@@ -22,4 +22,7 @@ def to_trace_payload(payload_dct: dict) -> TracePayload:
 
 
 def to_request_response_payload(payload_dct: dict) -> RequestResponse:
-    return json_format.ParseDict(payload_dct, RequestResponse())
+    payload = json_format.ParseDict(payload_dct, RequestResponse())
+    payload.span_id = bytes(payload_dct["spanId"], "utf-8")
+    payload.trace_id = bytes(payload_dct["traceId"], "utf-8")
+    return payload
