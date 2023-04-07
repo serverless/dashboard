@@ -83,8 +83,7 @@ func (e *Extension) ExternalExtension() {
 
 	deferredLogs := []agent.LogItem{}
 
-	wrapper := os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
-	hasInternalExtension := wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
+	hasInternalExtension := lib.HasInternalExtension()
 
 	// Save the res payload from the SDK so we can send it out at runtime done so we can include the
 	// runtime_duration_ms & runtime_response_latency_ms that is included in the runtime done event

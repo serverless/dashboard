@@ -94,6 +94,8 @@ func (s *LogsApiHttpListener) Start() (bool, error) {
 // Logging or printing besides the error cases below is not recommended if you have subscribed to receive extension logs.
 // Otherwise, logging here will cause Logs API to send new logs for the printed lines which will create an infinite loop.
 func (h *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error("Error reading body", zap.Error(err))
@@ -109,6 +111,8 @@ func (h *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *LogsApiHttpListener) span_http_handler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error("Error reading body", zap.Error(err))
@@ -130,6 +134,8 @@ func (h *LogsApiHttpListener) span_http_handler(w http.ResponseWriter, r *http.R
 }
 
 func (h *LogsApiHttpListener) req_res_http_handler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error("Error reading body", zap.Error(err))

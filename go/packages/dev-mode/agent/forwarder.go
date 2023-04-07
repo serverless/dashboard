@@ -56,8 +56,7 @@ type RuntimeDoneRecord struct {
 	Metrics   MetricsObject    `json:"metrics"`
 }
 
-var wrapper = os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
-var hasInternalExtension = wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
+var hasInternalExtension = lib.HasInternalExtension()
 
 func FindRequestId(logs []LogItem) string {
 	var requestId string = ""
