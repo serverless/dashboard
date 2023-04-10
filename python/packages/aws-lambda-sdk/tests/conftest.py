@@ -11,6 +11,11 @@ def reset_sdk(monkeypatch, request):
 
 
 @pytest.fixture()
+def reset_sdk_debug_mode(monkeypatch, request):
+    yield _reset_sdk(monkeypatch, request, False, True)
+
+
+@pytest.fixture()
 def reset_sdk_dev_mode(monkeypatch, request):
     yield _reset_sdk(monkeypatch, request, True, True)
 

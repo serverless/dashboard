@@ -5,8 +5,10 @@ const { expect } = require('chai');
 const fsp = require('fs').promises;
 const path = require('path');
 const log = require('log').get('test');
+const wait = require('timers-ext/promise/sleep');
 const toml = require('toml');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+const { Lambda } = require('@aws-sdk/client-lambda');
 const cleanup = require('./lib/cleanup');
 const createCoreResources = require('./lib/create-core-resources');
 const basename = require('./lib/basename');
@@ -14,7 +16,10 @@ const getProcessFunction = require('../../lib/get-process-function');
 const resolveOutcomeEnumValue = require('../../utils/resolve-outcome-enum-value');
 const resolveNanosecondsTimestamp = require('../../utils/resolve-nanoseconds-timestamp');
 const normalizeEvents = require('../../utils/normalize-events');
+const awsRequest = require('../../utils/aws-request');
 const resolveTestVariantsConfig = require('../../lib/resolve-test-variants-config');
+const resolveFileZipBuffer = require('../../utils/resolve-file-zip-buffer');
+const { exec } = require('node:child_process');
 
 const fixturesDirname = path.resolve(
   __dirname,
@@ -156,6 +161,166 @@ describe('Python: integration', function () {
     },
   };
 
+  const httpTestConfig = new Map([
+    [
+      'http',
+      {
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            const [invocationSpan, httpRequestSpan] = spans;
+
+            expect(httpRequestSpan.name).to.equal('python.http.request');
+            expect(httpRequestSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+
+            const { tags } = httpRequestSpan;
+            expect(tags.http.method).to.equal('GET');
+            expect(tags.http.protocol).to.equal('HTTP/1.1');
+            expect(tags.http.host).to.equal('127.0.0.1:3177');
+            expect(tags.http.path).to.equal('/');
+            expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
+            expect(tags.http.requestHeaderNames).to.deep.equal(['someHeader']);
+            expect(tags.http.statusCode.toString()).to.equal('200');
+          }
+        },
+      },
+    ],
+    [
+      'https',
+      {
+        hooks: {
+          afterCreate: async function self(testConfig) {
+            const urlEndpointLambdaName =
+              (testConfig.urlEndpointLambdaName = `${testConfig.configuration.FunctionName}-endpoint`);
+            try {
+              await awsRequest(Lambda, 'createFunction', {
+                FunctionName: urlEndpointLambdaName,
+                Handler: 'api-endpoint.handler',
+                Role: coreConfig.roleArn,
+                Runtime: 'python3.9',
+                Code: {
+                  ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'api-endpoint.py')),
+                },
+                MemorySize: 1024,
+              });
+            } catch (error) {
+              if (
+                error.message.includes(
+                  'The role defined for the function cannot be assumed by Lambda'
+                ) ||
+                error.message.includes('because the KMS key is invalid for CreateGrant')
+              ) {
+                // Occassional race condition issue on AWS side, retry
+                await self(testConfig);
+                return;
+              }
+              if (error.message.includes('Function already exist')) {
+                log.notice('Function %s already exists, deleting and re-creating', testConfig.name);
+                await awsRequest(Lambda, 'deleteFunction', {
+                  FunctionName: urlEndpointLambdaName,
+                });
+                await self(testConfig);
+                return;
+              }
+              throw error;
+            }
+            await awsRequest(Lambda, 'createAlias', {
+              FunctionName: urlEndpointLambdaName,
+              FunctionVersion: '$LATEST',
+              Name: 'url',
+            });
+            const deferredFunctionUrl = (async () => {
+              try {
+                return (
+                  await awsRequest(Lambda, 'createFunctionUrlConfig', {
+                    AuthType: 'NONE',
+                    FunctionName: urlEndpointLambdaName,
+                    Qualifier: 'url',
+                  })
+                ).FunctionUrl;
+              } catch (error) {
+                if (error.message.includes('FunctionUrlConfig exists for this Lambda function')) {
+                  return (
+                    await awsRequest(Lambda, 'getFunctionUrlConfig', {
+                      FunctionName: urlEndpointLambdaName,
+                      Qualifier: 'url',
+                    })
+                  ).FunctionUrl;
+                }
+                throw error;
+              }
+            })();
+            await Promise.all([
+              deferredFunctionUrl,
+              awsRequest(Lambda, 'addPermission', {
+                FunctionName: urlEndpointLambdaName,
+                Qualifier: 'url',
+                FunctionUrlAuthType: 'NONE',
+                Principal: '*',
+                Action: 'lambda:InvokeFunctionUrl',
+                StatementId: 'public-function-url',
+              }),
+            ]);
+            testConfig.functionUrl = await deferredFunctionUrl;
+            let state;
+            do {
+              await wait(100);
+              ({
+                Configuration: { State: state },
+              } = await awsRequest(Lambda, 'getFunction', {
+                FunctionName: urlEndpointLambdaName,
+              }));
+            } while (state !== 'Active');
+          },
+          beforeDelete: async (testConfig) => {
+            await Promise.all([
+              awsRequest(Lambda, 'deleteFunctionUrlConfig', {
+                FunctionName: testConfig.urlEndpointLambdaName,
+                Qualifier: 'url',
+              }),
+              awsRequest(Lambda, 'deleteFunction', {
+                FunctionName: testConfig.urlEndpointLambdaName,
+              }),
+            ]);
+          },
+        },
+        invokePayload: (testConfig) => {
+          return { url: `${testConfig.functionUrl}?foo=bar` };
+        },
+        test: ({ invocationsData, testConfig: { functionUrl } }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            const [invocationSpan, httpRequestSpan] = spans;
+
+            expect(httpRequestSpan.name).to.equal('python.https.request');
+            expect(httpRequestSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+
+            const { tags } = httpRequestSpan;
+            expect(tags.http.method).to.equal('GET');
+            expect(tags.http.protocol).to.equal('HTTP/1.1');
+            expect(tags.http.host.match(functionUrl.slice('https://'.length, -1))).to.not.be.null;
+            expect(tags.http.path).to.equal('/');
+            expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
+            expect(tags.http.requestHeaderNames).to.deep.equal(['someHeader']);
+            expect(tags.http.statusCode.toString()).to.equal('200');
+          }
+        },
+      },
+    ],
+  ]);
+
   const useCasesConfig = new Map([
     [
       'success',
@@ -220,6 +385,18 @@ describe('Python: integration', function () {
         ]),
       },
     ],
+    [
+      'http_requester',
+      {
+        variants: httpTestConfig,
+      },
+    ],
+    [
+      'aiohttp_requester',
+      {
+        variants: httpTestConfig,
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
@@ -228,6 +405,8 @@ describe('Python: integration', function () {
   let beforeTimestamp;
 
   before(async () => {
+    exec(`pip install aiohttp==3.8.4 --target="${fixturesDirname}/test_dependencies"`);
+
     pyProjectToml = toml.parse(
       await fsp.readFile(
         path.resolve(__dirname, '../../../../python/packages/aws-lambda-sdk/pyproject.toml'),
@@ -388,5 +567,8 @@ describe('Python: integration', function () {
     });
   }
 
-  after(async () => cleanup({ mode: 'core' }));
+  after(async () => {
+    cleanup({ mode: 'core' });
+    await fsp.rmdir(`${fixturesDirname}/test_dependencies`, { recursive: true, force: true });
+  });
 });

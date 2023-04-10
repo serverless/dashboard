@@ -537,3 +537,43 @@ def test_instrument_lambda_success_close_trace_failure(instrumenter):
     # then
     instrumenter._close_trace.assert_called_once_with("success", "ok")
     instrumenter._close_trace = _original
+
+
+def test_instrument_lambda_http_requests(reset_sdk_debug_mode, mocked_print):
+    # given
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
+
+    instrumenter = Instrumenter()
+    from ..fixtures.lambdas.http_requester import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "python.http.request",
+        ],
+        1,
+    )
+
+    tags = trace_payload.spans[3].tags
+    assert tags.http.method == "GET"
+    assert tags.http.protocol == "HTTP/1.1"
+    assert tags.http.host.startswith("127.0.0.1:317")
+    assert tags.http.path == "/"
+    assert tags.http.query_parameter_names == ["foo"]
+    assert tags.http.request_header_names == ["someHeader"]
+    assert tags.http.status_code == 200
