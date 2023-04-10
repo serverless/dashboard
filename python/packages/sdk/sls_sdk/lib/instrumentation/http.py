@@ -94,7 +94,7 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
             {
                 "method": params.method,
                 "protocol": "HTTP/1.1",
-                "host": params.url.host,
+                "host": f"{params.url.host}:{params.url.port}",
                 "path": params.url.path,
                 "request_header_names": list(params.headers.keys()),
                 "query_parameter_names": list(params.url.query.keys()),
@@ -190,7 +190,7 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
                     {
                         "method": method,
                         "protocol": "HTTP/1.1",
-                        "host": _self.host,
+                        "host": f"{_self.host}:{_self.port}",
                         "path": parsed_path.path,
                         "request_header_names": [h for h in headers.keys()],
                         "query_parameter_names": [q for q in query.keys()],

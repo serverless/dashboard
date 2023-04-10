@@ -81,7 +81,7 @@ def test_instrument_urllib(
             {
                 "http.method": "POST",
                 "http.protocol": "HTTP/1.1",
-                "http.host": "127.0.0.1",
+                "http.host": f"127.0.0.1:{httpserver.port}",
                 "http.path": "/foo/bar",
                 "http.query_parameter_names": ["baz"],
                 "http.status_code": 200,
@@ -128,7 +128,7 @@ def test_instrument_urllib3(
     assert instrumented_sdk.trace_spans.root.tags == {
         "http.method": "POST",
         "http.protocol": "HTTP/1.1",
-        "http.host": "127.0.0.1",
+        "http.host": f"127.0.0.1:{httpserver.port}",
         "http.path": "/foo/bar",
         "http.request_header_names": ["User-Agent"],
         "http.query_parameter_names": ["baz"],
@@ -170,7 +170,7 @@ def test_instrument_requests(
             {
                 "http.method": "GET",
                 "http.protocol": "HTTP/1.1",
-                "http.host": "127.0.0.1",
+                "http.host": f"127.0.0.1:{httpserver.port}",
                 "http.path": "/foo/bar",
                 "http.query_parameter_names": ["baz"],
                 "http.status_code": 200,
@@ -224,7 +224,7 @@ def test_instrument_aiohttp(
     assert instrumented_sdk.trace_spans.root.tags == {
         "http.method": "GET",
         "http.protocol": "HTTP/1.1",
-        "http.host": "127.0.0.1",
+        "http.host": f"127.0.0.1:{httpserver.port}",
         "http.path": "/foo/bar",
         "http.request_header_names": ["User-Agent"],
         "http.query_parameter_names": ["baz"],
@@ -248,8 +248,8 @@ def test_instrument_native_http_error(
     import urllib.parse
     import urllib.request
 
-    host = str(uuid.uuid4())
-    url = f"https://{host}:1234/foo/bar?baz=qux"
+    host = str(uuid.uuid4()) + ":1234"
+    url = f"https://{host}/foo/bar?baz=qux"
     headers = {"User-Agent": "foo"}
 
     # when
@@ -288,8 +288,8 @@ def test_instrument_aiohttp_error(
 
     sls_sdk.lib.trace.root_span = None
 
-    host = str(uuid.uuid4())
-    url = f"https://{host}:1234/foo/bar?baz=qux"
+    host = str(uuid.uuid4()) + ":1234"
+    url = f"https://{host}/foo/bar?baz=qux"
 
     # when
     import aiohttp
