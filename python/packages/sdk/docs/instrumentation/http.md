@@ -2,7 +2,15 @@
 
 _Disable with `SLS_DISABLE_HTTP_MONITORING` environment variable_
 
-All HTTP and HTTPS requests are monitored and stored as `python.http.request` & `python.https.request` trace spans.
+HTTP and HTTPS requests made with http clients listed below are monitored and stored as `python.http.request` & `python.https.request` trace spans.
+
+## Supported clients
+* `http.client`
+* `urllib`
+* `urllib3`
+* `requests`
+* `aiohttp`
+
 
 ## Trace span tags:
 

@@ -6,6 +6,7 @@ from werkzeug.wrappers import Request, Response
 import sys
 from types import SimpleNamespace
 import uuid
+from urllib.parse import urlparse
 
 LARGE_REQUEST_PAYLOAD = b"a" * 1024 * 128
 SMALL_REQUEST_PAYLOAD = b"a"
@@ -41,6 +42,58 @@ def _assert_request_response_body(sdk, request_body, response_body):
         or (len(response_body) > 1024 * 127 and sdk.trace_spans.root.output is None)
         or sdk.trace_spans.root.output == response_body.decode("utf-8")
     )
+
+
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+    ],
+)
+def test_instrument_http_client(
+    instrumented_sdk,
+    httpserver: HTTPServer,
+    request_body,
+    response_body,
+):
+    # given
+    def handler(request: Request):
+        return Response(response_body)
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import http.client
+
+    url = urlparse(httpserver.url_for("/foo/bar?baz=qux"))
+    headers = {"User-Agent": "foo"}
+
+    conn = http.client.HTTPConnection(url.hostname, url.port)
+    conn.request("POST", url.path + "?" + url.query, request_body, headers)
+    conn.getresponse()
+    conn.close()
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "POST",
+                "http.protocol": "HTTP/1.1",
+                "http.host": f"127.0.0.1:{httpserver.port}",
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+                "http.status_code": 200,
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+    _assert_request_response_body(instrumented_sdk, request_body, response_body)
 
 
 @pytest.mark.parametrize(
