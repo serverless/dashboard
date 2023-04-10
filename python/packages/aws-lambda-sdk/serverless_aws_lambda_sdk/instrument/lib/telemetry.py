@@ -18,6 +18,7 @@ if serverlessSdk._is_dev_mode:
         global _session
         conn = aiohttp.TCPConnector(limit=10)
         _session = aiohttp.ClientSession(connector=conn)
+        _session._sls_ignore = True
 
     async def send_async(name: str, body: bytes):
         request_start_time = time.perf_counter_ns()
