@@ -23,6 +23,7 @@ dependencies = [
 tests = [
     "aiohttp>=3.8.4",
     "black>=22.12",
+    "flask>=2.2.3",
     "pytest>=7.2",
     "pytest-httpserver>=1.0.6",
     "requests>=2.28.2",
