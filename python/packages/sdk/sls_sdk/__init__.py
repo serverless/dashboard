@@ -32,12 +32,14 @@ class ServerlessSdkSettings:
     disable_captured_events_stdout: bool
     disable_python_log_monitoring: bool
     disable_request_response_monitoring: bool
+    disable_http_monitoring: bool
 
     def __init__(
         self,
         disable_captured_events_stdout=False,
         disable_python_log_monitoring=False,
         disable_request_response_monitoring=False,
+        disable_http_monitoring=False,
     ):
         self.disable_captured_events_stdout = (
             bool(environ.get("SLS_DISABLE_CAPTURED_EVENTS_STDOUT"))
@@ -50,6 +52,9 @@ class ServerlessSdkSettings:
         self.disable_request_response_monitoring = (
             bool(environ.get("SLS_DISABLE_REQUEST_RESPONSE_MONITORING"))
             or disable_request_response_monitoring
+        )
+        self.disable_http_monitoring = (
+            bool(environ.get("SLS_DISABLE_HTTP_MONITORING")) or disable_http_monitoring
         )
 
 
@@ -67,6 +72,7 @@ class ServerlessSdk:
     _is_initialized: bool
     _is_debug_mode: bool
     _is_dev_mode: bool
+    _maximum_body_byte_length: int
 
     def __init__(self):
         self._is_initialized = False
@@ -77,6 +83,7 @@ class ServerlessSdk:
         self._report_error = report_error
         self._report_warning = report_warning
         self._report_notice = report_notice
+        self._maximum_body_byte_length = 1024 * 127  # 127 KB
 
     def _initialize(
         self,
@@ -84,6 +91,7 @@ class ServerlessSdk:
         disable_captured_events_stdout: Optional[bool] = False,
         disable_python_log_monitoring: Optional[bool] = False,
         disable_request_response_monitoring: Optional[bool] = False,
+        disable_http_monitoring: Optional[bool] = False,
     ):
         if self._is_initialized:
             return
@@ -94,10 +102,16 @@ class ServerlessSdk:
             disable_captured_events_stdout,
             disable_python_log_monitoring,
             disable_request_response_monitoring,
+            disable_http_monitoring,
         )
 
         if not self._settings.disable_python_log_monitoring:
             install_logging()
+
+        if not self._settings.disable_http_monitoring:
+            from .lib.instrumentation.http import install as install_http
+
+            install_http()
 
         self._is_initialized = True
 

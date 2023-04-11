@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 import logging
 import time
-from typing import List, Optional
+from typing import List, Optional, Callable
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
@@ -42,11 +42,12 @@ class TraceSpan:
     name: str
     start_time: Nanoseconds
     end_time: Optional[Nanoseconds] = None
-    input: Optional[str] = None
-    output: Optional[str] = None
+    _input: Optional[str] = None
+    _output: Optional[str] = None
     tags: Tags
     custom_tags: Tags
     sub_spans: List[Self]
+    _on_close_by_root: Optional[Callable] = None
 
     def __init__(
         self,
@@ -56,8 +57,9 @@ class TraceSpan:
         start_time: Optional[Nanoseconds] = None,
         tags: Optional[Tags] = None,
         immediate_descendants: Optional[List[str]] = None,
+        on_close_by_root: Optional[Callable] = None,
     ):
-        self.name = get_resource_name(name)
+        self._set_name(name)
         self.input = input
         self.output = output
         self.sub_spans = []
@@ -65,6 +67,7 @@ class TraceSpan:
         self._set_start_time(start_time)
         self._set_tags(tags)
         self._set_spans(immediate_descendants)
+        self._on_close_by_root = on_close_by_root
 
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
@@ -102,6 +105,9 @@ class TraceSpan:
     def _set_ctx(self, override: Optional[TraceSpan] = None):
         global ctx
         ctx.set(override or self)
+
+    def _set_name(self, name):
+        self.name = get_resource_name(name)
 
     def _set_tags(self, tags: Optional[Tags]):
         self.tags = Tags()
@@ -150,6 +156,17 @@ class TraceSpan:
 
         self._output = value
 
+    @property
+    def input(self) -> str:
+        return self._input
+
+    @input.setter
+    def input(self, value: str):
+        if value is not None and not isinstance(value, str):
+            raise InvalidType("`input` must be a string.")
+
+        self._input = value
+
     def close(self, end_time: Optional[Nanoseconds] = None):
         global root_span, ctx
         default: Nanoseconds = time.perf_counter_ns()
@@ -177,6 +194,8 @@ class TraceSpan:
             left_over_spans = []
             for sub_span in self.spans:
                 if not sub_span.end_time:
+                    if sub_span._on_close_by_root:
+                        sub_span._on_close_by_root()
                     sub_span.close(end_time=self.end_time)
                     left_over_spans.append(sub_span)
 
