@@ -122,6 +122,7 @@ class EventLoop(Thread):
                 "sdk": {
                     "name": serverlessSdk.name,
                     "version": serverlessSdk.version,
+                    "runtime": "python",
                 },
             },
             "spans": [_convert_span(s) for s in spans],
