@@ -89,6 +89,12 @@ def test_flask_post_500(app):
     from sls_sdk import serverlessSdk
 
     request_body = {"foo": "bar"}
+    events = []
+
+    def _on_event(event):
+        events.append(event)
+
+    serverlessSdk._event_emitter.on("captured-event", _on_event)
 
     # when
     response = requests.post(
@@ -106,14 +112,23 @@ def test_flask_post_500(app):
         "flask.route.post.internalerror",
         "flask.error.customexception",
     ]
+    assert events[0].tags["error.name"] == "CustomException"
 
 
 def test_flask_get_404(app):
     # given
     import requests
-    from sls_sdk import serverlessSdk
+    from sls_sdk import serverlessSdk, ServerlessSdkSettings
+
+    serverlessSdk._settings = ServerlessSdkSettings()
 
     request_body = {"foo": "bar"}
+    events = []
+
+    def _on_event(event):
+        events.append(event)
+
+    serverlessSdk._event_emitter.on("captured-event", _on_event)
 
     # when
     response = requests.get(
@@ -131,6 +146,7 @@ def test_flask_get_404(app):
         "flask",
         "flask.error.notfound",
     ]
+    assert events[0].tags["error.name"] == "NotFound"
 
 
 def test_flask_original_behaviour_restored_after_uninstall(app):

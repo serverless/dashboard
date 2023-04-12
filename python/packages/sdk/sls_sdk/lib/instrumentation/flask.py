@@ -49,6 +49,7 @@ class Instrumenter:
                     self._error_span = serverlessSdk._create_trace_span(
                         f"flask.error.{span_name}"
                     )
+                    serverlessSdk.capture_error(exception)
                     self._reported_exception = exception
             except Exception as ex:
                 report_error(ex)
@@ -100,6 +101,7 @@ class Instrumenter:
             self._error_span = serverlessSdk._create_trace_span(
                 f"flask.error.{span_name}"
             )
+            serverlessSdk.capture_error(exception)
             self._reported_exception = exception
         except Exception as ex:
             report_error(ex)
