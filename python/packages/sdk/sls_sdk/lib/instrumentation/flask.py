@@ -1,18 +1,17 @@
+import re
+from sls_sdk import serverlessSdk
+from ..error import report as report_error
+from functools import partial
+
 _instrumenter = None
 
 
 class Instrumenter:
-    import re
-    import sls_sdk
-    from ..error import report as report_error
-    from functools import partial
-
-    SDK = sls_sdk.serverlessSdk
-
     def __init__(self, flask):
         self._flask = flask
-        # Signals cover most of the use-cases, except for the case of user exceptions
-        # such as http 404. In this case, we need to override the handle_user_exception
+        # Signals https://flask.palletsprojects.com/en/2.2.x/signals/ cover most of the
+        # use-cases, except for the case of user exceptions such as http 404.
+        # In that case, we need to override the handle_user_exception
         # to create a span for the error. See _handle_user_exception for more details.
         self._signals = [
             (self._flask.appcontext_pushed, self._handle_appcontext_pushed),
@@ -30,10 +29,7 @@ class Instrumenter:
         if name is None:
             return "unknown"
         return (
-            Instrumenter.re.sub(
-                r"^\d+", "", Instrumenter.re.sub(r"[^0-9a-zA-Z]", "", name)
-            ).lower()
-            or "unknown"
+            re.sub(r"^\d+", "", re.sub(r"[^0-9a-zA-Z]", "", name)).lower() or "unknown"
         )
 
     def install(self):
@@ -50,19 +46,19 @@ class Instrumenter:
             try:
                 if not self._error_span:
                     span_name = self.sanitize_span_name(exception.__class__.__name__)
-                    self._error_span = Instrumenter.SDK._create_trace_span(
+                    self._error_span = serverlessSdk._create_trace_span(
                         f"flask.error.{span_name}"
                     )
                     self._reported_exception = exception
             except Exception as ex:
-                Instrumenter.report_error(ex)
+                report_error(ex)
 
             try:
                 return self._flask.Flask.handle_user_exception(flask, exception)
             finally:
                 self._safe_close([self._error_span])
 
-        return Instrumenter.partial(_instrumented, sender)
+        return partial(_instrumented, sender)
 
     def _handle_appcontext_pushed(self, sender, **kwargs):
         if self._root_span:
@@ -70,12 +66,12 @@ class Instrumenter:
         if hasattr(sender, "handle_user_exception"):
             sender.handle_user_exception = self._handle_user_exception(sender)
         try:
-            self._root_span = Instrumenter.SDK._create_trace_span("flask")
+            self._root_span = serverlessSdk._create_trace_span("flask")
             self._route_span = None
             self._error_span = None
             self._reported_exception = None
         except Exception as ex:
-            Instrumenter.report_error(ex)
+            report_error(ex)
 
     def _handle_request_started(self, sender, **extra):
         if not self._flask.request.endpoint:
@@ -89,9 +85,9 @@ class Instrumenter:
                     self.sanitize_span_name(self._flask.request.endpoint),
                 ]
             )
-            self._route_span = Instrumenter.SDK._create_trace_span(span_name)
+            self._route_span = serverlessSdk._create_trace_span(span_name)
         except Exception as ex:
-            Instrumenter.report_error(ex)
+            report_error(ex)
 
     def _handle_request_finished(self, sender, response, **extra):
         self._safe_close([self._route_span])
@@ -101,12 +97,12 @@ class Instrumenter:
             return
         try:
             span_name = self.sanitize_span_name(exception.__class__.__name__)
-            self._error_span = Instrumenter.SDK._create_trace_span(
+            self._error_span = serverlessSdk._create_trace_span(
                 f"flask.error.{span_name}"
             )
             self._reported_exception = exception
         except Exception as ex:
-            Instrumenter.report_error(ex)
+            report_error(ex)
 
     def _handle_appcontext_popped(self, sender, **kwargs):
         # restore back the original handle_user_exception
@@ -125,7 +121,7 @@ class Instrumenter:
                     span.close()
             return True
         except Exception as ex:
-            Instrumenter.report_error(ex)
+            report_error(ex)
             return False
 
 
