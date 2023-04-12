@@ -1,10 +1,10 @@
+import json
 import sys
 from pathlib import Path
 
-sys.path.append(Path(__file__).parent / "test_dependencies")
-
-
+sys.path.append(str((Path(__file__).parent / "test_dependencies").resolve()))
 from flask import Flask
+
 import serverless_wsgi
 
 app = Flask("__name__")
@@ -12,17 +12,17 @@ app = Flask("__name__")
 
 @app.get("/")
 def root():
-    return "root"
+    return json.dumps("root")
 
 
 @app.get("/foo")
 def foo():
-    return "ok"
+    return json.dumps("ok")
 
 
 @app.post("/test")
 def test():
-    return "ok"
+    return json.dumps("ok")
 
 
 @app.errorhandler(404)
