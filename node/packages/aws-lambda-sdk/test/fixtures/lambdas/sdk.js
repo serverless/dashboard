@@ -27,6 +27,9 @@ module.exports.handler = async (event) => {
   sdk.setTag('user.tag', `example:${invocationId}`);
 
   console.warn('Consoled warning', 12, true);
+
+  sdk._createTraceSpan('custom.not.closed');
+
   return {
     name: sdk.name,
     version: sdk.version,
