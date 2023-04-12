@@ -26,6 +26,7 @@ tests = [
     "pytest-httpserver>=1.0.6",
     "requests_mock>=1.10",
     "ruff>=0.0.199",
+    "serverless-wsgi>=3.0.2",
 ]
 [project.urls]
 changelog = "https://github.com/serverless/console/blob/main/python/packages/aws-lambda-sdk/CHANGELOG.md"

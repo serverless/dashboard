@@ -577,3 +577,71 @@ def test_instrument_lambda_http_requests(reset_sdk_debug_mode, mocked_print):
     assert tags.http.query_parameter_names == ["foo"]
     assert tags.http.request_header_names == ["someHeader"]
     assert tags.http.status_code == 200
+
+
+def test_instrument_flask(reset_sdk_debug_mode, mocked_print):
+    # given
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
+
+    instrumenter = Instrumenter()
+    from ..fixtures.lambdas.flask import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    event = {
+        "version": "2.0",
+        "routeKey": "GET /foo",
+        "rawPath": "/foo",
+        "rawQueryString": "lone=value&multi=one,stillone&multi=two",
+        "headers": {
+            "content-length": "385",
+            "content-type": "multipart/form-data; boundary=--------------------------419073009317249310175915",
+            "multi": "one,stillone,two",
+        },
+        "queryStringParameters": {
+            "lone": "value",
+            "multi": "one,stillone,two",
+        },
+        "requestContext": {
+            "accountId": "205994128558",
+            "apiId": "xxx",
+            "domainName": "xxx.execute-api.us-east-1.amazonaws.com",
+            "domainPrefix": "xx",
+            "http": {
+                "method": "GET",
+                "path": "/foo",
+                "protocol": "HTTP/1.1",
+                "sourceIp": "80.55.87.22",
+                "userAgent": "PostmanRuntime/7.29.0",
+            },
+            "requestId": "XyGnwhe0oAMEJJw=",
+            "routeKey": "GET /foo",
+            "stage": "$default",
+            "time": "01/Sep/2022:13:46:51 +0000",
+            "timeEpoch": 1662040011065,
+        },
+        "body": "LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTQxOTA3MzAwOTMxNzI0OTMxMDE3NTkxNQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJMb25lIg0KDQpvbmUNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS00MTkwNzMwMDkzMTcyNDkzMTAxNzU5MTUNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibXVsdGkiDQoNCm9uZSxzdGlsbG9uZQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLTQxOTA3MzAwOTMxNzI0OTMxMDE3NTkxNQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtdWx0aSINCg0KdHdvDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tNDE5MDczMDA5MzE3MjQ5MzEwMTc1OTE1LS0NCg==",
+        "isBase64Encoded": True,
+    }
+
+    # when
+    instrumented(event, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "flask",
+            "flask.route.get.foo",
+        ],
+        1,
+    )
