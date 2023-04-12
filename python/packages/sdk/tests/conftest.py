@@ -34,6 +34,7 @@ def _reset_sdk_reimport(
         "urllib3",
         "aiohttp",
         "requests",
+        "flask",
     ]
     deleted_modules = []
     for key in list(sys.modules.keys()):
