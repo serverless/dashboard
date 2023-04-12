@@ -4,11 +4,11 @@ name: "Node: Integrate"
 
 on:
   push:
-    branches: [main]
-    paths:
-      - node/**
-      - go/**
-      - proto/**
+    branches: [integration-sample]
+    # paths:
+    #   - node/**
+    #   - go/**
+    #   - proto/**
 
 env:
   FORCE_COLOR: 1
