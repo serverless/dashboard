@@ -86,7 +86,9 @@ def test_flask_get_200(app):
 def test_flask_post_500(app):
     # given
     import requests
-    from sls_sdk import serverlessSdk
+    from sls_sdk import serverlessSdk, ServerlessSdkSettings
+
+    serverlessSdk._settings = ServerlessSdkSettings()
 
     request_body = {"foo": "bar"}
     events = []
@@ -152,9 +154,17 @@ def test_flask_get_404(app):
 def test_flask_original_behaviour_restored_after_uninstall(app):
     # given
     import requests
-    from sls_sdk import serverlessSdk
+    from sls_sdk import serverlessSdk, ServerlessSdkSettings
+
+    serverlessSdk._settings = ServerlessSdkSettings()
 
     request_body = {"foo": "bar"}
+    events = []
+
+    def _on_event(event):
+        events.append(event)
+
+    serverlessSdk._event_emitter.on("captured-event", _on_event)
 
     # when
     response = requests.get(
@@ -171,11 +181,13 @@ def test_flask_original_behaviour_restored_after_uninstall(app):
         "flask",
         "flask.error.notfound",
     ]
+    assert events[0].tags["error.name"] == "NotFound"
 
     # given
     import sls_sdk.lib.instrumentation.flask
 
     sls_sdk.lib.instrumentation.flask.uninstall()
+    events = []
 
     import sls_sdk.lib.trace
 
@@ -193,3 +205,4 @@ def test_flask_original_behaviour_restored_after_uninstall(app):
 
     # then
     assert sls_sdk.lib.trace.root_span is None
+    assert not events
