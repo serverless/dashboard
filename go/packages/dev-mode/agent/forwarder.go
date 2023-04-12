@@ -56,8 +56,7 @@ type RuntimeDoneRecord struct {
 	Metrics   MetricsObject    `json:"metrics"`
 }
 
-var wrapper = os.Getenv("AWS_LAMBDA_EXEC_WRAPPER")
-var hasInternalExtension = wrapper == "/opt/sls-sdk-node/exec-wrapper.sh"
+var hasInternalExtension = lib.HasInternalExtension()
 
 func FindRequestId(logs []LogItem) string {
 	var requestId string = ""
@@ -174,18 +173,46 @@ func FindReqData(logs []LogItem) *LogItem {
 func IsDefaultConsoleMessage(record interface{}) bool {
 	message := fmt.Sprintf("%v", record)
 	arr := strings.Split(message, "\t")
+
 	// Not enough items in the list
 	// The first item is not a date timestamp
 	// The second item is not a request id
 	// The third item is not WARN or ERROR
-	if !hasInternalExtension || len(arr) < 4 || !IsValidDate(arr[0]) || !IsValidUUID(arr[1]) || !IsWarnOrError(arr[2]) {
+	date, requestId, logLevel := extractDefaultMessageValues(arr)
+	if !hasInternalExtension || !IsValidDate(date) || !IsValidUUID(requestId) || !IsWarnOrError(logLevel) {
 		return false
 	}
 	return true
 }
 
+// date, requestId, logLevel
+func extractDefaultMessageValues(arr []string) (string, string, string) {
+	logLevel := ""
+	date := ""
+	requestId := ""
+	if len(arr) < 4 {
+		return date, requestId, logLevel
+	}
+	runtime := lib.InternalExtensionRuntime()
+	switch runtime {
+	case "node":
+		logLevel = arr[2]
+		requestId = arr[1]
+		date = arr[0]
+		break
+	case "python":
+		requestId = arr[2]
+		date = arr[1]
+		removeLeadingBrace := strings.Replace(arr[0], "[", "", 1)
+		logLevel = strings.Replace(removeLeadingBrace, "]", "", 1)
+		break
+	default:
+	}
+	return date, requestId, logLevel
+}
+
 func IsWarnOrError(logLevel string) bool {
-	if logLevel == "WARN" || logLevel == "ERROR" {
+	if logLevel == "WARNING" || logLevel == "WARN" || logLevel == "ERROR" {
 		return true
 	}
 	return false

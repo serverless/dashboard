@@ -120,6 +120,7 @@ class Instrumenter:
                 "sdk": {
                     "name": serverlessSdk.name,
                     "version": serverlessSdk.version,
+                    "runtime": "python",
                 },
             },
             "traceId": self.aws_lambda.trace_id,
@@ -148,6 +149,7 @@ class Instrumenter:
                 "sdk": {
                     "name": serverlessSdk.name,
                     "version": serverlessSdk.version,
+                    "runtime": "python",
                 },
             },
             "traceId": self.aws_lambda.trace_id,
@@ -205,6 +207,7 @@ class Instrumenter:
                 "sdk": {
                     "name": serverlessSdk.name,
                     "version": serverlessSdk.version,
+                    "runtime": "python",
                 },
             },
             "spans": [s for s in map(_map_span, self.aws_lambda.spans) if s],
