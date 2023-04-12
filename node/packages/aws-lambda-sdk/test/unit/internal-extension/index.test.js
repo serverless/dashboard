@@ -818,6 +818,7 @@ describe('internal-extension/index.test.js', () => {
       'aws.lambda.initialization',
       'aws.lambda.invocation',
       'user.span',
+      'custom.not.closed',
     ]);
     expect(result.name).to.equal(pkgJson.name);
     expect(result.version).to.equal(pkgJson.version);
@@ -841,6 +842,7 @@ describe('internal-extension/index.test.js', () => {
       delete event.timestampUnixNano;
       return event;
     };
+    const { id: SDK_ERROR_SPAN_ID } = spans[0];
     const { traceId, spanId } = events[0];
     expect(events.map(normalizeEvent)).to.deep.equal([
       {
@@ -890,6 +892,20 @@ describe('internal-extension/index.test.js', () => {
           warning: {
             message: 'Consoled warning 12 true',
             type: 1,
+          },
+        },
+      },
+      {
+        traceId,
+        spanId: SDK_ERROR_SPAN_ID,
+        eventName: 'telemetry.warning.generated.v1',
+        customFingerprint: 'SDK_SPAN_NOT_CLOSED',
+        customTags: JSON.stringify({}),
+        tags: {
+          warning: {
+            message:
+              "Serverless SDK Warning: Following trace spans didn't end before end of lambda invocation: custom.not.closed\n",
+            type: 3,
           },
         },
       },
@@ -1017,11 +1033,13 @@ describe('internal-extension/index.test.js', () => {
           { name: 'aws.lambda.initialization', input: undefined, output: undefined },
           { name: 'user.span', input: undefined, output: undefined },
           { name: 'aws.lambda.invocation', input: undefined, output: undefined },
+          { name: 'custom.not.closed', input: undefined, output: undefined },
           { name: 'aws.lambda', input: undefined, output: undefined },
         ],
         traceEvents: [
           { eventName: 'telemetry.error.generated.v1' },
           { eventName: 'telemetry.error.generated.v1' },
+          { eventName: 'telemetry.warning.generated.v1' },
           { eventName: 'telemetry.warning.generated.v1' },
           { eventName: 'telemetry.warning.generated.v1' },
         ],
