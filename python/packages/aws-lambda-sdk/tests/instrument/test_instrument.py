@@ -591,7 +591,7 @@ def test_instrument_flask(reset_sdk_debug_mode, mocked_print):
     from serverless_aws_lambda_sdk.instrument import Instrumenter
 
     instrumenter = Instrumenter()
-    from ..fixtures.lambdas.flask import handler
+    from ..fixtures.lambdas.flask_app import handler
 
     instrumented = instrumenter.instrument(lambda: handler)
 

@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+sys.path.append(Path(__file__).parent / "test_dependencies")
+
+
 from flask import Flask
 import serverless_wsgi
 
