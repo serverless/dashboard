@@ -119,7 +119,6 @@ const handleWarningLog = (logLineParsed) => {
 module.exports.attemptParseStructuredLogAndCapture = (logLine) => {
   try {
     const logLineParsed = JSON.parse(logLine.toString());
-    // console.log(logLineParsed);
     if ('level' in logLineParsed) {
       debuglog('LOG LEVEL', logLineParsed.level);
       const logLevel = parseLogLevel(logLineParsed.level);
