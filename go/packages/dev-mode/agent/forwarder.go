@@ -75,7 +75,7 @@ func FindTraceId(logs []LogItem) string {
 
 	// If we don't have the internal extension included
 	// then we should generate one
-	if hasInternalExtension == false {
+	if !hasInternalExtension {
 		return uuid.NewString()
 	}
 
@@ -170,23 +170,53 @@ func FindReqData(logs []LogItem) *LogItem {
 	return nil
 }
 
-func IsDefaultConsoleMessage(record interface{}) bool {
+func IsCapturedLogMessage(record interface{}) bool {
 	message := fmt.Sprintf("%v", record)
-	arr := strings.Split(message, "\t")
 
 	// Not enough items in the list
 	// The first item is not a date timestamp
 	// The second item is not a request id
 	// The third item is not WARN or ERROR
-	date, requestId, logLevel := extractDefaultMessageValues(arr)
+	date, requestId, logLevel := extractDefaultMessageValues(message)
 	if !hasInternalExtension || !IsValidDate(date) || !IsValidUUID(requestId) || !IsWarnOrError(logLevel) {
-		return false
+		return isLoggerWarningOrError(message)
 	}
 	return true
 }
 
+func isLoggerWarningOrError(message string) bool {
+	runtime := lib.InternalExtensionRuntime()
+	switch runtime {
+	case "node":
+		var jsonObject map[string]interface{}
+		err := json.Unmarshal([]byte(message), &jsonObject)
+		if err != nil || jsonObject["level"] == nil {
+			return false
+		}
+
+		processedLevel := ProcessLoggerLevel(jsonObject["level"])
+		return IsWarnOrError(processedLevel)
+	default:
+		return false
+	}
+}
+
+func ProcessLoggerLevel(level interface{}) string {
+	// convert level to int
+	if levelInt, ok := level.(int); ok {
+		if levelInt <= 30 {
+			return ""
+		} else if levelInt <= 40 {
+			return "WARN"
+		}
+		return "ERROR"
+	}
+	return fmt.Sprintf("%v", level)
+}
+
 // date, requestId, logLevel
-func extractDefaultMessageValues(arr []string) (string, string, string) {
+func extractDefaultMessageValues(message string) (string, string, string) {
+	arr := strings.Split(message, "\t")
 	logLevel := ""
 	date := ""
 	requestId := ""
@@ -199,16 +229,16 @@ func extractDefaultMessageValues(arr []string) (string, string, string) {
 		logLevel = arr[2]
 		requestId = arr[1]
 		date = arr[0]
-		break
+		return date, requestId, logLevel
 	case "python":
 		requestId = arr[2]
 		date = arr[1]
 		removeLeadingBrace := strings.Replace(arr[0], "[", "", 1)
 		logLevel = strings.Replace(removeLeadingBrace, "]", "", 1)
-		break
+		return date, requestId, logLevel
 	default:
+		return date, requestId, logLevel
 	}
-	return date, requestId, logLevel
 }
 
 func IsWarnOrError(logLevel string) bool {
@@ -246,7 +276,7 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 		traceId = base64.StdEncoding.EncodeToString([]byte(traceId))
 	}
 	for i, log := range logs {
-		if log.LogType == "function" && !IsDefaultConsoleMessage(log.Record) {
+		if log.LogType == "function" && !IsCapturedLogMessage(log.Record) {
 			t, _ := time.Parse(time.RFC3339, log.Time)
 			if !strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.") {
 				// Apparently these environment variables don't
