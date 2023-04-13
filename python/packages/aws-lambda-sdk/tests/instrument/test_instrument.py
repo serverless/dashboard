@@ -4,7 +4,11 @@ from unittest.mock import patch, MagicMock
 import json
 import importlib
 from .. import compare_handlers, context
-from .test_assertions import assert_trace_payload, assert_lambda_tags
+from .test_assertions import (
+    assert_trace_payload,
+    assert_lambda_tags,
+    assert_hexadecimal,
+)
 from serverless_sdk_schema import TracePayload, RequestResponse
 import base64
 from werkzeug.wrappers import Request, Response
@@ -468,6 +472,9 @@ def test_instrument_lambda_success_dev_mode_with_server(
         (1, event),
         (2, "ok"),
     ]
+    [assert_hexadecimal(r.trace_id) for r in request_response_payloads]
+    [assert_hexadecimal(r.span_id) for r in request_response_payloads]
+
     assert [s.name for t in trace_payloads for s in t.spans] == [
         "aws.lambda.initialization",
         "aws.lambda.invocation",

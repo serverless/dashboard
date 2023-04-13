@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.6](https://github.com/serverless/console/compare/@serverless/sdk@0.5.5...@serverless/sdk@0.5.6) (2023-04-12)
+
+### Bug Fixes
+
+- SC-799 Added capture warning when spans are not closed ([#631](https://github.com/serverless/console/issues/631)) ([16f9a8b](https://github.com/serverless/console/commit/16f9a8b9ced92a39c4fcff9af50e50ee7315aa1c))
+
 ### [0.5.5](https://github.com/serverless/console/compare/@serverless/sdk@0.5.4...@serverless/sdk@0.5.5) (2023-04-06)
 
 ### Maintenance Improvements

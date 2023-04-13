@@ -110,7 +110,13 @@ serverlessSdk._initialize = (options = {}) => {
   return serverlessSdk;
 };
 
-serverlessSdk._createTraceSpan = (name, options = {}) => new TraceSpan(name, options);
+serverlessSdk._createTraceSpan = (name, options = {}) =>
+  new TraceSpan(
+    name,
+    Object.assign(options, {
+      _reportWarning: reportWarning,
+    })
+  );
 serverlessSdk._reportError = reportError;
 serverlessSdk._reportWarning = reportWarning;
 serverlessSdk._reportNotice = reportNotice;

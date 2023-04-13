@@ -120,6 +120,7 @@ class ServerlessSdk:
             from .lib.instrumentation.http import install as install_http
 
             install_http()
+
         if not self._settings.disable_flask_monitoring:
             from .lib.instrumentation.flask import install as install_flask
 
