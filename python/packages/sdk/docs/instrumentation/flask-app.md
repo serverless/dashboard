@@ -2,7 +2,7 @@
 
 _Disable with `SLS_DISABLE_FLASK_MONITORING` environment variable_.
 
-If [`flask`](https://pypi.org/project/Flask/) framework is used to route incoming requests, trace spans for it's middlewares are created.
+If [`flask`](https://pypi.org/project/Flask/) framework is used to route incoming requests, related trace spans are created.
 
 Tracing is turned on automatically.
 
