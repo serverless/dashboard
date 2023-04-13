@@ -17,7 +17,8 @@ class CustomImporter:
                 self._hook_fn(module)
 
         spec = PathFinder.find_spec(fullname, path, target)
-        spec.loader = CustomLoader(spec.loader.name, spec.loader.path)
+        if spec:
+            spec.loader = CustomLoader(spec.loader.name, spec.loader.path)
         return spec
 
 
