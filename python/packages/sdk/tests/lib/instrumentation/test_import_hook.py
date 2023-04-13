@@ -68,3 +68,26 @@ def test_target_module_not_imported_yet():
 
     # then
     assert not hasattr(os, "foo")
+
+
+def test_target_module_not_exists():
+    # given
+    hook = ImportHook("dummy_module_that_does_not_exist")
+    mock = MagicMock()
+
+    def _hook(module):
+        setattr(module, "foo", "bar")
+        mock()
+
+    # when
+    hook.enable(_hook)
+
+    # then
+    mock.assert_not_called()
+    assert hook.enabled
+
+    # when
+    hook.disable(lambda module: delattr(module, "foo"))
+
+    # then
+    assert not hook.enabled
