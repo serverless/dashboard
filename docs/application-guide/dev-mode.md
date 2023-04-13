@@ -17,8 +17,12 @@ and [enable the Dev Instrumentation Mode](./instrumentation.md).
 Once instrumentation is enabled, go to the **Dev Mode** page to view the
 real-time stream of traces, spans, and events.
 
-Currently Dev Mode is supported on the Node.js 12+ runtime on AWS Lambda only.
-Support for Python and Go runtimes is coming soon.
+You can also use Dev Mode on the CLI with `serverless dev`. To learn more go to
+the  ["Developing on the cloud"](https://github.com/serverless/serverless#developing-on-the-cloud)
+section of the serverless/serverless README.
+
+Currently Dev Mode is supported on the Node.js 12+ and Python 3.8+ runtimes on
+AWS Lambda only. Support for other runtimes is coming soon.
 
 ## Real-time Logging
 
@@ -40,8 +44,8 @@ By default, all strings and Errors are captured with `console.warn` and
 `console.error`. Unlike `console.log`, these methods will capture structured
 logs, including the stack trace and Error name, if applicable.
 
-For further customization, you can use the [Node.js SDK](../nodejs-sdk.md)
-methods to capture Events with custom tags.
+For further customization, you can use the [Node.js](../nodejs-sdk.md) or [Python](../python-sdk.md)
+SDK methods to capture Events with custom tags.
 
 ## Real Time Traces & Spans
 
