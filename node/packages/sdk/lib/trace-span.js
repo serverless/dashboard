@@ -43,6 +43,7 @@ class TraceSpan {
         );
       }
     }
+    this._reportWarning = options._reportWarning;
     this.startTime = startTime || defaultStartTime;
     this.name = ensureSpanName(name);
 
@@ -85,6 +86,7 @@ class TraceSpan {
       new TraceSpan(immediateDescendants.shift(), {
         startTime: this.startTime,
         immediateDescendants,
+        _reportWarning: this._reportWarning,
       });
     }
   }
@@ -132,10 +134,10 @@ class TraceSpan {
         leftoverSpans.push(subSpan.close({ endTime: this.endTime }));
       }
       if (leftoverSpans.length) {
-        process.stderr.write(
+        const message =
           "Serverless SDK Warning: Following trace spans didn't end before end of " +
-            `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}\n`
-        );
+          `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}\n`;
+        this._reportWarning(message, 'SDK_SPAN_NOT_CLOSED');
       }
       asyncLocalStorage.enterWith(this);
     } else {
