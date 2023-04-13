@@ -108,7 +108,8 @@ the trace details, logs, events, and forwarding them to Serverless Console.
 This extension enables the real-time logging in DevMode by skipping CloudWatch
 Logs.
 
-Currently this is limited to Node.js 12+ runtime only. 
+Currently Dev Mode is supported on the Node.js 12+ and Python 3.8+ runtimes on
+AWS Lambda only. Support for other runtimes is coming soon.
 
 ### Lambda Layer with the Serverless SDK
 
@@ -120,7 +121,11 @@ The traces, spans, and events are binary encoded and logged in CloudWatch
 where Serverless Console can consume the events via CloudWatch log subscription
 groups.
 
-Currently this is limited to the Node.js 12+ and Python 3.8+ runtimes only. 
+Currently instrumentation is supported on the Node.js 12+ and Python 3.8+
+runtimes on AWS Lambda only. Support for other runtimes is coming soon.
+
+Use the [Node.js](./nodejs-sdk.md) and [Python](./python-sdk.md) Serverless SDK
+to add custom instrumentation.
 
 ### Automatic updating of AWS Lambda Layers
 
