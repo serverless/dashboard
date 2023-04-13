@@ -1865,7 +1865,8 @@ describe('integration', function () {
       'structured-logging-events',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
+          // Most of the larger logger libraries, including AWS Powertools do not
+          // support Node 12 unless bundled. As such we test against just 14,16, & 18
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
