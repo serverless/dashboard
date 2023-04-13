@@ -2,8 +2,10 @@ import re
 from sls_sdk import serverlessSdk
 from ..error import report as report_error
 from functools import partial
+from .import_hook import ImportHook
 
 _instrumenter = None
+_import_hook = ImportHook("flask")
 
 
 class Instrumenter:
@@ -110,7 +112,7 @@ class Instrumenter:
         # restore back the original handle_user_exception
         sender.handle_user_exception = (
             lambda *args, **kwargs: self._flask.Flask.handle_user_exception(
-                self, *args, **kwargs
+                sender, *args, **kwargs
             )
         )
         self._safe_close([self._root_span, self._route_span, self._error_span])
@@ -127,25 +129,27 @@ class Instrumenter:
             return False
 
 
-def install():
+def _hook(flask):
     global _instrumenter
-    if _instrumenter:
-        return
-
-    try:
-        import importlib
-
-        flask = importlib.import_module("flask")
-    except ImportError:
-        return
-
     _instrumenter = Instrumenter(flask)
     _instrumenter.install()
 
 
-def uninstall():
+def _undo_hook(flask):
     global _instrumenter
-    if not _instrumenter:
-        return
     _instrumenter.uninstall()
     _instrumenter = None
+
+
+def install():
+    if _import_hook.enabled:
+        return
+
+    _import_hook.enable(_hook)
+
+
+def uninstall():
+    if not _import_hook.enabled:
+        return
+
+    _import_hook.disable(_undo_hook)

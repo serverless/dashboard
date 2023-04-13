@@ -26,6 +26,13 @@ def reset_sdk_dev_mode(monkeypatch, request):
 def _reset_sdk_reimport(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
+    # clean up the import hook if it was enabled
+    import_hook = [
+        x for x in sys.meta_path if type(sys.meta_path[0]).__name__ == "CustomImporter"
+    ]
+    if import_hook:
+        sys.meta_path.remove(import_hook[0])
+
     module_prefixes_to_delete = [
         "serverless_sdk",
         "sls_sdk",
