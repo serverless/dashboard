@@ -14,13 +14,15 @@ authors = [{ name = "serverlessinc" }]
 requires-python = ">=3.7"
 dependencies = [
     "aiohttp~=3.8",
-    "serverless-sdk~=0.3.12",
     "serverless-sdk-schema~=0.2.1",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11
+    "wrapt~=1.15.0",
 ]
 [project.optional-dependencies]
 tests = [
     "black>=22.12",
+    "boto3>=1.16.112",
+    "moto>=4.1.7",
     "pytest>=7.2",
     "pytest-aiohttp>=1.0.4",
     "pytest-httpserver>=1.0.6",
