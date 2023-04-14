@@ -905,7 +905,7 @@ describe('internal-extension/index.test.js', () => {
           warning: {
             message:
               "Serverless SDK Warning: Following trace spans didn't end before end of lambda invocation: custom.not.closed\n",
-            type: 1,
+            type: 2,
           },
         },
       },
