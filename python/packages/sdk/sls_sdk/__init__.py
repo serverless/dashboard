@@ -70,7 +70,7 @@ class ServerlessSdk:
     _event_emitter: EventEmitter
 
     trace_spans: TraceSpans
-    instrumentation: Final = ...
+    instrumentation: Final = SimpleNamespace()
 
     org_id: Optional[str] = None
     _settings: ServerlessSdkSettings
@@ -99,6 +99,8 @@ class ServerlessSdk:
         disable_request_response_monitoring: Optional[bool] = False,
         disable_http_monitoring: Optional[bool] = False,
         disable_flask_monitoring: Optional[bool] = False,
+        *args,
+        **kwargs,
     ):
         if self._is_initialized:
             return
@@ -125,6 +127,9 @@ class ServerlessSdk:
             from .lib.instrumentation.flask import install as install_flask
 
             install_flask()
+
+        if hasattr(self, "_initialize_extension"):
+            self._initialize_extension(*args, **kwargs)
 
         self._is_initialized = True
 
