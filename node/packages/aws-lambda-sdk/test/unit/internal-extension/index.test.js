@@ -842,7 +842,7 @@ describe('internal-extension/index.test.js', () => {
       delete event.timestampUnixNano;
       return event;
     };
-    const { id: SDK_ERROR_SPAN_ID } = spans[0];
+    const { id: rootSpanID } = spans[0];
     const { traceId, spanId } = events[0];
     expect(events.map(normalizeEvent)).to.deep.equal([
       {
@@ -897,7 +897,7 @@ describe('internal-extension/index.test.js', () => {
       },
       {
         traceId,
-        spanId: SDK_ERROR_SPAN_ID,
+        spanId: rootSpanID,
         eventName: 'telemetry.warning.generated.v1',
         customFingerprint: 'SDK_SPAN_NOT_CLOSED',
         customTags: JSON.stringify({}),
@@ -905,7 +905,7 @@ describe('internal-extension/index.test.js', () => {
           warning: {
             message:
               "Serverless SDK Warning: Following trace spans didn't end before end of lambda invocation: custom.not.closed\n",
-            type: 3,
+            type: 2,
           },
         },
       },
