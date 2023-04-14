@@ -214,3 +214,24 @@ def test_initialize_all_options(sdk: ServerlessSdk, monkeypatch):
     assert sdk._is_debug_mode
 
     sdk._settings = _settings
+
+
+def test_initialize_extension(sdk: ServerlessSdk):
+    # given
+    sdk._initialize_extension = MagicMock()
+
+    # when
+    sdk._is_initialized = False
+    sdk._initialize(
+        "foo",
+        org_id="test",
+        disable_captured_events_stdout=True,
+        disable_python_log_monitoring=True,
+        disable_request_response_monitoring=True,
+        disable_http_monitoring=True,
+        disable_flask_monitoring=True,
+        bar="baz",
+    )
+
+    # then
+    sdk._initialize_extension.assert_called_once_with("foo", bar="baz")
