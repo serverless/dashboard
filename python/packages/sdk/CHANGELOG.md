@@ -2,11 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## 0.3.12 (2023-04-12)
+## 0.4.0 (2023-04-13)
 
 ### Features
 
 - Instrument http requests
+- Instrument flask
+
+### ⚠ BREAKING CHANGES
+
+- `_sls_ignore` is required to be set for dev-mode telemetry requests
 
 ## 0.3.11 (2023-04-06)
 
