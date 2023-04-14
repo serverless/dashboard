@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.14](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.13...@serverless/aws-lambda-sdk@0.14.14) (2023-04-14)
+
+### Bug Fixes
+
+- Span not closed warnings are now user warnings ([#649](https://github.com/serverless/console/issues/649)) ([d2b958c](https://github.com/serverless/console/commit/d2b958c070ecc2af490f25f73e588f740b05ea76))
+
 ### [0.14.13](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.12...@serverless/aws-lambda-sdk@0.14.13) (2023-04-14)
 
 ### Features
