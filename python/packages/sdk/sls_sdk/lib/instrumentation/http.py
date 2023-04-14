@@ -1,11 +1,21 @@
 import time
 import importlib
+import contextvars
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 from ..error import report as report_error
 import sls_sdk
 
 SDK = sls_sdk.serverlessSdk
+_IGNORE_FOLLOWING_REQUEST = contextvars.ContextVar("ignore", default=False)
+
+
+def ignore_following_request():
+    _IGNORE_FOLLOWING_REQUEST.set(True)
+
+
+def reset_ignore_following_request():
+    _IGNORE_FOLLOWING_REQUEST.set(False)
 
 
 class BaseInstrumenter:
@@ -171,6 +181,13 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
 
     def _instrumented_request(self):
         def _func(_self, method, url, body=None, headers={}, *, encode_chunked=False):
+            _self._sls_ignore = _IGNORE_FOLLOWING_REQUEST.get()
+            reset_ignore_following_request()
+
+            if _self._sls_ignore:
+                return self._original_request(
+                    _self, method, url, body, headers, encode_chunked=encode_chunked
+                )
             start_time = time.perf_counter_ns()
 
             SDK._debug_log("HTTP request")
@@ -230,7 +247,7 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
 
     def _instrumented_getresponse(self):
         def _func(_self, *args, **kwargs):
-            if not self._trace_span:
+            if _self._sls_ignore or not self._trace_span:
                 return self._original_getresponse(_self, *args, **kwargs)
 
             try:
