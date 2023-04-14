@@ -1,6 +1,10 @@
 from ..lib.instrumentation.aws_sdk.safe_stringify import safe_stringify
 from sls_sdk import serverlessSdk
 from sls_sdk.lib.instrumentation.import_hook import ImportHook
+from sls_sdk.lib.instrumentation.http import (
+    ignore_following_request,
+    reset_ignore_following_request,
+)
 from wrapt import wrap_function_wrapper, ObjectProxy
 
 _instrumenter = None
@@ -39,48 +43,54 @@ class Instrumenter:
     def _patched_api_call(self, actual_api, instance, args, kwargs):
         (operation_name, api_params) = args
         try:
-            service_name = instance.meta.service_model.service_name.lower()
-            operation_name = operation_name.lower()
-            region_name = instance.meta.region_name
-            root_span = serverlessSdk._create_trace_span(
-                f"aws.sdk.{service_name}.{operation_name}",
-                tags={
-                    "aws.sdk.service": service_name,
-                    "aws.sdk.operation": operation_name,
-                    "aws.sdk.signature_version": "v4",
-                    "aws.sdk.region": region_name,
-                },
-                input=safe_stringify(api_params)
-                if self._should_monitor_request_response
-                else None,
-            )
-        except Exception as ex:
-            serverlessSdk._report_error(ex)
-            return actual_api(*args, **kwargs)
-
-        error, response = None, None
-        try:
-            response = actual_api(*args, **kwargs)
-            return response
-        except Exception as ex:
-            error = ex
-            raise error
-        finally:
+            ignore_following_request()
             try:
-                if error:
-                    message = error.args[0] if error.args else error.__class__.__name__
-                    root_span.tags.set("aws.sdk.error", message)
-                    response = getattr(error, "response", {})
-                if response:
-                    root_span.tags.set(
-                        "aws.sdk.request_id",
-                        response.get("ResponseMetadata", {}).get("RequestId", ""),
-                    )
-                    if self._should_monitor_request_response:
-                        root_span.output = safe_stringify(response)
-                root_span.close()
+                service_name = instance.meta.service_model.service_name.lower()
+                operation_name = operation_name.lower()
+                region_name = instance.meta.region_name
+                root_span = serverlessSdk._create_trace_span(
+                    f"aws.sdk.{service_name}.{operation_name}",
+                    tags={
+                        "aws.sdk.service": service_name,
+                        "aws.sdk.operation": operation_name,
+                        "aws.sdk.signature_version": "v4",
+                        "aws.sdk.region": region_name,
+                    },
+                    input=safe_stringify(api_params)
+                    if self._should_monitor_request_response
+                    else None,
+                )
             except Exception as ex:
                 serverlessSdk._report_error(ex)
+                return actual_api(*args, **kwargs)
+
+            error, response = None, None
+            try:
+                response = actual_api(*args, **kwargs)
+                return response
+            except Exception as ex:
+                error = ex
+                raise error
+            finally:
+                try:
+                    if error:
+                        message = (
+                            error.args[0] if error.args else error.__class__.__name__
+                        )
+                        root_span.tags.set("aws.sdk.error", message)
+                        response = getattr(error, "response", {})
+                    if response:
+                        root_span.tags.set(
+                            "aws.sdk.request_id",
+                            response.get("ResponseMetadata", {}).get("RequestId", ""),
+                        )
+                        if self._should_monitor_request_response:
+                            root_span.output = safe_stringify(response)
+                    root_span.close()
+                except Exception as ex:
+                    serverlessSdk._report_error(ex)
+        finally:
+            reset_ignore_following_request()
 
 
 def _hook(botocore):
