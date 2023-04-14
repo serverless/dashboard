@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.13](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.12...@serverless/aws-lambda-sdk@0.14.13) (2023-04-14)
+
+### Features
+
+- Add Structured Logging error capture ([#643](https://github.com/serverless/console/issues/643)) ([59db882](https://github.com/serverless/console/commit/59db8824530eede7b4657129aa20c882573b52e3))
+
 ### [0.14.12](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.11...@serverless/aws-lambda-sdk@0.14.12) (2023-04-12)
 
 ### Bug Fixes
