@@ -574,6 +574,8 @@ jobs:
           npm install
 
       - name: Integration tests
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
         run: |
           cd node/packages/aws-lambda-sdk
           npm run test:integration

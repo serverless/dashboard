@@ -406,6 +406,47 @@ describe('integration', function () {
     }
   };
 
+  const structuredLogEventCaptureTestConfig = {
+    isCustomResponse: false,
+    capturedEvents: [
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+      { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_USER' },
+    ],
+    test: ({ invocationsData }) => {
+      for (const [, { trace }] of invocationsData.entries()) {
+        const { events } = trace;
+        const errorNames = events
+          .filter(({ eventName }) => eventName === 'telemetry.error.generated.v1')
+          .map(({ tags }) => tags.error.name)
+          .sort();
+        const warningMessages = events
+          .filter(({ eventName }) => eventName === 'telemetry.warning.generated.v1')
+          .map(({ tags }) => tags.warning.message)
+          .sort();
+        const expectedErrorNames = [
+          'BunyanError',
+          'PowertoolsError',
+          'WinstonError',
+          'PinoError',
+        ].sort();
+        const expectedWarningMessages = [
+          'PowertoolsWarning',
+          'WinstonWarning',
+          'BunyanWarning',
+          'PinoWarning',
+        ].sort();
+        expect(errorNames).to.deep.equal(expectedErrorNames);
+        expect(warningMessages).to.deep.equal(expectedWarningMessages);
+      }
+    },
+  };
+
   const sdkTestConfig = {
     isCustomResponse: true,
     capturedEvents: [
@@ -1818,6 +1859,19 @@ describe('integration', function () {
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
         config: sdkTestConfig,
+      },
+    ],
+    [
+      'structured-logging-events',
+      {
+        variants: new Map([
+          // Most of the larger logger libraries, including AWS Powertools do not
+          // support Node 12 unless bundled. As such we test against just 14,16, & 18
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: structuredLogEventCaptureTestConfig,
       },
     ],
     [
