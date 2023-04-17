@@ -4,6 +4,15 @@ from abc import ABC, abstractmethod
 class ServiceMapper(ABC):
     @abstractmethod
     def params(self, trace_span, input):
+        pass
+
+    @abstractmethod
+    def response_data(self, trace_span, response):
+        pass
+
+
+class DynamoDBMapper(ServiceMapper):
+    def params(self, trace_span, input):
         tags = {}
         if "TableName" in input:
             tags["table_name"] = input["TableName"]
@@ -34,7 +43,6 @@ class ServiceMapper(ABC):
             tags["exclusive_start_key"] = input["ExclusiveStartKey"]
         trace_span.tags.update(tags, "aws.sdk.dynamodb")
 
-    @abstractmethod
     def response_data(self, trace_span, response):
         tags = {}
         if "Count" in response:
@@ -42,14 +50,6 @@ class ServiceMapper(ABC):
         if "ScannedCount" in response:
             tags["scanned_count"] = response["ScannedCount"]
         trace_span.tags.update(tags, "aws.sdk.dynamodb")
-
-
-class DynamoDBMapper(ServiceMapper):
-    def params(self, trace_span, input):
-        trace_span.tags.set("aws.sdk.table_name", input.get("TableName", ""))
-
-    def response_data(self, trace_span, response):
-        trace_span.tags.set("aws.sdk.item_count", len(response.get("Items", [])))
 
 
 class SQSMapper(ServiceMapper):
@@ -112,4 +112,4 @@ _SERVICE_MAPPERS = {
 
 
 def get_mapper_for_service(service_name):
-    return _SERVICE_MAPPERS[service_name]
+    return _SERVICE_MAPPERS.get(service_name)
