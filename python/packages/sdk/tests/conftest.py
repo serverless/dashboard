@@ -75,3 +75,17 @@ def _reset_sdk_reimport(
 @pytest.fixture(scope="session")
 def httpserver_listen_address():
     return ("127.0.0.1", 9800)
+
+
+@pytest.fixture(params=[False, True])
+def instrumented_sdk(reset_sdk, request, monkeypatch):
+    # if dev mode is enabled in the fixture
+    if request.param:
+        monkeypatch.setenv("SLS_DEV_MODE_ORG_ID", "test-org")
+    import sls_sdk
+
+    sls_sdk.serverlessSdk._initialize(
+        disable_request_response_monitoring=not request.param
+    )
+    yield sls_sdk.serverlessSdk
+    sls_sdk.lib.instrumentation.http.uninstall()
