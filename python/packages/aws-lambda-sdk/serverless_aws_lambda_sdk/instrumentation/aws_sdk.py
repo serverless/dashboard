@@ -1,4 +1,5 @@
 from ..lib.instrumentation.aws_sdk.safe_stringify import safe_stringify
+from ..lib.instrumentation.aws_sdk.service_mapper import get_mapper_for_service
 from sls_sdk import serverlessSdk
 from sls_sdk.lib.instrumentation.import_hook import ImportHook
 from sls_sdk.lib.instrumentation.http import (
@@ -48,6 +49,9 @@ class Instrumenter:
                 service_name = instance.meta.service_model.service_name.lower()
                 operation_name = operation_name.lower()
                 region_name = instance.meta.region_name
+
+                tag_mapper = get_mapper_for_service(service_name)
+
                 root_span = serverlessSdk._create_trace_span(
                     f"aws.sdk.{service_name}.{operation_name}",
                     tags={
@@ -60,6 +64,8 @@ class Instrumenter:
                     if self._should_monitor_request_response
                     else None,
                 )
+                if tag_mapper:
+                    tag_mapper.params(root_span, api_params)
             except Exception as ex:
                 serverlessSdk._report_error(ex)
                 return actual_api(*args, **kwargs)
@@ -86,6 +92,8 @@ class Instrumenter:
                         )
                         if self._should_monitor_request_response:
                             root_span.output = safe_stringify(response)
+                        if tag_mapper:
+                            tag_mapper.response_data(root_span, response)
                     root_span.close()
                 except Exception as ex:
                     serverlessSdk._report_error(ex)
