@@ -8,6 +8,8 @@ const log = require('log').get('test');
 const wait = require('timers-ext/promise/sleep');
 const toml = require('toml');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
+const { default: fetch } = require('node-fetch');
+const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const cleanup = require('./lib/cleanup');
 const createCoreResources = require('./lib/create-core-resources');
@@ -37,6 +39,44 @@ describe('Python: integration', function () {
   this.timeout(120000);
   const coreConfig = {};
 
+  const getCreateHttpApi = (payloadFormatVersion) => async (testConfig) => {
+    const apiId = (testConfig.apiId = (
+      await awsRequest(ApiGatewayV2, 'createApi', {
+        Name: testConfig.configuration.FunctionName,
+        ProtocolType: 'HTTP',
+      })
+    ).ApiId);
+    const deferredAddPermission = awsRequest(Lambda, 'addPermission', {
+      FunctionName: testConfig.configuration.FunctionName,
+      Principal: '*',
+      Action: 'lambda:InvokeFunction',
+      SourceArn: `arn:aws:execute-api:${process.env.AWS_REGION}:${coreConfig.accountId}:${apiId}/*`,
+      StatementId: testConfig.name,
+    });
+    const integrationId = (
+      await awsRequest(ApiGatewayV2, 'createIntegration', {
+        ApiId: apiId,
+        IntegrationType: 'AWS_PROXY',
+        IntegrationUri: `arn:aws:lambda:${process.env.AWS_REGION}:${coreConfig.accountId}:function:${testConfig.configuration.FunctionName}`,
+        PayloadFormatVersion: payloadFormatVersion,
+      })
+    ).IntegrationId;
+
+    await awsRequest(ApiGatewayV2, 'createRoute', {
+      ApiId: apiId,
+      RouteKey: 'POST /test',
+      Target: `integrations/${integrationId}`,
+    });
+
+    await awsRequest(ApiGatewayV2, 'createStage', {
+      ApiId: apiId,
+      StageName: '$default',
+      AutoDeploy: true,
+    });
+
+    await deferredAddPermission;
+  };
+
   const devModeConfiguration = {
     configuration: {
       Environment: {
@@ -51,6 +91,31 @@ describe('Python: integration', function () {
     deferredConfiguration: () => ({
       Layers: [coreConfig.layerInternalArn, coreConfig.layerExternalArn],
     }),
+  };
+
+  const flaskInvoke = async function self(testConfig) {
+    const startTime = process.hrtime.bigint();
+    const response = await fetch(
+      `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ some: 'content' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    if (response.status !== 200) {
+      if (response.status === 404) {
+        await wait(1000);
+        return self(testConfig);
+      }
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+    const payload = { raw: await response.text() };
+    const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+    log.debug('invoke response payload %s', payload.raw);
+    return { duration, payload };
   };
 
   const sdkTestConfig = {
@@ -397,6 +462,37 @@ describe('Python: integration', function () {
         variants: httpTestConfig,
       },
     ],
+    [
+      'flask_app',
+      {
+        hooks: {
+          afterCreate: getCreateHttpApi('2.0'),
+          beforeDelete: async (testConfig) => {
+            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+          },
+        },
+        invoke: flaskInvoke,
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+
+            const [invocationSpan, flaskSpan, ...routeSpans] = spans;
+            expect(flaskSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+            expect(routeSpans.map(({ name }) => name)).to.deep.equal(['flask.route.post.test']);
+            for (const routeSpan of routeSpans) {
+              expect(String(routeSpan.parentSpanId)).to.equal(String(flaskSpan.id));
+            }
+          }
+        },
+      },
+    ],
   ]);
 
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
@@ -405,7 +501,9 @@ describe('Python: integration', function () {
   let beforeTimestamp;
 
   before(async () => {
-    exec(`pip install aiohttp==3.8.4 --target="${fixturesDirname}/test_dependencies"`);
+    exec(
+      `pip install aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
+    );
 
     pyProjectToml = toml.parse(
       await fsp.readFile(
