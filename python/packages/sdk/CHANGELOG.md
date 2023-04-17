@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.1 (2023-04-17)
+
+### Bug Fixes
+
+- Fix race condition in HTTP trace spans
+- Fix setting of duplicate tags with same value
+
+### Maintenance Improvements
+
+- Improve internal configurability of HTTP instrumentation
+- Use context variables to selectively ignore instrumentation of HTTP requests
+
 ## 0.4.0 (2023-04-13)
 
 ### Features
