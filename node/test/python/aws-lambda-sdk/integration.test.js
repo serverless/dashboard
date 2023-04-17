@@ -147,7 +147,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('createqueue');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.sqs.queueName).to.equal(queueName);
+      expect(sdkTags.sqs.queueName).to.equal(queueName);
       // Send
       expect(sqsSendSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(sqsSendSpan.name).to.equal('aws.sdk.sqs.sendmessage');
@@ -158,8 +158,8 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('sendmessage');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.sqs.queueName).to.equal(queueName);
-      // expect(sdkTags.sqs.messageIds.length).to.equal(1);
+      expect(sdkTags.sqs.queueName).to.equal(queueName);
+      expect(sdkTags.sqs.messageIds.length).to.equal(1);
       // Delete
       expect(sqsDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(sqsDeleteSpan.name).to.equal('aws.sdk.sqs.deletequeue');
@@ -170,7 +170,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('deletequeue');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.sqs.queueName).to.equal(queueName);
+      expect(sdkTags.sqs.queueName).to.equal(queueName);
 
       // SQS
       const topicName = `${testConfig.configuration.FunctionName}-${index + 1}`;
@@ -184,7 +184,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('createtopic');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.sns.topicName).to.equal(topicName);
+      expect(sdkTags.sns.topicName).to.equal(topicName);
       // Send
       expect(snsPublishSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(snsPublishSpan.name).to.equal('aws.sdk.sns.publish');
@@ -195,8 +195,8 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('publish');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.sns.topicName).to.equal(topicName);
-      // expect(sdkTags.sns.messageIds.length).to.equal(1);
+      expect(sdkTags.sns.topicName).to.equal(topicName);
+      expect(sdkTags.sns.messageIds.length).to.equal(1);
       // Delete
       expect(snsDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(snsDeleteSpan.name).to.equal('aws.sdk.sns.deletetopic');
@@ -221,7 +221,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('createtable');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       // Describe
       expect(dynamodbDescribeSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(dynamodbDescribeSpan.name).to.equal('aws.sdk.dynamodb.describetable');
@@ -232,7 +232,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('describetable');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       while (dynamodbSpans[0].name === 'aws.sdk.dynamodb.describetable') {
         dynamodbSpans.shift();
       }
@@ -247,7 +247,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('putitem');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       // Query
       expect(dynamodbQuerySpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(dynamodbQuerySpan.name).to.equal('aws.sdk.dynamodb.query');
@@ -258,8 +258,8 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('query');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.dynamodb.tableName).to.equal(tableName);
-      // expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
       // Query with document client
 
       // Delete
@@ -272,7 +272,7 @@ describe('Python: integration', function () {
       expect(sdkTags.operation).to.equal('deletetable');
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
-      // expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
     }
   };
 
