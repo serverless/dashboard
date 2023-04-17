@@ -93,13 +93,13 @@ class ServerlessSdk:
 
     def _initialize(
         self,
+        *args,
         org_id: Optional[str] = None,
         disable_captured_events_stdout: Optional[bool] = False,
         disable_python_log_monitoring: Optional[bool] = False,
         disable_request_response_monitoring: Optional[bool] = False,
         disable_http_monitoring: Optional[bool] = False,
         disable_flask_monitoring: Optional[bool] = False,
-        *args,
         **kwargs,
     ):
         if self._is_initialized:
