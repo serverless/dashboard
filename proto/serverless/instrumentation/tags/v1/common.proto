@@ -23,6 +23,7 @@ message HttpTags {
   repeated string request_header_names = 8;
 
   // The Response Status Code.
+  // @validation_exact_number
   optional uint32 status_code = 9;
   // Eventual request error code
   optional string error_code = 12;
