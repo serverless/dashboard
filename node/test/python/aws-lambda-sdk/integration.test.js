@@ -586,112 +586,112 @@ describe('Python: integration', function () {
   ]);
 
   const useCasesConfig = new Map([
-    // [
-    //   'success',
-    //   {
-    //     variants: new Map([
-    //       ['v3-8', { configuration: { Runtime: 'python3.8' } }],
-    //       ['v3-9', { configuration: { Runtime: 'python3.9' } }],
-    //       [
-    //         'sampled',
-    //         {
-    //           configuration: {
-    //             Environment: {
-    //               Variables: {
-    //                 SLS_ORG_ID: process.env.SLS_ORG_ID,
-    //                 SLS_CRASH_ON_SDK_ERROR: '1',
-    //                 AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-python/exec_wrapper.py',
-    //               },
-    //             },
-    //           },
-    //         },
-    //       ],
-    //     ]),
-    //   },
-    // ],
-    // [
-    //   'error',
-    //   {
-    //     variants: new Map([
-    //       ['v3-8', { configuration: { Runtime: 'python3.8' } }],
-    //       ['v3-9', { configuration: { Runtime: 'python3.9' } }],
-    //     ]),
-    //     config: { expectedOutcome: 'error:handled' },
-    //   },
-    // ],
-    // [
-    //   'error_unhandled',
-    //   {
-    //     variants: new Map([
-    //       ['v3-8', { configuration: { Runtime: 'python3.8' } }],
-    //       ['v3-9', { configuration: { Runtime: 'python3.9' } }],
-    //     ]),
-    //     config: { expectedOutcome: 'error:unhandled' },
-    //   },
-    // ],
-    // [
-    //   'sdk',
-    //   {
-    //     variants: new Map([
-    //       ['v3-8', { configuration: { Runtime: 'python3.8' } }],
-    //       ['v3-9', { configuration: { Runtime: 'python3.9' } }],
-    //       ['dev-mode', devModeConfiguration],
-    //     ]),
-    //     config: sdkTestConfig,
-    //   },
-    // ],
-    // [
-    //   'dashboard/s_hello',
-    //   {
-    //     variants: new Map([
-    //       ['v3-8', { configuration: { Runtime: 'python3.8' } }],
-    //       ['v3-9', { configuration: { Runtime: 'python3.9' } }],
-    //     ]),
-    //   },
-    // ],
-    // [
-    //   'http_requester',
-    //   {
-    //     variants: httpTestConfig,
-    //   },
-    // ],
-    // [
-    //   'aiohttp_requester',
-    //   {
-    //     variants: httpTestConfig,
-    //   },
-    // ],
-    // [
-    //   'flask_app',
-    //   {
-    //     hooks: {
-    //       afterCreate: getCreateHttpApi('2.0'),
-    //       beforeDelete: async (testConfig) => {
-    //         await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
-    //       },
-    //     },
-    //     invoke: flaskInvoke,
-    //     test: ({ invocationsData }) => {
-    //       for (const [
-    //         index,
-    //         {
-    //           trace: { spans },
-    //         },
-    //       ] of invocationsData.entries()) {
-    //         spans.shift();
-    //         if (!index) spans.shift();
+    [
+      'success',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          [
+            'sampled',
+            {
+              configuration: {
+                Environment: {
+                  Variables: {
+                    SLS_ORG_ID: process.env.SLS_ORG_ID,
+                    SLS_CRASH_ON_SDK_ERROR: '1',
+                    AWS_LAMBDA_EXEC_WRAPPER: '/opt/sls-sdk-python/exec_wrapper.py',
+                  },
+                },
+              },
+            },
+          ],
+        ]),
+      },
+    ],
+    [
+      'error',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+        ]),
+        config: { expectedOutcome: 'error:handled' },
+      },
+    ],
+    [
+      'error_unhandled',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+        ]),
+        config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'sdk',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['dev-mode', devModeConfiguration],
+        ]),
+        config: sdkTestConfig,
+      },
+    ],
+    [
+      'dashboard/s_hello',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+        ]),
+      },
+    ],
+    [
+      'http_requester',
+      {
+        variants: httpTestConfig,
+      },
+    ],
+    [
+      'aiohttp_requester',
+      {
+        variants: httpTestConfig,
+      },
+    ],
+    [
+      'flask_app',
+      {
+        hooks: {
+          afterCreate: getCreateHttpApi('2.0'),
+          beforeDelete: async (testConfig) => {
+            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+          },
+        },
+        invoke: flaskInvoke,
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
 
-    //         const [invocationSpan, flaskSpan, ...routeSpans] = spans;
-    //         expect(flaskSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+            const [invocationSpan, flaskSpan, ...routeSpans] = spans;
+            expect(flaskSpan.parentSpanId).to.deep.equal(invocationSpan.id);
 
-    //         expect(routeSpans.map(({ name }) => name)).to.deep.equal(['flask.route.post.test']);
-    //         for (const routeSpan of routeSpans) {
-    //           expect(String(routeSpan.parentSpanId)).to.equal(String(flaskSpan.id));
-    //         }
-    //       }
-    //     },
-    //   },
-    // ],
+            expect(routeSpans.map(({ name }) => name)).to.deep.equal(['flask.route.post.test']);
+            for (const routeSpan of routeSpans) {
+              expect(String(routeSpan.parentSpanId)).to.equal(String(flaskSpan.id));
+            }
+          }
+        },
+      },
+    ],
     [
       'aws_sdk',
       {
@@ -708,7 +708,7 @@ describe('Python: integration', function () {
               },
             },
           ],
-          // ['external', { configuration: { Runtime: 'python3.8' } }],
+          ['external', { configuration: { Runtime: 'python3.8' } }],
         ]),
       },
     ],
