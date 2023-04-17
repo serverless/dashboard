@@ -28,6 +28,7 @@ For more details see [SDK Trace spans documentation](docs/sdk-trace.md)
 Additionally automatic instrumentation (with caveats) is provided for:
 
 - [HTTP(s) requests](/python/packages/sdk/docs/instrumentation/http.md)
+- [Flask app](/python/packages/sdk/docs/instrumentation/flask-app.md)
 
 ### SDK API
 
