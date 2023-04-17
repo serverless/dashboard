@@ -137,7 +137,7 @@ class TraceSpan {
         const message =
           "Serverless SDK Warning: Following trace spans didn't end before end of " +
           `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}\n`;
-        this._reportWarning(message, 'SDK_SPAN_NOT_CLOSED');
+        this._reportWarning(message, 'SDK_SPAN_NOT_CLOSED', { type: 'USER' });
       }
       asyncLocalStorage.enterWith(this);
     } else {

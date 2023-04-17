@@ -325,7 +325,7 @@ func TestStartInvokeDone(t *testing.T) {
 	extensionPlatformStart(requestId)
 	extensionInvoke(requestId)
 
-	messages := []string{"1 invocation", "2 invocation"}
+	messages := []string{"1 invocation", "2 invocation", "{\"level\": \"WARN\"}"}
 	postLogs(fmt.Sprintf(`[
 		{
 			"type": "function",
@@ -353,6 +353,9 @@ func TestStartInvokeDone(t *testing.T) {
 		}
 		if protoPayload.SlsTags.Service != functionName {
 			t.Errorf("Expected function name %s Received %s", functionName, protoPayload.SlsTags.Service)
+		}
+		if len(protoPayload.LogEvents) != 2 {
+			t.Errorf("Expected log message count %d Received %d", 2, len(protoPayload.LogEvents))
 		}
 		for index, event := range protoPayload.LogEvents {
 			if event.Body != messages[index] {

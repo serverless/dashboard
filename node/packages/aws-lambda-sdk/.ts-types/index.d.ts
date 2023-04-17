@@ -1,4 +1,4 @@
-import { default as Sdk, TraceSpans, Instrumentation } from '@serverless/sdk';
+import { Sdk, TraceSpans, Instrumentation } from '@serverless/sdk';
 import TraceSpan from '@serverless/sdk/lib/trace-span';
 import AwsSdkV2Instrument from './instrumentation/aws-sdk-v2';
 import AwsSdkV3ClientInstrument from './instrumentation/aws-sdk-v3-client';
