@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 tests = [
     "black>=22.12",
+    "flask>=2.2.3",
     "pytest>=7.2",
     "pytest-aiohttp>=1.0.4",
     "pytest-httpserver>=1.0.6",
