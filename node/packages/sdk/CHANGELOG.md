@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.8](https://github.com/serverless/console/compare/@serverless/sdk@0.5.7...@serverless/sdk@0.5.8) (2023-04-14)
+
+### Bug Fixes
+
+- Updated warning type to user ([#648](https://github.com/serverless/console/issues/648)) ([6a2e446](https://github.com/serverless/console/commit/6a2e446125fe39921fdcd02a9c83987bf50568e4))
+
 ### [0.5.7](https://github.com/serverless/console/compare/@serverless/sdk@0.5.6...@serverless/sdk@0.5.7) (2023-04-13)
 
 ### Features
