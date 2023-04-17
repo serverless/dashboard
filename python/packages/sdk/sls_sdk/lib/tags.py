@@ -39,10 +39,8 @@ class Tags(Dict[str, ValidTags]):
                 return
 
             current: ValidTags = self[name]
-
-            if isinstance(current, list):
-                if value != current:
-                    return
+            if value == current:
+                return
 
         raise DuplicateTraceSpanName(f"Cannot set tag: Tag {name} is already set")
 
