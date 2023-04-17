@@ -171,7 +171,20 @@ def test_tags_duplicate(tags: Tags, monkeypatch):
         for value in VALID_VALUES:
             tags[name] = value
 
-    mock.assert_called()
+    assert mock.call_count == len(VALID_NAMES) * len(VALID_VALUES)
+
+
+def test_tags_duplicate_same_value(tags: Tags, monkeypatch):
+    mock = MagicMock()
+    monkeypatch.setattr(sls_sdk.lib.tags, "report_error", mock)
+
+    tags["foo"] = "bar"
+    tags["foo"] = "bar"
+
+    tags["baz"] = ["list", "of", "values"]
+    tags["baz"] = ["list", "of", "values"]
+
+    mock.assert_not_called()
 
 
 def test_tags_duplicate_internal_method_raises_exception(tags: Tags):
