@@ -20,6 +20,10 @@ Disable tracing of HTTP and HTTPS requests
 
 (Dev mode only) Disable monitoring requests and reponses (function, AWS SDK requests and HTTP(S) requests)
 
+##### `SLS_DISABLE_AWS_SDK_MONITORING` (or `options.disableAwsSdkMonitoring`)
+
+Disable automated AWS SDK monitoring
+
 ### Instrumentation
 
 AWS Lambda SDK automatically creates `aws.lambda`, `aws.lambda.initialization` and `aws.lambda.invocation` trace spans.
@@ -28,6 +32,7 @@ For more details see [SDK Trace spans documentation](docs/sdk-trace.md)
 Additionally automatic instrumentation (with caveats) is provided for:
 
 - [HTTP(s) requests](/python/packages/sdk/docs/instrumentation/http.md)
+- [AWS SDK requests](docs/instrumentation/aws-sdk.md)
 
 ### SDK API
 
