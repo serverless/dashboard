@@ -408,7 +408,7 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | path | [string](#string) |  | The path of the HTTP Request |
 | query_parameter_names | [string](#string) | repeated | Names of the query parameters |
 | request_header_names | [string](#string) | repeated | Request header names |
-| status_code | [uint32](#uint32) | optional | The Response Status Code. |
+| status_code | [uint32](#uint32) | optional | The Response Status Code. @validation_exact_number |
 | error_code | [string](#string) | optional | Eventual request error code |
 
 
