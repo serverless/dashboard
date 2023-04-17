@@ -244,6 +244,66 @@ def test_instrument_requests(
         (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
     ],
 )
+def test_instrument_requests_ignore_following_request(
+    instrumented_sdk, httpserver: HTTPServer, request_body, response_body
+):
+    # given
+    def handler(request: Request):
+        return Response(response_body)
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    from sls_sdk.lib.instrumentation.http import ignore_following_request
+    import requests
+
+    ignore_following_request()
+
+    requests.get(
+        httpserver.url_for("/foo/bar?baz=qux"),
+        headers={"User-Agent": "foo"},
+        data=request_body,
+    )
+
+    # then
+    assert instrumented_sdk.trace_spans.root is None
+
+    # when
+    requests.get(
+        httpserver.url_for("/foo/bar?baz=qux"),
+        headers={"User-Agent": "foo"},
+        data=request_body,
+    )
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "GET",
+                "http.protocol": "HTTP/1.1",
+                "http.host": f"127.0.0.1:{httpserver.port}",
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+                "http.status_code": 200,
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+
+
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+        (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+    ],
+)
 def test_instrument_aiohttp(
     instrumented_sdk,
     httpserver: HTTPServer,
