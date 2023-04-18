@@ -9,6 +9,7 @@ const wait = require('timers-ext/promise/sleep');
 const toml = require('toml');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
 const { default: fetch } = require('node-fetch');
+const { APIGateway } = require('@aws-sdk/client-api-gateway');
 const { ApiGatewayV2 } = require('@aws-sdk/client-apigatewayv2');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const cleanup = require('./lib/cleanup');
@@ -428,6 +429,332 @@ describe('Python: integration', function () {
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
         ]),
         config: { expectedOutcome: 'error:unhandled' },
+      },
+    ],
+    [
+      'api_endpoint',
+      {
+        variants: new Map([
+          [
+            'rest-api',
+            {
+              hooks: {
+                afterCreate: async (testConfig) => {
+                  const restApiId = (testConfig.restApiId = (
+                    await awsRequest(APIGateway, 'createRestApi', {
+                      name: testConfig.configuration.FunctionName,
+                    })
+                  ).id);
+                  const deferredAddPermission = awsRequest(Lambda, 'addPermission', {
+                    FunctionName: testConfig.configuration.FunctionName,
+                    Principal: '*',
+                    Action: 'lambda:InvokeFunction',
+                    SourceArn: `arn:aws:execute-api:${process.env.AWS_REGION}:${coreConfig.accountId}:${restApiId}/*/*`,
+                    StatementId: 'rest-api',
+                  });
+                  const rootResourceId = (
+                    await awsRequest(APIGateway, 'getResources', {
+                      restApiId,
+                    })
+                  ).items[0].id;
+                  const interimResourceId = (
+                    await awsRequest(APIGateway, 'createResource', {
+                      restApiId,
+                      parentId: rootResourceId,
+                      pathPart: 'some-path',
+                    })
+                  ).id;
+                  const resourceId = (
+                    await awsRequest(APIGateway, 'createResource', {
+                      restApiId,
+                      parentId: interimResourceId,
+                      pathPart: '{param}',
+                    })
+                  ).id;
+                  await awsRequest(APIGateway, 'putMethod', {
+                    restApiId,
+                    resourceId,
+                    httpMethod: 'POST',
+                    authorizationType: 'NONE',
+                    requestParameters: { 'method.request.path.param': true },
+                  });
+                  await awsRequest(APIGateway, 'putIntegration', {
+                    restApiId,
+                    resourceId,
+                    httpMethod: 'POST',
+                    integrationHttpMethod: 'POST',
+                    type: 'AWS_PROXY',
+                    uri: `arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/2015-03-31/functions/${testConfig.functionArn}/invocations`,
+                  });
+                  await awsRequest(APIGateway, 'createDeployment', {
+                    restApiId,
+                    stageName: 'test',
+                  });
+                  await deferredAddPermission;
+                },
+                beforeDelete: async (testConfig) => {
+                  await awsRequest(APIGateway, 'deleteRestApi', {
+                    restApiId: testConfig.restApiId,
+                  });
+                },
+              },
+              invoke: async function self(testConfig) {
+                const startTime = process.hrtime.bigint();
+                const response = await fetch(
+                  `https://${testConfig.restApiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test/some-path/some-param`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify({ some: 'content' }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
+                if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
+                  throw new Error(`Unexpected response status: ${response.status}`);
+                }
+                const payload = { raw: await response.text() };
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                log.debug('invoke response payload %s', payload.raw);
+                return { duration, payload };
+              },
+              test: ({ invocationsData, testConfig }) => {
+                for (const { trace } of invocationsData) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.apigateway.rest');
+
+                  expect(tags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(tags.aws.lambda.apiGateway.apiId).to.equal(testConfig.restApiId);
+                  expect(tags.aws.lambda.apiGateway.apiStage).to.equal('test');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test/some-path/some-param');
+                  expect(tags.aws.lambda.apiGateway.request.pathParameterNames).to.deep.equal([
+                    'param',
+                  ]);
+
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(tags.aws.lambda.httpRouter.path).to.equal('/some-path/{param}');
+                }
+              },
+            },
+          ],
+          [
+            'http-api-v1',
+            {
+              hooks: {
+                afterCreate: getCreateHttpApi('1.0'),
+                beforeDelete: async (testConfig) => {
+                  await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+                },
+              },
+              invoke: async function self(testConfig) {
+                const startTime = process.hrtime.bigint();
+                const response = await fetch(
+                  `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify({ some: 'content' }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
+                if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
+                  throw new Error(`Unexpected response status: ${response.status}`);
+                }
+                const payload = { raw: await response.text() };
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                log.debug('invoke response payload %s', payload.raw);
+                return { duration, payload };
+              },
+              test: ({ invocationsData, testConfig }) => {
+                for (const { trace } of invocationsData) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v1');
+
+                  expect(tags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(tags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(tags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test');
+
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(tags.aws.lambda.httpRouter.path).to.equal('/test');
+                }
+              },
+            },
+          ],
+          [
+            'http-api-v2',
+            {
+              hooks: {
+                afterCreate: getCreateHttpApi('2.0'),
+                beforeDelete: async (testConfig) => {
+                  await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+                },
+              },
+              invoke: async function self(testConfig) {
+                const startTime = process.hrtime.bigint();
+                const response = await fetch(
+                  `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify({ some: 'content' }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
+                if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
+                  throw new Error(`Unexpected response status: ${response.status}`);
+                }
+                const payload = { raw: await response.text() };
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                log.debug('invoke response payload %s', payload.raw);
+                return { duration, payload };
+              },
+              test: ({ invocationsData, testConfig }) => {
+                for (const { trace } of invocationsData) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+                  expect(tags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(tags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(tags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(tags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test');
+
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(tags.aws.lambda.httpRouter.path).to.equal('/test');
+                }
+              },
+            },
+          ],
+          [
+            'function-url',
+            {
+              hooks: {
+                afterCreate: async function self(testConfig) {
+                  await awsRequest(Lambda, 'createAlias', {
+                    FunctionName: testConfig.configuration.FunctionName,
+                    FunctionVersion: '$LATEST',
+                    Name: 'url',
+                  });
+                  const deferredFunctionUrl = (async () => {
+                    try {
+                      return (
+                        await awsRequest(Lambda, 'createFunctionUrlConfig', {
+                          AuthType: 'NONE',
+                          FunctionName: testConfig.configuration.FunctionName,
+                          Qualifier: 'url',
+                        })
+                      ).FunctionUrl;
+                    } catch (error) {
+                      if (
+                        error.message.includes('FunctionUrlConfig exists for this Lambda function')
+                      ) {
+                        return (
+                          await awsRequest(Lambda, 'getFunctionUrlConfig', {
+                            FunctionName: testConfig.configuration.FunctionName,
+                            Qualifier: 'url',
+                          })
+                        ).FunctionUrl;
+                      }
+                      throw error;
+                    }
+                  })();
+                  await Promise.all([
+                    deferredFunctionUrl,
+                    awsRequest(Lambda, 'addPermission', {
+                      FunctionName: testConfig.configuration.FunctionName,
+                      Qualifier: 'url',
+                      FunctionUrlAuthType: 'NONE',
+                      Principal: '*',
+                      Action: 'lambda:InvokeFunctionUrl',
+                      StatementId: 'public-function-url',
+                    }),
+                  ]);
+                  testConfig.functionUrl = await deferredFunctionUrl;
+                },
+                beforeDelete: async (testConfig) => {
+                  await awsRequest(Lambda, 'deleteFunctionUrlConfig', {
+                    FunctionName: testConfig.configuration.FunctionName,
+                    Qualifier: 'url',
+                  });
+                },
+              },
+              invoke: async function self(testConfig) {
+                const startTime = process.hrtime.bigint();
+                const response = await fetch(`${testConfig.functionUrl}/test?foo=bar`, {
+                  method: 'POST',
+                  body: JSON.stringify({ some: 'content' }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+                if (response.status !== 200) {
+                  if (response.status === 404) {
+                    await wait(1000);
+                    return self(testConfig);
+                  }
+                  throw new Error(`Unexpected response status: ${response.status}`);
+                }
+                const payload = { raw: await response.text() };
+                const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+                log.debug('invoke response payload %s', payload.raw);
+                return { duration, payload };
+              },
+              test: ({ invocationsData }) => {
+                for (const { trace } of invocationsData) {
+                  const { tags } = trace.spans[0];
+
+                  expect(tags.aws.lambda.eventSource).to.equal('aws.lambda');
+                  expect(tags.aws.lambda.eventType).to.equal('aws.lambda.url');
+
+                  expect(tags.aws.lambda.http).to.have.property('host');
+                  expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(tags.aws.lambda.http.method).to.equal('POST');
+                  expect(tags.aws.lambda.http.path).to.equal('/test');
+
+                  expect(tags.aws.lambda.http.statusCode.toString()).to.equal('200');
+                }
+              },
+            },
+          ],
+        ]),
       },
     ],
     [
