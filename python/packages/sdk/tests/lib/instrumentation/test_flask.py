@@ -81,6 +81,7 @@ def test_flask_get_200(app):
     assert response.content == b"ok"
     root = serverlessSdk.trace_spans.root
     assert [s.name for s in root.spans] == ["flask", "flask.route.get.helloworld"]
+    assert root.tags["aws.lambda.http_router.path"] == "/"
 
 
 def test_flask_post_500(app):

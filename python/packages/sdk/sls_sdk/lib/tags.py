@@ -50,6 +50,11 @@ class Tags(Dict[str, ValidTags]):
         except Exception as ex:
             report_error(ex)
 
+    def __delitem__(self, key: str):
+        with self._lock:
+            if key in self:
+                super().__delitem__(key)
+
     def __setitem__(self, key: str, value: ValidTags):
         self.set(key, value)
 

@@ -289,6 +289,22 @@ def test_set_tag_multithreaded(sdk):
     # then
     assert len(sdk._custom_tags) == parallelism * scale
 
+    # given
+    def _del_tag_and_sleep(thread_index):
+        sleep(0.05)
+        for i in range(scale):
+            unique_value = thread_index * scale * 10 + i
+            del sdk._custom_tags[f"tag{unique_value}"]
+
+    # when
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
+        futures = [executor.submit(_del_tag_and_sleep, i) for i in range(parallelism)]
+        for future in concurrent.futures.as_completed(futures):
+            assert future.exception() is None
+
+    # then
+    assert len(sdk._custom_tags) == 0
+
 
 @pytest.mark.parametrize(
     "request_body,response_body",
