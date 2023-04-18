@@ -18,6 +18,9 @@ def reset_ignore_following_request():
     _IGNORE_FOLLOWING_REQUEST.set(False)
 
 
+_HTTP_SPAN = contextvars.ContextVar("http-span", default=None)
+
+
 class BaseInstrumenter:
     def __init__(self, target_module):
         self._is_installed = False
@@ -177,7 +180,6 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         super().__init__("http")
         self._original_request = None
         self._original_getresponse = None
-        self._trace_span = None
 
     def _instrumented_request(self):
         def _func(_self, method, url, body=None, headers={}, *, encode_chunked=False):
@@ -195,15 +197,16 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
                 "https" if _self.__class__.__name__ == "HTTPSConnection" else "http"
             )
 
-            self._trace_span = SDK._create_trace_span(
+            trace_span = SDK._create_trace_span(
                 f"python.{protocol}.request",
                 start_time=start_time,
             )
+            _HTTP_SPAN.set(trace_span)
 
             try:
                 parsed_path = urlparse(url)
                 query = parse_qs(parsed_path.query)
-                self._trace_span.tags.update(
+                trace_span.tags.update(
                     {
                         "method": method,
                         "protocol": "HTTP/1.1",
@@ -214,21 +217,21 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
                     },
                     prefix="http",
                 )
-                self._capture_request_body(body)
+                self._capture_request_body(trace_span, body)
 
                 self._original_request(
                     _self, method, url, body, headers, encode_chunked=encode_chunked
                 )
             except Exception as ex:
-                self._trace_span.tags["http.error_code"] = ex.__class__.__name__
-                if self._trace_span.end_time is None:
-                    self._trace_span.close()
-                self._trace_span = None
+                trace_span = _HTTP_SPAN.get()
+                trace_span.tags["http.error_code"] = ex.__class__.__name__
+                if trace_span.end_time is None:
+                    trace_span.close()
                 raise
 
         return _func
 
-    def _capture_request_body(self, body):
+    def _capture_request_body(self, trace_span, body):
         if not body:
             return
         if not self.should_monitor_request_response:
@@ -237,44 +240,45 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
             SDK._report_notice(
                 "Large body excluded",
                 "INPUT_BODY_TOO_LARGE",
-                self._trace_span,
+                trace_span,
             )
             return
         try:
-            self._trace_span.input = body.decode("utf-8")
+            trace_span.input = body.decode("utf-8")
         except Exception:
             pass
 
     def _instrumented_getresponse(self):
         def _func(_self, *args, **kwargs):
-            if _self._sls_ignore or not self._trace_span:
+            trace_span = _HTTP_SPAN.get()
+            if _self._sls_ignore or not trace_span:
                 return self._original_getresponse(_self, *args, **kwargs)
 
             try:
                 response = self._original_getresponse(_self, *args, **kwargs)
-                self._trace_span.tags["http.status_code"] = response.status
-                self._capture_response_body(response)
+                trace_span.tags["http.status_code"] = response.status
+                self._capture_response_body(trace_span, response)
                 return response
             finally:
-                if self._trace_span.end_time is None:
-                    self._trace_span.close()
+                if trace_span.end_time is None:
+                    trace_span.close()
 
         return _func
 
-    def _capture_response_body(self, response):
+    def _capture_response_body(self, trace_span, response):
         if not self.should_monitor_request_response:
             return
         if response.length > SDK._maximum_body_byte_length:
             SDK._report_notice(
                 "Large body excluded",
                 "OUTPUT_BODY_TOO_LARGE",
-                self._trace_span,
+                trace_span,
             )
             return
         try:
             response_body = response.peek()
             if response_body:
-                self._trace_span.output = response_body.decode("utf-8")
+                trace_span.output = response_body.decode("utf-8")
         except Exception as ex:
             report_error(ex)
 

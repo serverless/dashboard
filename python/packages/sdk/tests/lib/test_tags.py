@@ -91,6 +91,23 @@ def test_tags_valid_names_and_values():
 
         for name in VALID_NAMES:
             tags[name] = value
+            assert tags[name] == ensure_tag_value(name, value)
+
+            tags[name] = "new-value"
+            assert tags[name] == ensure_tag_value(name, value)
+
+
+def test_tags_valid_names_and_values_replacement():
+    for value in VALID_VALUES:
+        tags = Tags()
+
+        for name in VALID_NAMES:
+            tags[name] = value
+            assert tags[name] == ensure_tag_value(name, value)
+
+            del tags[name]
+            tags[name] = "new-value"
+            assert tags[name] == ensure_tag_value(name, "new-value")
 
 
 def test_tags_valid_names_and_null_values():
@@ -111,6 +128,21 @@ def test_tags_update():
 
     # then
     assert tags == input
+
+
+def test_tags_delete():
+    # given
+    input = {"test": 0, "type": "unit"}
+    tags = Tags()
+    tags.update(input)
+
+    # when
+    del tags["test"]
+    del tags["type"]
+    del tags["non-existent"]
+
+    # then
+    assert tags == {}
 
 
 def test_tags_update_with_prefix():

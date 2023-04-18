@@ -14,6 +14,8 @@ from .lib.invocation_context import (
     get as get_invocation_context,
 )
 from .lib.payload_conversion import to_trace_payload, to_request_response_payload
+from .lib.event_tags import resolve as resolve_event_tags
+from .lib.response_tags import resolve as resolve_response_tags
 from sls_sdk.lib.trace import TraceSpan
 from sls_sdk.lib.captured_event import CapturedEvent
 import base64
@@ -241,6 +243,8 @@ class Instrumenter:
                 serverlessSdk.capture_error(
                     outcome_result, type="unhandled", timestamp=end_time
                 )
+            else:
+                resolve_response_tags(outcome_result)
 
             if (
                 serverlessSdk._is_dev_mode
@@ -307,7 +311,7 @@ class Instrumenter:
                     "aws.lambda.invocation", start_time=request_start_time
                 )
             )
-
+            resolve_event_tags(event)
             if (
                 serverlessSdk._is_dev_mode
                 and not serverlessSdk._settings.disable_request_response_monitoring

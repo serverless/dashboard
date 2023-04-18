@@ -4,6 +4,11 @@ import concurrent.futures
 import asyncio
 import random
 import pytest
+from pytest_httpserver import HTTPServer
+from werkzeug.wrappers import Request, Response
+
+SMALL_REQUEST_PAYLOAD = b"a"
+SMALL_RESPONSE_PAYLOAD = b"r"
 
 
 def print_spans(root, length=100):
@@ -283,3 +288,72 @@ def test_set_tag_multithreaded(sdk):
 
     # then
     assert len(sdk._custom_tags) == parallelism * scale
+
+    # given
+    def _del_tag_and_sleep(thread_index):
+        sleep(0.05)
+        for i in range(scale):
+            unique_value = thread_index * scale * 10 + i
+            del sdk._custom_tags[f"tag{unique_value}"]
+
+    # when
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
+        futures = [executor.submit(_del_tag_and_sleep, i) for i in range(parallelism)]
+        for future in concurrent.futures.as_completed(futures):
+            assert future.exception() is None
+
+    # then
+    assert len(sdk._custom_tags) == 0
+
+
+@pytest.mark.parametrize(
+    "request_body,response_body",
+    [
+        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
+    ],
+)
+def test_instrument_requests_multithreaded(
+    instrumented_sdk, httpserver: HTTPServer, request_body, response_body
+):
+    # given
+    def handler(request: Request):
+        return Response(response_body)
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    root = instrumented_sdk._create_trace_span("rootspan")
+    parallelism = 5
+
+    # when
+    import requests
+
+    def _run():
+        requests.get(
+            httpserver.url_for("/foo/bar?baz=qux"),
+            headers={"User-Agent": "foo"},
+            data=request_body,
+        )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
+        futures = [executor.submit(_run) for _i in range(parallelism)]
+        for future in concurrent.futures.as_completed(futures):
+            assert future.exception() is None
+
+    # then
+    assert len(root.spans) == parallelism + 1
+    for span in root.spans[1:]:
+        assert span.name == "python.http.request"
+        assert (
+            span.tags.items()
+            >= dict(
+                {
+                    "http.method": "GET",
+                    "http.protocol": "HTTP/1.1",
+                    "http.host": f"127.0.0.1:{httpserver.port}",
+                    "http.path": "/foo/bar",
+                    "http.query_parameter_names": ["baz"],
+                    "http.status_code": 200,
+                }
+            ).items()
+        )
+        assert "User-Agent" in span.tags["http.request_header_names"]

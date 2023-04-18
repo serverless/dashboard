@@ -15,20 +15,6 @@ LARGE_RESPONSE_PAYLOAD = b"r" * 1024 * 128
 SMALL_RESPONSE_PAYLOAD = b"r"
 
 
-@pytest.fixture(params=[False, True])
-def instrumented_sdk(reset_sdk, request, monkeypatch):
-    # if dev mode is enabled in the fixture
-    if request.param:
-        monkeypatch.setenv("SLS_DEV_MODE_ORG_ID", "test-org")
-    import sls_sdk
-
-    sls_sdk.serverlessSdk._initialize(
-        disable_request_response_monitoring=not request.param
-    )
-    yield sls_sdk.serverlessSdk
-    sls_sdk.lib.instrumentation.http.uninstall()
-
-
 def _assert_request_response_body(sdk, request_body, response_body):
     assert (
         not sdk._is_dev_mode
