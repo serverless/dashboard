@@ -116,6 +116,7 @@ def test_flask_post_500(app):
         "flask.error.customexception",
     ]
     assert events[0].tags["error.name"] == "CustomException"
+    assert root.tags["aws.lambda.http_router.path"] == "/internal-server-error"
 
 
 def test_flask_get_404(app):
