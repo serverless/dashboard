@@ -8,6 +8,7 @@ from sls_sdk import serverlessSdk as baseSdk
 from .trace_spans.aws_lambda import aws_lambda_span
 from sls_sdk import ServerlessSdk, TraceSpans
 from sls_sdk.lib.trace import TraceSpan
+from .instrumentation import aws_sdk
 
 # module metadata
 __name__: Final[str] = "serverless-aws-lambda-sdk"
@@ -37,6 +38,22 @@ TraceSpans.aws_lambda_initialization = next(
 
 
 baseSdk._is_dev_mode = bool(os.environ.get("SLS_DEV_MODE_ORG_ID"))
+baseSdk.instrumentation.aws_sdk = aws_sdk
+
+
+def _initialize_extension(self, disable_aws_sdk_monitoring=False):
+    try:
+        settings = self._settings
+        self._settings.disable_aws_sdk_monitoring = bool(
+            os.environ.get("SLS_DISABLE_AWS_SDK_MONITORING", disable_aws_sdk_monitoring)
+        )
+        if not settings.disable_aws_sdk_monitoring:
+            baseSdk.instrumentation.aws_sdk.install()
+    except Exception as error:
+        self._report_error(error)
+
+
+ServerlessSdk._initialize_extension = _initialize_extension
 
 
 class AwsLambdaTraceSpans(TraceSpans):
