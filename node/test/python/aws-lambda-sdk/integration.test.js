@@ -479,8 +479,11 @@ describe('Python: integration', function () {
               trace: { spans },
             },
           ] of invocationsData.entries()) {
-            spans.shift();
+            const lambdaSpan = spans.shift();
             if (!index) spans.shift();
+            const { tags: lambdaTags } = lambdaSpan;
+
+            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
 
             const [invocationSpan, flaskSpan, ...routeSpans] = spans;
             expect(flaskSpan.parentSpanId).to.deep.equal(invocationSpan.id);
