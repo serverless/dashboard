@@ -266,11 +266,11 @@ describe('Python: integration', function () {
             try {
               await awsRequest(Lambda, 'createFunction', {
                 FunctionName: urlEndpointLambdaName,
-                Handler: 'api-endpoint.handler',
+                Handler: 'api_endpoint.handler',
                 Role: coreConfig.roleArn,
                 Runtime: 'python3.9',
                 Code: {
-                  ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'api-endpoint.py')),
+                  ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'api_endpoint.py')),
                 },
                 MemorySize: 1024,
               });
