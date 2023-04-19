@@ -4,11 +4,27 @@ import logging
 from typing import Optional
 from importlib_metadata import version
 from typing_extensions import Final
-from sls_sdk import serverlessSdk as baseSdk
-from .trace_spans.aws_lambda import aws_lambda_span
-from sls_sdk import ServerlessSdk, TraceSpans
-from sls_sdk.lib.trace import TraceSpan
-from .instrumentation import aws_sdk
+import sys
+import inspect
+
+# If the Lambda SDK is imported from the layer make sure
+# to import the base SDK also from the Lambda Layer.
+_is_loaded_from_layer = inspect.getfile(sys.modules[__name__]).startswith("/opt/python")
+_path_modified = False
+try:
+    if "sls_sdk" not in sys.modules and _is_loaded_from_layer:
+        sys.path.insert(0, "/opt/python")
+        _path_modified = True
+    from sls_sdk import serverlessSdk as baseSdk
+finally:
+    if _path_modified:
+        sys.path.pop(0)
+
+
+from .trace_spans.aws_lambda import aws_lambda_span  # noqa E402
+from sls_sdk import ServerlessSdk, TraceSpans  # noqa E402
+from sls_sdk.lib.trace import TraceSpan  # noqa E402
+from .instrumentation import aws_sdk  # noqa E402
 
 # module metadata
 __name__: Final[str] = "serverless-aws-lambda-sdk"

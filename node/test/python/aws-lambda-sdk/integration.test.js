@@ -1053,6 +1053,12 @@ describe('Python: integration', function () {
     exec(
       `pip install aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
     );
+    exec(
+      [
+        `mkdir ${fixturesDirname}/sls_sdk`,
+        `echo "raise Exception('This is a dummy module that should never get imported.')" > ${fixturesDirname}/sls_sdk/__init__.py`,
+      ].join('\n')
+    );
 
     pyProjectToml = toml.parse(
       await fsp.readFile(
@@ -1216,6 +1222,9 @@ describe('Python: integration', function () {
 
   after(async () => {
     cleanup({ mode: 'core' });
-    await fsp.rmdir(`${fixturesDirname}/test_dependencies`, { recursive: true, force: true });
+    await Promise.all([
+      fsp.rmdir(`${fixturesDirname}/test_dependencies`, { recursive: true, force: true }),
+      fsp.rmdir(`${fixturesDirname}/sls_sdk`, { recursive: true, force: true }),
+    ]);
   });
 });

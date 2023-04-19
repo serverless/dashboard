@@ -3,9 +3,7 @@ import importlib
 from os import environ
 from typing import List
 
-from typing_extensions import Final, TypeAlias, TYPE_CHECKING
-
-from ..instrument import Instrumenter
+from typing_extensions import Final
 
 __all__: Final[List[str]] = [
     "handler",
