@@ -1,9 +1,9 @@
 import time
-import importlib
 import contextvars
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 from ..error import report as report_error
+from .import_hook import ImportHook
 import sls_sdk
 
 SDK = sls_sdk.serverlessSdk
@@ -23,32 +23,32 @@ _HTTP_SPAN = contextvars.ContextVar("http-span", default=None)
 
 class BaseInstrumenter:
     def __init__(self, target_module):
+        self._import_hook = ImportHook(target_module)
         self._is_installed = False
-        self._target_module = target_module
+        self._module = None
 
     def install(self, should_monitor_request_response):
         if self._is_installed:
             return
         self.should_monitor_request_response = should_monitor_request_response
-        try:
-            self._module = importlib.import_module(self._target_module)
-        except ImportError:
+
+        if self._import_hook.enabled:
             return
 
-        self._install()
+        self._import_hook.enable(self._install)
         self._is_installed = True
 
     def uninstall(self):
         if not self._is_installed:
             return
 
-        self._uninstall()
+        self._import_hook.disable(self._uninstall)
         self._is_installed = False
 
-    def _install(self):
+    def _install(self, module):
         raise NotImplementedError
 
-    def _uninstall(self):
+    def _uninstall(self, module):
         raise NotImplementedError
 
 
@@ -159,7 +159,8 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
 
         return _init
 
-    def _install(self):
+    def _install(self, module):
+        self._module = module
         if hasattr(self._module, "TraceConfig"):
             trace_config = self._module.TraceConfig()
             trace_config.on_request_start.append(self._on_request_start)
@@ -170,9 +171,10 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
             self._original_init = self._module.ClientSession.__init__
             self._module.ClientSession.__init__ = self._instrumented_init(trace_config)
 
-    def _uninstall(self):
+    def _uninstall(self, module):
         if self._original_init:
             self._module.ClientSession.__init__ = self._original_init
+        self._module = None
 
 
 class NativeHTTPInstrumenter(BaseInstrumenter):
@@ -282,7 +284,8 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         except Exception as ex:
             report_error(ex)
 
-    def _install(self):
+    def _install(self, module):
+        self._module = module
         self._original_request = self._module.client.HTTPConnection.request
         self._original_getresponse = self._module.client.HTTPConnection.getresponse
         self._module.client.HTTPConnection.request = self._instrumented_request()
@@ -290,9 +293,10 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
             self._instrumented_getresponse()
         )
 
-    def _uninstall(self):
+    def _uninstall(self, module):
         self._module.client.HTTPConnection.request = self._original_request
         self._module.client.HTTPConnection.getresponse = self._original_getresponse
+        self._module = None
 
 
 _instrumenters = [NativeHTTPInstrumenter(), NativeAIOHTTPInstrumenter()]

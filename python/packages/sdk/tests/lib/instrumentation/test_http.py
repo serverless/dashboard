@@ -422,14 +422,20 @@ def test_instrument_aiohttp_unsupported_version(instrumented_sdk):
 
     with patch.dict(sys.modules, {"aiohttp": mock_aiohttp}):
         # given
+        import sls_sdk.lib.instrumentation.http
         from sls_sdk.lib.instrumentation.http import NativeAIOHTTPInstrumenter
 
+        sls_sdk.lib.instrumentation.http.uninstall()
         instrumenter = NativeAIOHTTPInstrumenter()
+
+        assert not instrumenter._import_hook.enabled
 
         # when
         instrumenter.install(True)
 
         # then
+        assert instrumenter._import_hook.enabled
+        assert instrumenter._module is not None
         assert instrumenter._original_init is None
 
 
@@ -437,6 +443,7 @@ def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
     with patch.dict(sys.modules, {"aiohttp": None}):
         # given
         import sls_sdk
+        from sls_sdk.lib.instrumentation.http import NativeAIOHTTPInstrumenter
 
         # when
         sls_sdk.serverlessSdk._initialize()
@@ -445,7 +452,7 @@ def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
         instrumenter = [
             x
             for x in sls_sdk.lib.instrumentation.http._instrumenters
-            if x._target_module == "aiohttp"
+            if isinstance(x, NativeAIOHTTPInstrumenter)
         ][0]
         assert not instrumenter._is_installed
 

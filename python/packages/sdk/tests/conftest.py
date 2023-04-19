@@ -11,16 +11,27 @@ def sdk(monkeypatch, request):
 
     serverlessSdk._initialize()
     yield serverlessSdk
+    import sls_sdk
+
+    sls_sdk.lib.instrumentation.http.uninstall()
 
 
 @pytest.fixture()
 def reset_sdk(monkeypatch, request):
     _reset_sdk_reimport(monkeypatch, request)
+    yield
+    import sls_sdk
+
+    sls_sdk.lib.instrumentation.http.uninstall()
 
 
 @pytest.fixture()
 def reset_sdk_dev_mode(monkeypatch, request):
     _reset_sdk_reimport(monkeypatch, request, True, True)
+    yield
+    import sls_sdk
+
+    sls_sdk.lib.instrumentation.http.uninstall()
 
 
 def _reset_sdk_reimport(
