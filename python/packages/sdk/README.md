@@ -44,9 +44,17 @@ _Common options supported by all environments:_
 
 Required setting. Id of your organization in Serverless Console.
 
+##### `SLS_DISABLE_HTTP_MONITORING` (or `disable_http_monitoring`)
+
+Disable tracing of HTTP and HTTPS requests. See [HTTP instrumentation](docs/instrumentation/http.md)
+
 ##### `SLS_DISABLE_REQUEST_RESPONSE_MONITORING` (or `disable_request_response_monitoring`)
 
 (Dev mode only) Disable monitoring requests and reponses (function, AWS SDK requests and HTTP(S) requests)
+
+##### `SLS_DISABLE_FLASK_MONITORING` (or `disable_flask_monitoring`)
+
+Disable automated flask monitoring. See [flask app instrumentation](docs/instrumentation/flask-app.md)
 
 ##### `SLS_DISABLE_CAPTURED_EVENTS_STDOUT` (or `disable_captured_events_stdout`)
 
