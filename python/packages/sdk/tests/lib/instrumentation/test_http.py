@@ -422,8 +422,10 @@ def test_instrument_aiohttp_unsupported_version(instrumented_sdk):
 
     with patch.dict(sys.modules, {"aiohttp": mock_aiohttp}):
         # given
+        import sls_sdk.lib.instrumentation.http
         from sls_sdk.lib.instrumentation.http import NativeAIOHTTPInstrumenter
 
+        sls_sdk.lib.instrumentation.http.uninstall()
         instrumenter = NativeAIOHTTPInstrumenter()
 
         assert not instrumenter._import_hook.enabled

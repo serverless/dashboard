@@ -23,7 +23,6 @@ _HTTP_SPAN = contextvars.ContextVar("http-span", default=None)
 
 class BaseInstrumenter:
     def __init__(self, target_module):
-        self._target_module = target_module
         self._import_hook = ImportHook(target_module)
         self._is_installed = False
         self._module = None
