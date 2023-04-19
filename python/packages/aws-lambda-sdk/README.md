@@ -20,9 +20,13 @@ Disable tracing of HTTP and HTTPS requests
 
 (Dev mode only) Disable monitoring requests and reponses (function, AWS SDK requests and HTTP(S) requests)
 
-##### `SLS_DISABLE_AWS_SDK_MONITORING` (or `options.disableAwsSdkMonitoring`)
+##### `SLS_DISABLE_AWS_SDK_MONITORING` (or `disable_aws_sdk_monitoring`)
 
 Disable automated AWS SDK monitoring
+
+##### `SLS_DISABLE_FLASK_MONITORING` (or `disable_flask_monitoring`)
+
+Disable automated flask monitoring
 
 ### Instrumentation
 
