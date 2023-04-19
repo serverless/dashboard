@@ -8,10 +8,17 @@ import importlib
 
 @pytest.fixture()
 def exec_wrapper_main():
-    import serverless_aws_lambda_sdk.internal_extension.exec_wrapper
+    exec_wrapper_path = str(
+        Path(__file__).parent.parent.parent
+        / "serverless_aws_lambda_sdk/internal_extension"
+    )
+    sys.path.append(exec_wrapper_path)
+    import exec_wrapper
 
-    importlib.reload(serverless_aws_lambda_sdk.internal_extension.exec_wrapper)
-    yield serverless_aws_lambda_sdk.internal_extension.exec_wrapper.main
+    importlib.reload(exec_wrapper)
+    sys.path.remove(exec_wrapper_path)
+
+    yield exec_wrapper.main
 
 
 @pytest.fixture()
