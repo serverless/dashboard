@@ -44,7 +44,9 @@ module.exports.install = (layerPrototype) => {
       const middlewareSpanName = (() => {
         if (routeSpan) {
           return `express.middleware.route.${[
-            generateMiddlewareName(this.method),
+            // TODO: Cover not set `this.method` case with integration test
+            // (at this point it's not clear how to reproduce it)
+            this.method && generateMiddlewareName(this.method),
             generateMiddlewareName(this.name) || 'unknown',
           ]
             .filter(Boolean)
