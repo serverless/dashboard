@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.10](https://github.com/serverless/console/compare/@serverless/sdk@0.5.9...@serverless/sdk@0.5.10) (2023-04-20)
+
+### Bug Fixes
+
+- Do not fail on missing `layer.method` ([21aabd9](https://github.com/serverless/console/commit/21aabd98a7c22223814962132608acaa16907f74))
+
+### Maintenance Improvements
+
+- Improve `sdk._reportWarning` resolution ([65ad54b](https://github.com/serverless/console/commit/65ad54b5485f5c1bda324b468f826437b44eb437))
+
 ### [0.5.9](https://github.com/serverless/console/compare/@serverless/sdk@0.5.8...@serverless/sdk@0.5.9) (2023-04-20)
 
 ### Bug Fixes
