@@ -593,6 +593,7 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
           [
             'sampled',
             {
@@ -616,6 +617,7 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
         ]),
         config: { expectedOutcome: 'error:handled' },
       },
@@ -626,6 +628,7 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
         ]),
         config: { expectedOutcome: 'error:unhandled' },
       },
@@ -962,6 +965,7 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
           ['dev-mode', devModeConfiguration],
         ]),
         config: sdkTestConfig,
@@ -973,6 +977,7 @@ describe('Python: integration', function () {
         variants: new Map([
           ['v3-8', { configuration: { Runtime: 'python3.8' } }],
           ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
         ]),
       },
     ],
