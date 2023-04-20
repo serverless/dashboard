@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.14 (2023-04-20)
+
+### Features
+
+- Instrument AWS SDK
+- Setup custom request & response tags
+- Adapt flask instrumentation
+
+### Bug Fixes
+
+- In context of the extension ensure to import extension SDK
+- Fix serialization of IDs within request-response payload
+
 ## 0.1.13 (2023-04-06)
 
 ### Bug Fixes
