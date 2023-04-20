@@ -1,10 +1,12 @@
 import time
 import contextvars
+import contextlib
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 from ..error import report as report_error
 from .import_hook import ImportHook
 import sls_sdk
+from wrapt import wrap_function_wrapper, ObjectProxy
 
 SDK = sls_sdk.serverlessSdk
 _IGNORE_FOLLOWING_REQUEST = contextvars.ContextVar("ignore", default=False)
@@ -177,16 +179,25 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
         self._module = None
 
 
+# urllib3 uses the native "http.client" library, this prevents further
+# instrumentation in case the request is coming from urllib3
+# or other higher level libraries like requests which make use of urllib3.
+_DISABLE_NATIVE_INSTRUMENTATION = contextvars.ContextVar(
+    "disable-native-instrumentation", default=False
+)
+
+
 class NativeHTTPInstrumenter(BaseInstrumenter):
     def __init__(self):
-        super().__init__("http")
+        super().__init__("http.client")
         self._original_request = None
         self._original_getresponse = None
 
     def _instrumented_request(self):
         def _func(_self, method, url, body=None, headers={}, *, encode_chunked=False):
-            _self._sls_ignore = _IGNORE_FOLLOWING_REQUEST.get()
-            reset_ignore_following_request()
+            _self._sls_ignore = (
+                _IGNORE_FOLLOWING_REQUEST.get() or _DISABLE_NATIVE_INSTRUMENTATION.get()
+            )
 
             if _self._sls_ignore:
                 return self._original_request(
@@ -286,20 +297,153 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
 
     def _install(self, module):
         self._module = module
-        self._original_request = self._module.client.HTTPConnection.request
-        self._original_getresponse = self._module.client.HTTPConnection.getresponse
-        self._module.client.HTTPConnection.request = self._instrumented_request()
-        self._module.client.HTTPConnection.getresponse = (
-            self._instrumented_getresponse()
-        )
+        self._original_request = self._module.HTTPConnection.request
+        self._original_getresponse = self._module.HTTPConnection.getresponse
+        self._module.HTTPConnection.request = self._instrumented_request()
+        self._module.HTTPConnection.getresponse = self._instrumented_getresponse()
 
     def _uninstall(self, module):
-        self._module.client.HTTPConnection.request = self._original_request
-        self._module.client.HTTPConnection.getresponse = self._original_getresponse
+        self._module.HTTPConnection.request = self._original_request
+        self._module.HTTPConnection.getresponse = self._original_getresponse
         self._module = None
 
 
-_instrumenters = [NativeHTTPInstrumenter(), NativeAIOHTTPInstrumenter()]
+# urllib3 calls the "urlopen" method recursively for certain scenarios like redirects.
+# This context variable is used to prevent the instrumented "urlopen" method from
+# being called recursively.
+_URLLIB3_IS_RECURSIVE_CALL = contextvars.ContextVar(
+    "urllib3-recursive-call", default=False
+)
+
+
+class URLLib3Instrumenter(BaseInstrumenter):
+    @contextlib.contextmanager
+    def _prevent_recursive_instrumentation():
+        _URLLIB3_IS_RECURSIVE_CALL.set(True)
+        _DISABLE_NATIVE_INSTRUMENTATION.set(True)
+        try:
+            yield
+        finally:
+            _DISABLE_NATIVE_INSTRUMENTATION.set(False)
+            _URLLIB3_IS_RECURSIVE_CALL.set(False)
+
+    def __init__(self):
+        super().__init__("urllib3")
+        self._target_method = "urlopen"
+
+    def _patched_call(self, actual_url_open, instance, args, kwargs):
+        if _IGNORE_FOLLOWING_REQUEST.get() or _URLLIB3_IS_RECURSIVE_CALL.get():
+            return actual_url_open(*args, **kwargs)
+
+        start_time = time.perf_counter_ns()
+        SDK._debug_log("HTTP request")
+        protocol = instance.scheme
+
+        trace_span = SDK._create_trace_span(
+            f"python.{protocol}.request",
+            start_time=start_time,
+        )
+
+        try:
+            # see function signature for urlopen method in urllib3
+            # https://github.com/urllib3/urllib3/blob/main/src/urllib3/connectionpool.py
+            method = args[0] if len(args) > 0 else kwargs.get("method")
+            parsed_path = urlparse(args[1] if len(args) > 1 else kwargs.get("url"))
+            body = args[2] if len(args) > 2 else kwargs.get("body")
+            headers = kwargs.get("headers", {})
+            query = parse_qs(parsed_path.query)
+            trace_span.tags.update(
+                {
+                    "method": method,
+                    "protocol": "HTTP/1.1",
+                    "host": f"{instance.host}:{instance.port}",
+                    "path": parsed_path.path,
+                    "request_header_names": [h for h in headers.keys()],
+                    "query_parameter_names": [q for q in query.keys()],
+                },
+                prefix="http",
+            )
+            self._capture_request_body(trace_span, body)
+
+            with URLLib3Instrumenter._prevent_recursive_instrumentation():
+                response = actual_url_open(*args, **kwargs)
+
+                trace_span.tags["http.status_code"] = response.status
+                self._capture_response_body(trace_span, response)
+
+                return response
+        except Exception as ex:
+            trace_span.tags["http.error_code"] = ex.__class__.__name__
+            raise
+        finally:
+            if trace_span.end_time is None:
+                trace_span.close()
+
+    def _capture_request_body(self, trace_span, body):
+        if not body:
+            return
+        if not self.should_monitor_request_response:
+            return
+        if len(body) > SDK._maximum_body_byte_length:
+            SDK._report_notice(
+                "Large body excluded",
+                "INPUT_BODY_TOO_LARGE",
+                trace_span,
+            )
+            return
+        try:
+            trace_span.input = body.decode("utf-8")
+        except Exception:
+            pass
+
+    def _capture_response_body(self, trace_span, response):
+        if not self.should_monitor_request_response:
+            return
+        response_body = response.data
+        response_length = int(response.headers.get("Content-Length", 0))
+        if response_length > SDK._maximum_body_byte_length:
+            SDK._report_notice(
+                "Large body excluded",
+                "OUTPUT_BODY_TOO_LARGE",
+                trace_span,
+            )
+            return
+        try:
+            if response_body:
+                trace_span.output = response_body.decode("utf-8")
+        except Exception as ex:
+            report_error(ex)
+
+    def _install(self, module):
+        self._module = module
+        wrap_function_wrapper(
+            module.connectionpool.HTTPConnectionPool,
+            self._target_method,
+            self._patched_call,
+        )
+
+    def _uninstall(self, module):
+        _wrapping_method = getattr(
+            module.connectionpool.HTTPConnectionPool, self._target_method, None
+        )
+        if (
+            _wrapping_method
+            and isinstance(_wrapping_method, ObjectProxy)
+            and hasattr(_wrapping_method, "__wrapped__")
+        ):
+            setattr(
+                module.connectionpool.HTTPConnectionPool,
+                self._target_method,
+                _wrapping_method.__wrapped__,
+            )
+        self._module = None
+
+
+_instrumenters = [
+    NativeHTTPInstrumenter(),
+    URLLib3Instrumenter(),
+    NativeAIOHTTPInstrumenter(),
+]
 _is_installed = False
 
 
