@@ -43,7 +43,6 @@ class TraceSpan {
         );
       }
     }
-    this._reportWarning = options._reportWarning;
     this.startTime = startTime || defaultStartTime;
     this.name = ensureSpanName(name);
 
@@ -86,7 +85,6 @@ class TraceSpan {
       new TraceSpan(immediateDescendants.shift(), {
         startTime: this.startTime,
         immediateDescendants,
-        _reportWarning: this._reportWarning,
       });
     }
   }
@@ -137,7 +135,8 @@ class TraceSpan {
         const message =
           "Serverless SDK Warning: Following trace spans didn't end before end of " +
           `lambda invocation: ${leftoverSpans.map(({ name }) => name).join(', ')}\n`;
-        this._reportWarning(message, 'SDK_SPAN_NOT_CLOSED', { type: 'USER' });
+        // Require on spot to avoid otherwise difficult to mitigate circular dependency
+        require('..')._reportWarning(message, 'SDK_SPAN_NOT_CLOSED', { type: 'USER' });
       }
       asyncLocalStorage.enterWith(this);
     } else {
