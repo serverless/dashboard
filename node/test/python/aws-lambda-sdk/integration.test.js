@@ -1036,7 +1036,7 @@ describe('Python: integration', function () {
             'internal',
             {
               configuration: {
-                Runtime: 'python3.9',
+                Runtime: 'python3.10',
                 Code: {
                   ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws_sdk.py')),
                 },
