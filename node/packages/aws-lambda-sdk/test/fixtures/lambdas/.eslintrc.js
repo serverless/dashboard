@@ -15,5 +15,9 @@ module.exports = {
     ],
     'no-console': 'off',
   },
-  ignorePatterns: ['esbuild-from-esm-callback.js'],
+  ignorePatterns: [
+    'esbuild-from-esm-callback.js',
+    'dashboard/s_function.js',
+    'dashboard/serverless_sdk',
+  ],
 };
