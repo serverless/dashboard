@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.4 (2023-04-20)
+
+### Maintenance Improvements
+
+- Support Python v3.10
+
 ## 0.4.3 (2023-04-20)
 
 ### Bug Fixes
