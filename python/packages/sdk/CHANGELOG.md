@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.3 (2023-04-20)
+
+### Bug Fixes
+
+- Fix duration resolution in HTTP instrumentation
+
+### Performance Improvements
+
+- Fix initialization performance regression
+
 ## 0.4.2 (2023-04-18)
 
 ### Features
