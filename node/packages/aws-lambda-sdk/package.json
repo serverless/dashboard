@@ -8,7 +8,7 @@
     "@serverless/sdk-schema": "^0.15.3",
     "d": "^1.0.1",
     "ext": "^1.7.0",
-    "long": "^5.2.1",
+    "long": "^5.2.3",
     "type": "^2.7.2"
   },
   "typesVersions": {
