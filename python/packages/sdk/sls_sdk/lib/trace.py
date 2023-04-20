@@ -76,7 +76,7 @@ class TraceSpan:
 
     def _set_spans(self, immediate_descendants: Optional[List[str]]):
         self._set_span_hierarchy()
-        self._set_ctx()
+        ctx.set(self)
         if immediate_descendants and len(immediate_descendants) > 0:
             TraceSpan(
                 immediate_descendants.pop(0),
@@ -99,9 +99,6 @@ class TraceSpan:
 
         if self.parent_span:
             self.parent_span.sub_spans.append(self)
-
-    def _set_ctx(self, override: Optional[TraceSpan] = None):
-        ctx.set(override or self)
 
     def _set_name(self, name):
         self.name = get_resource_name(name)
@@ -201,7 +198,7 @@ class TraceSpan:
                     "Serverless SDK Warning: Following trace spans didn't end before"
                     + f" end of lambda invocation: {spans}"
                 )
-            self._set_ctx()
+            ctx.set(self)
         else:
             # if this is not the root span and context points to this
             # then we need to reset the context to the first open ancestor span
@@ -212,12 +209,12 @@ class TraceSpan:
                 while current:
                     if not current.end_time:
                         # break at the first open ancestor and store it in the context
-                        self._set_ctx(current)
+                        ctx.set(current)
                         found = True
                         break
                     current = current.parent_span
                 if not found:
-                    self._set_ctx(root_span)
+                    ctx.set(root_span)
 
         event_emitter.emit("trace-span-close", self)
         return self
