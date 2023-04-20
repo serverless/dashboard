@@ -332,8 +332,7 @@ class URLLib3Instrumenter(BaseInstrumenter):
         self._target_method = "urlopen"
 
     def _patched_call(self, actual_url_open, instance, args, kwargs):
-        sls_ignore = _IGNORE_FOLLOWING_REQUEST.get()
-        if sls_ignore or _URLLIB3_IS_RECURSIVE_CALL.get():
+        if _IGNORE_FOLLOWING_REQUEST.get() or _URLLIB3_IS_RECURSIVE_CALL.get():
             return actual_url_open(*args, **kwargs)
 
         start_time = time.perf_counter_ns()
