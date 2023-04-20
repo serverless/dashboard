@@ -7,6 +7,7 @@ import sys
 from types import SimpleNamespace
 import uuid
 from urllib.parse import urlparse
+import time
 
 LARGE_REQUEST_PAYLOAD = b"a" * 1024 * 128
 SMALL_REQUEST_PAYLOAD = b"a"
@@ -61,6 +62,7 @@ def test_instrument_http_client(
     conn.close()
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.tags.items()
@@ -113,6 +115,7 @@ def test_instrument_urllib(
         response.read()
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.tags.items()
@@ -163,13 +166,14 @@ def test_instrument_urllib3(
     )
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert instrumented_sdk.trace_spans.root.tags == {
         "http.method": "POST",
         "http.protocol": "HTTP/1.1",
         "http.host": f"127.0.0.1:{httpserver.port}",
         "http.path": "/foo/bar",
-        "http.request_header_names": ["User-Agent"],
+        "http.request_header_names": [],
         "http.query_parameter_names": ["baz"],
         "http.status_code": 200,
     }
@@ -202,6 +206,7 @@ def test_instrument_requests(
     )
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.tags.items()
@@ -240,11 +245,13 @@ def test_instrument_requests_ignore_following_request(
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
 
     # when
-    from sls_sdk.lib.instrumentation.http import ignore_following_request
+    from sls_sdk.lib.instrumentation.http import (
+        ignore_following_request,
+        reset_ignore_following_request,
+    )
     import requests
 
     ignore_following_request()
-
     requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
@@ -255,6 +262,7 @@ def test_instrument_requests_ignore_following_request(
     assert instrumented_sdk.trace_spans.root is None
 
     # when
+    reset_ignore_following_request()
     requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
@@ -262,6 +270,7 @@ def test_instrument_requests_ignore_following_request(
     )
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.tags.items()
@@ -319,6 +328,7 @@ def test_instrument_aiohttp(
     asyncio.run(_get())
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert instrumented_sdk.trace_spans.root.tags == {
         "http.method": "GET",
@@ -358,6 +368,7 @@ def test_instrument_native_http_error(
             response.read()
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.https.request"
     assert (
         instrumented_sdk.trace_spans.root.tags.items()
@@ -403,6 +414,7 @@ def test_instrument_aiohttp_error(
         asyncio.run(_get())
 
     # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.https.request"
     assert instrumented_sdk.trace_spans.root.tags == {
         "http.method": "GET",
@@ -496,3 +508,136 @@ def test_instrument_aiohttp_sls_ignore(
 
     # then
     assert instrumented_sdk.trace_spans.root is None
+
+
+def test_instrument_duration_requests(instrumented_sdk, httpserver: HTTPServer):
+    # given
+    def handler(request: Request):
+        time.sleep(0.2)
+        return Response("ok")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import requests
+
+    requests.get(
+        httpserver.url_for("/foo/bar"),
+    )
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.end_time
+        - instrumented_sdk.trace_spans.root.start_time
+        > 200_000_000
+    )
+
+
+def test_instrument_duration_http_client(instrumented_sdk, httpserver: HTTPServer):
+    # given
+    def handler(request: Request):
+        time.sleep(0.2)
+        return Response("ok")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import http.client
+
+    url = urlparse(httpserver.url_for("/foo/bar"))
+
+    conn = http.client.HTTPConnection(url.hostname, url.port)
+    conn.request("POST", url.path + "?" + url.query)
+    conn.getresponse()
+    conn.close()
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.end_time
+        - instrumented_sdk.trace_spans.root.start_time
+        > 200_000_000
+    )
+
+
+def test_instrument_duration_urllib(instrumented_sdk, httpserver: HTTPServer):
+    # given
+    def handler(request: Request):
+        time.sleep(0.2)
+        return Response("ok")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import urllib.parse
+    import urllib.request
+
+    url = httpserver.url_for("/foo/bar")
+
+    req = urllib.request.Request(url)
+    with urllib.request.urlopen(req) as response:
+        response.read()
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.end_time
+        - instrumented_sdk.trace_spans.root.start_time
+        > 200_000_000
+    )
+
+
+def test_instrument_duration_urllib3(instrumented_sdk, httpserver: HTTPServer):
+    # given
+    def handler(request: Request):
+        time.sleep(0.2)
+        return Response("ok")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import urllib3
+
+    urllib3.PoolManager().request(
+        "POST",
+        httpserver.url_for("/foo/bar?baz=qux"),
+        headers={"Foo": "Bar"},
+        body=b"hello world",
+    )
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.end_time
+        - instrumented_sdk.trace_spans.root.start_time
+        > 200_000_000
+    )
+
+
+def test_instrument_duration_aiohttp(instrumented_sdk, httpserver):
+    # given
+    def handler(request: Request):
+        time.sleep(0.2)
+        return Response("ok")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import aiohttp
+
+    async def _get():
+        async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
+            async with session.get(httpserver.url_for("/foo/bar?baz=qux")) as resp:
+                print(resp.status)
+                print(await resp.text())
+
+    asyncio.run(_get())
+
+    # then
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.end_time
+        - instrumented_sdk.trace_spans.root.start_time
+        > 200_000_000
+    )
