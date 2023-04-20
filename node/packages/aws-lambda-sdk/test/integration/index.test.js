@@ -1806,6 +1806,78 @@ describe('integration', function () {
       },
     ],
     [
+      'dashboard/s_function',
+
+      {
+        isCustomResponse: true,
+        capturedEvents: [{ name: 'telemetry.error.generated.v1', type: 'ERROR_TYPE_CAUGHT_USER' }],
+        test: ({ invocationsData }) => {
+          for (const [index, { trace, responsePayload }] of invocationsData.entries()) {
+            const { spans, customTags } = trace;
+            const lambdaSpan = spans.shift();
+            if (!index) spans.shift();
+
+            const [invocationSpan, expressSpan, ...otherSpans] = spans;
+            const middlewareSpans = otherSpans.slice(0, -4);
+            const routeSpan = middlewareSpans.pop();
+            const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+            const expressRequest1Span = otherSpans[otherSpans.length - 4];
+            const expressRequest2Span = otherSpans[otherSpans.length - 3];
+            const outerRequest1Span = otherSpans[otherSpans.length - 2];
+            const outerRequest2Span = otherSpans[otherSpans.length - 1];
+
+            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+            expect(lambdaSpan.tags.aws.lambda.httpRouter.path).to.equal('/foo');
+
+            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+              'express.middleware.query',
+              'express.middleware.expressinit',
+              'express.middleware.jsonparser',
+              'express.middleware.router',
+            ]);
+            for (const middlewareSpan of middlewareSpans) {
+              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+            }
+            expect(routeSpan.name).to.equal('express.middleware.route.get.anonymous');
+            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+
+            expect(outerRequest1Span.name).to.equal('node.http.request');
+            expect(outerRequest1Span.parentSpanId).to.deep.equal(invocationSpan.id);
+            expect(outerRequest2Span.name).to.equal('node.http.request');
+            expect(outerRequest2Span.parentSpanId).to.deep.equal(invocationSpan.id);
+
+            const { tags: outerRequest1Tags } = outerRequest1Span;
+            expect(outerRequest1Tags.http.method).to.equal('POST');
+            expect(outerRequest1Tags.http.protocol).to.equal('HTTP/1.1');
+            expect(outerRequest1Tags.http.host).to.equal('localhost:3177');
+            expect(outerRequest1Tags.http.path).to.equal('/out-1');
+            expect(outerRequest1Tags.http.statusCode.toString()).to.equal('200');
+
+            expect(expressRequest1Span.name).to.equal('node.http.request');
+            expect(expressRequest1Span.parentSpanId).to.deep.equal(routeSpan.id);
+            expect(expressRequest2Span.name).to.equal('node.http.request');
+            expect(expressRequest2Span.parentSpanId).to.deep.equal(routeSpan.id);
+
+            const { tags: expressRequest1Tags } = expressRequest1Span;
+            expect(expressRequest1Tags.http.method).to.equal('POST');
+            expect(expressRequest1Tags.http.protocol).to.equal('HTTP/1.1');
+            expect(expressRequest1Tags.http.host).to.equal('localhost:3177');
+            expect(expressRequest1Tags.http.path).to.equal('/in-1');
+            expect(expressRequest1Tags.http.statusCode.toString()).to.equal('200');
+
+            expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': 'example:tag' });
+
+            const payload = JSON.parse(responsePayload.raw);
+            expect(payload.consoleSdk.name).to.equal(pkgJson.name);
+            expect(payload.consoleSdk.version).to.equal(pkgJson.version);
+            expect(payload.consoleSdk.rootSpanName).to.equal('aws.lambda');
+            expect(payload.isDashboardSdkAvailable).to.be.true;
+          }
+        },
+      },
+    ],
+    [
       'callback-no-result',
       {
         variants: new Map([
