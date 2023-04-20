@@ -71,9 +71,7 @@ class TraceSpan:
 
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
-        global root_span, ctx
         span = ctx.get(None)
-
         return span or root_span or None
 
     def _set_spans(self, immediate_descendants: Optional[List[str]]):
@@ -103,7 +101,6 @@ class TraceSpan:
             self.parent_span.sub_spans.append(self)
 
     def _set_ctx(self, override: Optional[TraceSpan] = None):
-        global ctx
         ctx.set(override or self)
 
     def _set_name(self, name):
@@ -168,7 +165,6 @@ class TraceSpan:
         self._input = value
 
     def close(self, end_time: Optional[Nanoseconds] = None):
-        global root_span, ctx
         default: Nanoseconds = time.perf_counter_ns()
         target_end_time = end_time
 
