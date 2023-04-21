@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.17](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.16...@serverless/aws-lambda-sdk@0.14.17) (2023-04-21)
+
+### Bug Fixes
+
+- Ensure `sdk.runtime` tag on all payloads ([5f44099](https://github.com/serverless/console/commit/5f4409982b7f1939c772d2550c51d9de9404a33d))
+
+### Maintenance Improvements
+
+- Remove no longer supported option ([9ecade7](https://github.com/serverless/console/commit/9ecade774f727f8d7e8b56c8c5454cb02f57bc9f))
+
 ### [0.14.16](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.15...@serverless/aws-lambda-sdk@0.14.16) (2023-04-20)
 
 ### Maintenance Improvements
