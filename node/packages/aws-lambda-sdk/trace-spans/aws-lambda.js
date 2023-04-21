@@ -1,7 +1,6 @@
 'use strict';
 
 const TraceSpan = require('@serverless/sdk/lib/trace-span');
-const reportWarning = require('@serverless/sdk/lib/report-warning');
 
 const immutableTags = {
   'aws.lambda.name': process.env.AWS_LAMBDA_FUNCTION_NAME,
@@ -29,7 +28,6 @@ const awsLambdaSpan = new TraceSpan('aws.lambda', {
   startTime: EvalError.$serverlessAwsLambdaInitializationStartTime,
   immediateDescendants: ['aws.lambda.initialization'],
   tags: immutableTags,
-  _reportWarning: reportWarning,
 });
 
 if (process.env.AWS_LAMBDA_INITIALIZATION_TYPE === 'on-demand') {
