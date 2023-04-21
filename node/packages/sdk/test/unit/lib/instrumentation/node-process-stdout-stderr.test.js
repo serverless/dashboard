@@ -8,7 +8,7 @@ const bunyan = require('bunyan');
 
 const requireUncached = require('ncjsm/require-uncached');
 
-describe('lib/instrumentation/node-console.js', () => {
+describe('lib/instrumentation/node-process-stdout-stderr.js', () => {
   let serverlessSdk;
   let instrumentNodeConsole;
   before(() => {
