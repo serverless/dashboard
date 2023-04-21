@@ -86,7 +86,7 @@ const handleInvocation = async (handlerModuleName, options = {}) => {
   expect(outcome.trace.input.slsTags).to.deep.equal({
     orgId: process.env.SLS_ORG_ID,
     service: functionName,
-    sdk: { name: pkgJson.name, version: pkgJson.version },
+    sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
   });
   const [lambdaSpan, initializationSpan, ...otherSpans] = outcome.trace.input.spans;
   const lambdaSpanTags = lambdaSpan.tags;
