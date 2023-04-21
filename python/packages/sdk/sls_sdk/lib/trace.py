@@ -32,8 +32,8 @@ __all__: Final[List[str]] = [
 
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
+_CONTEXT: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 
-ctx: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 root_span: Optional[TraceSpan] = None
 
 
@@ -71,12 +71,11 @@ class TraceSpan:
 
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
-        span = ctx.get(None)
-        return span or root_span or None
+        return _CONTEXT.get(None) or root_span or None
 
     def _set_spans(self, immediate_descendants: Optional[List[str]]):
         self._set_span_hierarchy()
-        ctx.set(self)
+        _CONTEXT.set(self)
         if immediate_descendants and len(immediate_descendants) > 0:
             TraceSpan(
                 immediate_descendants.pop(0),
@@ -198,23 +197,23 @@ class TraceSpan:
                     "Serverless SDK Warning: Following trace spans didn't end before"
                     + f" end of lambda invocation: {spans}"
                 )
-            ctx.set(self)
+            _CONTEXT.set(self)
         else:
             # if this is not the root span and context points to this
             # then we need to reset the context to the first open ancestor span
-            if self is ctx.get(None):
+            if self is _CONTEXT.get(None):
                 current = self.parent_span
                 found = False
                 # loop through ancestors
                 while current:
                     if not current.end_time:
                         # break at the first open ancestor and store it in the context
-                        ctx.set(current)
+                        _CONTEXT.set(current)
                         found = True
                         break
                     current = current.parent_span
                 if not found:
-                    ctx.set(root_span)
+                    _CONTEXT.set(root_span)
 
         event_emitter.emit("trace-span-close", self)
         return self
