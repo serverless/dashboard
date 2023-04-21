@@ -1,6 +1,7 @@
 from __future__ import annotations
 from time import sleep
 import concurrent.futures
+import threading
 import asyncio
 import random
 import pytest
@@ -12,6 +13,7 @@ SMALL_RESPONSE_PAYLOAD = b"r"
 
 
 def print_spans(root, length=100):
+    print("\n")
     # normalize start and end times within [0, length]
     offset = root.start_time
     for span in root.spans:
@@ -357,3 +359,71 @@ def test_instrument_requests_multithreaded(
             ).items()
         )
         assert "User-Agent" in span.tags["http.request_header_names"]
+
+
+def test_overlapping_spans_multithreaded_hierarchy(sdk):
+    # given
+    def _create_child_span():
+        span = sdk._create_trace_span("child")
+
+        def _create_grandchild_span():
+            span = sdk._create_trace_span("grandchild")
+            span.close()
+
+        thread = threading.Thread(target=_create_grandchild_span)
+        thread.start()
+        thread.join()
+
+        span.close()
+
+    root_span = sdk._create_trace_span("root")
+
+    # when
+    thread = threading.Thread(target=_create_child_span)
+    thread.start()
+    thread.join()
+
+    root_span.close()
+
+    # then
+    assert len(root_span.spans) == 3
+    (root, child, grandchild) = root_span.spans
+    assert root.name == "root"
+    assert child.name == "child"
+    assert grandchild.name == "grandchild"
+    assert root.parent_span is None
+    assert child.parent_span == root
+    assert grandchild.parent_span == child
+
+
+def test_overlapping_spans_async_hierarchy(sdk):
+    # given
+    async def _create_child_span():
+        span = sdk._create_trace_span("child")
+
+        async def _create_grandchild_span():
+            span = sdk._create_trace_span("grandchild")
+            span.close()
+
+        await _create_grandchild_span()
+        span.close()
+
+    root_span = sdk._create_trace_span("root")
+
+    # when
+    async def _run():
+        await _create_child_span()
+
+    asyncio.run(_run())
+
+    root_span.close()
+
+    # then
+    assert len(root_span.spans) == 3
+    (root, child, grandchild) = root_span.spans
+    assert root.name == "root"
+    assert child.name == "child"
+    assert grandchild.name == "grandchild"
+    assert root.parent_span is None
+    assert child.parent_span == root
+    assert grandchild.parent_span == child
