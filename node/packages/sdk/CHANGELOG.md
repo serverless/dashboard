@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.11](https://github.com/serverless/console/compare/@serverless/sdk@0.5.10...@serverless/sdk@0.5.11) (2023-04-21)
+
+### Bug Fixes
+
+- Ensure to report unexpected parsing issues ([0864381](https://github.com/serverless/console/commit/0864381355f42e1acb52247c97dd3054a9deba98))
+
+### Maintenance Improvements
+
+- Optimise JSON string detection ([f38b906](https://github.com/serverless/console/commit/f38b90631f2c15c1e230ede7b049fed76dfd2b67))
+- Optimize error data detection ([45c4a65](https://github.com/serverless/console/commit/45c4a6593e445aa6cd370fe2741f63f7f2c8ed7d))
+- Remove obsolete debug log ([3034aa7](https://github.com/serverless/console/commit/3034aa7c5750c80a881f159bdcba8294a2f3a846))
+
 ### [0.5.10](https://github.com/serverless/console/compare/@serverless/sdk@0.5.9...@serverless/sdk@0.5.10) (2023-04-20)
 
 ### Bug Fixes
