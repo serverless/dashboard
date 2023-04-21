@@ -3,25 +3,28 @@
 const isObject = require('type/object/is');
 const createErrorCapturedEvent = require('./create-error-captured-event');
 const createWarningCapturedEvent = require('./create-warning-captured-event');
+const reportError = require('./report-error');
+
+const safeJsonParse = (logLine) => {
+  try {
+    return JSON.parse(logLine);
+  } catch {
+    return null;
+  }
+};
+
+const supportedLevels = new Set(['WARN', 'ERROR']);
 
 const parseLogLevel = (level) => {
   if (typeof level === 'string') {
     const levelUpperCase = level.toUpperCase();
-    if (levelUpperCase !== 'ERROR' && levelUpperCase !== 'WARN') {
-      throw new Error('Unsupported level');
-    }
-    return levelUpperCase;
+    if (supportedLevels.has(levelUpperCase)) return levelUpperCase;
   } else if (typeof level === 'number') {
-    if (level <= 30) {
-      throw new Error('Unsupported level');
-    }
-
-    if (level <= 40) {
-      return 'WARN';
-    }
-    return 'ERROR';
+    if (level <= 30) return null;
+    if (level <= 40) return 'WARN';
+    if (level > 40) return 'ERROR';
   }
-  throw new Error('Unsupported level');
+  return null;
 };
 
 const highCardinalityAttributes = [
@@ -119,16 +122,21 @@ module.exports.attemptParseStructuredLogAndCapture = (logLine) => {
   try {
     if (typeof logLine !== 'string') return;
     if (logLine[0] !== '{') return;
-    const logLineParsed = JSON.parse(logLine);
-    if ('level' in logLineParsed) {
-      const logLevel = parseLogLevel(logLineParsed.level);
-      if (logLevel === 'ERROR') {
+    const logLineParsed = safeJsonParse(logLine);
+    if (!logLineParsed) return;
+    if (!logLineParsed.level) return;
+    const logLevel = parseLogLevel(logLineParsed.level);
+    switch (logLevel) {
+      case 'ERROR':
         handleErrorLog(logLineParsed);
-      } else if (logLevel === 'WARN') {
+        return;
+      case 'WARN':
         handleWarningLog(logLineParsed);
-      }
+        return;
+      default:
+        throw new Error(`Unsupported log level: ${logLevel}`);
     }
-  } catch (err) {
-    // Not a structured logline
+  } catch (error) {
+    reportError(error);
   }
 };
