@@ -1,7 +1,6 @@
 'use strict';
 
 const isObject = require('type/object/is');
-const { debuglog } = require('util');
 const createErrorCapturedEvent = require('./create-error-captured-event');
 const createWarningCapturedEvent = require('./create-warning-captured-event');
 
@@ -120,7 +119,6 @@ module.exports.attemptParseStructuredLogAndCapture = (logLine) => {
   try {
     const logLineParsed = JSON.parse(logLine.toString());
     if ('level' in logLineParsed) {
-      debuglog('LOG LEVEL', logLineParsed.level);
       const logLevel = parseLogLevel(logLineParsed.level);
       if (logLevel === 'ERROR') {
         handleErrorLog(logLineParsed);
