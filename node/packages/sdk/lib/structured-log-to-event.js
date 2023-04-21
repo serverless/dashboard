@@ -1,6 +1,5 @@
 'use strict';
 
-const isObject = require('type/object/is');
 const createErrorCapturedEvent = require('./create-error-captured-event');
 const createWarningCapturedEvent = require('./create-warning-captured-event');
 const reportError = require('./report-error');
@@ -81,7 +80,7 @@ const handleErrorLog = (logLineParsed) => {
     // In this case we do best attempt at parsing.
     // AWS Lambda Powertools will fall in this category.
     const [errKey, errObj] = Object.entries(logLineParsed).find(
-      ([, value]) => isObject(value) && 'message' in value && 'stack' in value
+      ([, value]) => value && value.message && value.stack
     );
 
     if (!errKey || !errObj) {
