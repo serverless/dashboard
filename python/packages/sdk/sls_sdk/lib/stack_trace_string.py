@@ -7,11 +7,7 @@ from typing import Optional, Any
 def resolve(error: Optional[Any] = None) -> str:
     if isinstance(error, BaseException):
         # in case of an actual Exception, stack trace is already set up.
-        return "".join(
-            traceback.format_exception(
-                etype=type(error), value=error, tb=error.__traceback__
-            )
-        )
+        return "".join(traceback.format_exception(error, error, error.__traceback__))
     else:
         # in case of errors that are not exceptions, return the current stack trace
         # but exclude the most recent 3 frames to make sure stack trace ends at

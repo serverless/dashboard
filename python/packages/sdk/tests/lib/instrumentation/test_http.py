@@ -641,3 +641,47 @@ def test_instrument_duration_aiohttp(instrumented_sdk, httpserver):
         - instrumented_sdk.trace_spans.root.start_time
         > 200_000_000
     )
+
+
+def test_instrument_requests_post_data_from_file(
+    instrumented_sdk, httpserver: HTTPServer
+):
+    # given
+    def handler(request: Request):
+        return Response("ok")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import requests
+
+    with open(__file__, "rb") as f:
+        requests.post(
+            httpserver.url_for("/foo/bar?baz=qux"),
+            headers={"User-Agent": "foo"},
+            data=f,
+        )
+
+    # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "POST",
+                "http.protocol": "HTTP/1.1",
+                "http.host": f"127.0.0.1:{httpserver.port}",
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+                "http.status_code": 200,
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+    if instrumented_sdk._is_dev_mode:
+        with open(__file__, "r") as f:
+            assert instrumented_sdk.trace_spans.root.input == f.read()

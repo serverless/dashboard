@@ -20,7 +20,7 @@ module.exports = async (useCasesConfig, coreConfig) =>
       TracePayload,
       fixturesDirname,
       baseLambdaConfiguration: {
-        Runtime: 'python3.9',
+        Runtime: 'python3.10',
         Layers: [coreConfig.layerInternalArn],
         Environment: {
           Variables: {

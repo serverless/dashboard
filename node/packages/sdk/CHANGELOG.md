@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.10](https://github.com/serverless/console/compare/@serverless/sdk@0.5.9...@serverless/sdk@0.5.10) (2023-04-20)
+
+### Bug Fixes
+
+- Do not fail on missing `layer.method` ([21aabd9](https://github.com/serverless/console/commit/21aabd98a7c22223814962132608acaa16907f74))
+
+### Maintenance Improvements
+
+- Improve `sdk._reportWarning` resolution ([65ad54b](https://github.com/serverless/console/commit/65ad54b5485f5c1bda324b468f826437b44eb437))
+
+### [0.5.9](https://github.com/serverless/console/compare/@serverless/sdk@0.5.8...@serverless/sdk@0.5.9) (2023-04-20)
+
+### Bug Fixes
+
+- Fix router middleware detection in Express instrumentation ([f89cc69](https://github.com/serverless/console/commit/f89cc69638e7bbe9820e355528ab0e138bae4a0a))
+
+### Maintenance Improvements
+
+- Fix information in inline comment ([a7ea178](https://github.com/serverless/console/commit/a7ea178bbb1711ddb2b0afa7dee306c5037b60a7))
+
 ### [0.5.8](https://github.com/serverless/console/compare/@serverless/sdk@0.5.7...@serverless/sdk@0.5.8) (2023-04-14)
 
 ### Bug Fixes

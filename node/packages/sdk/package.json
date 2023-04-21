@@ -1,12 +1,12 @@
 {
   "name": "@serverless/sdk",
   "repository": "serverless/console",
-  "version": "0.5.8",
+  "version": "0.5.10",
   "author": "Serverless, Inc.",
   "dependencies": {
     "d": "^1.0.1",
     "ext": "^1.7.0",
-    "long": "^5.2.1",
+    "long": "^5.2.3",
     "type": "^2.7.2",
     "uni-global": "^1.0.0"
   },

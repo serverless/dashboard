@@ -65,7 +65,7 @@ module.exports = async (coreConfig) => {
         config: {
           configuration: {
             Handler: 'success.handler',
-            Runtime: 'python3.9',
+            Runtime: 'python3.10',
             Code: {
               ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'success.py')),
             },

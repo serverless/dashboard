@@ -40,11 +40,13 @@ module.exports.install = (layerPrototype) => {
       }
       expressRouteData = expressSpansMap.get(req);
       const { routeSpan, openedSpans } = expressRouteData;
-      const isRouterMiddleware = !routeSpan && this.name === 'bound dispatch';
+      const isRouterMiddleware = Boolean(!routeSpan && this.route);
       const middlewareSpanName = (() => {
         if (routeSpan) {
           return `express.middleware.route.${[
-            generateMiddlewareName(this.method),
+            // TODO: Cover not set `this.method` case with integration test
+            // (at this point it's not clear how to reproduce it)
+            this.method && generateMiddlewareName(this.method),
             generateMiddlewareName(this.name) || 'unknown',
           ]
             .filter(Boolean)
@@ -77,7 +79,9 @@ module.exports.install = (layerPrototype) => {
           if (!middlewareSpan.endTime) {
             expressRouteData.openedSpans.delete(middlewareSpan);
             middlewareSpan.close();
-            if (this.name === 'bound dispatch') delete expressRouteData.routeSpan;
+            if (this.route) {
+              delete expressRouteData.routeSpan;
+            }
           }
         } catch (error) {
           reportError(error);

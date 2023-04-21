@@ -18,9 +18,7 @@ def test_resolve_stack_trace_string_from_error():
 
     # then
     assert stack_trace == "".join(
-        traceback.format_exception(
-            etype=type(error), value=error, tb=error.__traceback__
-        )
+        traceback.format_exception(error, error, error.__traceback__)
     )
 
 

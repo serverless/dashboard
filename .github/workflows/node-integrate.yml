@@ -666,6 +666,10 @@ jobs:
           # Tag needs to be pushed with real user token, otherwise pushed tag won't trigger the actions workflow
           # Hence we're passing 'serverless-ci' user authentication token
           token: ${{ secrets.USER_GITHUB_TOKEN }}
+      
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
 
       - name: Retrieve ~/.npm from cache
         uses: actions/cache@v2
