@@ -1,3 +1,4 @@
+from __future__ import annotations
 import time
 import contextvars
 import contextlib
@@ -7,6 +8,8 @@ from ..error import report as report_error
 from .import_hook import ImportHook
 import sls_sdk
 from wrapt import wrap_function_wrapper, ObjectProxy
+import io
+from typing import Iterable
 
 SDK = sls_sdk.serverlessSdk
 _IGNORE_FOLLOWING_REQUEST = contextvars.ContextVar("ignore", default=False)
@@ -21,6 +24,26 @@ def reset_ignore_following_request():
 
 
 _HTTP_SPAN = contextvars.ContextVar("http-span", default=None)
+
+
+def _decode_body(body):
+    if isinstance(body, bytes):
+        return body.decode("utf-8")
+    elif isinstance(body, str):
+        return body
+    elif isinstance(body, io.IOBase):
+        if body.seekable():
+            current_position = body.tell()
+            try:
+                return body.read().decode("utf-8")
+            finally:
+                body.seek(current_position)
+        else:
+            return body.peek().decode("utf-8")
+    elif isinstance(body, Iterable):
+        return b"".join(body).decode("utf-8")
+    else:
+        return None
 
 
 class BaseInstrumenter:
@@ -53,18 +76,16 @@ class BaseInstrumenter:
     def _uninstall(self, module):
         raise NotImplementedError
 
-
-class NativeAIOHTTPInstrumenter(BaseInstrumenter):
-    def __init__(self):
-        super().__init__("aiohttp")
-        self._original_init = None
-
     def _capture_request_body(self, trace_span, body):
         if not body:
             return
         if not self.should_monitor_request_response:
             return
-        if len(body) > SDK._maximum_body_byte_length:
+
+        decoded = _decode_body(body)
+        length = len(decoded)
+
+        if length > SDK._maximum_body_byte_length:
             SDK._report_notice(
                 "Large body excluded",
                 "INPUT_BODY_TOO_LARGE",
@@ -72,11 +93,18 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
             )
             return
         try:
-            trace_span.input = body.decode("utf-8")
+            trace_span.input = decoded
         except Exception:
             pass
 
+
+class NativeAIOHTTPInstrumenter(BaseInstrumenter):
+    def __init__(self):
+        super().__init__("aiohttp")
+        self._original_init = None
+
     async def _capture_response_body(self, trace_span, response):
+        # response is a aiohttp.ClientResponse object
         if not self.should_monitor_request_response:
             return
         if (
@@ -92,7 +120,7 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
         try:
             response_body = await response.read()
             if response_body:
-                trace_span.output = response_body.decode("utf-8")
+                trace_span.output = _decode_body(response_body)
         except Exception as ex:
             report_error(ex)
 
@@ -194,6 +222,8 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         self._original_getresponse = None
 
     def _instrumented_request(self):
+        # See https://docs.python.org/3/library/http.client.html#http.client.HTTPConnection.request
+        # for the signature of the request method
         def _func(_self, method, url, body=None, headers={}, *, encode_chunked=False):
             _self._sls_ignore = (
                 _IGNORE_FOLLOWING_REQUEST.get() or _DISABLE_NATIVE_INSTRUMENTATION.get()
@@ -244,24 +274,9 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
 
         return _func
 
-    def _capture_request_body(self, trace_span, body):
-        if not body:
-            return
-        if not self.should_monitor_request_response:
-            return
-        if len(body) > SDK._maximum_body_byte_length:
-            SDK._report_notice(
-                "Large body excluded",
-                "INPUT_BODY_TOO_LARGE",
-                trace_span,
-            )
-            return
-        try:
-            trace_span.input = body.decode("utf-8")
-        except Exception:
-            pass
-
     def _instrumented_getresponse(self):
+        # See https://docs.python.org/3/library/http.client.html#http.client.HTTPConnection.getresponse
+        # for the signature of the getresponse method
         def _func(_self, *args, **kwargs):
             trace_span = _HTTP_SPAN.get()
             if _self._sls_ignore or not trace_span:
@@ -291,7 +306,7 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         try:
             response_body = response.peek()
             if response_body:
-                trace_span.output = response_body.decode("utf-8")
+                trace_span.output = _decode_body(response_body)
         except Exception as ex:
             report_error(ex)
 
@@ -379,23 +394,6 @@ class URLLib3Instrumenter(BaseInstrumenter):
             if trace_span.end_time is None:
                 trace_span.close()
 
-    def _capture_request_body(self, trace_span, body):
-        if not body:
-            return
-        if not self.should_monitor_request_response:
-            return
-        if len(body) > SDK._maximum_body_byte_length:
-            SDK._report_notice(
-                "Large body excluded",
-                "INPUT_BODY_TOO_LARGE",
-                trace_span,
-            )
-            return
-        try:
-            trace_span.input = body.decode("utf-8")
-        except Exception:
-            pass
-
     def _capture_response_body(self, trace_span, response):
         if not self.should_monitor_request_response:
             return
@@ -410,7 +408,7 @@ class URLLib3Instrumenter(BaseInstrumenter):
             return
         try:
             if response_body:
-                trace_span.output = response_body.decode("utf-8")
+                trace_span.output = _decode_body(response_body)
         except Exception as ex:
             report_error(ex)
 
