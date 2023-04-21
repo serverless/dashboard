@@ -117,7 +117,9 @@ const handleWarningLog = (logLineParsed) => {
 
 module.exports.attemptParseStructuredLogAndCapture = (logLine) => {
   try {
-    const logLineParsed = JSON.parse(logLine.toString());
+    if (typeof logLine !== 'string') return;
+    if (logLine[0] !== '{') return;
+    const logLineParsed = JSON.parse(logLine);
     if ('level' in logLineParsed) {
       const logLevel = parseLogLevel(logLineParsed.level);
       if (logLevel === 'ERROR') {
