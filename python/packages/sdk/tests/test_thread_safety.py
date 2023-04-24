@@ -1,7 +1,5 @@
 from __future__ import annotations
 from time import sleep
-import concurrent.futures
-import threading
 import asyncio
 import random
 import pytest
@@ -30,22 +28,24 @@ def print_spans(root, length=100):
         print(f"{span.name.ljust(20, ' ')}: {beginning}{middle}")
 
 
-def test_overlapping_spans_multithreaded(sdk):
+def test_overlapping_spans_multithreaded(instrumented_sdk):
     # given
+    import concurrent.futures
+
     parallelism = 10
 
     def _create_span_and_sleep(index):
         sleep(0.01 * index)
-        span = sdk._create_trace_span(f"child{index}")
+        span = instrumented_sdk._create_trace_span(f"child{index}")
         span.index = index
         sleep(0.01 * index)
-        inner_span = sdk._create_trace_span(f"grandchild{index}")
+        inner_span = instrumented_sdk._create_trace_span(f"grandchild{index}")
         sleep(0.01 * index)
         inner_span.close()
         sleep(0.01 * index)
         span.close()
 
-    root_span = sdk._create_trace_span("root")
+    root_span = instrumented_sdk._create_trace_span("root")
 
     # when
     with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
@@ -70,21 +70,21 @@ def test_overlapping_spans_multithreaded(sdk):
         assert sub_span.sub_spans[0].parent_span is sub_span
 
 
-def test_overlapping_spans_async(sdk):
+def test_overlapping_spans_async(instrumented_sdk):
     # given
     parallelism = 10
 
     async def _create_span_and_sleep(index):
         await asyncio.sleep(0.05)
-        span = sdk._create_trace_span(f"child{index}")
+        span = instrumented_sdk._create_trace_span(f"child{index}")
         await asyncio.sleep(0.05)
-        inner_span = sdk._create_trace_span(f"grandchild{index}")
+        inner_span = instrumented_sdk._create_trace_span(f"grandchild{index}")
         await asyncio.sleep(0.05)
         inner_span.close()
         await asyncio.sleep(0.05)
         span.close()
 
-    root_span = sdk._create_trace_span("root")
+    root_span = instrumented_sdk._create_trace_span("root")
 
     # when
     async def _run():
@@ -107,16 +107,20 @@ def test_overlapping_spans_async(sdk):
         assert sub_span.sub_spans[0].parent_span is sub_span
 
 
-def test_overlapping_spans_async_with_multithreading(sdk):
+def test_overlapping_spans_async_with_multithreading(instrumented_sdk):
     # given
+    import concurrent.futures
+
     parallelism = 5
 
     async def _create_span_and_sleep(thread_index, async_index):
         await asyncio.sleep(0.05)
-        span = sdk._create_trace_span(f"thread{thread_index}.async{async_index}")
+        span = instrumented_sdk._create_trace_span(
+            f"thread{thread_index}.async{async_index}"
+        )
         span.index = thread_index * 100 + async_index + 1
         await asyncio.sleep(0.05)
-        inner_span = sdk._create_trace_span(
+        inner_span = instrumented_sdk._create_trace_span(
             f"thread{thread_index}.async{async_index}.child"
         )
         await asyncio.sleep(0.05)
@@ -124,12 +128,12 @@ def test_overlapping_spans_async_with_multithreading(sdk):
         await asyncio.sleep(0.05)
         span.close()
 
-    root_span = sdk._create_trace_span("root")
+    root_span = instrumented_sdk._create_trace_span("root")
 
     # when
     async def _run(thread_index):
         await asyncio.sleep(0.1)
-        span = sdk._create_trace_span(f"thread{thread_index}")
+        span = instrumented_sdk._create_trace_span(f"thread{thread_index}")
         span.index = thread_index * 100
         await asyncio.gather(
             *[_create_span_and_sleep(thread_index, i) for i in range(parallelism)]
@@ -161,17 +165,21 @@ def test_overlapping_spans_async_with_multithreading(sdk):
             assert len(sub_sub_span.sub_spans) == 1
 
 
-def test_overlapping_spans_async_with_multithreading_large_scale(sdk):
+def test_overlapping_spans_async_with_multithreading_large_scale(instrumented_sdk):
     # given
+    import concurrent.futures
+
     parallelism = 10
     scale = 1000
 
     async def _create_span_and_sleep(thread_index, async_index):
         await asyncio.sleep(0)
-        span = sdk._create_trace_span(f"thread{thread_index}.async{async_index}")
+        span = instrumented_sdk._create_trace_span(
+            f"thread{thread_index}.async{async_index}"
+        )
         span.index = thread_index * scale * 10 + async_index + 1
         await asyncio.sleep(0)
-        inner_span = sdk._create_trace_span(
+        inner_span = instrumented_sdk._create_trace_span(
             f"thread{thread_index}.async{async_index}.child"
         )
         await asyncio.sleep(0)
@@ -179,12 +187,12 @@ def test_overlapping_spans_async_with_multithreading_large_scale(sdk):
         await asyncio.sleep(0)
         span.close()
 
-    root_span = sdk._create_trace_span("root")
+    root_span = instrumented_sdk._create_trace_span("root")
 
     # when
     async def _run(thread_index):
         await asyncio.sleep(0.1)
-        span = sdk._create_trace_span(f"thread{thread_index}")
+        span = instrumented_sdk._create_trace_span(f"thread{thread_index}")
         span.index = thread_index * scale * 10
         await asyncio.gather(
             *[_create_span_and_sleep(thread_index, i) for i in range(scale)]
@@ -217,8 +225,10 @@ def test_overlapping_spans_async_with_multithreading_large_scale(sdk):
 
 
 @pytest.mark.parametrize("is_error", [True, False])
-def test_captured_events_async_with_multithreading(sdk, is_error):
+def test_captured_events_async_with_multithreading(instrumented_sdk, is_error):
     # given
+    import concurrent.futures
+
     parallelism = 5
     scale = 100
     captured_events = []
@@ -226,17 +236,17 @@ def test_captured_events_async_with_multithreading(sdk, is_error):
     def _captured_event_handler(captured_event):
         captured_events.append(captured_event)
 
-    sdk._event_emitter.on("captured-event", _captured_event_handler)
+    instrumented_sdk._event_emitter.on("captured-event", _captured_event_handler)
 
     async def _create_captured_event_and_sleep(thread_index, async_index):
         await asyncio.sleep(0)
         if is_error:
-            sdk.capture_error(
+            instrumented_sdk.capture_error(
                 Exception("Captured error"),
                 tags={"threadIndex": thread_index, "asyncIndex": async_index},
             )
         else:
-            sdk.capture_warning(
+            instrumented_sdk.capture_warning(
                 "Captured warning",
                 tags={"threadIndex": thread_index, "asyncIndex": async_index},
             )
@@ -271,8 +281,10 @@ def test_captured_events_async_with_multithreading(sdk, is_error):
             assert events[async_index].custom_tags["asyncIndex"] == async_index
 
 
-def test_set_tag_multithreaded(sdk):
+def test_set_tag_multithreaded(instrumented_sdk):
     # given
+    import concurrent.futures
+
     parallelism = 10
     scale = 10000
 
@@ -280,7 +292,7 @@ def test_set_tag_multithreaded(sdk):
         sleep(0.05)
         for i in range(scale):
             unique_value = thread_index * scale * 10 + i
-            sdk.set_tag(f"tag{unique_value}", unique_value)
+            instrumented_sdk.set_tag(f"tag{unique_value}", unique_value)
 
     # when
     with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
@@ -289,14 +301,14 @@ def test_set_tag_multithreaded(sdk):
             assert future.exception() is None
 
     # then
-    assert len(sdk._custom_tags) == parallelism * scale
+    assert len(instrumented_sdk._custom_tags) == parallelism * scale
 
     # given
     def _del_tag_and_sleep(thread_index):
         sleep(0.05)
         for i in range(scale):
             unique_value = thread_index * scale * 10 + i
-            del sdk._custom_tags[f"tag{unique_value}"]
+            del instrumented_sdk._custom_tags[f"tag{unique_value}"]
 
     # when
     with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
@@ -305,7 +317,7 @@ def test_set_tag_multithreaded(sdk):
             assert future.exception() is None
 
     # then
-    assert len(sdk._custom_tags) == 0
+    assert len(instrumented_sdk._custom_tags) == 0
 
 
 @pytest.mark.parametrize(
@@ -318,12 +330,16 @@ def test_instrument_requests_multithreaded(
     instrumented_sdk, httpserver: HTTPServer, request_body, response_body
 ):
     # given
+    import concurrent.futures
+
     def handler(request: Request):
         return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
 
     root = instrumented_sdk._create_trace_span("rootspan")
+    assert len(root.spans) == 1
+
     parallelism = 5
 
     # when
@@ -361,22 +377,23 @@ def test_instrument_requests_multithreaded(
         assert "User-Agent" in span.tags["http.request_header_names"]
 
 
-def test_overlapping_spans_multithreaded_hierarchy(sdk):
+def test_overlapping_spans_multithreaded_hierarchy_plain(instrumented_sdk):
     # given
+    import threading
+
+    def _create_grandchild_span():
+        span = instrumented_sdk._create_trace_span("grandchild")
+        span.close()
+
     def _create_child_span():
-        span = sdk._create_trace_span("child")
-
-        def _create_grandchild_span():
-            span = sdk._create_trace_span("grandchild")
-            span.close()
-
+        span = instrumented_sdk._create_trace_span("child")
         thread = threading.Thread(target=_create_grandchild_span)
         thread.start()
         thread.join()
 
         span.close()
 
-    root_span = sdk._create_trace_span("root")
+    root_span = instrumented_sdk._create_trace_span("root")
 
     # when
     thread = threading.Thread(target=_create_child_span)
@@ -396,19 +413,79 @@ def test_overlapping_spans_multithreaded_hierarchy(sdk):
     assert grandchild.parent_span == child
 
 
-def test_overlapping_spans_async_hierarchy(sdk):
+def test_overlapping_spans_multithreaded_hierarchy_thread_pool_executor(
+    instrumented_sdk,
+):
+    # given
+    import concurrent.futures
+
+    def _create_grandchild_span(parent_index, index):
+        span = instrumented_sdk._create_trace_span(
+            f"child{parent_index}grandchild{index}"
+        )
+        span.close()
+
+    def _create_child_span(index):
+        span = instrumented_sdk._create_trace_span(f"child{index}")
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(_create_grandchild_span, index, i) for i in range(2)
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                assert future.exception() is None
+
+        span.close()
+
+    root_span = instrumented_sdk._create_trace_span("root")
+
+    # when
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(_create_child_span, i) for i in range(2)]
+        for future in concurrent.futures.as_completed(futures):
+            assert future.exception() is None
+
+    root_span.close()
+
+    # then
+    assert len(root_span.spans) == 7
+    root = [span for span in root_span.spans if span.name == "root"][0]
+    child0 = [span for span in root_span.spans if span.name == "child0"][0]
+    child1 = [span for span in root_span.spans if span.name == "child1"][0]
+    child0grandchild0 = [
+        span for span in root_span.spans if span.name == "child0grandchild0"
+    ][0]
+    child0grandchild1 = [
+        span for span in root_span.spans if span.name == "child0grandchild1"
+    ][0]
+    child1grandchild0 = [
+        span for span in root_span.spans if span.name == "child1grandchild0"
+    ][0]
+    child1grandchild1 = [
+        span for span in root_span.spans if span.name == "child1grandchild1"
+    ][0]
+    assert root.parent_span is None
+    assert child0.parent_span is root
+    assert child1.parent_span is root
+    assert child0grandchild0.parent_span is child0
+    assert child0grandchild1.parent_span is child0
+    assert child1grandchild0.parent_span is child1
+    assert child1grandchild1.parent_span is child1
+
+
+def test_overlapping_spans_async_hierarchy(instrumented_sdk):
     # given
     async def _create_child_span():
-        span = sdk._create_trace_span("child")
+        span = instrumented_sdk._create_trace_span("child")
 
         async def _create_grandchild_span():
-            span = sdk._create_trace_span("grandchild")
+            span = instrumented_sdk._create_trace_span("grandchild")
             span.close()
 
         await _create_grandchild_span()
         span.close()
 
-    root_span = sdk._create_trace_span("root")
+    root_span = instrumented_sdk._create_trace_span("root")
 
     # when
     async def _run():

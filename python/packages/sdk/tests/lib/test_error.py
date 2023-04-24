@@ -3,7 +3,12 @@ import pytest
 from unittest.mock import MagicMock, patch, ANY
 
 
-def test_error_with_exception(sdk, monkeypatch):
+@pytest.fixture(autouse=True)
+def _reset_sdk(reset_sdk):
+    pass
+
+
+def test_error_with_exception(monkeypatch):
     # given
     import sls_sdk.lib.error_captured_event
     from sls_sdk.lib.error import report as report_error, logger
@@ -39,7 +44,7 @@ def test_error_with_exception(sdk, monkeypatch):
     )
 
 
-def test_error_with_custom_object(sdk, monkeypatch):
+def test_error_with_custom_object(monkeypatch):
     # given
     import sls_sdk.lib.error_captured_event
     from sls_sdk.lib.error import report as report_error, logger
@@ -75,7 +80,7 @@ def test_error_with_custom_object(sdk, monkeypatch):
     )
 
 
-def test_error_with_crash_exception(sdk, monkeypatch):
+def test_error_with_crash_exception(monkeypatch):
     # given
     from sls_sdk.lib.error import report as report_error, logger
 
@@ -88,7 +93,7 @@ def test_error_with_crash_exception(sdk, monkeypatch):
         assert ex is error
 
 
-def test_error_with_crash_custom_object(sdk, monkeypatch):
+def test_error_with_crash_custom_object(monkeypatch):
     # given
     from sls_sdk.lib.error import report as report_error, logger
 
