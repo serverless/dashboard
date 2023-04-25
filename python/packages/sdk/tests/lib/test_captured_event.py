@@ -1,11 +1,17 @@
 from __future__ import annotations
 import time
 import json
+import pytest
 from unittest.mock import MagicMock
 from sls_sdk.lib.captured_event import CapturedEvent
 from sls_sdk.lib.tags import Tags, convert_tags_to_protobuf
 from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
 import sls_sdk.lib.captured_event
+
+
+@pytest.fixture(autouse=True)
+def _reset_sdk(reset_sdk):
+    pass
 
 
 def test_captured_event():

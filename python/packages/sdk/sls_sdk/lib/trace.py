@@ -2,11 +2,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 import logging
 import time
+import threading
 from typing import List, Optional, Callable
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
 import json
+from .instrumentation.import_hook import ImportHook
 from .timing import to_protobuf_epoch_timestamp
 from ..base import Nanoseconds, TraceId
 from ..exceptions import (
@@ -21,6 +23,7 @@ from .emitter import event_emitter
 from .id import generate_id
 from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
+from wrapt import wrap_function_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +35,24 @@ __all__: Final[List[str]] = [
 
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
+_CONTEXT: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 
-ctx: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 root_span: Optional[TraceSpan] = None
+
+
+def _install_thread_hook(threading_module):
+    # Implementation of item 2 in `resolve_current_span`
+    def _thread_ctor_wrapper(actual_start, instance, args, kwargs):
+        if not hasattr(instance, "_parent_span"):
+            instance._parent_span = _CONTEXT.get() or root_span
+        result = actual_start(*args, **kwargs)
+        return result
+
+    wrap_function_wrapper(threading_module.Thread, "start", _thread_ctor_wrapper)
+
+
+_import_hook = ImportHook("threading")
+_import_hook.enable(_install_thread_hook)
 
 
 class TraceSpan:
@@ -69,16 +87,30 @@ class TraceSpan:
         self._set_spans(immediate_descendants)
         self._on_close_by_root = on_close_by_root
 
+    def __str__(self):
+        parent = self.parent_span.name if self.parent_span else None
+        return f"{self.name} (parent={parent} - id={self.id})"
+
+    def __repr__(self):
+        return self.__str__()
+
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
-        global root_span, ctx
-        span = ctx.get(None)
-
-        return span or root_span or None
+        # Current span is resolved in the following order:
+        # 1. Current context, this covers spans in async contexts
+        # 2. Current thread, this covers spans in threads
+        # 3. Root span, fallback to root if no other span can be resolved
+        # 4. None, if no span can be resolved
+        return (
+            _CONTEXT.get()
+            or getattr(threading.current_thread(), "_parent_span", None)
+            or root_span
+            or None
+        )
 
     def _set_spans(self, immediate_descendants: Optional[List[str]]):
         self._set_span_hierarchy()
-        self._set_ctx()
+        _CONTEXT.set(self)
         if immediate_descendants and len(immediate_descendants) > 0:
             TraceSpan(
                 immediate_descendants.pop(0),
@@ -101,10 +133,6 @@ class TraceSpan:
 
         if self.parent_span:
             self.parent_span.sub_spans.append(self)
-
-    def _set_ctx(self, override: Optional[TraceSpan] = None):
-        global ctx
-        ctx.set(override or self)
 
     def _set_name(self, name):
         self.name = get_resource_name(name)
@@ -168,7 +196,6 @@ class TraceSpan:
         self._input = value
 
     def close(self, end_time: Optional[Nanoseconds] = None):
-        global root_span, ctx
         default: Nanoseconds = time.perf_counter_ns()
         target_end_time = end_time
 
@@ -205,23 +232,24 @@ class TraceSpan:
                     "Serverless SDK Warning: Following trace spans didn't end before"
                     + f" end of lambda invocation: {spans}"
                 )
-            self._set_ctx()
+            _CONTEXT.set(self)
         else:
             # if this is not the root span and context points to this
             # then we need to reset the context to the first open ancestor span
-            if self is ctx.get(None):
+            current = _CONTEXT.get()
+            if self is current:
                 current = self.parent_span
                 found = False
                 # loop through ancestors
                 while current:
                     if not current.end_time:
                         # break at the first open ancestor and store it in the context
-                        self._set_ctx(current)
+                        _CONTEXT.set(current)
                         found = True
                         break
                     current = current.parent_span
                 if not found:
-                    self._set_ctx(root_span)
+                    _CONTEXT.set(root_span)
 
         event_emitter.emit("trace-span-close", self)
         return self

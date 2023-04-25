@@ -1,9 +1,15 @@
 import time
 import json
 from unittest.mock import patch, call
+import pytest
 
 
-def test_root_span(sdk):
+@pytest.fixture(autouse=True)
+def _reset_sdk(reset_sdk):
+    pass
+
+
+def test_root_span():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -18,7 +24,7 @@ def test_root_span(sdk):
     ), "should automatically generate `start_time`"
 
 
-def test_sub_span(sdk):
+def test_sub_span():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -44,7 +50,7 @@ def test_sub_span(sdk):
     assert child_span in root_span.sub_spans
 
 
-def test_span_init_start_time(sdk):
+def test_span_init_start_time():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -57,7 +63,7 @@ def test_span_init_start_time(sdk):
     assert span.start_time == start_time, "should support injection of `start_time`"
 
 
-def test_span_init_tags(sdk):
+def test_span_init_tags():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -70,7 +76,7 @@ def test_span_init_tags(sdk):
     assert span.tags == tags, "should support initial `tags`"
 
 
-def test_span_init_end_time(sdk):
+def test_span_init_end_time():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -84,7 +90,7 @@ def test_span_init_end_time(sdk):
     assert span.end_time == end_time, "should support injection of `end_time`"
 
 
-def test_span_init_input(sdk):
+def test_span_init_input():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -97,7 +103,7 @@ def test_span_init_input(sdk):
     assert span.input == input, "should support `input`"
 
 
-def test_span_protobuf(sdk):
+def test_span_protobuf():
     # given
     from sls_sdk.lib.trace import TraceSpan
     from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
@@ -145,7 +151,7 @@ def test_span_protobuf(sdk):
     }, "should stringify to JSON"
 
 
-def test_span_protobuf_no_custom_tags(sdk):
+def test_span_protobuf_no_custom_tags():
     # given
     from sls_sdk.lib.trace import TraceSpan
     from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
@@ -174,7 +180,7 @@ def test_span_protobuf_no_custom_tags(sdk):
     }, "should stringify to JSON"
 
 
-def test_creation_of_immediate_descendant_spans(sdk):
+def test_creation_of_immediate_descendant_spans():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -203,7 +209,7 @@ def test_creation_of_immediate_descendant_spans(sdk):
     child_span.close()
 
 
-def test_leaf_span(sdk):
+def test_leaf_span():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -213,7 +219,7 @@ def test_leaf_span(sdk):
     assert list(span.spans) == [span], "should resolve just self when no subspans"
 
 
-def test_spans(sdk):
+def test_spans():
     # given
     from sls_sdk.lib.trace import TraceSpan
 
@@ -228,7 +234,7 @@ def test_spans(sdk):
     assert span.spans == [span, sub_span_1, sub_sub_span, sub_span_2]
 
 
-def test_span_closure(sdk):
+def test_span_closure():
     from sls_sdk.lib.trace import TraceSpan
     from sls_sdk.lib.emitter import event_emitter
 
@@ -257,7 +263,7 @@ def test_span_closure(sdk):
     )
 
 
-def test_root_span_reuse(sdk):
+def test_root_span_reuse():
     # given
     from importlib import reload
     import sls_sdk.lib.trace

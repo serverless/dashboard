@@ -310,9 +310,6 @@ def test_instrument_aiohttp(
         return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
-    import sls_sdk.lib.trace
-
-    sls_sdk.lib.trace.root_span = None
 
     # when
     import aiohttp
@@ -394,10 +391,6 @@ def test_instrument_aiohttp_error(
     instrumented_sdk,
 ):
     # given
-    import sls_sdk.lib.trace
-
-    sls_sdk.lib.trace.root_span = None
-
     host = str(uuid.uuid4()) + ":1234"
     url = f"https://{host}/foo/bar?baz=qux"
 
@@ -488,9 +481,6 @@ def test_instrument_aiohttp_sls_ignore(
         return Response(response_body)
 
     httpserver.expect_request("/foo/bar").respond_with_handler(handler)
-    import sls_sdk.lib.trace
-
-    sls_sdk.lib.trace.root_span = None
 
     # when
     import aiohttp

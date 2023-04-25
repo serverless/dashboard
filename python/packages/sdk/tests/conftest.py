@@ -1,37 +1,53 @@
 import pytest
 import sys
 import importlib
+from wrapt import ObjectProxy
 from . import TEST_ORG, TEST_DEV_MODE_ORG_ID
 
 
-@pytest.fixture()
-def sdk(monkeypatch, request):
-    _reset_sdk_reimport(monkeypatch, request, False, True)
-    from serverless_sdk import serverlessSdk
-
-    serverlessSdk._initialize()
-    yield serverlessSdk
-    import sls_sdk
+def _uninstall():
+    import sls_sdk.lib.instrumentation.http
+    import sls_sdk.lib.instrumentation.flask
+    import sls_sdk.lib.instrumentation.logging
+    import sls_sdk.lib.trace
 
     sls_sdk.lib.instrumentation.http.uninstall()
+    sls_sdk.lib.instrumentation.flask.uninstall()
+    sls_sdk.lib.instrumentation.logging.uninstall()
+
+    def _uninstall_threading_hook(threading):
+        _wrapping_method = getattr(threading.Thread, "start", None)
+        if (
+            _wrapping_method
+            and isinstance(_wrapping_method, ObjectProxy)
+            and hasattr(_wrapping_method, "__wrapped__")
+        ):
+            setattr(
+                threading.Thread,
+                "start",
+                _wrapping_method.__wrapped__,
+            )
+
+    sls_sdk.lib.trace._import_hook.disable(_uninstall_threading_hook)
+    if sls_sdk.lib.trace.root_span:
+        if not sls_sdk.lib.trace.root_span.end_time:
+            sls_sdk.lib.trace.root_span.close()
+        sls_sdk.lib.trace.root_span = None
+    sls_sdk.lib.trace._CONTEXT.set(None)
 
 
 @pytest.fixture()
 def reset_sdk(monkeypatch, request):
     _reset_sdk_reimport(monkeypatch, request)
     yield
-    import sls_sdk
-
-    sls_sdk.lib.instrumentation.http.uninstall()
+    _uninstall()
 
 
 @pytest.fixture()
 def reset_sdk_dev_mode(monkeypatch, request):
     _reset_sdk_reimport(monkeypatch, request, True, True)
     yield
-    import sls_sdk
-
-    sls_sdk.lib.instrumentation.http.uninstall()
+    _uninstall()
 
 
 def _reset_sdk_reimport(
@@ -47,6 +63,8 @@ def _reset_sdk_reimport(
     module_prefixes_to_delete = [
         "serverless_sdk",
         "sls_sdk",
+        "threading",
+        "concurrent.futures",
         "http.client",
         "urllib",
         "urllib3",
@@ -99,4 +117,4 @@ def instrumented_sdk(reset_sdk, request, monkeypatch):
         disable_request_response_monitoring=not request.param
     )
     yield sls_sdk.serverlessSdk
-    sls_sdk.lib.instrumentation.http.uninstall()
+    _uninstall()

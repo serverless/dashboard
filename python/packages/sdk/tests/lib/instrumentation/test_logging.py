@@ -1,23 +1,22 @@
 import pytest
 from unittest.mock import MagicMock
-import sls_sdk.lib.instrumentation.logging
 import logging
 import json
 
 
-@pytest.fixture(autouse=True)
-def instrumentation_setup():
+@pytest.fixture()
+def instrumented_logging():
+    import sls_sdk.lib.instrumentation.logging
+
     sls_sdk.lib.instrumentation.logging.install()
-    yield
+    yield sls_sdk.lib.instrumentation.logging
     sls_sdk.lib.instrumentation.logging.uninstall()
 
 
-def test_instrument_error(monkeypatch):
+def test_instrument_error(instrumented_logging, monkeypatch):
     # given
     mock = MagicMock()
-    monkeypatch.setattr(
-        sls_sdk.lib.instrumentation.logging, "create_error_captured_event", mock
-    )
+    monkeypatch.setattr(instrumented_logging, "create_error_captured_event", mock)
     error = Exception("My error")
 
     # when
@@ -27,12 +26,10 @@ def test_instrument_error(monkeypatch):
     mock.assert_called_once_with(error, origin="pythonLogging")
 
 
-def test_instrument_error_with_multiple_arguments(monkeypatch):
+def test_instrument_error_with_multiple_arguments(instrumented_logging, monkeypatch):
     # given
     mock = MagicMock()
-    monkeypatch.setattr(
-        sls_sdk.lib.instrumentation.logging, "create_error_captured_event", mock
-    )
+    monkeypatch.setattr(instrumented_logging, "create_error_captured_event", mock)
     error = "%s %s went wrong"
     args = ("logging", "test")
 
@@ -43,11 +40,11 @@ def test_instrument_error_with_multiple_arguments(monkeypatch):
     mock.assert_called_once_with(error % args, origin="pythonLogging")
 
 
-def test_instrument_warning(monkeypatch):
+def test_instrument_warning(instrumented_logging, monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        sls_sdk.lib.instrumentation.logging,
+        instrumented_logging,
         "create_warning_captured_event",
         mock,
     )
@@ -60,11 +57,11 @@ def test_instrument_warning(monkeypatch):
     mock.assert_called_once_with(message % "hello", origin="pythonLogging")
 
 
-def test_instrument_warn(monkeypatch):
+def test_instrument_warn(instrumented_logging, monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        sls_sdk.lib.instrumentation.logging,
+        instrumented_logging,
         "create_warning_captured_event",
         mock,
     )
@@ -77,11 +74,11 @@ def test_instrument_warn(monkeypatch):
     mock.assert_called_once_with(message % "hello", origin="pythonLogging")
 
 
-def test_instrument_warning_recognize_sdk_warning(monkeypatch):
+def test_instrument_warning_recognize_sdk_warning(instrumented_logging, monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        sls_sdk.lib.instrumentation.logging,
+        instrumented_logging,
         "create_warning_captured_event",
         mock,
     )
@@ -98,11 +95,11 @@ def test_instrument_warning_recognize_sdk_warning(monkeypatch):
     mock_json.assert_called_once_with(data, indent=2)
 
 
-def test_instrument_warning_recognize_sdk_error(monkeypatch):
+def test_instrument_warning_recognize_sdk_error(instrumented_logging, monkeypatch):
     # given
     mock = MagicMock()
     monkeypatch.setattr(
-        sls_sdk.lib.instrumentation.logging,
+        instrumented_logging,
         "create_error_captured_event",
         mock,
     )
