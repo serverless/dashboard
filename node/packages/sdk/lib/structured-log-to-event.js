@@ -1,28 +1,29 @@
 'use strict';
 
-const isObject = require('type/object/is');
-const { debuglog } = require('util');
 const createErrorCapturedEvent = require('./create-error-captured-event');
 const createWarningCapturedEvent = require('./create-warning-captured-event');
+const reportError = require('./report-error');
+
+const safeJsonParse = (logLine) => {
+  try {
+    return JSON.parse(logLine);
+  } catch {
+    return null;
+  }
+};
+
+const supportedLevels = new Set(['WARN', 'ERROR']);
 
 const parseLogLevel = (level) => {
   if (typeof level === 'string') {
     const levelUpperCase = level.toUpperCase();
-    if (levelUpperCase !== 'ERROR' && levelUpperCase !== 'WARN') {
-      throw new Error('Unsupported level');
-    }
-    return levelUpperCase;
+    if (supportedLevels.has(levelUpperCase)) return levelUpperCase;
   } else if (typeof level === 'number') {
-    if (level <= 30) {
-      throw new Error('Unsupported level');
-    }
-
-    if (level <= 40) {
-      return 'WARN';
-    }
-    return 'ERROR';
+    if (level <= 30) return null;
+    if (level <= 40) return 'WARN';
+    if (level > 40) return 'ERROR';
   }
-  throw new Error('Unsupported level');
+  return null;
 };
 
 const highCardinalityAttributes = [
@@ -79,7 +80,7 @@ const handleErrorLog = (logLineParsed) => {
     // In this case we do best attempt at parsing.
     // AWS Lambda Powertools will fall in this category.
     const [errKey, errObj] = Object.entries(logLineParsed).find(
-      ([, value]) => isObject(value) && 'message' in value && 'stack' in value
+      ([, value]) => value && value.message && value.stack
     );
 
     if (!errKey || !errObj) {
@@ -118,17 +119,23 @@ const handleWarningLog = (logLineParsed) => {
 
 module.exports.attemptParseStructuredLogAndCapture = (logLine) => {
   try {
-    const logLineParsed = JSON.parse(logLine.toString());
-    if ('level' in logLineParsed) {
-      debuglog('LOG LEVEL', logLineParsed.level);
-      const logLevel = parseLogLevel(logLineParsed.level);
-      if (logLevel === 'ERROR') {
+    if (typeof logLine !== 'string') return;
+    if (logLine[0] !== '{') return;
+    const logLineParsed = safeJsonParse(logLine);
+    if (!logLineParsed) return;
+    if (!logLineParsed.level) return;
+    const logLevel = parseLogLevel(logLineParsed.level);
+    switch (logLevel) {
+      case 'ERROR':
         handleErrorLog(logLineParsed);
-      } else if (logLevel === 'WARN') {
+        return;
+      case 'WARN':
         handleWarningLog(logLineParsed);
-      }
+        return;
+      default:
+        throw new Error(`Unsupported log level: ${logLevel}`);
     }
-  } catch (err) {
-    // Not a structured logline
+  } catch (error) {
+    reportError(error);
   }
 };

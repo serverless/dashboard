@@ -2076,7 +2076,7 @@ describe('integration', function () {
           expect(slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
             service: testConfig.configuration.FunctionName,
-            sdk: { name: pkgJson.name, version: pkgJson.version },
+            sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
           });
           expect(lambdaSpan.tags.aws.lambda).to.have.property('arch');
           expect(lambdaSpan.tags.aws.lambda.name).to.equal(testConfig.configuration.FunctionName);

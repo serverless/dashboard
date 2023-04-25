@@ -21,15 +21,14 @@ def run_http_server():
         httpd.serve_forever(0.1)
 
 
-def make_http_request(url, use_ssl=False):
+def make_http_request(url):
     sys.path.append(Path(__file__).parent / "test_dependencies")
     import aiohttp
 
     async def _request():
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers={"someHeader": "bar"}) as resp:
-                print(resp.status)
-                print(await resp.text())
+                await resp.text()
 
     asyncio.run(_request())
     sys.path.pop()
@@ -38,8 +37,6 @@ def make_http_request(url, use_ssl=False):
 def handler(event, context) -> str:
     url = event.get("url")
     if url:
-        from urllib.parse import urlparse
-
         make_http_request(url)
     else:
         from threading import Thread
