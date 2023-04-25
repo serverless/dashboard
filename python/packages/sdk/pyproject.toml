@@ -30,6 +30,7 @@ tests = [
     "requests>=2.28.2",
     "ruff>=0.0.199",
     "urllib3>=1.26.15",
+    "yarl~=1.8.0",
 ]
 [project.urls]
 changelog = "https://github.com/serverless/console/blob/main/python/packages/sdk/CHANGELOG.md"
