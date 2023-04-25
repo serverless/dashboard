@@ -18,6 +18,7 @@ dependencies = [
     "serverless-sdk-schema~=0.2.1",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11
     "wrapt~=1.15.0",
+    "yarl~=1.8.0",
 ]
 [project.optional-dependencies]
 tests = [

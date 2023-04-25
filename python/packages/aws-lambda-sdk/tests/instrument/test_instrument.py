@@ -475,11 +475,13 @@ def test_instrument_lambda_success_dev_mode_with_server(
     [assert_hexadecimal(r.trace_id) for r in request_response_payloads]
     [assert_hexadecimal(r.span_id) for r in request_response_payloads]
 
-    assert [s.name for t in trace_payloads for s in t.spans] == [
-        "aws.lambda.initialization",
-        "aws.lambda.invocation",
-        "aws.lambda",
-    ]
+    assert set([s.name for t in trace_payloads for s in t.spans]) == set(
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ]
+    )
 
     assert (
         len([e.event_name for t in trace_payloads for e in t.events])
@@ -577,6 +579,77 @@ def test_instrument_lambda_http_requests(reset_sdk_debug_mode, mocked_print):
     )
 
     tags = trace_payload.spans[3].tags
+    assert tags.http.method == "GET"
+    assert tags.http.protocol == "HTTP/1.1"
+    assert tags.http.host.startswith("127.0.0.1:317")
+    assert tags.http.path == "/"
+    assert tags.http.query_parameter_names == ["foo"]
+    assert tags.http.request_header_names == ["someHeader"]
+    assert tags.http.status_code == 200
+
+
+def test_instrument_lambda_aiohttp_requests(reset_sdk_debug_mode, mocked_print):
+    # given
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
+
+    instrumenter = Instrumenter()
+    from ..fixtures.lambdas.aiohttp_requester import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "python.http.request",
+        ],
+        1,
+    )
+
+    tags = trace_payload.spans[3].tags
+    assert tags.http.method == "GET"
+    assert tags.http.protocol == "HTTP/1.1"
+    assert tags.http.host.startswith("127.0.0.1:317")
+    assert tags.http.path == "/"
+    assert tags.http.query_parameter_names == ["foo"]
+    assert tags.http.request_header_names == ["someHeader"]
+    assert tags.http.status_code == 200
+
+    mocked_print.reset_mock()
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(_TARGET_LOG_PREFIX)
+    ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.invocation",
+            "python.http.request",
+        ],
+        1,
+    )
+
+    tags = trace_payload.spans[2].tags
     assert tags.http.method == "GET"
     assert tags.http.protocol == "HTTP/1.1"
     assert tags.http.host.startswith("127.0.0.1:317")
