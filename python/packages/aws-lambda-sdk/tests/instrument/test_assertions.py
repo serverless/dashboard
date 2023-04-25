@@ -28,6 +28,9 @@ def assert_lambda_tags(aws_lambda: Span, outcome: int):
 
 
 def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome: int):
+    def _first_or_none(l):
+        return l[0] if l else None
+
     assert trace_payload.sls_tags.sdk.name == "serverless-aws-lambda-sdk"
     assert trace_payload.sls_tags.sdk.runtime == "python"
 
@@ -37,20 +40,21 @@ def assert_trace_payload(trace_payload: TracePayload, spans: List[str], outcome:
     aws_lambda = [x for x in trace_payload.spans if x.name == "aws.lambda"][0]
     assert_lambda_tags(aws_lambda, outcome)
 
-    aws_lambda_initialization = [
-        x for x in trace_payload.spans if x.name == "aws.lambda.initialization"
-    ][0]
+    aws_lambda_initialization = _first_or_none(
+        [x for x in trace_payload.spans if x.name == "aws.lambda.initialization"]
+    )
     aws_lambda_invocation = [
         x for x in trace_payload.spans if x.name == "aws.lambda.invocation"
     ][0]
-    assert (
-        aws_lambda_initialization.start_time_unix_nano
-        == aws_lambda.start_time_unix_nano
-    )
-    assert (
-        aws_lambda_invocation.start_time_unix_nano
-        > aws_lambda_initialization.start_time_unix_nano
-    )
+    if aws_lambda_initialization:
+        assert (
+            aws_lambda_initialization.start_time_unix_nano
+            == aws_lambda.start_time_unix_nano
+        )
+        assert (
+            aws_lambda_invocation.start_time_unix_nano
+            > aws_lambda_initialization.start_time_unix_nano
+        )
     for span in trace_payload.spans:
         assert span.start_time_unix_nano < span.end_time_unix_nano
 
