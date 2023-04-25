@@ -2,11 +2,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 import logging
 import time
+import threading
 from typing import List, Optional, Callable
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
 from typing_extensions import Final, Self
 import json
+from .instrumentation.import_hook import ImportHook
 from .timing import to_protobuf_epoch_timestamp
 from ..base import Nanoseconds, TraceId
 from ..exceptions import (
@@ -21,6 +23,7 @@ from .emitter import event_emitter
 from .id import generate_id
 from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
+from wrapt import wrap_function_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,21 @@ TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 _CONTEXT: Final[TraceSpanContext] = ContextVar("ctx", default=None)
 
 root_span: Optional[TraceSpan] = None
+
+
+def _install_thread_hook(threading_module):
+    # Implementation of item 2 in `resolve_current_span`
+    def _thread_ctor_wrapper(actual_start, instance, args, kwargs):
+        if not hasattr(instance, "_parent_span"):
+            instance._parent_span = _CONTEXT.get() or root_span
+        result = actual_start(*args, **kwargs)
+        return result
+
+    wrap_function_wrapper(threading_module.Thread, "start", _thread_ctor_wrapper)
+
+
+_import_hook = ImportHook("threading")
+_import_hook.enable(_install_thread_hook)
 
 
 class TraceSpan:
@@ -69,9 +87,26 @@ class TraceSpan:
         self._set_spans(immediate_descendants)
         self._on_close_by_root = on_close_by_root
 
+    def __str__(self):
+        parent = self.parent_span.name if self.parent_span else None
+        return f"{self.name} (parent={parent} - id={self.id})"
+
+    def __repr__(self):
+        return self.__str__()
+
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
-        return _CONTEXT.get(None) or root_span or None
+        # Current span is resolved in the following order:
+        # 1. Current context, this covers spans in async contexts
+        # 2. Current thread, this covers spans in threads
+        # 3. Root span, fallback to root if no other span can be resolved
+        # 4. None, if no span can be resolved
+        return (
+            _CONTEXT.get()
+            or getattr(threading.current_thread(), "_parent_span", None)
+            or root_span
+            or None
+        )
 
     def _set_spans(self, immediate_descendants: Optional[List[str]]):
         self._set_span_hierarchy()
@@ -201,7 +236,8 @@ class TraceSpan:
         else:
             # if this is not the root span and context points to this
             # then we need to reset the context to the first open ancestor span
-            if self is _CONTEXT.get(None):
+            current = _CONTEXT.get()
+            if self is current:
                 current = self.parent_span
                 found = False
                 # loop through ancestors
