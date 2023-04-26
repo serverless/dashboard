@@ -105,18 +105,44 @@ Max memory used as reported by AWS (with `maxMemoryUsed` metric provided in invo
 
 ## Setup & Run
 
-### 1. Ensure AWS credentials
+### 1. Ensure installed dependencies
+
+#### 1.1 Node.js
+
+Ensure dependencies are ensure in following folders (they can be installed via `npm install` commmand):
+
+- `node`
+- `node/packages/aws-lambda-sdk`
+- `node/packages/aws-lambda-sdk/test/fixtures/lambdas`
+
+#### 1.2 Python
+
+Ensure dependencies for the `serverless-aws-lambda-sdk` package beign installed as:
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install serverless-aws-lambda-sdk --target=python/packages/aws-lambda-sdk/dist
+```
+
+#### 1.3 Go
+
+Ensure Go is installed in the environment
+
+### 2. Setup environment variables
+
+#### 2.1 Ensure AWS credentials
 
 _In same manner as for AWS CLI_
 
-### 2. Configure environment variables
+#### 2.2 Configure environment variables
 
 - `AWS_REGION` - region against which benchmarks should be run
 - `SLS_ORG_ID`- Console organization id (can by dummy, as it'll be part of generated trace which otherwise is not send to console servers)
 - `TEST_UID` - (optional) common name token to be used as part of generated resource names. All generated resource names will be prefixed with `test-oext-<test-uid>`. If not provided, one is generated on basis of [local machine id](https://www.npmjs.com/package/node-machine-id). Note: Script ensures that all generated resources are removed after benchmark is done
 - `LOG_LEVEL` - (optional) For more verbose output `LOG_LEVEL=info` can be used
 
-### 4. Run
+### 3. Run
 
 Benchmark for all configured use cases and benchmark variants can be run as:
 
@@ -127,7 +153,7 @@ Benchmark for all configured use cases and benchmark variants can be run as:
 Generated benchmark results are output to the console in CSV format. To store them to the file output can be piped as:
 
 ```bash
-./node/test/scripts/benchmark.index.js > benchmark.csv
+./node/test/scripts/benchmark/index.js > benchmark.csv
 ```
 
 ### 4.1 Run customization
