@@ -41,6 +41,9 @@ All created resourced are named or prefixed with `test-sdk-<testUid>` string, wh
 
 The Python code subject to test, which will be packaged as a lambda layer, should be built in the `python/packages/aws-lambda-sdk/dist` folder. You can choose where to pull the dependencies from, they might be pulled from PyPI repository or you can use dependencies from the local repository.
 
+### Before building
+* Remove the target `dist` folder to make sure packages from previous runs do not interfere: `rm -rf python/packages/aws-lambda-sdk/dist`
+
 ### A. Build code from PyPI repository
 
 ```bash
