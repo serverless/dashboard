@@ -132,6 +132,11 @@ module.exports.attemptParseStructuredLogAndCapture = (logLine) => {
       case 'WARN':
         handleWarningLog(logLineParsed);
         return;
+      case 'INFO':
+      case null:
+        // We don't capture info logs but we don't want to throw an error either.
+        // If a value is null, it means it is not a valid log line
+        return;
       default:
         throw new Error(`Unsupported log level: ${logLevel}`);
     }
