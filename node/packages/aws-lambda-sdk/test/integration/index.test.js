@@ -69,6 +69,12 @@ describe('integration', function () {
       Target: `integrations/${integrationId}`,
     });
 
+    await awsRequest(ApiGatewayV2, 'createRoute', {
+      ApiId: apiId,
+      RouteKey: 'POST /foo/bar',
+      Target: `integrations/${integrationId}`,
+    });
+
     await awsRequest(ApiGatewayV2, 'createStage', {
       ApiId: apiId,
       StageName: '$default',
@@ -337,30 +343,32 @@ describe('integration', function () {
     }),
   };
 
-  const expressInvoke = async function self(testConfig) {
-    const startTime = process.hrtime.bigint();
-    const response = await fetch(
-      `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com/test`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ some: 'content' }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+  const resolveExpressInvoke = ({ pathname }) =>
+    async function self(testConfig) {
+      const startTime = process.hrtime.bigint();
+      const response = await fetch(
+        `https://${testConfig.apiId}.execute-api.${process.env.AWS_REGION}.amazonaws.com${pathname}`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ some: 'content' }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (response.status !== 200) {
+        if (response.status === 404) {
+          log.warn(`API Gateway at POST ${pathname} not ready yet, retrying in 1s`);
+          await wait(1000);
+          return self(testConfig);
+        }
+        throw new Error(`Unexpected response status: ${response.status}`);
       }
-    );
-    if (response.status !== 200) {
-      if (response.status === 404) {
-        await wait(1000);
-        return self(testConfig);
-      }
-      throw new Error(`Unexpected response status: ${response.status}`);
-    }
-    const payload = { raw: await response.text() };
-    const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
-    log.debug('invoke response payload %s', payload.raw);
-    return { duration, payload };
-  };
+      const payload = { raw: await response.text() };
+      const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+      log.debug('invoke response payload %s', payload.raw);
+      return { duration, payload };
+    };
 
   const expressMinimalTest = ({ invocationsData }) => {
     for (const [
@@ -1607,7 +1615,7 @@ describe('integration', function () {
             await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
           },
         },
-        invoke: expressInvoke,
+        invoke: resolveExpressInvoke({ pathname: '/test' }),
         test: ({ invocationsData, testConfig }) => {
           for (const [
             index,
@@ -1658,6 +1666,68 @@ describe('integration', function () {
       },
     ],
     [
+      'express-nested',
+      {
+        hooks: {
+          afterCreate: getCreateHttpApi('2.0'),
+          beforeDelete: async (testConfig) => {
+            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+          },
+        },
+        invoke: resolveExpressInvoke({ pathname: '/foo/bar' }),
+        test: ({ invocationsData, testConfig }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            const lambdaSpan = spans.shift();
+            if (!index) spans.shift();
+            const { tags: lambdaTags } = lambdaSpan;
+
+            expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+            expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+            expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
+            expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+            expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
+            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+            expect(lambdaTags.aws.lambda.http).to.have.property('host');
+            expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
+            expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+            expect(lambdaTags.aws.lambda.http.path).to.equal('/foo/bar');
+
+            expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/foo/bar');
+
+            const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+            const routeSpan = middlewareSpans.pop();
+            const routerSpan = middlewareSpans.pop();
+            const topRouterSpan = middlewareSpans[middlewareSpans.length - 1];
+
+            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+              'express.middleware.query',
+              'express.middleware.expressinit',
+              'express.middleware.jsonparser',
+              'express.middleware.router.foo',
+            ]);
+            for (const middlewareSpan of middlewareSpans) {
+              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+            }
+            expect(routerSpan.name).to.equal('express.middleware.router');
+            expect(String(routerSpan.parentSpanId)).to.equal(String(topRouterSpan.id));
+            expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+          }
+        },
+      },
+    ],
+    [
       'esm-express/index',
       {
         hooks: {
@@ -1666,7 +1736,7 @@ describe('integration', function () {
             await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
           },
         },
-        invoke: expressInvoke,
+        invoke: resolveExpressInvoke({ pathname: '/test' }),
         test: expressMinimalTest,
       },
     ],
@@ -1692,7 +1762,7 @@ describe('integration', function () {
           );
           return { Code: { ZipFile: zip.toBuffer() } };
         },
-        invoke: expressInvoke,
+        invoke: resolveExpressInvoke({ pathname: '/test' }),
         test: expressMinimalTest,
       },
     ],
