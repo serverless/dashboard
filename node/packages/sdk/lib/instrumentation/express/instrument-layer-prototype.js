@@ -18,6 +18,7 @@ module.exports.install = (layerPrototype) => {
   layerPrototype.handle_request = function handle(req, res, next) {
     let middlewareSpan;
     let expressRouteData;
+    let isRouterMiddleware;
     try {
       if (!expressSpansMap.has(req)) {
         const expressSpan = serverlessSdk._createTraceSpan('express');
@@ -26,10 +27,11 @@ module.exports.install = (layerPrototype) => {
         expressSpansMap.set(req, expressRouteData);
         res.on('finish', () => {
           const endTime = process.hrtime.bigint();
-          if (expressRouteData.route && expressRouteData.route.path && rootSpan) {
+          const rootSpan = serverlessSdk.traceSpans.root;
+          if (rootSpan && expressRouteData.path) {
             // Override eventual API Gateway's `resourcePath`
             rootSpan.tags.delete('aws.lambda.http_router.path');
-            rootSpan.tags.set('aws.lambda.http_router.path', expressRouteData.route.path);
+            rootSpan.tags.set('aws.lambda.http_router.path', expressRouteData.path);
           }
           for (const subSpan of openedSpans) {
             if (!subSpan.endTime) subSpan.close({ endTime });
@@ -40,7 +42,7 @@ module.exports.install = (layerPrototype) => {
       }
       expressRouteData = expressSpansMap.get(req);
       const { routeSpan, openedSpans } = expressRouteData;
-      const isRouterMiddleware = Boolean(!routeSpan && this.route);
+      isRouterMiddleware = Boolean(!routeSpan && this.route);
       const middlewareSpanName = (() => {
         if (routeSpan) {
           return `express.middleware.route.${[
@@ -52,23 +54,23 @@ module.exports.install = (layerPrototype) => {
             .filter(Boolean)
             .join('.')}`;
         }
-        return isRouterMiddleware
-          ? 'express.middleware.router'
-          : `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`;
+        if (isRouterMiddleware) return 'express.middleware.router';
+        if (this.name === 'router' && this.path) {
+          return `express.middleware.router.${generateMiddlewareName(this.path) || 'unknown'}`;
+        }
+        return `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`;
       })();
       middlewareSpan = serverlessSdk._createTraceSpan(middlewareSpanName);
       openedSpans.add(middlewareSpan);
-      if (
-        this.path &&
-        (!expressRouteData.path || expressRouteData.path.length < this.path.length)
-      ) {
-        expressRouteData.path = this.path;
+      if (this.path) {
+        if (isRouterMiddleware) {
+          expressRouteData.path = (expressRouteData.nestedPath || '') + this.path;
+        } else {
+          expressRouteData.nestedPath = (expressRouteData.nestedPath || '') + this.path;
+        }
       }
       if (this.method) expressRouteData.method = this.method;
-      if (isRouterMiddleware) {
-        expressRouteData.routeSpan = middlewareSpan;
-        expressRouteData.route = this.route;
-      }
+      if (isRouterMiddleware) expressRouteData.routeSpan = middlewareSpan;
     } catch (error) {
       reportError(error);
       return originalHandleRequest.call(this, req, res, next);
@@ -79,9 +81,7 @@ module.exports.install = (layerPrototype) => {
           if (!middlewareSpan.endTime) {
             expressRouteData.openedSpans.delete(middlewareSpan);
             middlewareSpan.close();
-            if (this.route) {
-              delete expressRouteData.routeSpan;
-            }
+            if (isRouterMiddleware) delete expressRouteData.routeSpan;
           }
         } catch (error) {
           reportError(error);
@@ -131,5 +131,3 @@ module.exports.uninstall = (layerPrototype) => {
 };
 
 const serverlessSdk = require('../../..');
-
-const rootSpan = serverlessSdk.traceSpans.root;
