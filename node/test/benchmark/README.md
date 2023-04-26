@@ -117,11 +117,12 @@ Ensure dependencies are ensure in following folders (they can be installed via `
 
 #### 1.2 Python
 
-Ensure dependencies for the `serverless-aws-lambda-sdk` package beign installed as:
+Ensure dependencies for the `serverless-aws-lambda-sdk` package being installed as:
 
 ```
 python3 -m venv .venv
 source .venv/bin/activate
+rm -rf python/packages/aws-lambda-sdk/dist
 python3 -m pip install serverless-aws-lambda-sdk --target=python/packages/aws-lambda-sdk/dist
 ```
 
