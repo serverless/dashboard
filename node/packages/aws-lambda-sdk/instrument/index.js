@@ -11,7 +11,7 @@ const sendTelemetry = require('./lib/send-telemetry');
 const flushSpans = require('./lib/auto-send-spans').flush;
 const filterCapturedEvent = require('./lib/filter-captured-event');
 const invocationContextAccessor = require('./lib/invocation-context-accessor');
-const isApiEvent = require('./lib/is-api-event');
+const resolveIsApiEvent = require('./lib/is-api-event');
 const pkgJson = require('../package');
 
 const serverlessSdk = require('./lib/sdk');
@@ -24,7 +24,7 @@ const coreTraceSpanNames = new Set([
   'aws.lambda.initialization',
   'aws.lambda.invocation',
 ]);
-const alertEventNames = new Set(['telemetry.error.generated.v1', 'telemetry.warning.generated.v1']);
+const alertEventNames = new Set(['telemetry.error.generated.v1']);
 
 const capturedEvents = [];
 serverlessSdk._eventEmitter.on('captured-event', (capturedEvent) =>
@@ -99,10 +99,12 @@ const reportResponse = async (response, context, endTime) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
-let requestCounter = 0;
-let lastCounterResetTime = 0;
+let isFirstInvocation = true;
+let isAfterNotSampledApiRequest = false;
 
 const reportTrace = ({ isErrorOutcome }) => {
+  const isApiEvent = resolveIsApiEvent();
+  let shouldSetIsAfterNotSampledApiRequest = false;
   const isSampledOut =
     (() => {
       // This function determines if a trace should be sampled or not
@@ -113,21 +115,23 @@ const reportTrace = ({ isErrorOutcome }) => {
       if (serverlessSdk._isDebugMode) return false;
       // Do not sample when in dev mode
       if (serverlessSdk._isDevMode) return false;
-      // Do not sample when any error or warning event is captured
+      // Do not sample when any error event is captured
       if (capturedEvents.some(({ name }) => alertEventNames.has(name))) return false;
-      const currentTime = Date.now();
-      if (currentTime - lastCounterResetTime > 1000) {
-        lastCounterResetTime = currentTime;
-        requestCounter = 0;
+
+      if (isAfterNotSampledApiRequest) {
+        // Do not sample two consecutive API requests (to handle OPTIONS + actual request)
+        if (isApiEvent) return false;
       }
-      ++requestCounter;
-      // In case of API backed function sample out 3rd and following invocations,
-      // that happen in a frame of a second
-      if (isApiEvent()) return requestCounter > 2;
-      // In other cases do not sample 1st invocation, and sample out 90% of following invocations
-      if (requestCounter === 1) return false;
-      return Math.random() > 0.1;
+      // Do not sample first invocation, otherwise set sampling rate at 10%
+      // (for API we apply correction as requests are passed through in pairs)
+      if (!isFirstInvocation && Math.random() > (isApiEvent ? 0.05 : 0.1)) return true;
+      shouldSetIsAfterNotSampledApiRequest = isApiEvent;
+      return false;
     })() || undefined;
+  isFirstInvocation = false;
+  if (isAfterNotSampledApiRequest) isAfterNotSampledApiRequest = false;
+  else if (shouldSetIsAfterNotSampledApiRequest) isAfterNotSampledApiRequest = true;
+
   const payload = (serverlessSdk._lastTrace = {
     isSampledOut,
     slsTags: {
