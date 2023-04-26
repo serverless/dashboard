@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.12](https://github.com/serverless/console/compare/@serverless/sdk@0.5.11...@serverless/sdk@0.5.12) (2023-04-26)
+
+### Features
+
+- Full resolution of paths that involve nested express routers ([e3641aa](https://github.com/serverless/console/commit/e3641aa245c2471bf1a4eae895af13674bf5d222))
+
 ### [0.5.11](https://github.com/serverless/console/compare/@serverless/sdk@0.5.10...@serverless/sdk@0.5.11) (2023-04-21)
 
 ### Bug Fixes
