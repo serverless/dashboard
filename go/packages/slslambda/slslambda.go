@@ -2,9 +2,10 @@ package slslambda
 
 import (
 	"context"
-	"github.com/aws/aws-lambda-go/lambda"
 	"runtime/debug"
 	"time"
+
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 var initializationStart = time.Now()
@@ -47,7 +48,16 @@ func CaptureError(ctx context.Context, err error) {
 		debugLog("capture error:", ctxErr)
 		return
 	}
-	span.captureError(err)
+	span.captureError(err, nil)
+}
+
+func CaptureErrorWithOptions(ctx context.Context, err error, options EventOptions) {
+	span, ctxErr := currentSpanFromContext(ctx)
+	if ctxErr != nil {
+		debugLog("capture error:", ctxErr)
+		return
+	}
+	span.captureError(err, &options)
 }
 
 func CaptureWarning(ctx context.Context, msg string) {
@@ -56,7 +66,16 @@ func CaptureWarning(ctx context.Context, msg string) {
 		debugLog("capture warning:", ctxErr)
 		return
 	}
-	span.captureWarning(msg)
+	span.captureWarning(msg, nil)
+}
+
+func CaptureWarningWithOptions(ctx context.Context, msg string, options EventOptions) {
+	span, ctxErr := currentSpanFromContext(ctx)
+	if ctxErr != nil {
+		debugLog("capture warning:", ctxErr)
+		return
+	}
+	span.captureWarning(msg, &options)
 }
 
 func WithSpan(ctx context.Context, name string) context.Context {

@@ -1,9 +1,11 @@
 package slslambda
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-lambda-go/lambda/messages"
 	"time"
+
+	"github.com/aws/aws-lambda-go/lambda/messages"
 
 	"github.com/aws/aws-sdk-go/aws"
 	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
@@ -16,18 +18,36 @@ const (
 )
 
 type (
+	EventOptions struct {
+		CustomFingerprint *string
+		CustomTags        map[string]string
+	}
 	errorEvent struct {
 		timestamp time.Time
 		error
+		*EventOptions
 	}
 	warningEvent struct {
 		timestamp time.Time
 		message   string
+		*EventOptions
 	}
 	protoEvent interface {
 		ToProto(traceID, parentSpanID []byte) (*instrumentationv1.Event, error)
 	}
 )
+
+func marshalCustomTags(options *EventOptions) *string {
+	if options.CustomTags != nil && len(options.CustomTags) > 0 {
+		b, err := json.Marshal(options.CustomTags)
+		if err != nil {
+			return nil
+		}
+		s := string(b)
+		return &s
+	}
+	return nil
+}
 
 func convertToProtoEvents(errorEvents []protoEvent, warningEvents []warningEvent, traceID, spanID []byte) ([]*instrumentationv1.Event, error) {
 	var protoEvents []*instrumentationv1.Event
@@ -59,6 +79,8 @@ func convertToProtoErrorEvent(event errorEvent, traceID, spanID []byte, errType 
 		SpanId:            spanID,
 		TimestampUnixNano: uint64(event.timestamp.UnixNano()),
 		EventName:         telemetryErrorGeneratedV1,
+		CustomFingerprint: event.CustomFingerprint,
+		CustomTags:        marshalCustomTags(event.EventOptions),
 		Tags: &tagsv1.Tags{
 			Error: toErrorTags(event.error, errType),
 		},
@@ -78,6 +100,8 @@ func convertToProtoWarningEvent(event warningEvent, traceID, spanID []byte) (*in
 		SpanId:            spanID,
 		TimestampUnixNano: uint64(event.timestamp.UnixNano()),
 		EventName:         telemetryWarningGeneratedV1,
+		CustomFingerprint: event.CustomFingerprint,
+		CustomTags:        marshalCustomTags(event.EventOptions),
 		Tags: &tagsv1.Tags{
 			Warning: &tagsv1.WarningTags{
 				Message: event.message,
