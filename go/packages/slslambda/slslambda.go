@@ -43,12 +43,7 @@ func WithEnvironment(env string) Option {
 }
 
 func CaptureError(ctx context.Context, err error) {
-	span, ctxErr := currentSpanFromContext(ctx)
-	if ctxErr != nil {
-		debugLog("capture error:", ctxErr)
-		return
-	}
-	span.captureError(err, nil)
+	CaptureErrorWithOptions(ctx, err, EventOptions{})
 }
 
 func CaptureErrorWithOptions(ctx context.Context, err error, options EventOptions) {
@@ -61,12 +56,7 @@ func CaptureErrorWithOptions(ctx context.Context, err error, options EventOption
 }
 
 func CaptureWarning(ctx context.Context, msg string) {
-	span, ctxErr := currentSpanFromContext(ctx)
-	if ctxErr != nil {
-		debugLog("capture warning:", ctxErr)
-		return
-	}
-	span.captureWarning(msg, nil)
+	CaptureWarningWithOptions(ctx, msg, EventOptions{})
 }
 
 func CaptureWarningWithOptions(ctx context.Context, msg string, options EventOptions) {
