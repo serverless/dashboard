@@ -3,11 +3,12 @@ package slslambda
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/aws"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"sync"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
+	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 )
 
 type basicSpan struct {
@@ -75,21 +76,23 @@ func (s *basicSpan) newChild(ctx context.Context, name string) context.Context {
 	s.children = append(s.children, span)
 	return context.WithValue(ctx, currentSpanContextKey, span)
 }
-func (s *basicSpan) captureError(err error) {
+
+func (s *basicSpan) captureError(err error, options *EventOptions) {
 	if err == nil {
 		return
 	}
 	s.Lock()
 	defer s.Unlock()
-	s.errors = append(s.errors, newCaughtError(err, time.Now()))
+	s.errors = append(s.errors, newCaughtError(err, time.Now(), options))
 }
 
-func (s *basicSpan) captureWarning(msg string) {
+func (s *basicSpan) captureWarning(msg string, options *EventOptions) {
 	s.Lock()
 	defer s.Unlock()
 	s.warnings = append(s.warnings, warningEvent{
-		timestamp: time.Now(),
-		message:   msg,
+		timestamp:    time.Now(),
+		message:      msg,
+		EventOptions: options,
 	})
 }
 

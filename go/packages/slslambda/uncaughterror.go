@@ -1,9 +1,10 @@
 package slslambda
 
 import (
+	"time"
+
 	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
-	"time"
 )
 
 type uncaughtError struct {

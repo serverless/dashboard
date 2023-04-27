@@ -3,11 +3,12 @@ package slslambda
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
 	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
-	"time"
 )
 
 type (
