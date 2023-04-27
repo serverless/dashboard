@@ -2,6 +2,15 @@ import logging
 import os
 import time
 import boto3
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent / "test_dependencies"))
+from pynamodb.models import Model
+from pynamodb.attributes import UnicodeAttribute
+
+sys.path.pop()
+
 
 s3_client = boto3.client("s3")
 sqs = boto3.client("sqs")
@@ -40,10 +49,12 @@ def _dynamodb():
     table = dynamodb.create_table(
         TableName=table_name,
         KeySchema=[
-            {"AttributeName": "id", "KeyType": "HASH"},
+            {"AttributeName": "country", "KeyType": "HASH"},
+            {"AttributeName": "city", "KeyType": "RANGE"},
         ],
         AttributeDefinitions=[
-            {"AttributeName": "id", "AttributeType": "S"},
+            {"AttributeName": "country", "AttributeType": "S"},
+            {"AttributeName": "city", "AttributeType": "S"},
         ],
         BillingMode="PAY_PER_REQUEST",
     )
@@ -53,14 +64,29 @@ def _dynamodb():
 
     dynamodb.put_item(
         TableName=table_name,
-        Item={"id": {"S": "test"}},
+        Item={"country": {"S": "France"}, "city": {"S": "Nice"}},
     )
     dynamodb.query(
         TableName=table_name,
-        KeyConditionExpression="#id = :id",
-        ExpressionAttributeNames={"#id": "id"},
-        ExpressionAttributeValues={":id": {"S": "test"}},
+        KeyConditionExpression="#country = :country",
+        ExpressionAttributeNames={"#country": "country"},
+        ExpressionAttributeValues={":country": {"S": "France"}},
     )
+
+    class LocationModel(Model):
+        class Meta:
+            table_name = (
+                f"{os.environ.get('AWS_LAMBDA_FUNCTION_NAME')}-{invocation_count}"
+            )
+
+        country = UnicodeAttribute(hash_key=True)
+        city = UnicodeAttribute(range_key=True)
+
+    paris = LocationModel("France", "Paris")
+    paris.save()
+    if len([l for l in LocationModel.query("France")]) != 2:
+        raise Exception("PynamoDB query failed")
+
     dynamodb.delete_table(TableName=table_name)
 
 
