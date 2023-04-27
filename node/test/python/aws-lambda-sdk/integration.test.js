@@ -240,6 +240,7 @@ describe('Python: integration', function () {
       const [
         dynamodbPutItemSpan,
         dynamodbQuerySpan,
+        dynamodbQuerySpan2,
         pynamodbHttpSaveSpan,
         pynamodbHttpQuerySpan,
         dynamodbDeleteSpan,
@@ -267,6 +268,20 @@ describe('Python: integration', function () {
       expect(sdkTags).to.not.have.property('error');
       expect(sdkTags.dynamodb.tableName).to.equal(tableName);
       expect(sdkTags.dynamodb.keyCondition).to.equal('#country = :country');
+      // Query 2
+      expect(dynamodbQuerySpan2.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbQuerySpan2.name).to.equal('aws.sdk.dynamodb.query');
+      sdkTags = dynamodbQuerySpan2.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('query');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.keyCondition).to.not.be.empty;
+      expect(sdkTags.dynamodb.projection).to.not.be.empty;
+      expect(sdkTags.dynamodb.filter).to.not.be.empty;
 
       // Pynamodb
       expect(pynamodbHttpSaveSpan.tags.http.statusCode).to.equal(200);

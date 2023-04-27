@@ -13,6 +13,8 @@ from serverless_sdk_schema import TracePayload, RequestResponse
 import base64
 from werkzeug.wrappers import Request, Response
 from pytest_httpserver import HTTPServer
+from moto import mock_dynamodb
+
 
 _TARGET_LOG_PREFIX = "SERVERLESS_TELEMETRY.T."
 
@@ -725,3 +727,110 @@ def test_instrument_flask(reset_sdk_debug_mode, mocked_print):
         ],
         1,
     )
+
+
+@mock_dynamodb
+def test_instrument_dynamodb(instrumenter, monkeypatch):
+    # given
+    monkeypatch.setattr(
+        "random.random", lambda: 0.1
+    )  # make sure trace is not sampled out
+
+    def handler_generator():
+        def handler(event, context):
+            import boto3
+            from pynamodb.models import Model
+            from pynamodb.attributes import UnicodeAttribute
+
+            table_name = "test-table"
+
+            class LocationModel(Model):
+                class Meta:
+                    table_name = "test-table"
+
+                country = UnicodeAttribute(hash_key=True)
+                city = UnicodeAttribute(range_key=True)
+
+            dynamodb = boto3.client("dynamodb", region_name="us-east-1")
+            dynamodb.create_table(
+                TableName=table_name,
+                KeySchema=[
+                    {"AttributeName": "country", "KeyType": "HASH"},
+                    {"AttributeName": "city", "KeyType": "RANGE"},
+                ],
+                AttributeDefinitions=[
+                    {"AttributeName": "country", "AttributeType": "S"},
+                    {"AttributeName": "city", "AttributeType": "S"},
+                ],
+                BillingMode="PAY_PER_REQUEST",
+            )
+
+            # when
+            dynamodb.put_item(
+                TableName=table_name,
+                Item={"country": {"S": "France"}, "city": {"S": "Paris"}},
+            )
+            dynamodb.query(
+                TableName=table_name,
+                KeyConditionExpression="#country = :country",
+                ExpressionAttributeNames={"#country": "country"},
+                ExpressionAttributeValues={":country": {"S": "France"}},
+            )
+
+            res = boto3.resource("dynamodb", region_name="us-east-1")
+            from boto3.dynamodb.conditions import Key
+
+            if (
+                len(
+                    list(
+                        res.meta.client.get_paginator("query").paginate(
+                            TableName=table_name,
+                            KeyConditionExpression=Key("country").eq("France"),
+                        )
+                    )
+                )
+                != 1
+                or len([l for l in LocationModel.query("France")]) != 1
+            ):
+                raise Exception("Invalid number of items")
+
+            dynamodb.delete_table(TableName=table_name)
+            return "ok"
+
+        return handler
+
+    instrumented = instrumenter.instrument(handler_generator)
+    from builtins import print
+
+    # when
+    with patch("builtins.print") as mocked_print:
+        mocked_print.side_effect = print
+        instrumented({}, context)
+        serialized = [
+            x[0][0]
+            for x in mocked_print.call_args_list
+            if x[0][0].startswith(_TARGET_LOG_PREFIX)
+        ][0].replace(_TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "aws.sdk.dynamodb.createtable",
+            "aws.sdk.dynamodb.putitem",
+            "aws.sdk.dynamodb.query",
+            "aws.sdk.dynamodb.query",
+            "aws.sdk.dynamodb.deletetable",
+        ],
+        1,
+    )
+    for span in [
+        s for s in trace_payload.spans if s.name.startswith("aws.sdk.dynamodb")
+    ]:
+        assert span.tags.aws.sdk.dynamodb.table_name == "test-table"
+
+    assert not trace_payload.events

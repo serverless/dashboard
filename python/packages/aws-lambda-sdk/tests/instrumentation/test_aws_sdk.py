@@ -158,13 +158,18 @@ def test_aws_sdk_instrumentation_of_dynamodb(instrumenter, monkeypatch):
     # when
     dynamodb.put_item(
         TableName=table_name,
-        Item={"country": {"S": "France"}, "city": {"S": "Paris"}},
+        Item={
+            "country": {"S": "France"},
+            "city": {"S": "Paris"},
+            "type": {"S": "city"},
+        },
     )
+
     dynamodb.query(
         TableName=table_name,
         KeyConditionExpression="#country = :country",
         ExpressionAttributeNames={"#country": "country"},
-        ExpressionAttributeValues={":id": {"S": "France"}},
+        ExpressionAttributeValues={":country": {"S": "France"}},
     )
 
     res = boto3.resource("dynamodb", region_name="us-east-1")
@@ -174,7 +179,7 @@ def test_aws_sdk_instrumentation_of_dynamodb(instrumenter, monkeypatch):
         res.meta.client.get_paginator("query").paginate(
             TableName=table_name,
             KeyConditionExpression=Key("country").eq("France"),
-            FilterExpression=Key("city").eq("Paris"),
+            FilterExpression=Key("type").eq("city"),
             ProjectionExpression="country, city",
         )
     )
@@ -209,5 +214,5 @@ def test_aws_sdk_instrumentation_of_dynamodb(instrumenter, monkeypatch):
     assert query2_span.tags["aws.sdk.dynamodb.projection"] == "country, city"
     assert (
         query2_span.tags["aws.sdk.dynamodb.filter"]
-        == "{'format': '{0} {operator} {1}', 'operator': '=', 'values': ['city', 'Paris']}"
+        == "{'format': '{0} {operator} {1}', 'operator': '=', 'values': ['type', 'city']}"
     )
