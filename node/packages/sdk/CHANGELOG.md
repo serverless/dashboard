@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.14](https://github.com/serverless/console/compare/@serverless/sdk@0.5.13...@serverless/sdk@0.5.14) (2023-04-27)
+
+### Bug Fixes
+
+- Fix resolution of parametrized route paths ([7bdc66f](https://github.com/serverless/console/commit/7bdc66f23c14b4786316b1c0425b0a7ac5d1368e))
+
 ### [0.5.13](https://github.com/serverless/console/compare/@serverless/sdk@0.5.12...@serverless/sdk@0.5.13) (2023-04-27)
 
 ### Bug Fixes
