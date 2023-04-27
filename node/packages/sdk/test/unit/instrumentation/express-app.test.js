@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const requireUncached = require('ncjsm/require-uncached');
 
-describe('instrumentation/expres-app.js', () => {
+describe('instrumentation/express-app.js', () => {
   describe('Basic', () => {
     let instrumentExpressApp;
     let serverless;
