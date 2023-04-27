@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.15 (2023-04-27)
+
+### Bug Fixes
+
+- Fix handling of DynamoDB expression tags
+- Fix request response decoding
+- Fix span hierarchy in multithreaded usage
+- Fix duration resolution in HTTP instrumentation
+
+### Maintenance Improvements
+
+- Support Python v3.10
+
 ## 0.1.14 (2023-04-20)
 
 ### Features
