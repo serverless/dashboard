@@ -25,6 +25,10 @@ router.post('/bar', (req, res) => {
 
 app.use('/nested', router);
 
+app.post('/users/:userId/books/:bookId', (req, res) => {
+  res.send('"ok"');
+});
+
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
 module.exports.handler = serverless(app);
