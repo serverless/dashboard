@@ -71,7 +71,7 @@ describe('integration', function () {
 
     await awsRequest(ApiGatewayV2, 'createRoute', {
       ApiId: apiId,
-      RouteKey: 'POST /foo/bar',
+      RouteKey: 'POST /nested/bar',
       Target: `integrations/${integrationId}`,
     });
 
@@ -1609,121 +1609,124 @@ describe('integration', function () {
     [
       'express',
       {
-        hooks: {
-          afterCreate: getCreateHttpApi('2.0'),
-          beforeDelete: async (testConfig) => {
-            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
-          },
-        },
-        invoke: resolveExpressInvoke({ pathname: '/test' }),
-        test: ({ invocationsData, testConfig }) => {
-          for (const [
-            index,
+        variants: new Map([
+          [
+            'basic',
             {
-              trace: { spans },
+              invoke: resolveExpressInvoke({ pathname: '/test' }),
+              test: ({ invocationsData, testConfig }) => {
+                for (const [
+                  index,
+                  {
+                    trace: { spans },
+                  },
+                ] of invocationsData.entries()) {
+                  const lambdaSpan = spans.shift();
+                  if (!index) spans.shift();
+                  const { tags: lambdaTags } = lambdaSpan;
+
+                  expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+                  expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(lambdaTags.aws.lambda.http).to.have.property('host');
+                  expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+                  expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
+
+                  expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
+
+                  const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+                  const routeSpan = middlewareSpans.pop();
+                  const routerSpan = middlewareSpans[middlewareSpans.length - 1];
+
+                  expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+                  expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+                    'express.middleware.query',
+                    'express.middleware.expressinit',
+                    'express.middleware.jsonparser',
+                    'express.middleware.router',
+                  ]);
+                  for (const middlewareSpan of middlewareSpans) {
+                    expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+                  }
+                  expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+                  expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+                }
+              },
             },
-          ] of invocationsData.entries()) {
-            const lambdaSpan = spans.shift();
-            if (!index) spans.shift();
-            const { tags: lambdaTags } = lambdaSpan;
-
-            expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
-            expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
-
-            expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
-            expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
-            expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
-            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
-            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
-            expect(lambdaTags.aws.lambda.http).to.have.property('host');
-            expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
-            expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
-            expect(lambdaTags.aws.lambda.http.path).to.equal('/test');
-
-            expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
-
-            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/test');
-
-            const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
-            const routeSpan = middlewareSpans.pop();
-            const routerSpan = middlewareSpans[middlewareSpans.length - 1];
-
-            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-
-            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
-              'express.middleware.query',
-              'express.middleware.expressinit',
-              'express.middleware.jsonparser',
-              'express.middleware.router',
-            ]);
-            for (const middlewareSpan of middlewareSpans) {
-              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
-            }
-            expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
-            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
-          }
-        },
-      },
-    ],
-    [
-      'express-nested',
-      {
-        hooks: {
-          afterCreate: getCreateHttpApi('2.0'),
-          beforeDelete: async (testConfig) => {
-            await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
-          },
-        },
-        invoke: resolveExpressInvoke({ pathname: '/foo/bar' }),
-        test: ({ invocationsData, testConfig }) => {
-          for (const [
-            index,
+          ],
+          [
+            'nested',
             {
-              trace: { spans },
+              invoke: resolveExpressInvoke({ pathname: '/nested/bar' }),
+              test: ({ invocationsData, testConfig }) => {
+                for (const [
+                  index,
+                  {
+                    trace: { spans },
+                  },
+                ] of invocationsData.entries()) {
+                  const lambdaSpan = spans.shift();
+                  if (!index) spans.shift();
+                  const { tags: lambdaTags } = lambdaSpan;
+
+                  expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+                  expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(lambdaTags.aws.lambda.http).to.have.property('host');
+                  expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+                  expect(lambdaTags.aws.lambda.http.path).to.equal('/nested/bar');
+
+                  expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/nested/bar');
+
+                  const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+                  const routeSpan = middlewareSpans.pop();
+                  const routerSpan = middlewareSpans.pop();
+                  const topRouterSpan = middlewareSpans[middlewareSpans.length - 1];
+
+                  expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+                  expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+                    'express.middleware.query',
+                    'express.middleware.expressinit',
+                    'express.middleware.jsonparser',
+                    'express.middleware.router.nested',
+                  ]);
+                  for (const middlewareSpan of middlewareSpans) {
+                    expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+                  }
+                  expect(routerSpan.name).to.equal('express.middleware.router');
+                  expect(String(routerSpan.parentSpanId)).to.equal(String(topRouterSpan.id));
+                  expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+                  expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+                }
+              },
             },
-          ] of invocationsData.entries()) {
-            const lambdaSpan = spans.shift();
-            if (!index) spans.shift();
-            const { tags: lambdaTags } = lambdaSpan;
-
-            expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
-            expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
-
-            expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
-            expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
-            expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
-            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
-            expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
-            expect(lambdaTags.aws.lambda.http).to.have.property('host');
-            expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
-            expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
-            expect(lambdaTags.aws.lambda.http.path).to.equal('/foo/bar');
-
-            expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
-
-            expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal('/foo/bar');
-
-            const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
-            const routeSpan = middlewareSpans.pop();
-            const routerSpan = middlewareSpans.pop();
-            const topRouterSpan = middlewareSpans[middlewareSpans.length - 1];
-
-            expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
-
-            expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
-              'express.middleware.query',
-              'express.middleware.expressinit',
-              'express.middleware.jsonparser',
-              'express.middleware.router.foo',
-            ]);
-            for (const middlewareSpan of middlewareSpans) {
-              expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
-            }
-            expect(routerSpan.name).to.equal('express.middleware.router');
-            expect(String(routerSpan.parentSpanId)).to.equal(String(topRouterSpan.id));
-            expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
-            expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
-          }
+          ],
+        ]),
+        config: {
+          hooks: {
+            afterCreate: getCreateHttpApi('2.0'),
+            beforeDelete: async (testConfig) => {
+              await awsRequest(ApiGatewayV2, 'deleteApi', { ApiId: testConfig.apiId });
+            },
+          },
         },
       },
     ],
