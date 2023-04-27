@@ -64,7 +64,7 @@ module.exports.install = (layerPrototype) => {
       openedSpans.add(middlewareSpan);
       if (this.path) {
         if (isRouterMiddleware) {
-          expressRouteData.path = (expressRouteData.nestedPath || '') + this.path;
+          expressRouteData.path = (expressRouteData.nestedPath || '') + this.route.path;
         } else {
           expressRouteData.nestedPath = (expressRouteData.nestedPath || '') + this.path;
         }
