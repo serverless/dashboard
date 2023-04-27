@@ -15,7 +15,7 @@ func newCaughtError(err error, timestamp time.Time, options *EventOptions) *caug
 	return &caughtError{errorEvent: errorEvent{
 		timestamp:    timestamp,
 		error:        err,
-		EventOptions: options,
+		eventOptions: options,
 	}}
 }
 

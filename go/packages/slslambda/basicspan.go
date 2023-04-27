@@ -92,7 +92,7 @@ func (s *basicSpan) captureWarning(msg string, options *EventOptions) {
 	s.warnings = append(s.warnings, warningEvent{
 		timestamp:    time.Now(),
 		message:      msg,
-		EventOptions: options,
+		eventOptions: options,
 	})
 }
 
