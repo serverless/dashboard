@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.19](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.18...@serverless/aws-lambda-sdk@0.14.19) (2023-04-27)
+
+### Features
+
+- Improve sampling resolution ([beb7208](https://github.com/serverless/console/commit/beb7208133fc4f70d2d89b5f719ce032b6e273b9))
+
+### Bug Fixes
+
+- Ensure our `--require` option is first ([e7d8a3e](https://github.com/serverless/console/commit/e7d8a3eec7bba01d27ed92de142538b687f842f3))
+
 ### [0.14.18](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.17...@serverless/aws-lambda-sdk@0.14.18) (2023-04-26)
 
 ### Maintenance Improvements
