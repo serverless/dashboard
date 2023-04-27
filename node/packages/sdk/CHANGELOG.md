@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.13](https://github.com/serverless/console/compare/@serverless/sdk@0.5.12...@serverless/sdk@0.5.13) (2023-04-27)
+
+### Bug Fixes
+
+- Fix log levels parsing in structured logs instrumentation ([#694](https://github.com/serverless/console/issues/694)) ([21f0929](https://github.com/serverless/console/commit/21f09295e4fa2cdcfdce605d8be19291806c00cf))
+
 ### [0.5.12](https://github.com/serverless/console/compare/@serverless/sdk@0.5.11...@serverless/sdk@0.5.12) (2023-04-26)
 
 ### Features
