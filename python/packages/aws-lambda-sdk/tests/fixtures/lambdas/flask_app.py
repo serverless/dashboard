@@ -7,6 +7,8 @@ from flask import Flask
 
 import serverless_wsgi
 
+sys.path.pop()
+
 app = Flask("__name__")
 
 

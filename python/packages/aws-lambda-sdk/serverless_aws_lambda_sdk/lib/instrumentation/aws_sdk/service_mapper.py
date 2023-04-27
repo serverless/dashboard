@@ -11,6 +11,29 @@ class ServiceMapper(ABC):
         pass
 
 
+def _convert_expression_to_string(expression):
+    if isinstance(expression, str):
+        return expression
+    if hasattr(expression, "get_expression"):
+        expression_dict = expression.get_expression()
+        if isinstance(expression_dict, dict):
+            return str(
+                {
+                    "format": expression_dict.get("format"),
+                    "operator": expression_dict.get("operator"),
+                    "values": [
+                        _convert_expression_to_string(v)
+                        for v in expression_dict.get("values", [])
+                    ],
+                }
+            )
+    if hasattr(expression, "name"):
+        return expression.name
+
+    # fallback to the default string representation
+    return str(expression)
+
+
 class DynamoDBMapper(ServiceMapper):
     def params(self, trace_span, input):
         tags = {}
@@ -24,7 +47,9 @@ class DynamoDBMapper(ServiceMapper):
             tags["limit"] = input["Limit"]
         tags["attributes_to_get"] = input.get("AttributesToGet", [])
         if "ProjectionExpression" in input:
-            tags["projection"] = input["ProjectionExpression"]
+            tags["projection"] = _convert_expression_to_string(
+                input["ProjectionExpression"]
+            )
         if "IndexName" in input:
             tags["index_name"] = input["IndexName"]
         if "ScanIndexForward" in input:
@@ -32,9 +57,11 @@ class DynamoDBMapper(ServiceMapper):
         if "Select" in input:
             tags["select"] = input["Select"]
         if "KeyConditionExpression" in input:
-            tags["key_condition"] = input["KeyConditionExpression"]
+            tags["key_condition"] = _convert_expression_to_string(
+                input["KeyConditionExpression"]
+            )
         if "FilterExpression" in input:
-            tags["filter"] = input["FilterExpression"]
+            tags["filter"] = _convert_expression_to_string(input["FilterExpression"])
         if "Segment" in input:
             tags["segment"] = input["Segment"]
         if "TotalSegments" in input:

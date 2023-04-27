@@ -22,7 +22,7 @@ def run_http_server():
 
 
 def make_http_request(url):
-    sys.path.append(Path(__file__).parent / "test_dependencies")
+    sys.path.append(str(Path(__file__).parent / "test_dependencies"))
     import aiohttp
 
     async def _request():

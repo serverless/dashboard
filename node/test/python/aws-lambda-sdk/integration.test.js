@@ -237,7 +237,14 @@ describe('Python: integration', function () {
       while (dynamodbSpans[0].name === 'aws.sdk.dynamodb.describetable') {
         dynamodbSpans.shift();
       }
-      const [dynamodbPutItemSpan, dynamodbQuerySpan, dynamodbDeleteSpan] = dynamodbSpans;
+      const [
+        dynamodbPutItemSpan,
+        dynamodbQuerySpan,
+        dynamodbQuerySpan2,
+        pynamodbHttpSaveSpan,
+        pynamodbHttpQuerySpan,
+        dynamodbDeleteSpan,
+      ] = dynamodbSpans;
       // Put item
       expect(dynamodbPutItemSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
       expect(dynamodbPutItemSpan.name).to.equal('aws.sdk.dynamodb.putitem');
@@ -260,8 +267,25 @@ describe('Python: integration', function () {
       expect(sdkTags).to.have.property('requestId');
       expect(sdkTags).to.not.have.property('error');
       expect(sdkTags.dynamodb.tableName).to.equal(tableName);
-      expect(sdkTags.dynamodb.keyCondition).to.equal('#id = :id');
-      // Query with document client
+      expect(sdkTags.dynamodb.keyCondition).to.equal('#country = :country');
+      // Query 2
+      expect(dynamodbQuerySpan2.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+      expect(dynamodbQuerySpan2.name).to.equal('aws.sdk.dynamodb.query');
+      sdkTags = dynamodbQuerySpan2.tags.aws.sdk;
+      expect(sdkTags.region).to.equal(process.env.AWS_REGION);
+      expect(sdkTags.signatureVersion).to.equal('v4');
+      expect(sdkTags.service).to.equal('dynamodb');
+      expect(sdkTags.operation).to.equal('query');
+      expect(sdkTags).to.have.property('requestId');
+      expect(sdkTags).to.not.have.property('error');
+      expect(sdkTags.dynamodb.tableName).to.equal(tableName);
+      expect(sdkTags.dynamodb.keyCondition).to.not.be.empty;
+      expect(sdkTags.dynamodb.projection).to.not.be.empty;
+      expect(sdkTags.dynamodb.filter).to.not.be.empty;
+
+      // Pynamodb
+      expect(pynamodbHttpSaveSpan.tags.http.statusCode).to.equal(200);
+      expect(pynamodbHttpQuerySpan.tags.http.statusCode).to.equal(200);
 
       // Delete
       expect(dynamodbDeleteSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
@@ -1031,20 +1055,7 @@ describe('Python: integration', function () {
       'aws_sdk',
       {
         config: { test: testAwsSdk },
-        variants: new Map([
-          [
-            'internal',
-            {
-              configuration: {
-                Runtime: 'python3.10',
-                Code: {
-                  ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'aws_sdk.py')),
-                },
-              },
-            },
-          ],
-          ['external', { configuration: { Runtime: 'python3.8' } }],
-        ]),
+        variants: new Map([['v3-10', { configuration: { Runtime: 'python3.10' } }]]),
       },
     ],
   ]);
@@ -1056,7 +1067,7 @@ describe('Python: integration', function () {
 
   before(async () => {
     exec(
-      `pip install aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
+      `pip install pynamodb==5.5.0 aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
     );
     exec(
       [
