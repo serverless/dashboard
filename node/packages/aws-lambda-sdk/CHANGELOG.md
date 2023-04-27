@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.20](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.19...@serverless/aws-lambda-sdk@0.14.20) (2023-04-27)
+
+_Adapt updates from v0.5.14 of `@serverless/sdk`_
+
 ### [0.14.19](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.18...@serverless/aws-lambda-sdk@0.14.19) (2023-04-27)
 
 ### Features
