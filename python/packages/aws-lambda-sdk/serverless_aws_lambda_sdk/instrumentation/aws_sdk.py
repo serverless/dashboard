@@ -7,9 +7,14 @@ from sls_sdk.lib.instrumentation.http import (
     reset_ignore_following_request,
 )
 from wrapt import wrap_function_wrapper, ObjectProxy
+import re
 
 _instrumenter = None
 _import_hook = ImportHook("botocore")
+
+
+def _sanitize_span_name(name):
+    return re.sub(r"^\d+", "", re.sub(r"[^0-9a-zA-Z]", "", name)).lower()
 
 
 class Instrumenter:
@@ -46,17 +51,19 @@ class Instrumenter:
         try:
             ignore_following_request()
             try:
-                service_name = instance.meta.service_model.service_name.lower()
-                operation_name = operation_name.lower()
+                sanitized_service_name = _sanitize_span_name(
+                    instance.meta.service_model.service_name
+                )
+                sanitized_operation_name = _sanitize_span_name(operation_name)
                 region_name = instance.meta.region_name
 
-                tag_mapper = get_mapper_for_service(service_name)
+                tag_mapper = get_mapper_for_service(sanitized_service_name)
 
                 root_span = serverlessSdk._create_trace_span(
-                    f"aws.sdk.{service_name}.{operation_name}",
+                    f"aws.sdk.{sanitized_service_name}.{sanitized_operation_name}",
                     tags={
-                        "aws.sdk.service": service_name,
-                        "aws.sdk.operation": operation_name,
+                        "aws.sdk.service": sanitized_service_name,
+                        "aws.sdk.operation": sanitized_operation_name,
                         "aws.sdk.signature_version": "v4",
                         "aws.sdk.region": region_name,
                     },
