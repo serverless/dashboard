@@ -29,6 +29,13 @@ app.post('/users/:userId/books/:bookId', (req, res) => {
   res.send('"ok"');
 });
 
+const paramRouter = new express.Router();
+paramRouter.post('/ipsum/:cat', (req, res) => {
+  res.send('"ok"');
+});
+
+app.use('/lorem/:dog', paramRouter);
+
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
 module.exports.handler = serverless(app);

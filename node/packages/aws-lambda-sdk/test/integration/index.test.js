@@ -81,6 +81,12 @@ describe('integration', function () {
       Target: `integrations/${integrationId}`,
     });
 
+    await awsRequest(ApiGatewayV2, 'createRoute', {
+      ApiId: apiId,
+      RouteKey: 'POST /lorem/{dog}/ipsum/{cat}',
+      Target: `integrations/${integrationId}`,
+    });
+
     await awsRequest(ApiGatewayV2, 'createStage', {
       ApiId: apiId,
       StageName: '$default',
@@ -1774,6 +1780,64 @@ describe('integration', function () {
                   for (const middlewareSpan of middlewareSpans) {
                     expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
                   }
+                  expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
+                  expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
+                }
+              },
+            },
+          ],
+          [
+            'nestedParametrized',
+            {
+              invoke: resolveExpressInvoke({ pathname: '/lorem/hau/ipsum/miau' }),
+              test: ({ invocationsData, testConfig }) => {
+                for (const [
+                  index,
+                  {
+                    trace: { spans },
+                  },
+                ] of invocationsData.entries()) {
+                  const lambdaSpan = spans.shift();
+                  if (!index) spans.shift();
+                  const { tags: lambdaTags } = lambdaSpan;
+
+                  expect(lambdaTags.aws.lambda.eventSource).to.equal('aws.apigateway');
+                  expect(lambdaTags.aws.lambda.eventType).to.equal('aws.apigatewayv2.http.v2');
+
+                  expect(lambdaTags.aws.lambda.apiGateway).to.have.property('accountId');
+                  expect(lambdaTags.aws.lambda.apiGateway.apiId).to.equal(testConfig.apiId);
+                  expect(lambdaTags.aws.lambda.apiGateway.apiStage).to.equal('$default');
+                  expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('id');
+                  expect(lambdaTags.aws.lambda.apiGateway.request).to.have.property('timeEpoch');
+                  expect(lambdaTags.aws.lambda.http).to.have.property('host');
+                  expect(lambdaTags.aws.lambda.http).to.have.property('requestHeaderNames');
+                  expect(lambdaTags.aws.lambda.http.method).to.equal('POST');
+                  expect(lambdaTags.aws.lambda.http.path).to.equal('/lorem/hau/ipsum/miau');
+
+                  expect(lambdaTags.aws.lambda.http.statusCode.toString()).to.equal('200');
+
+                  expect(lambdaTags.aws.lambda.httpRouter.path.toString()).to.equal(
+                    '/lorem/:dog/ipsum/:cat'
+                  );
+
+                  const [invocationSpan, expressSpan, ...middlewareSpans] = spans;
+                  const routeSpan = middlewareSpans.pop();
+                  const routerSpan = middlewareSpans.pop();
+                  const topRouterSpan = middlewareSpans[middlewareSpans.length - 1];
+
+                  expect(expressSpan.parentSpanId).to.deep.equal(invocationSpan.id);
+
+                  expect(middlewareSpans.map(({ name }) => name)).to.deep.equal([
+                    'express.middleware.query',
+                    'express.middleware.expressinit',
+                    'express.middleware.jsonparser',
+                    'express.middleware.router.loremdog',
+                  ]);
+                  for (const middlewareSpan of middlewareSpans) {
+                    expect(String(middlewareSpan.parentSpanId)).to.equal(String(expressSpan.id));
+                  }
+                  expect(routerSpan.name).to.equal('express.middleware.router');
+                  expect(String(routerSpan.parentSpanId)).to.equal(String(topRouterSpan.id));
                   expect(routeSpan.name).to.equal('express.middleware.route.post.anonymous');
                   expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
                 }
