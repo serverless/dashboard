@@ -56,7 +56,9 @@ module.exports.install = (layerPrototype) => {
         }
         if (isRouterMiddleware) return 'express.middleware.router';
         if (this.name === 'router' && this.path) {
-          return `express.middleware.router.${generateMiddlewareName(this.path) || 'unknown'}`;
+          return `express.middleware.router.${
+            generateMiddlewareName(this.$slsRoutePath || '') || 'unknown'
+          }`;
         }
         return `express.middleware.${generateMiddlewareName(this.name) || 'unknown'}`;
       })();
@@ -64,9 +66,10 @@ module.exports.install = (layerPrototype) => {
       openedSpans.add(middlewareSpan);
       if (this.path) {
         if (isRouterMiddleware) {
-          expressRouteData.path = (expressRouteData.nestedPath || '') + this.route.path;
+          expressRouteData.path = (expressRouteData.nestedPath || '') + (this.$slsRoutePath || '');
         } else {
-          expressRouteData.nestedPath = (expressRouteData.nestedPath || '') + this.path;
+          expressRouteData.nestedPath =
+            (expressRouteData.nestedPath || '') + (this.$slsRoutePath || '');
         }
       }
       if (this.method) expressRouteData.method = this.method;

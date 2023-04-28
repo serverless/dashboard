@@ -1,11 +1,9 @@
 'use strict';
 
 const cjsHook = require('../utils/cjs-hook');
-const instrumentLayerPrototype = require('./instrument-layer-prototype');
+const instrumentRouter = require('./instrument-router');
 
 module.exports.install = () =>
-  cjsHook.register('/express/lib/router/layer.js', ({ prototype }) =>
-    instrumentLayerPrototype.install(prototype)
-  );
+  cjsHook.register('/express/lib/router/index.js', (router) => instrumentRouter.install(router));
 
-module.exports.uninstall = () => cjsHook.unregister('/express/lib/router/layer.js');
+module.exports.uninstall = () => cjsHook.unregister('/express/lib/router/index.js');
