@@ -82,7 +82,7 @@ module.exports = async (basename, coreConfig, options) => {
   };
 
   const ensureIsActive = async (testConfig) => {
-    await wait(100);
+    await wait(1000);
     let state;
     try {
       state = (
