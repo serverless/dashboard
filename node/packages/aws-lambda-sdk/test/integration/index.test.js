@@ -349,7 +349,7 @@ describe('integration', function () {
     }),
   };
 
-  const resolveExpressInvoke = ({ pathname }) =>
+  const resolveExpressInvoke = ({ pathname }, retryCount = 0) =>
     async function self(testConfig) {
       const startTime = process.hrtime.bigint();
       const response = await fetch(
@@ -363,10 +363,10 @@ describe('integration', function () {
         }
       );
       if (response.status !== 200) {
-        if (response.status === 404) {
+        if (retryCount < 10 && response.status === 404) {
           log.warn(`API Gateway at POST ${pathname} not ready yet, retrying in 1s`);
           await wait(1000);
-          return self(testConfig);
+          return self(testConfig, ++retryCount);
         }
         throw new Error(`Unexpected response status: ${response.status}`);
       }
