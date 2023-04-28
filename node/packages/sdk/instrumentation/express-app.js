@@ -2,7 +2,7 @@
 
 const ensureObject = require('type/object/ensure');
 const ensurePlainFunction = require('type/plain-function/ensure');
-const instrumentLayerPrototype = require('../lib/instrumentation/express/instrument-layer-prototype');
+const instrumentRouter = require('../lib/instrumentation/express/instrument-router');
 
 const instrumentedApps = new WeakMap();
 
@@ -13,7 +13,7 @@ module.exports.install = (app) => {
     errorMessage: 'Passed argument is not an instance of express app',
   });
   app.lazyrouter();
-  const uninstall = instrumentLayerPrototype.install(Object.getPrototypeOf(app._router.stack[0]));
+  const uninstall = instrumentRouter.install(Object.getPrototypeOf(app._router));
   instrumentedApps.set(app, uninstall);
   return uninstall;
 };
