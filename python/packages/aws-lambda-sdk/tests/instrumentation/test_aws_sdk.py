@@ -4,7 +4,7 @@ import boto3
 import botocore
 from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute
-from moto import mock_s3, mock_dynamodb
+from moto import mock_s3, mock_dynamodb, mock_servicequotas
 import json
 from unittest.mock import MagicMock
 
@@ -216,3 +216,27 @@ def test_aws_sdk_instrumentation_of_dynamodb(instrumenter, monkeypatch):
         query2_span.tags["aws.sdk.dynamodb.filter"]
         == "{'format': '{0} {operator} {1}', 'operator': '=', 'values': ['type', 'city']}"
     )
+
+
+@mock_servicequotas
+def test_aws_sdk_servicequotas_instrumentation(instrumenter):
+    # given
+    client = boto3.client("service-quotas", region_name="us-east-1")
+
+    # when
+    client.list_aws_default_service_quotas(ServiceCode="vpc")
+
+    # then
+    sdk_span = [
+        s for s in instrumenter.trace_spans.root.spans if s.name.startswith("aws.sdk")
+    ][0]
+
+    assert sdk_span.name == "aws.sdk.servicequotas.listawsdefaultservicequotas"
+    assert sdk_span.tags["aws.sdk.service"] == "servicequotas"
+    assert sdk_span.tags["aws.sdk.operation"] == "listawsdefaultservicequotas"
+    assert sdk_span.tags["aws.sdk.signature_version"] == "v4"
+    assert sdk_span.tags["aws.sdk.region"] == "us-east-1"
+    assert "aws.sdk.error" not in sdk_span.tags
+    assert sdk_span.tags["aws.sdk.request_id"] is not None
+    assert sdk_span.input is None
+    assert sdk_span.output is None
