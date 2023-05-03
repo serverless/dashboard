@@ -65,8 +65,8 @@ class ServerlessSdkSettings:
 
 
 class ServerlessSdk:
-    name: Final[str] = __name__
-    version: Final[str] = __version__
+    name: str = __name__
+    version: str = __version__
     _event_emitter: EventEmitter
 
     trace_spans: TraceSpans
