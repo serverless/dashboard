@@ -270,6 +270,9 @@ class TraceSpan:
             result["customTags"] = json.dumps(self.custom_tags)
         return result
 
+    def clear(self):
+        pass
+
 
 def _flatten(xs):
     # https://stackoverflow.com/a/2158532
