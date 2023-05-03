@@ -332,6 +332,7 @@ _URLLIB3_IS_RECURSIVE_CALL = contextvars.ContextVar(
 
 
 class URLLib3Instrumenter(BaseInstrumenter):
+    @staticmethod
     @contextlib.contextmanager
     def _prevent_recursive_instrumentation():
         _URLLIB3_IS_RECURSIVE_CALL.set(True)

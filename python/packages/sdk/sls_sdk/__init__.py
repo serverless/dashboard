@@ -104,7 +104,7 @@ class ServerlessSdk:
     ):
         if self._is_initialized:
             return
-        self.org_id = environ.get(SLS_ORG_ID, default=org_id)
+        self.org_id = environ.get(SLS_ORG_ID) or org_id
         self._is_debug_mode = bool(environ.get("SLS_SDK_DEBUG"))
         self._is_dev_mode = bool(environ.get("SLS_DEV_MODE_ORG_ID"))
         self._settings = ServerlessSdkSettings(
@@ -128,10 +128,12 @@ class ServerlessSdk:
 
             install_flask()
 
-        if hasattr(self, "_initialize_extension"):
-            self._initialize_extension(*args, **kwargs)
+        self._initialize_extension(*args, **kwargs)
 
         self._is_initialized = True
+
+    def _initialize_extension(self, *args, **kwargs):
+        pass
 
     def _create_trace_span(
         self,

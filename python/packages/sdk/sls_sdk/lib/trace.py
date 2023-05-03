@@ -6,7 +6,7 @@ import threading
 from typing import List, Optional, Callable
 from contextvars import ContextVar
 from backports.cached_property import cached_property  # available in Python >=3.8
-from typing_extensions import Final, Self
+from typing_extensions import Final
 import json
 from .instrumentation.import_hook import ImportHook
 from .timing import to_protobuf_epoch_timestamp
@@ -56,7 +56,7 @@ _import_hook.enable(_install_thread_hook)
 
 
 class TraceSpan:
-    parent_span: Self
+    parent_span: "TraceSpan"
     name: str
     start_time: Nanoseconds
     end_time: Optional[Nanoseconds] = None
@@ -64,7 +64,7 @@ class TraceSpan:
     _output: Optional[str] = None
     tags: Tags
     custom_tags: Tags
-    sub_spans: List[Self]
+    sub_spans: List["TraceSpan"]
     _on_close_by_root: Optional[Callable] = None
 
     def __init__(
@@ -174,7 +174,7 @@ class TraceSpan:
         return [self] + list(_flatten([s.spans for s in self.sub_spans]))
 
     @property
-    def output(self) -> str:
+    def output(self) -> Optional[str]:
         return self._output
 
     @output.setter
@@ -185,7 +185,7 @@ class TraceSpan:
         self._output = value
 
     @property
-    def input(self) -> str:
+    def input(self) -> Optional[str]:
         return self._input
 
     @input.setter
