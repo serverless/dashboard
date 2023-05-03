@@ -50,6 +50,9 @@ repository = "https://github.com/serverless/console"
 [tool.setuptools.packages.find]
 include = ["sls_sdk*", "serverless_sdk*"]
 
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
