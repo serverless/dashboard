@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Union
 
-from importlib_metadata import version
 from typing_extensions import Final
 
 
@@ -11,7 +10,7 @@ SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
 # module metadata
 __name__ = "serverless-sdk"
-__version__: Final[str] = version(__name__)
+__version__ = "0.4.5"
 
 
 TraceId = str
