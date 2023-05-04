@@ -92,6 +92,13 @@ jobs:
           source .venv/bin/activate
           python3 -m pip install '.[tests]'
 
+      - name: Run SDK type checking
+        if: steps.pathChanges.outputs.sdk == 'true'
+        run: |
+          cd python/packages/sdk
+          source .venv/bin/activate
+          python3 -m mypy sls_sdk
+
       - name: Run SDK unit tests
         if: steps.pathChanges.outputs.sdk == 'true'
         run: |

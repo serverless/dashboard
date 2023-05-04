@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from math import inf, nan
 from re import Pattern
-from typing import Dict, List, Mapping, Tuple, Optional
+from typing import Dict, List, Mapping, Tuple, Optional, Any
 from js_regex import compile
 from typing_extensions import Final, get_args
 from threading import Lock
@@ -122,7 +122,7 @@ def ensure_tag_name(name: str) -> str:
     )
 
 
-def ensure_tag_value(attr: str, value: str) -> ValidTags:
+def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
     valid_types: Tuple[type] = get_args(TagType)  # type: ignore
     valid_types = (*valid_types, list)  # type: ignore
 
@@ -172,7 +172,7 @@ def _snake_to_camel_case(string):
 
 
 def convert_tags_to_protobuf(tags: Tags):
-    protobuf_tags = {}
+    protobuf_tags: Any = {}
     for key, value in tags.items():
         context = protobuf_tags
         key_tokens = key.split(".")
