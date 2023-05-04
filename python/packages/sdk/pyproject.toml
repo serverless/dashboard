@@ -32,6 +32,7 @@ tests = [
     "aiohttp>=3.8.4",
     "black>=22.12",
     "flask>=2.2.3",
+    "mypy>=1.2",
     "pytest>=7.2",
     "pytest-httpserver>=1.0.6",
     "requests>=2.28.2",
@@ -48,10 +49,23 @@ repository = "https://github.com/serverless/console"
 [tool.setuptools.packages.find]
 include = ["sls_sdk*", "serverless_sdk*"]
 
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
 ]
+
+[tool.mypy]
+disable_error_code = "override,assignment,arg-type"
+exclude = [
+    '^tests/',
+]
+
+[[tool.mypy.overrides]]
+module = "wrapt"
+ignore_missing_imports = true
 
 [tool.ruff]
 ignore = ["F401", "E722"]
