@@ -279,7 +279,7 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         # for the signature of the getresponse method
         def _func(_self, *args, **kwargs):
             trace_span = _HTTP_SPAN.get()
-            if _self._sls_ignore or not trace_span:
+            if getattr(self, "_sls_ignore", False) or not trace_span:
                 return self._original_getresponse(_self, *args, **kwargs)
 
             try:
@@ -332,6 +332,7 @@ _URLLIB3_IS_RECURSIVE_CALL = contextvars.ContextVar(
 
 
 class URLLib3Instrumenter(BaseInstrumenter):
+    @staticmethod
     @contextlib.contextmanager
     def _prevent_recursive_instrumentation():
         _URLLIB3_IS_RECURSIVE_CALL.set(True)
