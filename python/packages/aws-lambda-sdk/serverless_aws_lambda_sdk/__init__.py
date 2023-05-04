@@ -2,7 +2,6 @@ from __future__ import annotations
 import os
 import logging
 from typing import Optional
-from importlib_metadata import version
 from typing_extensions import Final
 import sys
 import inspect
@@ -28,7 +27,7 @@ from .instrumentation import aws_sdk  # noqa E402
 
 # module metadata
 __name__: Final[str] = "serverless-aws-lambda-sdk"
-__version__: Final[str] = version(__name__)
+__version__: Final[str] = "0.1.15"
 
 logger = logging.getLogger(__name__)
 
