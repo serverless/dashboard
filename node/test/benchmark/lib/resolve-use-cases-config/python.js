@@ -29,6 +29,21 @@ module.exports = async (coreConfig) => {
       },
     ],
     [
+      'lumigo',
+      {
+        configuration: {
+          Handler: 'lumigo_tracer._handler',
+          Layers: ['arn:aws:lambda:us-east-1:114300393969:layer:lumigo-python-tracer:250'],
+          Environment: {
+            Variables: {
+              LUMIGO_ORIGINAL_HANDLER: 'success.handler',
+              LUMIGO_TRACER_TOKEN: 'dummy',
+            },
+          },
+        },
+      },
+    ],
+    [
       'external',
       {
         configuration: {
