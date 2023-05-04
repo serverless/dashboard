@@ -1,5 +1,6 @@
 from __future__ import annotations
 from types import MethodType
+from importlib_metadata import version
 from unittest.mock import MagicMock
 
 from . import get_params
@@ -21,6 +22,7 @@ def test_has_name(instrumented_sdk):
 def test_has_version(instrumented_sdk):
     assert hasattr(instrumented_sdk, "version")
     assert isinstance(instrumented_sdk.version, str)
+    assert instrumented_sdk.version == version(instrumented_sdk.name)
 
 
 def test_has_tracespans(instrumented_sdk):
