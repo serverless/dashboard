@@ -6,10 +6,11 @@ from typing import List, Union
 from importlib_metadata import version
 from typing_extensions import Final
 
+
 SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
 # module metadata
-__name__: Final[str] = "serverless-sdk"
+__name__ = "serverless-sdk"
 __version__: Final[str] = version(__name__)
 
 
