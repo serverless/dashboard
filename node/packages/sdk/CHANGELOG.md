@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.16](https://github.com/serverless/console/compare/@serverless/sdk@0.5.15...@serverless/sdk@0.5.16) (2023-05-04)
+
+### Bug Fixes
+
+- Ensure to resolve stack trace only for exposed logs ([c71982e](https://github.com/serverless/console/commit/c71982e50e133824d8dea272d79f659cdf9cb3ee))
+
 ### [0.5.15](https://github.com/serverless/console/compare/@serverless/sdk@0.5.14...@serverless/sdk@0.5.15) (2023-04-28)
 
 ### Bug Fixes
