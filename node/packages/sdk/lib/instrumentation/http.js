@@ -144,15 +144,6 @@ const install = (protocol, httpModule) => {
 
   const request = function request(...args) {
     const startTime = process.hrtime.bigint();
-    if (serverlessSdk._isDebugMode) {
-      // Generate stack trace only if intend to write this log
-      // (stack trace generation can be expensive, esecially with source map generation on)
-      serverlessSdk._debugLog(
-        'HTTP request',
-        shouldIgnoreFollowingRequest,
-        !shouldIgnoreFollowingRequest && new Error().stack
-      );
-    }
     let [url, options] = args;
 
     let cbIndex = 2;
@@ -280,10 +271,8 @@ module.exports.install = () => {
 
 module.exports.ignoreFollowingRequest = () => {
   if (!isInstalled) return;
-  serverlessSdk._debugLog('ignore HTTP request', shouldIgnoreFollowingRequest);
   shouldIgnoreFollowingRequest = true;
   process.nextTick(() => {
-    serverlessSdk._debugLog('reset ignore HTTP request', shouldIgnoreFollowingRequest);
     shouldIgnoreFollowingRequest = false;
   });
 };
