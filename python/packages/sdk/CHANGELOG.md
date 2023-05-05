@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.6 (2023-05-05)
+
+### Performance Improvements
+
+- Use version file to remove importlib-metadata import
+- Use custom pub/sub implementation instead of blinker
+
+### Maintenance Improvements
+
+- Specify python classifiers for pypi
+- Fix static type checking issues
+
 ## 0.4.5 (2023-04-26)
 
 ### Bug Fixes
