@@ -127,7 +127,7 @@ if (serverlessSdk._isDebugMode) Error.stackTraceLimit = Infinity;
 
 serverlessSdk._eventEmitter = require('./lib/emitter');
 
-Object.defineProperties(
-  serverlessSdk,
-  lazy({ _customTags: d('cew', () => new Tags(), { flat: true }) })
-);
+Object.defineProperties(serverlessSdk, {
+  _isInTraceSpanBlackBox: d.gs(() => TraceSpan.isInBlackBox),
+  ...lazy({ _customTags: d('cew', () => new Tags(), { flat: true }) }),
+});

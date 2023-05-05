@@ -31,6 +31,11 @@ class TraceSpan {
   static resolveCurrentSpan() {
     return asyncLocalStorage.getStore() || TraceSpan.rootSpan || null;
   }
+  static get isInBlackBox() {
+    const currentSpan = TraceSpan.resolveCurrentSpan();
+    if (!currentSpan) return false;
+    return Boolean(currentSpan._isBlackBox || currentSpan._isBlackBoxed);
+  }
 
   constructor(name, options = {}) {
     const defaultStartTime = process.hrtime.bigint();
@@ -61,6 +66,7 @@ class TraceSpan {
     if (tags) this.tags.setMany(tags);
     if (options.input != null) this.input = options.input;
     if (options.output != null) this.output = options.output;
+    this._isBlackBox = Boolean(options.isBlackBox);
     if (!TraceSpan.rootSpan) {
       TraceSpan.rootSpan = this;
       this.parentSpan = null;
@@ -78,8 +84,8 @@ class TraceSpan {
 
     asyncLocalStorage.enterWith(this);
 
-    if (this.parentSpan) this.parentSpan.subSpans.add(this);
-    emitter.emit('trace-span-open', this);
+    if (this.parentSpan) this.parentSpan._subSpans.add(this);
+    if (!this._isBlackBoxed) emitter.emit('trace-span-open', this);
     if (immediateDescendants && immediateDescendants.length) {
       // eslint-disable-next-line no-new
       new TraceSpan(immediateDescendants.shift(), {
@@ -142,12 +148,12 @@ class TraceSpan {
     } else {
       this.closeContext();
     }
-    emitter.emit('trace-span-close', this);
+    if (!this._isBlackBoxed) emitter.emit('trace-span-close', this);
     return this;
   }
   destroy() {
     this.closeContext();
-    if (this.parentSpan) this.parentSpan.subSpans.delete(this);
+    if (this.parentSpan) this.parentSpan._subSpans.delete(this);
     this.parentSpan = null;
   }
   toJSON() {
@@ -178,6 +184,13 @@ class TraceSpan {
         ? JSON.stringify(this.customTags)
         : undefined,
     };
+  }
+  get subSpans() {
+    return this._isBlackBox ? new Set() : this._subSpans;
+  }
+  get _isBlackBoxed() {
+    if (!this.parentSpan) return false;
+    return this.parentSpan._isBlackBox || this.parentSpan._isBlackBoxed;
   }
   get spans() {
     return new StringifiableSet([
@@ -210,7 +223,7 @@ Object.defineProperties(
       return this.parentSpan ? this.parentSpan.traceId : generateId();
     }),
     id: d(() => generateId()),
-    subSpans: d(() => new Set()),
+    _subSpans: d(() => new Set()),
     tags: d(() => new Tags()),
     customTags: d(() => new Tags()),
   })
