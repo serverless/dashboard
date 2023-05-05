@@ -24,7 +24,6 @@ dynamic = [
 ]
 dependencies = [
     "backports.cached-property", # included in Python >=3.8
-    "importlib_metadata>=5.2", # included in Python >=3.8
     "js-regex<1.1.0,>=1.0.1",
     "typing-extensions>=4.4", # included in Python 3.8 - 3.11
     "wrapt~=1.15.0",
