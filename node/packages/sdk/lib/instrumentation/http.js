@@ -178,7 +178,8 @@ const install = (protocol, httpModule) => {
     if (
       shouldIgnoreFollowingRequest ||
       options._slsIgnore ||
-      (originalCb && typeof originalCb !== 'function')
+      (originalCb && typeof originalCb !== 'function') ||
+      serverlessSdk._isInTraceSpanBlackBox
     ) {
       shouldIgnoreFollowingRequest = false;
       return originalRequest.apply(this, args);
