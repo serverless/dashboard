@@ -20,7 +20,7 @@ describe('performance', function () {
 
   // TODO: Reduce acceptable durations once improvements are made
   it('should introduce reasonable initialization overhead', () => {
-    expect(results.get('internal').results.initialization.total.median).to.be.below(500);
+    expect(results.get('internal').results.initialization.total.median).to.be.below(400);
   });
 
   it('should introduce reasonable first invocation overhead', () => {
