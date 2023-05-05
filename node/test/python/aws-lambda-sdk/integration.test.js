@@ -372,7 +372,7 @@ describe('Python: integration', function () {
         }
         const payload = JSON.parse(responsePayload.raw);
         expect(payload.name).to.equal(pyProjectToml.project.name);
-        expect(payload.version).to.equal(pyProjectToml.project.version);
+        expect(payload.version).to.equal(sdkVersion);
         expect(payload.rootSpanName).to.equal('aws.lambda');
         expect(JSON.parse(customTags)).to.deep.equal({ 'user.tag': `example:${index + 1}` });
 
@@ -1063,6 +1063,7 @@ describe('Python: integration', function () {
   const testVariantsConfig = resolveTestVariantsConfig(useCasesConfig);
 
   let pyProjectToml;
+  let sdkVersion;
   let beforeTimestamp;
 
   before(async () => {
@@ -1082,6 +1083,15 @@ describe('Python: integration', function () {
         'utf8'
       )
     );
+    sdkVersion = (
+      await fsp.readFile(
+        path.resolve(
+          __dirname,
+          '../../../../python/packages/aws-lambda-sdk/serverless_aws_lambda_sdk/VERSION'
+        ),
+        'utf8'
+      )
+    ).trim();
     await createCoreResources(coreConfig);
 
     const processFunction = await getProcessFunction(basename, coreConfig, {
@@ -1199,7 +1209,7 @@ describe('Python: integration', function () {
           expect(slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
             service: testConfig.configuration.FunctionName,
-            sdk: { name: pyProjectToml.project.name, version: pyProjectToml.project.version },
+            sdk: { name: pyProjectToml.project.name, version: sdkVersion },
           });
           expect(lambdaSpan.tags.aws.lambda).to.have.property('arch');
           expect(lambdaSpan.tags.aws.lambda.name).to.equal(testConfig.configuration.FunctionName);
