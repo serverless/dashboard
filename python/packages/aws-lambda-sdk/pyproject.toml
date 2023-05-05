@@ -7,7 +7,6 @@ requires = [
 
 [project]
 name = "serverless-aws-lambda-sdk"
-dynamic = ["version"]
 description = "Serverless AWS Lambda SDK for Python"
 readme = "README.md"
 authors = [{ name = "serverlessinc" }]
@@ -19,6 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+]
+dynamic = [
+    "version",
 ]
 dependencies = [
     "aiohttp~=3.8",
@@ -52,6 +54,9 @@ repository = "https://github.com/serverless/console"
 [tool.setuptools.package-data]
 "*" = ["VERSION"]
 
+[tool.setuptools.dynamic]
+version = {file = "./serverless_aws_lambda_sdk/VERSION"}
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
@@ -60,6 +65,3 @@ testpaths = [
 [tool.ruff]
 ignore = ["F401", "E722"]
 exclude = ["tests"]
-
-[tool.setuptools.dynamic]
-version = {file = "./serverless_aws_lambda_sdk/VERSION"}
