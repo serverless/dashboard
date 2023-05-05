@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "serverless-aws-lambda-sdk"
-version = "0.1.15"
+dynamic = ["version"]
 description = "Serverless AWS Lambda SDK for Python"
 readme = "README.md"
 authors = [{ name = "serverlessinc" }]
@@ -49,6 +49,9 @@ documentation = "https://github.com/serverless/console/tree/main/python/packages
 homepage = "https://www.serverless.com/console"
 repository = "https://github.com/serverless/console"
 
+[tool.setuptools.package-data]
+"*" = ["VERSION"]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
@@ -57,3 +60,6 @@ testpaths = [
 [tool.ruff]
 ignore = ["F401", "E722"]
 exclude = ["tests"]
+
+[tool.setuptools.dynamic]
+version = {file = "./serverless_aws_lambda_sdk/VERSION"}

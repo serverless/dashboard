@@ -5,6 +5,7 @@ from typing import Optional
 from typing_extensions import Final
 import sys
 import inspect
+from pathlib import Path
 
 # If the Lambda SDK is imported from the layer make sure
 # to import the base SDK also from the Lambda Layer.
@@ -27,7 +28,9 @@ from .instrumentation import aws_sdk  # noqa E402
 
 # module metadata
 __name__: Final[str] = "serverless-aws-lambda-sdk"
-__version__: Final[str] = "0.1.15"
+
+with open(Path(__file__).parent / "VERSION") as version_file:
+    __version__ = version_file.read().strip()
 
 logger = logging.getLogger(__name__)
 
