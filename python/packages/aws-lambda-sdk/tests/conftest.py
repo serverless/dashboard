@@ -23,8 +23,23 @@ def reset_sdk_dev_mode(monkeypatch, request):
 def _reset_sdk(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
+    module_prefixes_to_delete = [
+        "serverless_sdk",
+        "sls_sdk",
+        "threading",
+        "concurrent.futures",
+        "http.client",
+        "urllib",
+        "urllib3",
+        "aiohttp",
+        "requests",
+        "flask",
+        "serverless_aws_lambda_sdk",
+    ]
+    deleted_modules = []
     for key in list(sys.modules.keys()):
-        if [prefix for prefix in ["serverless_", "sls_"] if key.startswith(prefix)]:
+        if [prefix for prefix in module_prefixes_to_delete if key.startswith(prefix)]:
+            deleted_modules.append(key)
             del sys.modules[key]
 
     monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", TEST_FUNCTION)
@@ -44,7 +59,12 @@ def _reset_sdk(
         for key in request.param:
             monkeypatch.setenv(key, request.param[key])
 
-    # make sure the SDK is imported
+    # make sure 3rd party dependencies are imported
+    for module in deleted_modules + module_prefixes_to_delete:
+        if not module.startswith("serverless_"):
+            importlib.import_module(module)
+
+    # finally, make sure the SDK is imported
     importlib.import_module("serverless_aws_lambda_sdk")
     return monkeypatch
 

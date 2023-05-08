@@ -1,8 +1,7 @@
-import asyncio
 import json
 from threading import Thread, Event, Lock
 import os
-from .telemetry import send_async, close_session, open_session
+from .telemetry import send, close_connection
 from .sdk import serverlessSdk
 from .invocation_context import get as get_invocation_context
 from .payload_conversion import to_trace_payload
@@ -25,18 +24,21 @@ class ThreadSafeBuffer:
     def __init__(self):
         self._pending_spans = []
         self._pending_captured_events = []
+        self._pending_request_response_payloads = []
         self._lock = Lock()
 
     def get_all(self):
         with self._lock:
-            spans, captured_events = (
+            spans, captured_events, request_response_payloads = (
                 self._pending_spans.copy(),
                 self._pending_captured_events.copy(),
+                self._pending_request_response_payloads.copy(),
             )
 
             self._pending_spans.clear()
             self._pending_captured_events.clear()
-            return (spans, captured_events)
+            self._pending_request_response_payloads.clear()
+            return (spans, captured_events, request_response_payloads)
 
     def add_span(self, span):
         with self._lock:
@@ -46,65 +48,51 @@ class ThreadSafeBuffer:
         with self._lock:
             self._pending_captured_events.append(captured_event)
 
+    def add_request_response_payload(self, request_response_payload):
+        with self._lock:
+            self._pending_request_response_payloads.append(request_response_payload)
+
     def __len__(self):
         with self._lock:
-            return len(self._pending_captured_events) + len(self._pending_spans)
+            return (
+                len(self._pending_captured_events)
+                + len(self._pending_spans)
+                + len(self._pending_request_response_payloads)
+            )
 
 
-class ScheduledTasks:
-    def __init__(self):
-        self._tasks = set()
-        self._lock = Lock()
-
-    def add(self, task: asyncio.Task):
-        with self._lock:
-            self._tasks.add(task)
-        task.add_done_callback(lambda t: self.remove(t))
-
-    def remove(self, task: asyncio.Task):
-        with self._lock:
-            self._tasks.remove(task)
-
-    def get_all(self):
-        with self._lock:
-            return self._tasks.copy()
-
-
-class EventLoop(Thread):
+class DevModeThread(Thread):
     """
     Used to send telemetry data to dev-mode extension, in a separate thread.
-    The thread executes an asyncio loop.
-    Communication between the main thread and the EventLoop thread:
-    1. Main thread can add spans and captured events to the buffer.
-    2. Main thread can schedule a task to be executed in the asyncio loop.
-    3. Main thread can flush the buffer.
-    4. Main thread can stop the asyncio loop.
+    The thread executes a while loop until terminated from upstream.
+    Communication between the main thread and the dev mode thread:
+    Main thread can:
+    1. add spans and captured events to the buffer.
+    2. add a request/response type payload to be sent in the dev mode thread loop.
+    3. flush the buffer and stop the dev mode thread.
     """
 
-    def __init__(self, start_event):
+    def __init__(self, start_event: Event):
         super().__init__()
 
         self._loop = None
-        self._event = start_event  # when the thread starts, the event will be signalled
+        self._has_started = (
+            start_event  # when the thread starts, the event will be signalled
+        )
         self._buffered_data = (
             ThreadSafeBuffer()
         )  # used to buffer spans and captured events
-        self._scheduled_tasks = ScheduledTasks()
+        self._is_stopped = Event()  # used to stop the thread
 
-    def send_telemetry(self, name: str, body: bytes):
-        """
-        Send the data to the telemetry endpoint, this is not blocking.
-        It schedules a task to be executed in the asyncio loop.
-        """
+    def _send_all(self):
+        (
+            spans,
+            captured_events,
+            request_response_payload,
+        ) = self._buffered_data.get_all()
 
-        def _add_task(coro):
-            self._scheduled_tasks.add(asyncio.create_task(coro))
-
-        coro = send_async(name, body)
-        self._loop.call_soon_threadsafe(_add_task, coro)
-
-    def _send_data(self):
-        (spans, captured_events) = self._buffered_data.get_all()
+        for payload in request_response_payload:
+            send("request-response", payload)
 
         if not spans and not captured_events:
             return
@@ -134,64 +122,47 @@ class EventLoop(Thread):
                 s for s in payload["spans"] if s["name"] != "aws.lambda"
             ]
 
-        self.send_telemetry("trace", to_trace_payload(payload).SerializeToString())
-
-    def _schedule_eventually(self):
-        """
-        If there is no scheduled task, schedule one to be executed in the future.
-        """
-
-        def _schedule_for_later():
-            self._loop.call_later(0.05, self._send_data)
-
-        self._loop.call_soon_threadsafe(_schedule_for_later)
+        send("trace", to_trace_payload(payload).SerializeToString())
 
     def add_span(self, span):
+        """Executes in the context of the main thread."""
         self._buffered_data.add_span(span)
-        self._schedule_eventually()
 
     def add_captured_event(self, captured_event):
+        """Executes in the context of the main thread."""
         self._buffered_data.add_captured_event(captured_event)
-        self._schedule_eventually()
+
+    def add_request_response_payload(self, request_response_payload):
+        """Executes in the context of the main thread."""
+        self._buffered_data.add_request_response_payload(request_response_payload)
 
     def run(self):
-        """
-        Start the thread and the event loop.
-        """
-        self._loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._loop)
+        """Executes in the context of the dev-mode thread."""
 
-        # make sure session is open before running the main loop
-        self._loop.run_until_complete(open_session())
+        # signal that the thread is running
+        self._has_started.set()
 
-        # signal that the thread is ready
-        self._loop.call_soon(self._event.set)
+        while True:
+            is_stopped = self._is_stopped.wait(0.05)
+            if is_stopped:
+                break
 
-        # this will lock the asyncio thread, until the main thread signals to stop
-        self._loop.run_forever()
+            self._send_all()
 
-        # at this point, main thread signalled stop, main loop ended.
-        # complete remaining tasks as well as flushing the buffer
-        self._send_data()
-        self._loop.run_until_complete(self._loop.shutdown_asyncgens())
-        tasks = self._scheduled_tasks.get_all()
-        if tasks:
-            self._loop.run_until_complete(asyncio.gather(*tasks))
-
-        # clean up resources
-        self._loop.run_until_complete(close_session())
+        self._send_all()
+        close_connection()
 
     def terminate(self):
         """
         Signal the thread to stop, any remaining data will be flushed.
         """
-        self._loop.call_soon_threadsafe(self._loop.stop)
+        self._is_stopped.set()
         self.join()
 
 
-def get_event_loop() -> EventLoop:
+def get_dev_mode_thread() -> DevModeThread:
     event = Event()
-    event_loop = EventLoop(event)
-    event_loop.start()
+    thread = DevModeThread(event)
+    thread.start()
     event.wait()
-    return event_loop
+    return thread
