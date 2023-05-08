@@ -209,7 +209,7 @@ const install = (protocol, httpModule) => {
     const traceSpan = serverlessSdk._createTraceSpan(`node.${protocol}.request`, {
       startTime,
       onCloseByRoot: () => {
-        if (responseReadableState && responseReadableState.flowing === false) {
+        if (responseReadableState && !responseReadableState.flowing) {
           // Response data was not observed
           traceSpan.close({ endTime: requestEndTime });
           return;
