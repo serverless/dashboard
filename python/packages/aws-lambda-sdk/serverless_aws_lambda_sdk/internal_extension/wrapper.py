@@ -15,18 +15,31 @@ if environ.get("_ORIGIN_HANDLER") is None:
 environ["_HANDLER"] = environ.get("_ORIGIN_HANDLER")
 del environ["_ORIGIN_HANDLER"]
 
+_IMPORT_FAILED = False
 try:
-    from serverless_aws_lambda_sdk import serverlessSdk
-except ModuleNotFoundError:
-    from .. import serverlessSdk
+    try:
+        from serverless_aws_lambda_sdk import serverlessSdk
+    except ModuleNotFoundError:
+        from .. import serverlessSdk
 
+    try:
+        serverlessSdk._initialize()
+    except Exception as ex:
+        serverlessSdk._report_error(ex)
 
-try:
-    serverlessSdk._initialize()
-except Exception as ex:
-    serverlessSdk._report_error(ex)
+    from ..instrument import Instrumenter  # noqa E402
+except:
+    import traceback
+    import sys
 
-from ..instrument import Instrumenter  # noqa E402
+    print(
+        "Fatal Serverless SDK Error: "
+        "Please report at https://github.com/serverless/console/issues: "
+        "Internal extension wrapper failed.",
+        traceback.format_exc(),
+        file=sys.stderr,
+    )
+    _IMPORT_FAILED = True
 
 
 class HandlerNotFound(Exception):
@@ -62,11 +75,14 @@ def _get_instrumented_handler():
             )
         return _handler
 
-    try:
-        instrumenter = Instrumenter()
-        return instrumenter.instrument(handler_generator)
-    except Exception as ex:
-        serverlessSdk._report_error(ex)
+    if not _IMPORT_FAILED:
+        try:
+            instrumenter = Instrumenter()
+            return instrumenter.instrument(handler_generator)
+        except Exception as ex:
+            serverlessSdk._report_error(ex)
+            return handler_generator()
+    else:
         return handler_generator()
 
 

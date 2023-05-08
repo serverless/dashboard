@@ -20,8 +20,17 @@ def reset_sdk_dev_mode(monkeypatch, request):
     yield _reset_sdk(monkeypatch, request, True, True)
 
 
+@pytest.fixture()
+def reset_sdk_no_import(monkeypatch, request):
+    yield _reset_sdk(monkeypatch, request, False, False, False)
+
+
 def _reset_sdk(
-    monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
+    monkeypatch,
+    request,
+    is_dev_mode: bool = False,
+    is_debug_mode: bool = False,
+    import_sdk: bool = True,
 ):
     for key in list(sys.modules.keys()):
         if [prefix for prefix in ["serverless_", "sls_"] if key.startswith(prefix)]:
@@ -45,7 +54,8 @@ def _reset_sdk(
             monkeypatch.setenv(key, request.param[key])
 
     # make sure the SDK is imported
-    importlib.import_module("serverless_aws_lambda_sdk")
+    if import_sdk:
+        importlib.import_module("serverless_aws_lambda_sdk")
     return monkeypatch
 
 
