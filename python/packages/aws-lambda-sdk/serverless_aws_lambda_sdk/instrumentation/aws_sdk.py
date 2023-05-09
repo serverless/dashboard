@@ -10,7 +10,7 @@ from sls_sdk.lib.instrumentation.wrapper import replace_method
 import re
 
 _instrumenter = None
-_import_hook = ImportHook("botocore")
+_import_hook = ImportHook("botocore.client")
 
 
 def _sanitize_span_name(name):
@@ -20,24 +20,24 @@ def _sanitize_span_name(name):
 class Instrumenter:
     target_method = "_make_api_call"
 
-    def __init__(self, botocore):
-        self._botocore = botocore
+    def __init__(self, botocore_client):
+        self._botocore_client = botocore_client
 
     def install(self, should_monitor_request_response):
         self._should_monitor_request_response = should_monitor_request_response
         replace_method(
-            self._botocore.client.BaseClient,
+            self._botocore_client.BaseClient,
             Instrumenter.target_method,
             self._patched_api_call,
         )
 
     def uninstall(self):
         _wrapped = getattr(
-            self._botocore.client.BaseClient, Instrumenter.target_method, None
+            self._botocore_client.BaseClient, Instrumenter.target_method, None
         )
         if hasattr(_wrapped, "__wrapped__"):
             setattr(
-                self._botocore.client.BaseClient,
+                self._botocore_client.BaseClient,
                 Instrumenter.target_method,
                 _wrapped.__wrapped__,
             )
@@ -104,16 +104,16 @@ class Instrumenter:
             reset_ignore_following_request()
 
 
-def _hook(botocore):
+def _hook(botocore_client):
     global _instrumenter
-    _instrumenter = Instrumenter(botocore)
+    _instrumenter = Instrumenter(botocore_client)
     _instrumenter.install(
         serverlessSdk._is_dev_mode
         and not serverlessSdk._settings.disable_request_response_monitoring
     )
 
 
-def _undo_hook(botocore):
+def _undo_hook(botocore_client):
     global _instrumenter
     _instrumenter.uninstall()
     _instrumenter = None
