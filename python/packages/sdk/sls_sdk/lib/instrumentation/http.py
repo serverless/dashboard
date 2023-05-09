@@ -7,7 +7,7 @@ from urllib.parse import parse_qs
 from ..error import report as report_error
 from .import_hook import ImportHook
 import sls_sdk
-from wrapt import wrap_function_wrapper, ObjectProxy
+from .wrapper import replace_method
 import io
 from typing import Iterable
 
@@ -415,7 +415,7 @@ class URLLib3Instrumenter(BaseInstrumenter):
 
     def _install(self, module):
         self._module = module
-        wrap_function_wrapper(
+        replace_method(
             module.connectionpool.HTTPConnectionPool,
             self._target_method,
             self._patched_call,
@@ -425,11 +425,7 @@ class URLLib3Instrumenter(BaseInstrumenter):
         _wrapping_method = getattr(
             module.connectionpool.HTTPConnectionPool, self._target_method, None
         )
-        if (
-            _wrapping_method
-            and isinstance(_wrapping_method, ObjectProxy)
-            and hasattr(_wrapping_method, "__wrapped__")
-        ):
+        if hasattr(_wrapping_method, "__wrapped__"):
             setattr(
                 module.connectionpool.HTTPConnectionPool,
                 self._target_method,

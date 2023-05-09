@@ -1,7 +1,6 @@
 import pytest
 import sys
 import importlib
-from wrapt import ObjectProxy
 from . import TEST_ORG, TEST_DEV_MODE_ORG_ID
 
 
@@ -17,11 +16,7 @@ def _uninstall():
 
     def _uninstall_threading_hook(threading):
         _wrapping_method = getattr(threading.Thread, "start", None)
-        if (
-            _wrapping_method
-            and isinstance(_wrapping_method, ObjectProxy)
-            and hasattr(_wrapping_method, "__wrapped__")
-        ):
+        if hasattr(_wrapping_method, "__wrapped__"):
             setattr(
                 threading.Thread,
                 "start",

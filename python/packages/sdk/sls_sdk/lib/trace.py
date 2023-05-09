@@ -23,7 +23,7 @@ from .emitter import event_emitter
 from .id import generate_id
 from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
-from wrapt import wrap_function_wrapper
+from .instrumentation.wrapper import replace_method
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def _install_thread_hook(threading_module):
         result = actual_start(*args, **kwargs)
         return result
 
-    wrap_function_wrapper(threading_module.Thread, "start", _thread_ctor_wrapper)
+    replace_method(threading_module.Thread, "start", _thread_ctor_wrapper)
 
 
 _import_hook = ImportHook("threading")
