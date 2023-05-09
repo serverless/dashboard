@@ -133,6 +133,13 @@ jobs:
           source .venv/bin/activate
           python3 -m pip install '.[tests]'
 
+      - name: Run AWS Lambda SDK type checking
+        if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
+        run: |
+          cd python/packages/aws-lambda-sdk
+          source .venv/bin/activate
+          python3 -m mypy serverless_aws_lambda_sdk
+
       - name: Run AWS Lambda SDK unit tests
         if: steps.pathChanges.outputs.awsLambdaSdk == 'true'
         run: |

@@ -24,10 +24,11 @@ finally:
 from .trace_spans.aws_lambda import aws_lambda_span  # noqa E402
 from sls_sdk import ServerlessSdk, TraceSpans  # noqa E402
 from sls_sdk.lib.trace import TraceSpan  # noqa E402
+from sls_sdk.lib.captured_event import CapturedEvent  # noqa E402
 from .instrumentation import aws_sdk  # noqa E402
 
 # module metadata
-__name__: Final[str] = "serverless-aws-lambda-sdk"
+__name__ = "serverless-aws-lambda-sdk"
 
 with open(Path(__file__).parent / "VERSION") as version_file:
     __version__ = version_file.read().strip()
@@ -44,8 +45,8 @@ __all__ = [
 
 baseSdk.name = __name__
 baseSdk.version = __version__
-TraceSpans.aws_lambda = aws_lambda_span
-TraceSpans.aws_lambda_initialization = next(
+baseSdk.trace_spans.aws_lambda = aws_lambda_span
+baseSdk.trace_spans.aws_lambda_initialization = next(
     (
         x
         for x in baseSdk.trace_spans.root.sub_spans
@@ -83,6 +84,7 @@ class AwsLambdaTraceSpans(TraceSpans):
 class AwsLambdaSdk(ServerlessSdk):
     trace_spans: AwsLambdaTraceSpans
     _is_dev_mode: bool
+    _captured_events: list[CapturedEvent]
 
 
 serverlessSdk: AwsLambdaSdk = baseSdk
