@@ -23,7 +23,7 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "serverless-sdk~=0.4.5",
+    "serverless-sdk~=0.4.6",
     "serverless-sdk-schema~=0.2.1",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11
     "wrapt~=1.15.0",
@@ -36,6 +36,7 @@ tests = [
     "flask>=2.2.3",
     "importlib_metadata>=5.2", # included in Python >=3.8
     "moto>=4.1.7",
+    "mypy>=1.2",
     "pynamodb>=5.5",
     "pytest>=7.2",
     "pytest-aiohttp>=1.0.4",
@@ -43,6 +44,7 @@ tests = [
     "requests_mock>=1.10",
     "ruff>=0.0.199",
     "serverless-wsgi>=3.0.2",
+    "types-protobuf>=4.22.0.2",
 ]
 [project.urls]
 changelog = "https://github.com/serverless/console/blob/main/python/packages/aws-lambda-sdk/CHANGELOG.md"
@@ -51,7 +53,7 @@ homepage = "https://www.serverless.com/console"
 repository = "https://github.com/serverless/console"
 
 [tool.setuptools.package-data]
-"*" = ["VERSION"]
+"*" = ["py.typed", "VERSION"]
 
 [tool.setuptools.dynamic]
 version = {file = "./serverless_aws_lambda_sdk/VERSION"}
@@ -60,6 +62,16 @@ version = {file = "./serverless_aws_lambda_sdk/VERSION"}
 testpaths = [
     "tests",
 ]
+
+[tool.mypy]
+disable_error_code = "override,assignment,arg-type"
+exclude = [
+    '^tests/',
+]
+
+[[tool.mypy.overrides]]
+module = "wrapt"
+ignore_missing_imports = true
 
 [tool.ruff]
 ignore = ["F401", "E722"]
