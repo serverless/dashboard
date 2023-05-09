@@ -77,7 +77,7 @@ class Instrumenter:
     def __init__(self):
         self.current_invocation_id = 0
         serverlessSdk._captured_events = []
-        self.event_loop = None
+        self.dev_mode = None
         serverlessSdk._event_emitter.on("captured-event", self._captured_event_handler)
         serverlessSdk._event_emitter.on(
             "trace-span-close", self._trace_span_close_handler
@@ -94,9 +94,9 @@ class Instrumenter:
             )
 
         if serverlessSdk._is_dev_mode:
-            from .lib.dev_mode import get_event_loop
+            from .lib.dev_mode import get_dev_mode_thread
 
-            self.event_loop = get_event_loop()
+            self.dev_mode = get_dev_mode_thread()
 
         serverlessSdk.trace_spans.aws_lambda_initialization.close()
 
@@ -104,15 +104,15 @@ class Instrumenter:
         serverlessSdk._captured_events.append(captured_event)
         # Only report captured events, if dev mode is active and the event is not
         # a dev mode server issue, to prevent infinite loops.
-        if self.event_loop and not (
+        if self.dev_mode and not (
             captured_event.custom_fingerprint
             and captured_event.custom_fingerprint.startswith("DEV_MODE_SERVER")
         ):
-            self.event_loop.add_captured_event(captured_event)
+            self.dev_mode.add_captured_event(captured_event)
 
     def _trace_span_close_handler(self, span):
-        if self.event_loop:
-            self.event_loop.add_span(span)
+        if self.dev_mode:
+            self.dev_mode.add_span(span)
 
     def _report_request(self, event, context):
         payload_dct = serverlessSdk._last_request = {
@@ -137,14 +137,13 @@ class Instrumenter:
         payload_buffer = (
             serverlessSdk._last_request_buffer
         ) = to_request_response_payload(payload_dct)
-        return self.event_loop.send_telemetry(
-            "request-response",
+        return self.dev_mode.add_request_response_payload(
             payload_buffer.SerializeToString(),
         )
 
     def _report_response(self, response, context, end_time):
         response_string = _resolve_body_string(response, "OUTPUT")
-        payload_dct = serverlessSdk._last_request = {
+        payload_dct = serverlessSdk._last_response = {
             "slsTags": {
                 "orgId": serverlessSdk.org_id,
                 "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
@@ -164,9 +163,7 @@ class Instrumenter:
         payload_buffer = (
             serverlessSdk._last_response_buffer
         ) = to_request_response_payload(payload_dct)
-        self.event_loop.send_telemetry(
-            "request-response", payload_buffer.SerializeToString()
-        )
+        self.dev_mode.add_request_response_payload(payload_buffer.SerializeToString())
 
     def _report_trace(self, is_error_outcome: bool):
         is_sampled_out = (
@@ -226,9 +223,9 @@ class Instrumenter:
         )
 
     def _flush_and_close_event_loop(self):
-        if self.event_loop:
-            self.event_loop.terminate()
-            self.event_loop = None
+        if self.dev_mode:
+            self.dev_mode.terminate()
+            self.dev_mode = None
 
     def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
         self.is_root_span_reset = False
@@ -301,10 +298,10 @@ class Instrumenter:
 
             # Event loop may already be active in case of a cold start
             # That's why we create it only if it's not already set
-            if serverlessSdk._is_dev_mode and self.event_loop is None:
-                from .lib.dev_mode import get_event_loop
+            if serverlessSdk._is_dev_mode and self.dev_mode is None:
+                from .lib.dev_mode import get_dev_mode_thread
 
-                self.event_loop = get_event_loop()
+                self.dev_mode = get_dev_mode_thread()
 
             serverlessSdk.trace_spans.aws_lambda_invocation = (
                 serverlessSdk._create_trace_span(
