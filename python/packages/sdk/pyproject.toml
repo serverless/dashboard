@@ -27,7 +27,6 @@ dependencies = [
     "blinker>=1.5",
     "js-regex<1.1.0,>=1.0.1",
     "typing-extensions>=4.4", # included in Python 3.8 - 3.11
-    "wrapt~=1.15.0",
 ]
 [project.optional-dependencies]
 tests = [
@@ -68,10 +67,6 @@ disable_error_code = "override,assignment,arg-type"
 exclude = [
     '^tests/',
 ]
-
-[[tool.mypy.overrides]]
-module = "wrapt"
-ignore_missing_imports = true
 
 [tool.ruff]
 ignore = ["F401", "E722"]
