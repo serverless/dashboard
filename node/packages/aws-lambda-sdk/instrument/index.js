@@ -2,6 +2,7 @@
 
 'use strict';
 
+const zlib = require('zlib');
 const ensurePlainFunction = require('type/plain-function/ensure');
 const traceProto = require('@serverless/sdk-schema/dist/trace');
 const requestResponseProto = require('@serverless/sdk-schema/dist/request_response');
@@ -158,7 +159,7 @@ const reportTrace = ({ isErrorOutcome }) => {
   });
   const payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
-  process._rawDebug(`SERVERLESS_TELEMETRY.T.${payloadBuffer.toString('base64')}`);
+  process._rawDebug(`SERVERLESS_TELEMETRY.TZ.${zlib.gzipSync(payloadBuffer).toString('base64')}`);
 };
 
 const resolveOutcomeEnumValue = (value) => {
