@@ -1068,7 +1068,7 @@ describe('Python: integration', function () {
 
   before(async () => {
     exec(
-      `pip install pynamodb==5.5.0 aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
+      `pip install pynamodb==5.5.0 yarl==1.8.2 aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
     );
     exec(
       [

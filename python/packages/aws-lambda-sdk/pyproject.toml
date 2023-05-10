@@ -26,7 +26,6 @@ dependencies = [
     "serverless-sdk~=0.4.7",
     "serverless-sdk-schema~=0.2.1",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11
-    "yarl~=1.8.0",
 ]
 [project.optional-dependencies]
 tests = [
@@ -43,6 +42,7 @@ tests = [
     "ruff>=0.0.199",
     "serverless-wsgi>=3.0.2",
     "types-protobuf>=4.22.0.2",
+    "yarl~=1.8.0",
 ]
 [project.urls]
 changelog = "https://github.com/serverless/console/blob/main/python/packages/aws-lambda-sdk/CHANGELOG.md"
