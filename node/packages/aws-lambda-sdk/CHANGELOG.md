@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.14.23](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.22...@serverless/aws-lambda-sdk@0.14.23) (2023-05-10)
+
+### Maintenance Improvements
+
+- Black box AWS SDK spans via new dedicated method ([1266baa](https://github.com/serverless/console/commit/1266baa98aa9170b1d2c6e57136d75e00d089a7f))
+
 ### [0.14.22](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.21...@serverless/aws-lambda-sdk@0.14.22) (2023-05-04)
 
 _Adapt updates from v0.5.16 of `@serverless/sdk`_
