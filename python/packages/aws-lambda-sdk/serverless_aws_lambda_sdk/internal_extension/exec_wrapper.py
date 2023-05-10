@@ -84,7 +84,7 @@ def _set_handler():
 def main():
     try:
         _set_handler()
-    except:
+    except:  # noqa: E722
         import traceback
 
         print(

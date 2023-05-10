@@ -2,7 +2,6 @@ from __future__ import annotations
 import os
 import logging
 from typing import Optional
-from typing_extensions import Final
 import sys
 import inspect
 from pathlib import Path
