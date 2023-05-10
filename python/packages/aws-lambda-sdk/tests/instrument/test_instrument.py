@@ -739,7 +739,12 @@ def test_instrument_dynamodb(instrumenter, monkeypatch):
         def handler(event, context):
             import boto3
 
-            client = boto3.client("dynamodb", region_name="us-east-1")
+            client = boto3.client(
+                "dynamodb",
+                region_name="us-east-1",
+                aws_access_key_id="foo",
+                aws_secret_access_key="bar",
+            )
             stubber = Stubber(client)
             response = {
                 "ResponseMetadata": {
@@ -753,7 +758,12 @@ def test_instrument_dynamodb(instrumenter, monkeypatch):
             stubber.add_response("delete_table", response)
             stubber.activate()
 
-            dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+            dynamodb = boto3.resource(
+                "dynamodb",
+                region_name="us-east-1",
+                aws_access_key_id="foo",
+                aws_secret_access_key="bar",
+            )
             resource_stubber = Stubber(dynamodb.meta.client)
             resource_stubber.add_response("query", response)
             resource_stubber.activate()

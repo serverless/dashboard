@@ -41,7 +41,12 @@ def test_aws_sdk_instrumentation_s3(instrumenter):
     # given
     import boto3
 
-    client = boto3.client("s3", region_name="us-east-1")
+    client = boto3.client(
+        "s3",
+        region_name="us-east-1",
+        aws_access_key_id="foo",
+        aws_secret_access_key="bar",
+    )
     stubber = Stubber(client)
     stubber.add_response("create_bucket", {})
     stubber.activate()
@@ -69,7 +74,12 @@ def test_aws_sdk_instrumentation_in_dev_mode_s3(instrumenter_dev):
     # given
     import boto3
 
-    client = boto3.client("s3", region_name="us-east-1")
+    client = boto3.client(
+        "s3",
+        region_name="us-east-1",
+        aws_access_key_id="foo",
+        aws_secret_access_key="bar",
+    )
     stubber = Stubber(client)
     response = {
         "ResponseMetadata": {
@@ -109,7 +119,12 @@ def test_aws_sdk_instrumentation_error(instrumenter):
     # given
     import boto3
 
-    client = boto3.client("s3", region_name="us-east-1")
+    client = boto3.client(
+        "s3",
+        region_name="us-east-1",
+        aws_access_key_id="foo",
+        aws_secret_access_key="bar",
+    )
     stubber = Stubber(client)
     stubber.add_client_error(
         "head_object",
@@ -157,7 +172,12 @@ def test_aws_sdk_instrumentation_of_dynamodb(instrumenter, monkeypatch):
 
     import boto3
 
-    client = boto3.client("dynamodb", region_name="us-east-1")
+    client = boto3.client(
+        "dynamodb",
+        region_name="us-east-1",
+        aws_access_key_id="foo",
+        aws_secret_access_key="bar",
+    )
     stubber = Stubber(client)
     response = {
         "ResponseMetadata": {
@@ -201,7 +221,12 @@ def test_aws_sdk_instrumentation_of_dynamodb(instrumenter, monkeypatch):
         ExpressionAttributeValues={":country": {"S": "France"}},
     )
 
-    dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+    dynamodb = boto3.resource(
+        "dynamodb",
+        region_name="us-east-1",
+        aws_access_key_id="foo",
+        aws_secret_access_key="bar",
+    )
     resource_stubber = Stubber(dynamodb.meta.client)
     resource_stubber.add_response("query", response)
     resource_stubber.activate()
@@ -255,7 +280,12 @@ def test_aws_sdk_servicequotas_instrumentation(instrumenter):
     # given
     import boto3
 
-    client = boto3.client("service-quotas", region_name="us-east-1")
+    client = boto3.client(
+        "service-quotas",
+        region_name="us-east-1",
+        aws_access_key_id="foo",
+        aws_secret_access_key="bar",
+    )
     stubber = Stubber(client)
     response = {
         "ResponseMetadata": {
