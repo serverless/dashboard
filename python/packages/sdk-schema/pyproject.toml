@@ -38,6 +38,3 @@ repository = "https://github.com/serverless/console"
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
-
-[tool.ruff]
-ignore = ["F401"]
