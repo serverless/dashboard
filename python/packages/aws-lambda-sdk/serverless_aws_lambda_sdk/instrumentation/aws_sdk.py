@@ -6,8 +6,9 @@ from sls_sdk.lib.instrumentation.http import (
     ignore_following_request,
     reset_ignore_following_request,
 )
-from wrapt import wrap_function_wrapper, ObjectProxy
+from sls_sdk.lib.instrumentation.wrapper import replace_method
 import re
+import importlib
 
 _instrumenter = None
 _import_hook = ImportHook("botocore")
@@ -21,27 +22,23 @@ class Instrumenter:
     target_method = "_make_api_call"
 
     def __init__(self, botocore):
-        self._botocore = botocore
+        self._botocore_client = importlib.import_module("botocore.client")
 
     def install(self, should_monitor_request_response):
         self._should_monitor_request_response = should_monitor_request_response
-        wrap_function_wrapper(
-            "botocore.client",
-            f"BaseClient.{Instrumenter.target_method}",
+        replace_method(
+            self._botocore_client.BaseClient,
+            Instrumenter.target_method,
             self._patched_api_call,
         )
 
     def uninstall(self):
         _wrapped = getattr(
-            self._botocore.client.BaseClient, Instrumenter.target_method, None
+            self._botocore_client.BaseClient, Instrumenter.target_method, None
         )
-        if (
-            _wrapped
-            and isinstance(_wrapped, ObjectProxy)
-            and hasattr(_wrapped, "__wrapped__")
-        ):
+        if hasattr(_wrapped, "__wrapped__"):
             setattr(
-                self._botocore.client.BaseClient,
+                self._botocore_client.BaseClient,
                 Instrumenter.target_method,
                 _wrapped.__wrapped__,
             )
