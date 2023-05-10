@@ -82,7 +82,7 @@ def test_error_with_custom_object(monkeypatch):
 
 def test_error_with_crash_exception(monkeypatch):
     # given
-    from sls_sdk.lib.error import report as report_error, logger
+    from sls_sdk.lib.error import report as report_error
 
     error = Exception("Something went wrong")
     monkeypatch.setenv("SLS_CRASH_ON_SDK_ERROR", "1")
@@ -95,7 +95,7 @@ def test_error_with_crash_exception(monkeypatch):
 
 def test_error_with_crash_custom_object(monkeypatch):
     # given
-    from sls_sdk.lib.error import report as report_error, logger
+    from sls_sdk.lib.error import report as report_error
 
     error = "Something went wrong"
     monkeypatch.setenv("SLS_CRASH_ON_SDK_ERROR", "1")

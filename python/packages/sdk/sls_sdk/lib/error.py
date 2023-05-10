@@ -45,6 +45,6 @@ def report(error, type: str = "INTERNAL"):
             type="handledSdkUser" if type == "USER" else "handledSdkInternal",
             origin="pythonLogging",
         )
-    except:
+    except:  # noqa: E722
         # ignore
         pass
