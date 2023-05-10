@@ -2,8 +2,6 @@
 
 const ensureObject = require('type/object/ensure');
 const ensureConstructor = require('type/constructor/ensure');
-const doNotInstrumentFollowingHttpRequest =
-  require('@serverless/sdk/lib/instrumentation/http').ignoreFollowingRequest;
 const serviceMapper = require('../lib/instrumentation/aws-sdk/service-mapper');
 const safeStringify = require('../lib/instrumentation/aws-sdk/safe-stringify');
 
@@ -58,6 +56,7 @@ module.exports.install = (Sdk) => {
           'aws.sdk.operation': operationName,
         },
         input: inputString,
+        isBlackBox: true,
       });
       if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, params);
       let wasCompleted = false;
@@ -99,7 +98,6 @@ module.exports.install = (Sdk) => {
           serverlessSdk._reportError(error);
         }
       });
-      doNotInstrumentFollowingHttpRequest();
     } catch (error) {
       serverlessSdk._reportError(error);
       return originalRunTo.call(this, state, done);

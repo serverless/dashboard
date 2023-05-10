@@ -1,8 +1,6 @@
 'use strict';
 
 const ensureObject = require('type/object/ensure');
-const doNotInstrumentFollowingHttpRequest =
-  require('@serverless/sdk/lib/instrumentation/http').ignoreFollowingRequest;
 
 const instrumentedClients = new WeakMap();
 
@@ -40,6 +38,7 @@ module.exports.install = (client) => {
               'aws.sdk.signature_version': 'v4',
             },
             input: shouldMonitorRequestResponse ? safeStringify(args.input) : null,
+            isBlackBox: true,
           });
           if (tagMapper && tagMapper.params) tagMapper.params(traceSpan, args.input);
           deferredRegion = client.config
@@ -91,18 +90,12 @@ module.exports.install = (client) => {
           return response;
         }
       };
-      const httpRequestMiddleware = (next) => async (args) => {
-        doNotInstrumentFollowingHttpRequest();
-        return next(args);
-      };
 
       stack.add(awsRequestMiddleware);
-      stack.add(httpRequestMiddleware, { step: 'deserialize', priority: 'low' });
 
       uninstall = () => {
         if (instrumentedClients.has(client)) return;
         stack.remove(awsRequestMiddleware);
-        stack.remove(httpRequestMiddleware);
         instrumentedClients.delete(client);
       };
     },
