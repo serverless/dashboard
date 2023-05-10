@@ -67,7 +67,3 @@ disable_error_code = "override,assignment,arg-type"
 exclude = [
     '^tests/',
 ]
-
-[tool.ruff]
-ignore = ["F401", "E722"]
-#fix = true

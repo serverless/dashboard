@@ -8,7 +8,7 @@ from . import get_params
 
 def test_can_import_serverless_sdk(reset_sdk):
     try:
-        from sls_sdk import serverlessSdk
+        from sls_sdk import serverlessSdk  # noqa: F401
 
     except ImportError as e:
         raise AssertionError("Cannot import `serverlessSdk`") from e
@@ -185,7 +185,7 @@ def test_sdk_set_tag_does_not_crash_on_invalid_input(reset_sdk, monkeypatch):
     failed = False
     try:
         sdk.set_tag(tag_name, tag_value)
-    except:
+    except Exception:
         failed = True
 
     # then
