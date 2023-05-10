@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.17](https://github.com/serverless/console/compare/@serverless/sdk@0.5.16...@serverless/sdk@0.5.17) (2023-05-10)
+
+### Bug Fixes
+
+- Fix detection of not observed response body ([f7eb441](https://github.com/serverless/console/commit/f7eb4419869bff2f0fa4b69d94cd175919813f1a))
+
+### Maintenance Improvements
+
+- Support black boxing internal spans ([4ae3a31](https://github.com/serverless/console/commit/4ae3a31333e1e599e1a5e91ab8d3cc8a6e5fe068))
+- Do not create HTTP trace spans in black box context ([12ef23b](https://github.com/serverless/console/commit/12ef23b87ed6aa34785e1d942b3177240f72f794))
+- Remove no longer needed debug logs ([978deb8](https://github.com/serverless/console/commit/978deb849f915a2e27a08411b38d9b17b51163c8))
+
 ### [0.5.16](https://github.com/serverless/console/compare/@serverless/sdk@0.5.15...@serverless/sdk@0.5.16) (2023-05-04)
 
 ### Bug Fixes
