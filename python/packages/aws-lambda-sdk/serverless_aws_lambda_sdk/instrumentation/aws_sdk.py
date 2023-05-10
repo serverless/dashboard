@@ -8,6 +8,7 @@ from sls_sdk.lib.instrumentation.http import (
 )
 from sls_sdk.lib.instrumentation.wrapper import replace_method
 import re
+import importlib
 
 _instrumenter = None
 _import_hook = ImportHook("botocore")
@@ -21,9 +22,7 @@ class Instrumenter:
     target_method = "_make_api_call"
 
     def __init__(self, botocore):
-        import botocore.client
-
-        self._botocore_client = botocore.client
+        self._botocore_client = importlib.import_module("botocore.client")
 
     def install(self, should_monitor_request_response):
         self._should_monitor_request_response = should_monitor_request_response
