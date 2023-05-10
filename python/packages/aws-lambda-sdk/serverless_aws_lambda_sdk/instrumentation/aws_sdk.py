@@ -10,7 +10,7 @@ from sls_sdk.lib.instrumentation.wrapper import replace_method
 import re
 
 _instrumenter = None
-_import_hook = ImportHook("botocore.client")
+_import_hook = ImportHook("botocore")
 
 
 def _sanitize_span_name(name):
@@ -20,8 +20,10 @@ def _sanitize_span_name(name):
 class Instrumenter:
     target_method = "_make_api_call"
 
-    def __init__(self, botocore_client):
-        self._botocore_client = botocore_client
+    def __init__(self, botocore):
+        import botocore.client
+
+        self._botocore_client = botocore.client
 
     def install(self, should_monitor_request_response):
         self._should_monitor_request_response = should_monitor_request_response
@@ -104,16 +106,16 @@ class Instrumenter:
             reset_ignore_following_request()
 
 
-def _hook(botocore_client):
+def _hook(botocore):
     global _instrumenter
-    _instrumenter = Instrumenter(botocore_client)
+    _instrumenter = Instrumenter(botocore)
     _instrumenter.install(
         serverlessSdk._is_dev_mode
         and not serverlessSdk._settings.disable_request_response_monitoring
     )
 
 
-def _undo_hook(botocore_client):
+def _undo_hook(botocore):
     global _instrumenter
     _instrumenter.uninstall()
     _instrumenter = None
