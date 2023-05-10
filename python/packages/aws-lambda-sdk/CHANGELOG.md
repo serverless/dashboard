@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.16 (2023-05-10)
+
+### Bug Fixes
+
+- Sanitize service/operation names when instrumenting AWS SDK
+
+### Performance Improvements
+
+- Use native http module instead of aiohttp to reduce package size
+- Remove dependency on wrapt to reduce package size and latency
+- Use version file to remove importlib-metadata import
+
+### Maintenance Improvements
+
+- Specify python classifiers for pypi
+- Fix static type checking issues
+
 ## 0.1.15 (2023-04-27)
 
 ### Bug Fixes
