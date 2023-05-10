@@ -207,6 +207,7 @@ jobs:
         run: |
           cd python/packages/aws-lambda-sdk
           python3 -m pip install . --target=dist
+          rm -rf dist/google/_upb
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v1
