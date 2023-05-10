@@ -34,6 +34,8 @@ def _reset_sdk(
         "aiohttp",
         "requests",
         "flask",
+        "boto3",
+        "botocore",
         "serverless_aws_lambda_sdk",
     ]
     deleted_modules = []
@@ -61,7 +63,7 @@ def _reset_sdk(
 
     # make sure 3rd party dependencies are imported
     for module in deleted_modules + module_prefixes_to_delete:
-        if not module.startswith("serverless_"):
+        if not module.startswith("serverless_aws_lambda_sdk"):
             importlib.import_module(module)
 
     # finally, make sure the SDK is imported

@@ -34,7 +34,6 @@ tests = [
     "boto3>=1.16.112",
     "flask>=2.2.3",
     "importlib_metadata>=5.2", # included in Python >=3.8
-    "moto>=4.1.7",
     "mypy>=1.2",
     "pynamodb>=5.5",
     "pytest>=7.2",

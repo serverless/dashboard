@@ -13,7 +13,7 @@ from serverless_sdk_schema import TracePayload, RequestResponse
 import base64
 from werkzeug.wrappers import Request, Response
 from pytest_httpserver import HTTPServer
-from moto import mock_dynamodb
+from botocore.stub import Stubber
 
 
 _TARGET_LOG_PREFIX = "SERVERLESS_TELEMETRY.T."
@@ -729,7 +729,6 @@ def test_instrument_flask(reset_sdk_debug_mode, mocked_print):
     )
 
 
-@mock_dynamodb
 def test_instrument_dynamodb(instrumenter, monkeypatch):
     # given
     monkeypatch.setattr(
@@ -739,20 +738,29 @@ def test_instrument_dynamodb(instrumenter, monkeypatch):
     def handler_generator():
         def handler(event, context):
             import boto3
-            from pynamodb.models import Model
-            from pynamodb.attributes import UnicodeAttribute
+
+            client = boto3.client("dynamodb", region_name="us-east-1")
+            stubber = Stubber(client)
+            response = {
+                "ResponseMetadata": {
+                    "RequestId": "foo",
+                    "HTTPStatusCode": 200,
+                },
+            }
+            stubber.add_response("create_table", response)
+            stubber.add_response("put_item", response)
+            stubber.add_response("query", response)
+            stubber.add_response("delete_table", response)
+            stubber.activate()
+
+            dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+            resource_stubber = Stubber(dynamodb.meta.client)
+            resource_stubber.add_response("query", response)
+            resource_stubber.activate()
 
             table_name = "test-table"
 
-            class LocationModel(Model):
-                class Meta:
-                    table_name = "test-table"
-
-                country = UnicodeAttribute(hash_key=True)
-                city = UnicodeAttribute(range_key=True)
-
-            dynamodb = boto3.client("dynamodb", region_name="us-east-1")
-            dynamodb.create_table(
+            client.create_table(
                 TableName=table_name,
                 KeySchema=[
                     {"AttributeName": "country", "KeyType": "HASH"},
@@ -766,35 +774,31 @@ def test_instrument_dynamodb(instrumenter, monkeypatch):
             )
 
             # when
-            dynamodb.put_item(
+            client.put_item(
                 TableName=table_name,
                 Item={"country": {"S": "France"}, "city": {"S": "Paris"}},
             )
-            dynamodb.query(
+            client.query(
                 TableName=table_name,
                 KeyConditionExpression="#country = :country",
                 ExpressionAttributeNames={"#country": "country"},
                 ExpressionAttributeValues={":country": {"S": "France"}},
             )
 
-            res = boto3.resource("dynamodb", region_name="us-east-1")
             from boto3.dynamodb.conditions import Key
 
-            if (
-                len(
-                    list(
-                        res.meta.client.get_paginator("query").paginate(
-                            TableName=table_name,
-                            KeyConditionExpression=Key("country").eq("France"),
-                        )
-                    )
+            list(
+                dynamodb.meta.client.get_paginator("query").paginate(
+                    TableName=table_name,
+                    KeyConditionExpression=Key("country").eq("France"),
                 )
-                != 1
-                or len([l for l in LocationModel.query("France")]) != 1
-            ):
-                raise Exception("Invalid number of items")
+            )
 
-            dynamodb.delete_table(TableName=table_name)
+            client.delete_table(TableName=table_name)
+
+            stubber.assert_no_pending_responses()
+            resource_stubber.assert_no_pending_responses()
+
             return "ok"
 
         return handler
