@@ -4,6 +4,7 @@ const ensurePlainObject = require('type/plain-object/ensure');
 const ensurePlainFunction = require('type/plain-function/ensure');
 const log = require('log').get('test');
 const _ = require('lodash');
+const zlib = require('zlib');
 const { CloudWatchLogs } = require('@aws-sdk/client-cloudwatch-logs');
 const { Lambda } = require('@aws-sdk/client-lambda');
 const wait = require('timers-ext/promise/sleep');
@@ -224,12 +225,15 @@ module.exports = async (basename, coreConfig, options) => {
         if (!printedPayloads[name]) printedPayloads[name] = [];
         payloadString = payloadString.trim();
         printedPayloads[name].push(payloadString);
+        let traceBuffer;
         switch (name) {
+          case 'TZ':
+            traceBuffer = zlib.unzipSync(Buffer.from(payloadString, 'base64'));
+          // fallthrough
           case 'T':
             {
-              const trace = normalizeProtoObject(
-                TracePayload.decode(Buffer.from(payloadString, 'base64'))
-              );
+              if (!traceBuffer) traceBuffer = Buffer.from(payloadString, 'base64');
+              const trace = normalizeProtoObject(TracePayload.decode(traceBuffer));
               const [totalSpan] = trace.spans;
               const [initializationSpan, invocationSpan] = (() => {
                 if (trace.spans[1].name === 'aws.lambda.initialization') {
