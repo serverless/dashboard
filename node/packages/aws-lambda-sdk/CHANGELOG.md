@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.15.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.23...@serverless/aws-lambda-sdk@0.15.0) (2023-05-11)
+
+### ⚠ BREAKING CHANGES
+
+- Telemetry payloads prefixed with `SERVERLESS_TELEMETRY.T.` are replaced with gzipped payloads written with `SERVERLESS_TELEMETRY.TZ.` prefix
+
+### Performance Improvements
+
+- Improve size of written telemetry log by gzipping it ([#738](https://github.com/serverless/console/issues/738)) ([3d28670](https://github.com/serverless/console/commit/3d2867082863fee3d6b168dae3d9a7eaaf5dadd8))
+
 ### [0.14.23](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.22...@serverless/aws-lambda-sdk@0.14.23) (2023-05-10)
 
 ### Maintenance Improvements
