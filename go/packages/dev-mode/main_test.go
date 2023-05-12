@@ -31,12 +31,13 @@ type ValidationLogMessage struct {
 }
 
 type ValidationResult struct {
-	Register  RegisterPayload `json:"register"`
-	RequestId string          `json:"requestId"`
-	Logs      []u.APIPayload  `json:"logs"`
-	ReqRes    []u.APIPayload  `json:"reqRes"`
-	Spans     []u.APIPayload  `json:"spans"`
-	NextCount int64           `json:"nextCount"`
+	Register        RegisterPayload `json:"register"`
+	RequestId       string          `json:"requestId"`
+	Logs            []u.APIPayload  `json:"logs"`
+	ReqRes          []u.APIPayload  `json:"reqRes"`
+	Spans           []u.APIPayload  `json:"spans"`
+	DevModePayloads []u.APIPayload  `json:"devModePayloads"`
+	NextCount       int64           `json:"nextCount"`
 }
 
 var port = 9001
@@ -284,12 +285,15 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 		}
 	}
 
-	for _, reqResPayload := range validationData2.ReqRes {
+	for _, devModePayload := range validationData2.DevModePayloads {
 		// reqResStr, _ := base64.StdEncoding.DecodeString(string(reqResPayload.Payload))
-		var devModePayload schema.DevModePayload
-		err := proto.Unmarshal(reqResPayload.Payload, &devModePayload)
-		if err != nil || devModePayload.RequestId != requestId2 {
-			t.Errorf("Expected reqRes requestId %s Received %s", requestId2, devModePayload.RequestId)
+		var payload schema.DevModeTransportPayload
+		err := proto.Unmarshal(devModePayload.Payload, &payload)
+		if err != nil {
+			t.Errorf("Expected no marshaling error %v", err)
+		}
+		if payload.RequestId != requestId2 {
+			t.Errorf("Expected devModePayload requestId %s Received %s", requestId2, payload.RequestId)
 		}
 	}
 

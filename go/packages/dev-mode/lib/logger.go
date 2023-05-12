@@ -77,27 +77,11 @@ func ReportOverheadDuration(t time.Time) {
 	}
 }
 
-func ReportLog(logPayload string) {
+func ReportDevModePayload(logPayload string) {
 	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
 	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
 	if ok || toLogs {
-		BaseLogger.Printf("SERVERLESS_TELEMETRY.DL.%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
-	}
-}
-
-func ReportReqRes(logPayload string) {
-	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
-	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
-	if ok || toLogs {
-		BaseLogger.Printf("SERVERLESS_TELEMETRY.DR.%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
-	}
-}
-
-func ReportSpans(logPayload string) {
-	_, ok := os.LookupEnv("SLS_DEBUG_EXTENSION")
-	_, toLogs := os.LookupEnv("SLS_TEST_EXTENSION_LOG")
-	if ok || toLogs {
-		BaseLogger.Printf("SERVERLESS_TELEMETRY.DM.%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
+		BaseLogger.Printf("SERVERLESS_TELEMETRY.DMZ.%s", base64.StdEncoding.EncodeToString([]byte(logPayload)))
 	}
 }
 

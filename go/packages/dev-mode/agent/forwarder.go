@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -463,13 +464,36 @@ func CollectTraceData(logs []LogItem) [][]byte {
 	return messages
 }
 
-func makeAPICall(body []byte, testReporter func(string), path string, contentType string) (int, error) {
+func ForwardActivity(payloads []schema.DevModeTransportPayload) (int, error) {
+	path := "/dev"
+	if len(payloads) == 0 {
+		return 200, nil
+	}
+	finalPayload := schema.DevModeTransportPayload{
+		AccountId: payloads[0].AccountId,
+		Region:    payloads[0].Region,
+		RequestId: payloads[0].RequestId,
+	}
+	for _, activity := range payloads {
+		finalPayload.Logs = append(finalPayload.Logs, activity.Logs...)
+		finalPayload.RequestResponse = append(finalPayload.RequestResponse, activity.RequestResponse...)
+		finalPayload.Traces = append(finalPayload.Traces, activity.Traces...)
+	}
+	body, _ := proto.Marshal(&finalPayload)
 	// Send data to backends
 	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
 	var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
+	// Gzip the body
+	var gzipBody bytes.Buffer
+	gz := gzip.NewWriter(&gzipBody)
+	if _, err := gz.Write(body); err != nil {
+		return 500, nil
+	}
+	gz.Close()
+
 	// If we are running integration tests we just want to write the JSON payloads to CW
 	if toLogs {
-		testReporter(string(body))
+		lib.ReportDevModePayload(gzipBody.String())
 		return 200, nil
 	} else {
 		url := lib.GetBaseUrl() + path
@@ -485,8 +509,8 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 
 		token, _ := os.LookupEnv("SLS_DEV_TOKEN")
 		client := &http.Client{}
-		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
-		req.Header.Add("Content-Type", contentType)
+		req, _ := http.NewRequest("POST", url, &gzipBody)
+		req.Header.Add("Content-Type", "application/gzip")
 		req.Header.Add("Authorization", "Bearer "+token)
 		req.Header.Add("sls-token-type", "orgToken")
 		res, resErr := client.Do(req)
@@ -497,9 +521,13 @@ func makeAPICall(body []byte, testReporter func(string), path string, contentTyp
 	}
 }
 
-func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId string) (int, error) {
+func AggregateActivity(logs []LogItem, requestId string, accountId string, traceId string) *schema.DevModeTransportPayload {
 	region := os.Getenv("AWS_REGION")
-
+	aggregatedActivity := schema.DevModeTransportPayload{
+		AccountId: accountId,
+		Region:    region,
+		RequestId: requestId,
+	}
 	// Send reqRes payloads
 	payloads, metadata := CollectRequestResponseData(logs, requestId, accountId, traceId)
 	if len(payloads) != 0 {
@@ -508,10 +536,8 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 			var devModePayload schema.RequestResponse
 			reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
 			if reqResErr == nil {
-
 				// Attach metadata from the Lambda Telemetry API
 				// to the finalPayload
-				var telemetry *schema.LambdaTelemetry
 				if len(metadata) > index {
 					meta := metadata[index]
 					// Update the response payload so that it uses the
@@ -527,38 +553,14 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 						jsonString, _ := json.Marshal(meta.Record)
 						reportData := InitReportRecord{}
 						json.Unmarshal(jsonString, &reportData)
-						telemetry = &schema.LambdaTelemetry{
-							InitDurationMs: &reportData.Metrics.DurationMs,
-						}
 					} else if meta.LogType == "platform.runtimeDone" {
 						jsonString, _ := json.Marshal(meta.Record)
 						reportData := RuntimeDoneRecord{}
 						json.Unmarshal(jsonString, &reportData)
-						responseLatency := uint32(0)
-						for _, spanPayload := range reportData.Spans {
-							if spanPayload.Name == "responseLatency" {
-								responseLatency = spanPayload.DurationMs
-							}
-						}
-						telemetry = &schema.LambdaTelemetry{
-							RuntimeDurationMs:        &reportData.Metrics.DurationMs,
-							RuntimeResponseLatencyMs: &responseLatency,
-						}
 					}
 				}
 
-				finalProtoPayload := schema.DevModePayload{
-					RequestId: requestId,
-					AccountId: accountId,
-					Region:    region,
-					Telemetry: telemetry,
-					Payload: &schema.DevModePayload_RequestResponse{
-						RequestResponse: &devModePayload,
-					},
-				}
-
-				finalPayload, _ := proto.Marshal(&finalProtoPayload)
-				makeAPICall(finalPayload, lib.ReportReqRes, "/forwarder/reqres", "application/x-protobuf")
+				aggregatedActivity.RequestResponse = append(aggregatedActivity.RequestResponse, &devModePayload)
 			} else {
 				lib.Info("Proto Error", reqResErr)
 			}
@@ -573,31 +575,15 @@ func ForwardLogs(logs []LogItem, requestId string, accountId string, traceId str
 			var devModePayload schema.TracePayload
 			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
 			if traceErr == nil {
-				finalProtoPayload := schema.DevModePayload{
-					RequestId: requestId,
-					AccountId: accountId,
-					Region:    region,
-					Payload: &schema.DevModePayload_Trace{
-						Trace: &devModePayload,
-					},
-				}
-				finalPayload, _ := proto.Marshal(&finalProtoPayload)
-				makeAPICall(finalPayload, lib.ReportSpans, "/forwarder/spans", "application/x-protobuf")
+				aggregatedActivity.Traces = append(aggregatedActivity.Traces, &devModePayload)
 			}
 		}
 	}
 
 	logPayload := FormatLogs(logs, requestId, accountId, traceId)
-	if len(logPayload.LogEvents) == 0 {
-		return 0, nil
+	if len(logPayload.LogEvents) != 0 {
+		aggregatedActivity.Logs = append(aggregatedActivity.Logs, &logPayload)
 	}
 
-	// Convert proto to bytes
-	protoBytes, protoErr := proto.Marshal(&logPayload)
-	if protoErr != nil {
-		lib.Error("Failed to marshal proto", protoErr)
-	}
-
-	// Send data to backends
-	return makeAPICall(protoBytes, lib.ReportLog, "/forwarder", "application/x-protobuf")
+	return &aggregatedActivity
 }

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,15 +20,16 @@ type APIPayload struct {
 }
 
 type Validations struct {
-	Register  string       `json:"register"`
-	LogTypes  []string     `json:"logTypes"`
-	LogURI    string       `json:"logURI"`
-	SdkURI    string       `json:"sdkURI"`
-	RequestId string       `json:"requestId"`
-	Logs      []APIPayload `json:"logs"`
-	ReqRes    []APIPayload `json:"reqRes"`
-	Spans     []APIPayload `json:"spans"`
-	NextCount int64        `json:"nextCount"`
+	Register        string       `json:"register"`
+	LogTypes        []string     `json:"logTypes"`
+	LogURI          string       `json:"logURI"`
+	SdkURI          string       `json:"sdkURI"`
+	RequestId       string       `json:"requestId"`
+	Logs            []APIPayload `json:"logs"`
+	ReqRes          []APIPayload `json:"reqRes"`
+	Spans           []APIPayload `json:"spans"`
+	DevModePayloads []APIPayload `json:"devModePayloads"`
+	NextCount       int64        `json:"nextCount"`
 }
 
 type LogRegisterDestinationInput struct {
@@ -63,14 +65,15 @@ var reg = "us-east-1"
 var status string = ""
 var lambdaExtensionIdentifier = uuid.New().String()
 var validations = Validations{
-	Register:  "",
-	LogURI:    "",
-	SdkURI:    "http://127.0.0.1:2773",
-	RequestId: "",
-	Logs:      make([]APIPayload, 0),
-	ReqRes:    make([]APIPayload, 0),
-	Spans:     make([]APIPayload, 0),
-	NextCount: 0,
+	Register:        "",
+	LogURI:          "",
+	SdkURI:          "http://127.0.0.1:2773",
+	RequestId:       "",
+	Logs:            make([]APIPayload, 0),
+	ReqRes:          make([]APIPayload, 0),
+	Spans:           make([]APIPayload, 0),
+	DevModePayloads: make([]APIPayload, 0),
+	NextCount:       0,
 }
 
 func StartServer(functionName string, region string, port int64) *http.Server {
@@ -98,9 +101,7 @@ func createLambdaServer(port int64) *http.Server {
 	router.GET("/2020-01-01/extension/event/next", nextEndpoint)
 	router.PUT("/2022-07-01/telemetry", registerLogs)
 	router.POST("/logs", sendLogs)
-	router.POST("/save/forwarder", saveLogs)
-	router.POST("/save/forwarder/reqres", saveReqRes)
-	router.POST("/save/forwarder/spans", saveSpans)
+	router.POST("/save/dev", saveDevPayloads)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -201,33 +202,45 @@ func registerLogs(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
-func saveLogs(c *gin.Context) {
-	var input schema.LogPayload
-	if errA := c.ShouldBind(&input); errA == nil {
-		logPayload, _ := proto.Marshal(&input)
+func saveDevPayloads(c *gin.Context) {
+	gzipReader, _ := gzip.NewReader(c.Request.Body)
+	defer gzipReader.Close()
+	unzipped, _ := ioutil.ReadAll(gzipReader)
+	var input schema.DevModeTransportPayload
+	protoErr := proto.Unmarshal(unzipped, &input)
+	if protoErr != nil {
+		println("Oh no!", protoErr)
+	}
+
+	marshaledDevModePayload, _ := proto.Marshal(&input)
+	validations.DevModePayloads = append(validations.DevModePayloads, APIPayload{
+		Payload: marshaledDevModePayload,
+	})
+
+	for _, logPayload := range input.Logs {
+		marshaledLogPayload, _ := proto.Marshal(logPayload)
 		val := APIPayload{
-			Payload: logPayload,
+			Payload: marshaledLogPayload,
 		}
 		validations.Logs = append(validations.Logs, val)
-		c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 	}
-}
 
-func saveReqRes(c *gin.Context) {
-	body, _ := ioutil.ReadAll(c.Request.Body)
-	val := APIPayload{
-		Payload: body,
+	for _, reqResPayload := range input.RequestResponse {
+		marshaledReqResPayload, _ := proto.Marshal(reqResPayload)
+		val := APIPayload{
+			Payload: marshaledReqResPayload,
+		}
+		validations.ReqRes = append(validations.ReqRes, val)
 	}
-	validations.ReqRes = append(validations.ReqRes, val)
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
-}
 
-func saveSpans(c *gin.Context) {
-	body, _ := ioutil.ReadAll(c.Request.Body)
-	val := APIPayload{
-		Payload: body,
+	for _, tracePayload := range input.Traces {
+		marshaledTracePayload, _ := proto.Marshal(tracePayload)
+		val := APIPayload{
+			Payload: marshaledTracePayload,
+		}
+		validations.Spans = append(validations.Spans, val)
 	}
-	validations.Spans = append(validations.Spans, val)
+
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
@@ -319,13 +332,14 @@ func resetValidation(c *gin.Context) {
 	validations = Validations{
 		Register: "",
 		// Don't clear logs URI or else the app wont work between invocations :)
-		LogURI:    validations.LogURI,
-		SdkURI:    "http://127.0.0.1:2773",
-		RequestId: "",
-		Logs:      make([]APIPayload, 0),
-		ReqRes:    make([]APIPayload, 0),
-		Spans:     make([]APIPayload, 0),
-		NextCount: 0,
+		LogURI:          validations.LogURI,
+		SdkURI:          "http://127.0.0.1:2773",
+		RequestId:       "",
+		Logs:            make([]APIPayload, 0),
+		ReqRes:          make([]APIPayload, 0),
+		Spans:           make([]APIPayload, 0),
+		DevModePayloads: make([]APIPayload, 0),
+		NextCount:       0,
 	}
 	c.Data(http.StatusOK, "text/html", []byte("ok"))
 }
