@@ -369,7 +369,7 @@ describe('integration', function () {
         }
       );
       if (response.status !== 200) {
-        if (retryCount < 10 && response.status === 404) {
+        if (retryCount < 20 && response.status === 404) {
           log.warn(`API Gateway at POST ${pathname} not ready yet, retrying in 1s`);
           await wait(1000);
           return self(testConfig, ++retryCount);
