@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import uuid
 from urllib.parse import urlparse
 import time
+from unittest.mock import MagicMock
 
 LARGE_REQUEST_PAYLOAD = b"a" * 1024 * 128
 SMALL_REQUEST_PAYLOAD = b"a"
@@ -675,3 +676,52 @@ def test_instrument_requests_post_data_from_file(
     if instrumented_sdk._is_dev_mode:
         with open(__file__, "r") as f:
             assert instrumented_sdk.trace_spans.root.input == f.read()
+
+
+def test_instrument_requests_with_binary_body(
+    instrumented_sdk, httpserver: HTTPServer, monkeypatch
+):
+    # given
+    mock_report_error = MagicMock()
+    import sls_sdk.lib.instrumentation.http
+
+    monkeypatch.setattr(
+        sls_sdk.lib.instrumentation.http, "report_error", mock_report_error
+    )
+
+    def handler(request: Request):
+        return Response(b"\x8b")
+
+    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
+
+    # when
+    import requests
+
+    requests.get(
+        httpserver.url_for("/foo/bar?baz=qux"),
+        headers={"User-Agent": "foo"},
+        data=SMALL_REQUEST_PAYLOAD,
+    )
+
+    # then
+    assert len(instrumented_sdk.trace_spans.root.spans) == 1
+    assert instrumented_sdk.trace_spans.root.name == "python.http.request"
+    assert (
+        instrumented_sdk.trace_spans.root.tags.items()
+        >= dict(
+            {
+                "http.method": "GET",
+                "http.protocol": "HTTP/1.1",
+                "http.host": f"127.0.0.1:{httpserver.port}",
+                "http.path": "/foo/bar",
+                "http.query_parameter_names": ["baz"],
+                "http.status_code": 200,
+            }
+        ).items()
+    )
+    assert (
+        "User-Agent"
+        in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
+    )
+    mock_report_error.assert_not_called()
+    _assert_request_response_body(instrumented_sdk, SMALL_REQUEST_PAYLOAD, None)
