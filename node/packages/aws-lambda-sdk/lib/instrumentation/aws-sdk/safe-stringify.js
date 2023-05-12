@@ -3,7 +3,8 @@
 const util = require('util');
 
 const replacer = (key, value) => {
-  return typeof value === 'bigint' ? value.toString() : value;
+  if (typeof value === 'bigint') return value.toString();
+  return value;
 };
 
 module.exports = (value) => {
