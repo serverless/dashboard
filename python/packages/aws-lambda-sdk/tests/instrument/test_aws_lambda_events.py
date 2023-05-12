@@ -1,10 +1,7 @@
 from __future__ import annotations
 import pytest
 from .. import context
-from serverless_sdk_schema import TracePayload, RequestResponse
-import base64
-
-_TARGET_LOG_PREFIX = "SERVERLESS_TELEMETRY.T."
+from .serialization import TARGET_LOG_PREFIX, deserialize_trace
 
 
 @pytest.fixture()
@@ -80,11 +77,11 @@ def test_handle_api_gateway_rest_api_event(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     lambda_tags = trace_payload.spans[0].tags.aws.__getattribute__("lambda")
     assert lambda_tags.event_source == "aws.apigateway"
     assert lambda_tags.event_type == "aws.apigateway.rest"
@@ -183,11 +180,11 @@ def test_handle_api_gateway_v2_http_api_payload_v1_event(instrumenter, mocked_pr
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     lambda_tags = trace_payload.spans[0].tags.aws.__getattribute__("lambda")
     assert lambda_tags.event_source == "aws.apigateway"
     assert lambda_tags.event_type == "aws.apigatewayv2.http.v1"
@@ -259,11 +256,11 @@ def test_handle_api_gateway_v2_http_api_payload_v2_event(instrumenter, mocked_pr
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     lambda_tags = trace_payload.spans[0].tags.aws.__getattribute__("lambda")
     assert lambda_tags.event_source == "aws.apigateway"
     assert lambda_tags.event_type == "aws.apigatewayv2.http.v2"
@@ -334,11 +331,11 @@ def test_handle_function_url_payload_event(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     lambda_tags = trace_payload.spans[0].tags.aws.__getattribute__("lambda")
     assert lambda_tags.event_source == "aws.lambda"
     assert lambda_tags.event_type == "aws.lambda.url"
@@ -411,11 +408,11 @@ def test_handle_sqs_event(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     lambda_tags = trace_payload.spans[0].tags.aws.__getattribute__("lambda")
     assert lambda_tags.event_source == "aws.sqs"
     assert lambda_tags.event_type == "aws.sqs"
@@ -478,11 +475,11 @@ def test_handle_sns_event(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     lambda_tags = trace_payload.spans[0].tags.aws.__getattribute__("lambda")
     assert lambda_tags.event_source == "aws.sns"
     assert lambda_tags.event_type == "aws.sns"

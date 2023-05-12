@@ -10,13 +10,10 @@ from .test_assertions import (
     assert_hexadecimal,
 )
 from serverless_sdk_schema import TracePayload, RequestResponse
-import base64
 from werkzeug.wrappers import Request, Response
 from pytest_httpserver import HTTPServer
 from botocore.stub import Stubber
-
-
-_TARGET_LOG_PREFIX = "SERVERLESS_TELEMETRY.T."
+from .serialization import TARGET_LOG_PREFIX, deserialize_trace
 
 
 @pytest.fixture()
@@ -70,11 +67,11 @@ def test_instrument_lambda_success(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -112,8 +109,8 @@ def test_instrument_subsequent_calls(instrumenter):
         first = [
             x[0][0]
             for x in mocked_print.call_args_list
-            if x[0][0].startswith(_TARGET_LOG_PREFIX)
-        ][0].replace(_TARGET_LOG_PREFIX, "")
+            if x[0][0].startswith(TARGET_LOG_PREFIX)
+        ][0].replace(TARGET_LOG_PREFIX, "")
     assert generator_call_count == 1
     assert handler_call_count == 1
 
@@ -123,13 +120,13 @@ def test_instrument_subsequent_calls(instrumenter):
         second = [
             x[0][0]
             for x in mocked_print.call_args_list
-            if x[0][0].startswith(_TARGET_LOG_PREFIX)
-        ][0].replace(_TARGET_LOG_PREFIX, "")
+            if x[0][0].startswith(TARGET_LOG_PREFIX)
+        ][0].replace(TARGET_LOG_PREFIX, "")
     assert generator_call_count == 1
     assert handler_call_count == 2
 
     # then
-    first_trace_payload = TracePayload.FromString(base64.b64decode(first))
+    first_trace_payload = deserialize_trace(first)
     assert_trace_payload(
         first_trace_payload,
         [
@@ -140,7 +137,7 @@ def test_instrument_subsequent_calls(instrumenter):
         1,
     )
 
-    second_trace_payload = TracePayload.FromString(base64.b64decode(second))
+    second_trace_payload = deserialize_trace(second)
 
     assert [s.name for s in first_trace_payload.spans] == [
         "aws.lambda",
@@ -171,11 +168,11 @@ def test_instrument_lambda_unhandled_error(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -199,11 +196,11 @@ def test_instrument_lambda_handled_error(instrumenter, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -261,11 +258,11 @@ def test_instrument_lambda_sdk(instrumenter):
             serialized = [
                 x[0][0]
                 for x in mocked_print.call_args_list
-                if x[0][0].startswith(_TARGET_LOG_PREFIX)
-            ][0].replace(_TARGET_LOG_PREFIX, "")
+                if x[0][0].startswith(TARGET_LOG_PREFIX)
+            ][0].replace(TARGET_LOG_PREFIX, "")
 
         # then
-        trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+        trace_payload = deserialize_trace(serialized)
         if asserted_spans:
             assert_trace_payload(
                 trace_payload,
@@ -348,11 +345,11 @@ def test_instrument_sdk_sampled_out(
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -386,11 +383,11 @@ def test_instrument_lambda_success_dev_mode_without_server(
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -452,11 +449,11 @@ def test_instrument_lambda_success_dev_mode_with_server(
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -502,11 +499,11 @@ def test_instrument_lambda_success_dev_mode_with_server(
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -564,11 +561,11 @@ def test_instrument_lambda_http_requests(reset_sdk_debug_mode, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -604,11 +601,11 @@ def test_instrument_lambda_aiohttp_requests(reset_sdk_debug_mode, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -636,11 +633,11 @@ def test_instrument_lambda_aiohttp_requests(reset_sdk_debug_mode, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -711,11 +708,11 @@ def test_instrument_flask(reset_sdk_debug_mode, mocked_print):
     serialized = [
         x[0][0]
         for x in mocked_print.call_args_list
-        if x[0][0].startswith(_TARGET_LOG_PREFIX)
-    ][0].replace(_TARGET_LOG_PREFIX, "")
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
@@ -823,11 +820,11 @@ def test_instrument_dynamodb(instrumenter, monkeypatch):
         serialized = [
             x[0][0]
             for x in mocked_print.call_args_list
-            if x[0][0].startswith(_TARGET_LOG_PREFIX)
-        ][0].replace(_TARGET_LOG_PREFIX, "")
+            if x[0][0].startswith(TARGET_LOG_PREFIX)
+        ][0].replace(TARGET_LOG_PREFIX, "")
 
     # then
-    trace_payload = TracePayload.FromString(base64.b64decode(serialized))
+    trace_payload = deserialize_trace(serialized)
     assert_trace_payload(
         trace_payload,
         [
