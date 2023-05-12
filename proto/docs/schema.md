@@ -46,6 +46,7 @@
   
 - [serverless/instrumentation/v1/dev_mode.proto](#serverless_instrumentation_v1_dev_mode-proto)
     - [DevModePayload](#serverless-instrumentation-v1-DevModePayload)
+    - [DevModeTransportPayload](#serverless-instrumentation-v1-DevModeTransportPayload)
     - [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry)
   
 - [serverless/instrumentation/v1/event.proto](#serverless_instrumentation_v1_event-proto)
@@ -665,6 +666,27 @@ that is forwarded to ingest via the internal extension
 | telemetry | [LambdaTelemetry](#serverless-instrumentation-v1-LambdaTelemetry) | optional | Extracted Lambda Telemetry API data |
 | trace | [TracePayload](#serverless-instrumentation-v1-TracePayload) |  | The set of lambda traces that were generated via an internal extension |
 | request_response | [RequestResponse](#serverless-instrumentation-v1-RequestResponse) |  | The req or response data from the instrumented lambda function |
+
+
+
+
+
+
+<a name="serverless-instrumentation-v1-DevModeTransportPayload"></a>
+
+### DevModeTransportPayload
+DevMode Transport Payload that will be used to aggregate reqRes, traces, and logs
+into a single payload that will be packaged and sent to our DevMode ingest.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| account_id | [string](#string) |  | The AWS Account ID where this payload originated from |
+| region | [string](#string) |  | The AWS Region where this payload originated from |
+| request_id | [string](#string) |  | The lambda request id where this payload originated from |
+| request_response | [RequestResponse](#serverless-instrumentation-v1-RequestResponse) | repeated | The request/response data from the instrumented lambda function |
+| traces | [TracePayload](#serverless-instrumentation-v1-TracePayload) | repeated | The set of lambda traces that were generated via an internal extension |
+| logs | [LogPayload](#serverless-instrumentation-v1-LogPayload) | repeated | The logs generated via the telemetry API |
 
 
 
