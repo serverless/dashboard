@@ -19,6 +19,7 @@ from .lib.response_tags import resolve as resolve_response_tags
 from sls_sdk.lib.trace import TraceSpan
 from sls_sdk.lib.captured_event import CapturedEvent
 import base64
+import zlib
 
 
 def debug_log(msg):
@@ -218,8 +219,9 @@ class Instrumenter:
             else None,
         }
         payload = to_trace_payload(payload_dct)
+        compressed_payload = zlib.compress(payload.SerializeToString())
         print(
-            f"SERVERLESS_TELEMETRY.T.{base64.b64encode(payload.SerializeToString()).decode('utf-8')}"
+            f"SERVERLESS_TELEMETRY.TZ.{base64.b64encode(compressed_payload).decode('utf-8')}"
         )
 
     def _flush_and_close_event_loop(self):
