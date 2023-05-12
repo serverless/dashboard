@@ -57,7 +57,7 @@ def _resolve_body_string(data, prefix):
                     f"{prefix}_BODY_BINARY",
                     serverlessSdk.trace_spans.aws_lambda,
                 )
-    stringified_body = json.dumps(data)
+    stringified_body = json.dumps(data, default=str)
     if len(stringified_body) > 1024 * 127:
         serverlessSdk._report_notice(
             "Large body excluded",
