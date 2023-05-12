@@ -326,6 +326,18 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 			meta := LogItem{}
 			json.Unmarshal(jsonString, &meta)
 			metadata = append(metadata, &meta)
+			/* Parse req/res data and add tags we are adding below
+			Aws: &tags.AwsTags{
+				AccountId:    &accountId,
+				Region:       &region,
+				RequestId:    &requestId,
+				ResourceName: &functionName,
+			},
+			OrgId: &orgId,
+			Sdk: &tags.SdkTags{
+				Name:    "@serverless/external-extension",
+				Version: "N/A",
+			}, */
 			messages = append(messages, []byte(log.Record.(string)))
 		}
 	}
@@ -532,6 +544,7 @@ func AggregateActivity(logs []LogItem, requestId string, accountId string, trace
 	payloads, metadata := CollectRequestResponseData(logs, requestId, accountId, traceId)
 	if len(payloads) != 0 {
 		for index, payload := range payloads {
+			functionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
 			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
 			var devModePayload schema.RequestResponse
 			reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
@@ -558,6 +571,16 @@ func AggregateActivity(logs []LogItem, requestId string, accountId string, trace
 						reportData := RuntimeDoneRecord{}
 						json.Unmarshal(jsonString, &reportData)
 					}
+				}
+
+				if devModePayload.Tags == nil {
+					devModePayload.Tags = &tags.Tags{}
+				}
+				devModePayload.Tags.Aws = &tags.AwsTags{
+					AccountId:    &accountId,
+					RequestId:    &requestId,
+					Region:       &region,
+					ResourceName: &functionName,
 				}
 
 				aggregatedActivity.RequestResponse = append(aggregatedActivity.RequestResponse, &devModePayload)
