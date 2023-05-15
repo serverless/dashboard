@@ -26,6 +26,17 @@ def reset_ignore_following_request():
 _HTTP_SPAN = contextvars.ContextVar("http-span", default=None)
 
 
+def safe_call(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            return None
+
+    return wrapper
+
+
+@safe_call
 def _decode_body(body):
     if isinstance(body, bytes):
         return body.decode("utf-8")
