@@ -1,3 +1,4 @@
+
 var serverlessSDK = require('./serverless_sdk/index.js');
 serverlessSDK = new serverlessSDK({
   orgId: 'integration',
@@ -15,7 +16,7 @@ serverlessSDK = new serverlessSDK({
   devModeEnabled: false,
   accessKey: null,
   pluginVersion: '6.2.3',
-  disableFrameworksInstrumentation: false,
+  disableFrameworksInstrumentation: false
 });
 
 const handlerWrapperArgs = { functionName: 'test-issue-sc-816-dev-function', timeout: 6 };
@@ -24,7 +25,5 @@ try {
   const userHandler = require('./index.js');
   module.exports.handler = serverlessSDK.handler(userHandler.handler, handlerWrapperArgs);
 } catch (error) {
-  module.exports.handler = serverlessSDK.handler(() => {
-    throw error;
-  }, handlerWrapperArgs);
+  module.exports.handler = serverlessSDK.handler(() => { throw error }, handlerWrapperArgs);
 }
