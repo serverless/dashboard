@@ -182,8 +182,8 @@ func (e *Extension) ExternalExtension() {
 			// Send to dev mode if we have requestId and traceId
 			aggregate := agent.AggregateActivity(arr, requestId, AWS_ACCOUNT_ID, traceId)
 			deferredActivity = append(deferredActivity, *aggregate)
-			// Check if lastRequest is more than 100 milliseconds ago
-			if time.Since(lastRequest).Milliseconds() > 100 && len(deferredActivity) > 0 {
+			// Check if lastRequest is more than 350 milliseconds ago
+			if time.Since(lastRequest).Milliseconds() > 350 && len(deferredActivity) > 0 {
 				lastRequest = time.Now()
 				agent.ForwardActivity(deferredActivity)
 				deferredActivity = nil
