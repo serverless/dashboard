@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.17 (2023-05-15)
+
+### Bug Fixes
+
+- Ensure no side effects in request/response body parsing
+
+### Performance Improvements
+
+- Improve size of written telemetry log by gzipping
+- Remove unused dependencies
+- Trim protobuf library by removing unused implementation
+- Remove byte-code from layer
+
 ## 0.1.16 (2023-05-10)
 
 ### Bug Fixes
