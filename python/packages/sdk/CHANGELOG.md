@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.8 (2023-05-15)
+
+### Bug Fixes
+
+- Handle binary HTTP request/response body gracefully, when instrumenting http calls
+
+### Maintenance Improvements
+
+- Improve linter config to have stricter checks
+
 ## 0.4.7 (2023-05-09)
 
 ### Performance Improvements
