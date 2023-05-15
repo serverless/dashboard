@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.4](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.3...@serverless/sdk-schema@0.15.4) (2023-05-15)
+
+### Features
+
+- Dev Mode transport payload upgrade ([ec7551d](https://github.com/serverless/console/commit/ec7551dac4a167a950a60aa5b322c3c28f50f13d))
+
 ### [0.15.3](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.2...@serverless/sdk-schema@0.15.3) (2023-03-29)
 
 ### Features
