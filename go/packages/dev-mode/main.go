@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/golang-collections/go-datastructures/queue"
+	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"go.uber.org/zap"
 )
 
@@ -82,8 +83,9 @@ func (e *Extension) ExternalExtension() {
 	var responseLog *agent.LogItem = nil
 
 	deferredLogs := []agent.LogItem{}
-
+	deferredActivity := []schema.DevModeTransportPayload{}
 	hasInternalExtension := lib.HasInternalExtension()
+	lastRequest := time.Now()
 
 	// Save the res payload from the SDK so we can send it out at runtime done so we can include the
 	// runtime_duration_ms & runtime_response_latency_ms that is included in the runtime done event
@@ -178,13 +180,22 @@ func (e *Extension) ExternalExtension() {
 			}
 
 			// Send to dev mode if we have requestId and traceId
-			agent.ForwardLogs(arr, requestId, AWS_ACCOUNT_ID, traceId)
+			aggregate := agent.AggregateActivity(arr, requestId, AWS_ACCOUNT_ID, traceId)
+			deferredActivity = append(deferredActivity, *aggregate)
+			// Check if lastRequest is more than 100 milliseconds ago
+			if time.Since(lastRequest).Milliseconds() > 100 && len(deferredActivity) > 0 {
+				lastRequest = time.Now()
+				agent.ForwardActivity(deferredActivity)
+				deferredActivity = nil
+			}
 		}
-		// Force send logs at end of loop
+		// Force send activity at end of loop
 		if len(deferredLogs) > 0 {
-			agent.ForwardLogs(deferredLogs, requestId, AWS_ACCOUNT_ID, traceId)
+			aggregate := agent.AggregateActivity(deferredLogs, requestId, AWS_ACCOUNT_ID, traceId)
+			deferredActivity = append(deferredActivity, *aggregate)
 		}
-
+		agent.ForwardActivity(deferredActivity)
+		deferredActivity = nil
 		initReport = nil
 		responseLog = nil
 	}
