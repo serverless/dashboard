@@ -5,8 +5,7 @@ const { expect } = require('chai');
 const path = require('path');
 const log = require('log').get('test');
 const { TracePayload } = require('@serverless/sdk-schema/dist/trace');
-const { DevModePayload } = require('@serverless/sdk-schema/dist/dev_mode');
-const { LogPayload } = require('@serverless/sdk-schema/dist/log');
+const { DevModeTransportPayload } = require('@serverless/sdk-schema/dist/dev_mode');
 const cleanup = require('../lib/cleanup');
 const createCoreResources = require('../lib/create-core-resources');
 const basename = require('../lib/basename');
@@ -49,8 +48,20 @@ describe('Integration', function () {
       '4s-logger',
       {
         variants: new Map([
-          ['v16', { configuration: { Runtime: 'nodejs16.x', Timeout: 5 } }],
-          ['v18', { configuration: { Runtime: 'nodejs18.x', Timeout: 5 } }],
+          [
+            'v16',
+            {
+              ignoreMultipleInvocations: true,
+              configuration: { Runtime: 'nodejs16.x', Timeout: 5 },
+            },
+          ],
+          [
+            'v18',
+            {
+              ignoreMultipleInvocations: true,
+              configuration: { Runtime: 'nodejs18.x', Timeout: 5 },
+            },
+          ],
         ]),
         config: {
           test: ({ invocationsData, testConfig }) => {
@@ -80,6 +91,7 @@ describe('Integration', function () {
               configuration: { Runtime: 'nodejs16.x', Timeout: 3 },
               expectedOutcome: 'error:unhandled',
               isCustomResponse: true,
+              ignoreMultipleInvocations: true,
             },
           ],
           [
@@ -88,6 +100,7 @@ describe('Integration', function () {
               configuration: { Runtime: 'nodejs18.x', Timeout: 3 },
               expectedOutcome: 'error:unhandled',
               isCustomResponse: true,
+              ignoreMultipleInvocations: true,
             },
           ],
         ]),
@@ -95,8 +108,7 @@ describe('Integration', function () {
           test: ({ invocationsData }) => {
             for (const { reqResPayloads } of invocationsData) {
               expect(reqResPayloads.length).to.equal(2);
-              const lastPayload = reqResPayloads[1];
-              const response = lastPayload.payload.requestResponse;
+              const response = reqResPayloads[1];
               expect(response.traceId !== '').to.equal(true);
               expect(response.tags.error.message).to.contain('Task timed out');
               expect(response.tags.error.type).to.equal(1);
@@ -113,6 +125,7 @@ describe('Integration', function () {
             'v16',
             {
               ...internalConfiguration,
+              ignoreMultipleInvocations: true,
               configuration: {
                 ...internalConfiguration.configuration,
                 Runtime: 'nodejs16.x',
@@ -124,6 +137,7 @@ describe('Integration', function () {
             'v18',
             {
               ...internalConfiguration,
+              ignoreMultipleInvocations: true,
               configuration: { ...internalConfiguration.configuration, Timeout: 5 },
             },
           ],
@@ -147,18 +161,16 @@ describe('Integration', function () {
 
             // Replace with external + sdk integration results once the sdk is configured
             // to communicate with the external extension
-            for (const {
-              printedPayloads: { DR: reqRes },
-            } of invocationsData) {
-              expect(reqRes.length).to.equal(2);
+            for (const { reqResPayloads } of invocationsData) {
+              expect(reqResPayloads.length).to.equal(2);
             }
 
-            for (const { devModePayloads } of invocationsData) {
+            for (const { tracePayloads } of invocationsData) {
               // Since we are sending spans as they are complete I need to change this to a variable length
               // but we should always have at least 1
-              expect(devModePayloads.length >= 1).to.equal(true);
-              const devModePayload = devModePayloads[0];
-              expect(devModePayload.payload.trace.events.length).to.equal(2);
+              expect(tracePayloads.length >= 1).to.equal(true);
+              const trace = tracePayloads[0];
+              expect(trace.events.length).to.equal(2);
             }
           },
         },
@@ -172,6 +184,7 @@ describe('Integration', function () {
             'v18',
             {
               ...internalConfiguration,
+              ignoreMultipleInvocations: true,
               configuration: {
                 ...internalConfiguration.configuration,
                 Runtime: 'nodejs18.x',
@@ -184,13 +197,12 @@ describe('Integration', function () {
         ]),
         config: {
           test: ({ invocationsData }) => {
-            for (const { reqResPayloads, devModePayloads } of invocationsData) {
+            for (const { reqResPayloads, tracePayloads } of invocationsData) {
               // TraceId should match the one send via the dev mode payload
-              const traceId = devModePayloads[0].payload?.trace.spans[0].traceId.toString();
+              const traceId = tracePayloads[0]?.spans[0].traceId.toString();
               const encodedTraceId = Buffer.from(traceId).toString('base64');
               expect(reqResPayloads.length).to.equal(2);
-              const lastPayload = reqResPayloads[1];
-              const response = lastPayload.payload.requestResponse;
+              const response = reqResPayloads[1];
               expect(response.tags.error.message).to.contain('Task timed out');
               expect(response.tags.error.type).to.equal(1);
               expect(response.traceId.toString()).to.equal(encodedTraceId);
@@ -207,8 +219,7 @@ describe('Integration', function () {
     await createCoreResources(coreConfig);
     const processFunction = await getProcessFunction(basename, coreConfig, {
       TracePayload,
-      LogPayload,
-      DevModePayload,
+      DevModeTransportPayload,
       baseLambdaConfiguration: {
         Role: coreConfig.roleArn,
         Runtime: 'nodejs18.x',
