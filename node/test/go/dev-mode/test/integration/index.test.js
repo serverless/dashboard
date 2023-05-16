@@ -51,14 +51,12 @@ describe('Integration', function () {
           [
             'v16',
             {
-              ignoreMultipleInvocations: true,
               configuration: { Runtime: 'nodejs16.x', Timeout: 5 },
             },
           ],
           [
             'v18',
             {
-              ignoreMultipleInvocations: true,
               configuration: { Runtime: 'nodejs18.x', Timeout: 5 },
             },
           ],
@@ -91,7 +89,6 @@ describe('Integration', function () {
               configuration: { Runtime: 'nodejs16.x', Timeout: 3 },
               expectedOutcome: 'error:unhandled',
               isCustomResponse: true,
-              ignoreMultipleInvocations: true,
             },
           ],
           [
@@ -100,7 +97,6 @@ describe('Integration', function () {
               configuration: { Runtime: 'nodejs18.x', Timeout: 3 },
               expectedOutcome: 'error:unhandled',
               isCustomResponse: true,
-              ignoreMultipleInvocations: true,
             },
           ],
         ]),
@@ -125,7 +121,6 @@ describe('Integration', function () {
             'v16',
             {
               ...internalConfiguration,
-              ignoreMultipleInvocations: true,
               configuration: {
                 ...internalConfiguration.configuration,
                 Runtime: 'nodejs16.x',
@@ -137,7 +132,6 @@ describe('Integration', function () {
             'v18',
             {
               ...internalConfiguration,
-              ignoreMultipleInvocations: true,
               configuration: { ...internalConfiguration.configuration, Timeout: 5 },
             },
           ],
@@ -184,7 +178,6 @@ describe('Integration', function () {
             'v18',
             {
               ...internalConfiguration,
-              ignoreMultipleInvocations: true,
               configuration: {
                 ...internalConfiguration.configuration,
                 Runtime: 'nodejs18.x',
