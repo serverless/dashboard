@@ -10,7 +10,7 @@ build_arm64: clean
 	cd dist; zip extension.zip -r extensions/
 
 test:
-	go test ./... -v -count=1 -timeout 30s
+	go test ./... -p 1 -v -count=1 -timeout 30s
 
 deploy_x86: build_x86
 	aws lambda publish-layer-version --layer-name sls-dev-mode --description "This layer will collect logs and forward them to serverless console. This should only be used in development" --zip-file fileb://dist/extension.zip
