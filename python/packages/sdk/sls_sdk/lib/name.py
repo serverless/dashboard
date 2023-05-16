@@ -1,10 +1,11 @@
 from __future__ import annotations
-
 from re import Pattern
+from .imports import internally_imported
 
-from js_regex import compile
+with internally_imported("js_regex"):
+    from js_regex import compile
+
 from typing_extensions import Final
-
 from ..exceptions import InvalidTraceSpanName
 
 
