@@ -40,7 +40,7 @@ module.exports = async (basename, coreConfig, options) => {
     ensurePlainObject(options.baseLambdaConfiguration)
   );
 
-  const { TracePayload, LogPayload, DevModePayload } = options;
+  const { TracePayload, DevModeTransportPayload } = options;
   ensurePlainFunction(TracePayload.encode);
 
   if (!baseLambdaConfiguration.Code && options.fixturesDirname) {
@@ -262,33 +262,28 @@ module.exports = async (basename, coreConfig, options) => {
               });
             }
             break;
-          case 'DM':
+          case 'DMZ':
             {
+              // base64 decode and ungzip payloadString
               const devModePayload = normalizeProtoObject(
-                DevModePayload.decode(Buffer.from(payloadString, 'base64'))
+                DevModeTransportPayload.decode(zlib.unzipSync(Buffer.from(payloadString, 'base64')))
               );
+
+              const { requestResponse, traces, logs } = devModePayload;
+
               Object.assign(currentInvocationData, {
-                devModePayloads: [...(currentInvocationData.devModePayloads || []), devModePayload],
+                logPayloads: [...(currentInvocationData.logPayloads || []), ...(logs || [])],
               });
-            }
-            break;
-          case 'DR':
-            {
-              const devModePayload = normalizeProtoObject(
-                DevModePayload.decode(Buffer.from(payloadString, 'base64'))
-              );
+
               Object.assign(currentInvocationData, {
-                reqResPayloads: [...(currentInvocationData.reqResPayloads || []), devModePayload],
+                reqResPayloads: [
+                  ...(currentInvocationData.reqResPayloads || []),
+                  ...(requestResponse || []),
+                ],
               });
-            }
-            break;
-          case 'DL':
-            {
-              const logPayload = normalizeProtoObject(
-                LogPayload.decode(Buffer.from(payloadString, 'base64'))
-              );
+
               Object.assign(currentInvocationData, {
-                logPayloads: [...(currentInvocationData.logPayloads || []), logPayload],
+                tracePayloads: [...(currentInvocationData.tracePayloads || []), ...(traces || [])],
               });
             }
             break;
