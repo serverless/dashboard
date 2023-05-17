@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.5](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.4...@serverless/sdk-schema@0.15.5) (2023-05-17)
+
+### Features
+
+- Introduce `aws.lambda.response_mode` tag ([e61819e](https://github.com/serverless/console/commit/e61819e57b7b9342ce57c52d0d055ce0b1aa4542))
+
 ### [0.15.4](https://github.com/serverless/console/compare/@serverless/sdk-schema@0.15.3...@serverless/sdk-schema@0.15.4) (2023-05-15)
 
 ### Features
