@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.0...@serverless/aws-lambda-sdk@0.15.1) (2023-05-17)
+
+### Features
+
+- Support response streaming ([2e7f8d0](https://github.com/serverless/console/commit/2e7f8d05d073325eb28c1e865a9b968f12b1724e))
+- Do not write dev mode specific events in trace payload ([a324263](https://github.com/serverless/console/commit/a324263e46ccc56e3c468a947f716742b57ca1a1))
+
+### Maintenance Improvements
+
+- Improve filter logic organization ([50166a0](https://github.com/serverless/console/commit/50166a0d821e4fc3b33ba6fa10c8391168ac76c1))
+
 ## [0.15.0](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.14.23...@serverless/aws-lambda-sdk@0.15.0) (2023-05-11)
 
 ### ⚠ BREAKING CHANGES
