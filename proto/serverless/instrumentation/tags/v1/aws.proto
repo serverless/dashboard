@@ -121,6 +121,18 @@ message AwsLambdaTags {
   // The Unix timestamp in milliseconds of the REPORT log event of the invocation.
   optional uint64 logs_end_time_unix = 21;
 
+  enum ResponseMode {
+    // Mode not confirmed
+    RESPONSE_MODE_UNSPECIFIED = 0;
+    // Regular buffered response
+    RESPONSE_MODE_BUFFERED = 1;
+    // Stream response
+    RESPONSE_MODE_RESPONSE_STREAM = 2;
+  }
+
+  // The event source for the invocation.
+  optional ResponseMode response_mode = 22;
+
   // Will be set if the function is handling a SQS event
   optional AwsSqsEventTags sqs = 100;
   // Will be set if the function is handling a SNS event
