@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.18](https://github.com/serverless/console/compare/@serverless/sdk@0.5.17...@serverless/sdk@0.5.18) (2023-05-17)
+
+### Features
+
+- Enable filters configuration for HTTP requests ([554e358](https://github.com/serverless/console/commit/554e358e62848ddde08d8e88ddfdc68b00749a4e))
+
 ### [0.5.17](https://github.com/serverless/console/compare/@serverless/sdk@0.5.16...@serverless/sdk@0.5.17) (2023-05-10)
 
 ### Bug Fixes
