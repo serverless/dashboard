@@ -6,6 +6,8 @@ const reportError = require('../report-error');
 
 let shouldIgnoreFollowingRequest = false;
 
+const requestFilters = [];
+
 const urlToHttpOptions = (url) => {
   const options = {
     hostname:
@@ -179,7 +181,8 @@ const install = (protocol, httpModule) => {
       shouldIgnoreFollowingRequest ||
       options._slsIgnore ||
       (originalCb && typeof originalCb !== 'function') ||
-      serverlessSdk._isInTraceSpanBlackBox
+      serverlessSdk._isInTraceSpanBlackBox ||
+      requestFilters.some((filter) => !filter(options))
     ) {
       shouldIgnoreFollowingRequest = false;
       return originalRequest.apply(this, args);
@@ -277,5 +280,7 @@ module.exports.ignoreFollowingRequest = () => {
     shouldIgnoreFollowingRequest = false;
   });
 };
+
+module.exports.requestFilters = requestFilters;
 
 const serverlessSdk = require('../..');
