@@ -1214,6 +1214,103 @@ describe('integration', function () {
       },
     ],
     [
+      'response-streaming',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: {
+          hooks: {
+            afterCreate: async function self(testConfig) {
+              await awsRequest(Lambda, 'createAlias', {
+                FunctionName: testConfig.configuration.FunctionName,
+                FunctionVersion: '$LATEST',
+                Name: 'response-streaming',
+              });
+              const deferredFunctionUrl = (async () => {
+                try {
+                  return (
+                    await awsRequest(Lambda, 'createFunctionUrlConfig', {
+                      AuthType: 'NONE',
+                      FunctionName: testConfig.configuration.FunctionName,
+                      Qualifier: 'response-streaming',
+                      InvokeMode: 'RESPONSE_STREAM',
+                    })
+                  ).FunctionUrl;
+                } catch (error) {
+                  if (error.message.includes('FunctionUrlConfig exists for this Lambda function')) {
+                    return (
+                      await awsRequest(Lambda, 'getFunctionUrlConfig', {
+                        FunctionName: testConfig.configuration.FunctionName,
+                        Qualifier: 'response-streaming',
+                      })
+                    ).FunctionUrl;
+                  }
+                  throw error;
+                }
+              })();
+              await Promise.all([
+                deferredFunctionUrl,
+                awsRequest(Lambda, 'addPermission', {
+                  FunctionName: testConfig.configuration.FunctionName,
+                  Qualifier: 'response-streaming',
+                  FunctionUrlAuthType: 'NONE',
+                  Principal: '*',
+                  Action: 'lambda:InvokeFunctionUrl',
+                  StatementId: 'public-function-response-streaming',
+                }),
+              ]);
+              testConfig.functionUrl = await deferredFunctionUrl;
+            },
+            beforeDelete: async (testConfig) => {
+              await awsRequest(Lambda, 'deleteFunctionUrlConfig', {
+                FunctionName: testConfig.configuration.FunctionName,
+                Qualifier: 'response-streaming',
+              });
+            },
+          },
+          invoke: async function self(testConfig) {
+            const startTime = process.hrtime.bigint();
+            const response = await fetch(`${testConfig.functionUrl}/test?foo=bar`, {
+              method: 'POST',
+              body: JSON.stringify({ some: 'content' }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            if (response.status !== 200) {
+              if (response.status === 404) {
+                await wait(1000);
+                return self(testConfig);
+              }
+              throw new Error(`Unexpected response status: ${response.status}`);
+            }
+            const payload = { raw: await response.text() };
+            const duration = Math.round(Number(process.hrtime.bigint() - startTime) / 1000000);
+            log.debug('invoke response payload %s', payload.raw);
+            return { duration, payload };
+          },
+          test: ({ invocationsData }) => {
+            for (const { trace } of invocationsData) {
+              const { tags } = trace.spans[0];
+
+              expect(tags.aws.lambda.eventSource).to.equal('aws.lambda');
+              expect(tags.aws.lambda.eventType).to.equal('aws.lambda.url');
+
+              expect(tags.aws.lambda.http).to.have.property('host');
+              expect(tags.aws.lambda.http).to.have.property('requestHeaderNames');
+              expect(tags.aws.lambda.http.method).to.equal('POST');
+              expect(tags.aws.lambda.http.path).to.equal('/test');
+
+              expect(tags.aws.lambda.responseMode).to.equal(2);
+            }
+          },
+        },
+      },
+    ],
+    [
       'http-requester',
       {
         variants: new Map([

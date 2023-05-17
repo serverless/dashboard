@@ -263,21 +263,31 @@ module.exports = (originalHandler, options = {}) => {
     );
   }
   let currentInvocationId = 0;
+  const isResponseStreaming = originalHandler[Symbol.for('aws.lambda.runtime.handler.streaming')];
 
   awsLambdaInitializationSpan.close();
-  return (event, context, awsCallback) => {
+  const decoratedHandler = (event, context, awsCallback) => {
     const requestStartTime = process.hrtime.bigint();
     let wrappedCallback;
     let contextDone;
+    let responseStream;
 
     let originalDone;
     isCurrentInvocationResolved = false;
     const invocationId = ++currentInvocationId;
+    if (isResponseStreaming) {
+      responseStream = context;
+      context = awsCallback;
+      awsCallback = null;
+    }
+
     try {
       serverlessSdk._debugLog('Invocation: start');
       invocationContextAccessor.set(context);
       if (invocationId > 1) awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
+      if (isResponseStreaming) awsLambdaSpan.tags.set('aws.lambda.response_mode', 2);
+
       traceSpans.awsLambdaInvocation = serverlessSdk._createTraceSpan('aws.lambda.invocation', {
         startTime: requestStartTime,
       });
@@ -302,7 +312,7 @@ module.exports = (originalHandler, options = {}) => {
       context.succeed = (result) => contextDone(null, result);
       context.fail = (err) => contextDone(err == null ? 'handled' : err);
 
-      wrappedCallback = wrapAwsCallback(awsCallback);
+      if (awsCallback) wrappedCallback = wrapAwsCallback(awsCallback);
       // TODO: Insert eventual request handling
       serverlessSdk._debugLog(
         'Overhead duration: Internal request:',
@@ -312,11 +322,15 @@ module.exports = (originalHandler, options = {}) => {
       serverlessSdk._reportError(error);
       clearRootSpan();
       if (originalDone) contextDone = originalDone;
-      return originalHandler(event, context, awsCallback);
+      return isResponseStreaming
+        ? originalHandler(event, responseStream, context)
+        : originalHandler(event, context, awsCallback);
     }
     const eventualResult = (() => {
       try {
-        return originalHandler(event, context, wrappedCallback);
+        return isResponseStreaming
+          ? originalHandler(event, responseStream, context)
+          : originalHandler(event, context, wrappedCallback);
       } catch (error) {
         // Propagate as uncaught exception
         process.nextTick(() => {
@@ -353,4 +367,11 @@ module.exports = (originalHandler, options = {}) => {
         contextDone = originalDone;
       });
   };
+  try {
+    // Ensure to pass through eventual AWS handler resolution markers (e.g. response streaming)
+    Object.defineProperties(decoratedHandler, Object.getOwnPropertyDescriptors(originalHandler));
+  } catch {
+    // ignore
+  }
+  return decoratedHandler;
 };
