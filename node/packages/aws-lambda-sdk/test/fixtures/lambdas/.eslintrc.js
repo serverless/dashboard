@@ -20,4 +20,7 @@ module.exports = {
     'dashboard/s_function.js',
     'dashboard/serverless_sdk',
   ],
+  globals: {
+    awslambda: 'readonly',
+  },
 };

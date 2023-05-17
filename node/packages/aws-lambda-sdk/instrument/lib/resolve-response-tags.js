@@ -7,6 +7,7 @@ const awsLambdaSpan = require('./sdk').traceSpans.awsLambda;
 
 module.exports = (response) => {
   if (isApiEvent()) {
+    if (awsLambdaSpan.tags.get('aws.lambda.response_mode' === 2)) return;
     let statusCode = response && response.statusCode;
     if (statusCode == null) {
       awsLambdaSpan.tags.set('aws.lambda.http.error_code', 'MISSING_STATUS_CODE');

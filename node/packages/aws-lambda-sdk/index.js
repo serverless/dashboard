@@ -28,3 +28,10 @@ serverlessSdk._initializeExtension = (options) => {
   }
 };
 serverlessSdk._isDevMode = Boolean(process.env.SLS_DEV_MODE_ORG_ID);
+
+require('@serverless/sdk/lib/instrumentation/http').requestFilters.push((httpOptions) => {
+  if (typeof httpOptions.path !== 'string') return true;
+  // Do not attempt to trace Lambda Runtime API calls
+  // e.g. it's how AWS runtime handles internally response streaming
+  return !httpOptions.path.startsWith('/2018-06-01/runtime/');
+});
