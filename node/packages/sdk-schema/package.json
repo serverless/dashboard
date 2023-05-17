@@ -14,7 +14,7 @@
   "author": "Serverless, Inc.",
   "license": "MIT",
   "dependencies": {
-    "long": "^5.2.1",
+    "long": "^5.2.3",
     "protobufjs": "^7.2.3"
   },
   "standard-version": {
