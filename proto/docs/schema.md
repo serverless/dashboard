@@ -20,6 +20,7 @@
     - [HttpRouterTags](#serverless-instrumentation-tags-v1-HttpRouterTags)
   
     - [AwsLambdaTags.Outcome](#serverless-instrumentation-tags-v1-AwsLambdaTags-Outcome)
+    - [AwsLambdaTags.ResponseMode](#serverless-instrumentation-tags-v1-AwsLambdaTags-ResponseMode)
   
 - [serverless/instrumentation/tags/v1/common.proto](#serverless_instrumentation_tags_v1_common-proto)
     - [HttpTags](#serverless-instrumentation-tags-v1-HttpTags)
@@ -191,6 +192,7 @@ Describes the AWS Lambda runtime details
 | response_body | [string](#string) | optional | Response body |
 | logs_start_time_unix | [uint64](#uint64) | optional | The Unix timestamp in milliseconds of the START log event of the invocation. |
 | logs_end_time_unix | [uint64](#uint64) | optional | The Unix timestamp in milliseconds of the REPORT log event of the invocation. |
+| response_mode | [AwsLambdaTags.ResponseMode](#serverless-instrumentation-tags-v1-AwsLambdaTags-ResponseMode) | optional | The event source for the invocation. |
 | sqs | [AwsSqsEventTags](#serverless-instrumentation-tags-v1-AwsSqsEventTags) | optional | Will be set if the function is handling a SQS event |
 | sns | [AwsSnsEventTags](#serverless-instrumentation-tags-v1-AwsSnsEventTags) | optional | Will be set if the function is handling a SNS event |
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | Will be set if the function is handling HTTP requests via any method, API GW, Function URLs, etc. |
@@ -378,6 +380,19 @@ outcomes upon completion.
 | OUTCOME_ERROR_UNHANDLED | 3 | Function crashed in an unhandled way at invocation (a result of either uncaught exception or unhandled rejection) |
 | OUTCOME_ERROR_TIMEOUT | 4 | Function timed out |
 | OUTCOME_ERROR_HANDLED | 5 | Function handler resolved with an error (either error was passed to lambda callback, or async handler resolved with error rejection) |
+
+
+
+<a name="serverless-instrumentation-tags-v1-AwsLambdaTags-ResponseMode"></a>
+
+### AwsLambdaTags.ResponseMode
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| RESPONSE_MODE_UNSPECIFIED | 0 | Mode not confirmed |
+| RESPONSE_MODE_BUFFERED | 1 | Regular buffered response |
+| RESPONSE_MODE_RESPONSE_STREAM | 2 | Stream response |
 
 
  
