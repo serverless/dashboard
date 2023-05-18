@@ -1217,7 +1217,7 @@ describe('Python: integration', function () {
           expect(slsTags).to.deep.equal({
             orgId: process.env.SLS_ORG_ID,
             service: testConfig.configuration.FunctionName,
-            sdk: { name: pyProjectToml.project.name, version: sdkVersion },
+            sdk: { name: pyProjectToml.project.name, version: sdkVersion, runtime: 'python' },
           });
           expect(lambdaSpan.tags.aws.lambda).to.have.property('arch');
           expect(lambdaSpan.tags.aws.lambda.name).to.equal(testConfig.configuration.FunctionName);
