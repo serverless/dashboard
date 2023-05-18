@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.1...@serverless/aws-lambda-sdk@0.15.2) (2023-05-18)
+
+### Bug Fixes
+
+- Placeholder stream values when reporting request/response body ([03b3161](https://github.com/serverless/console/commit/03b3161eae56b67bb37705c52c987571719f8b61))
+
+### Maintenance Improvements
+
+- Improve organization of replacer logic ([92bb89e](https://github.com/serverless/console/commit/92bb89ea1eea27103de139660dcfda9a88888038))
+
 ### [0.15.1](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.0...@serverless/aws-lambda-sdk@0.15.1) (2023-05-17)
 
 ### Features
