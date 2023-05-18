@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.19](https://github.com/serverless/console/compare/@serverless/sdk@0.5.18...@serverless/sdk@0.5.19) (2023-05-18)
+
+### Bug Fixes
+
+- Fix error data resolution from AWS Powertools error log ([fcb6fe7](https://github.com/serverless/console/commit/fcb6fe7fc25a708ada0758874b1ef342211bf2c9))
+- Ensure to expose our crashes that `console` will swallow ([81f680e](https://github.com/serverless/console/commit/81f680ea1873f854b7a3fdded5cd9e243c24deb6))
+
 ### [0.5.18](https://github.com/serverless/console/compare/@serverless/sdk@0.5.17...@serverless/sdk@0.5.18) (2023-05-17)
 
 ### Features
