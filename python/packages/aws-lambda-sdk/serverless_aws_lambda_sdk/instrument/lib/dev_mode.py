@@ -5,6 +5,7 @@ from .telemetry import send, close_connection
 from .sdk import serverlessSdk
 from .invocation_context import get as get_invocation_context
 from .payload_conversion import to_trace_payload
+from sls_sdk.lib.imports import internally_imported
 import builtins
 import logging
 
@@ -84,6 +85,7 @@ class DevModeThread(Thread):
         )  # used to buffer spans and captured events
         self._is_stopped = Event()  # used to stop the thread
 
+    @internally_imported("google")
     def _send_all(self):
         (
             spans,

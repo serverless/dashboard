@@ -1,5 +1,8 @@
-from serverless_sdk_schema import TracePayload, RequestResponse
-from google.protobuf import json_format
+from sls_sdk.lib.imports import internally_imported
+
+with internally_imported("google"):
+    from serverless_sdk_schema import TracePayload, RequestResponse
+    from google.protobuf import json_format
 
 
 def to_trace_payload(payload_dct: dict) -> TracePayload:

@@ -492,7 +492,7 @@ describe('Python: integration', function () {
                 FunctionName: urlEndpointLambdaName,
                 Handler: 'api_endpoint.handler',
                 Role: coreConfig.roleArn,
-                Runtime: 'python3.9',
+                Runtime: 'python3.10',
                 Code: {
                   ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'api_endpoint.py')),
                 },
@@ -611,6 +611,7 @@ describe('Python: integration', function () {
   ]);
 
   const useCasesConfig = new Map([
+    ['internal_dependencies', {}],
     [
       'success',
       {
@@ -1076,6 +1077,13 @@ describe('Python: integration', function () {
         `echo "raise Exception('This is a dummy module that should never get imported.')" > ${fixturesDirname}/sls_sdk/__init__.py`,
       ].join('\n')
     );
+    exec(
+      [
+        `mkdir -p ${fixturesDirname}/google`,
+        `touch ${fixturesDirname}/google/__init__.py`,
+        `echo "foo = 'bar'" > ${fixturesDirname}/google/protobuf.py`,
+      ].join('\n')
+    );
 
     pyProjectToml = toml.parse(
       await fsp.readFile(
@@ -1098,7 +1106,7 @@ describe('Python: integration', function () {
       TracePayload,
       fixturesDirname,
       baseLambdaConfiguration: {
-        Runtime: 'python3.9',
+        Runtime: 'python3.10',
         Layers: [coreConfig.layerInternalArn],
         Environment: {
           Variables: {
@@ -1251,6 +1259,7 @@ describe('Python: integration', function () {
     await Promise.all([
       fsp.rmdir(`${fixturesDirname}/test_dependencies`, { recursive: true, force: true }),
       fsp.rmdir(`${fixturesDirname}/sls_sdk`, { recursive: true, force: true }),
+      fsp.rmdir(`${fixturesDirname}/google`, { recursive: true, force: true }),
     ]);
   });
 });

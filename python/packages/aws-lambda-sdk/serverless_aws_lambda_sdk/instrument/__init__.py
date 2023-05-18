@@ -8,6 +8,7 @@ from typing import List, Optional, Any
 from typing_extensions import Final
 import random
 from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
+from sls_sdk.lib.imports import internally_imported
 from .lib.sdk import serverlessSdk
 from .lib.invocation_context import (
     set as set_invocation_context,
@@ -229,6 +230,7 @@ class Instrumenter:
             self.dev_mode.terminate()
             self.dev_mode = None
 
+    @internally_imported("google")
     def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
         self.is_root_span_reset = False
         try:
@@ -290,39 +292,40 @@ class Instrumenter:
     def _handler(self, user_handler, event, context):
         request_start_time = time.perf_counter_ns()
         self.current_invocation_id += 1
-        try:
-            debug_log("Invocation: start")
-            set_invocation_context(context)
-            if self.current_invocation_id > 1:
-                self.aws_lambda.start_time = request_start_time
+        with internally_imported("google"):
+            try:
+                debug_log("Invocation: start")
+                set_invocation_context(context)
+                if self.current_invocation_id > 1:
+                    self.aws_lambda.start_time = request_start_time
 
-            self.aws_lambda.tags["aws.lambda.request_id"] = context.aws_request_id
+                self.aws_lambda.tags["aws.lambda.request_id"] = context.aws_request_id
 
-            # Event loop may already be active in case of a cold start
-            # That's why we create it only if it's not already set
-            if serverlessSdk._is_dev_mode and self.dev_mode is None:
-                from .lib.dev_mode import get_dev_mode_thread
+                # Event loop may already be active in case of a cold start
+                # That's why we create it only if it's not already set
+                if serverlessSdk._is_dev_mode and self.dev_mode is None:
+                    from .lib.dev_mode import get_dev_mode_thread
 
-                self.dev_mode = get_dev_mode_thread()
+                    self.dev_mode = get_dev_mode_thread()
 
-            serverlessSdk.trace_spans.aws_lambda_invocation = (
-                serverlessSdk._create_trace_span(
-                    "aws.lambda.invocation", start_time=request_start_time
+                serverlessSdk.trace_spans.aws_lambda_invocation = (
+                    serverlessSdk._create_trace_span(
+                        "aws.lambda.invocation", start_time=request_start_time
+                    )
                 )
-            )
-            resolve_event_tags(event)
-            if (
-                serverlessSdk._is_dev_mode
-                and not serverlessSdk._settings.disable_request_response_monitoring
-            ):
-                self._report_request(event, context)
+                resolve_event_tags(event)
+                if (
+                    serverlessSdk._is_dev_mode
+                    and not serverlessSdk._settings.disable_request_response_monitoring
+                ):
+                    self._report_request(event, context)
 
-            diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
-            debug_log("Overhead duration: Internal request:" + f"{diff}ms")
+                diff = int((time.perf_counter_ns() - request_start_time) / 1000_000)
+                debug_log("Overhead duration: Internal request:" + f"{diff}ms")
 
-        except Exception as ex:
-            serverlessSdk._report_error(ex)
-            return user_handler(event, context)
+            except Exception as ex:
+                serverlessSdk._report_error(ex)
+                return user_handler(event, context)
 
         # Invocation of customer code
         try:
