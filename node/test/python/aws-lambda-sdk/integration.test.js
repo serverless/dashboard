@@ -612,6 +612,12 @@ describe('Python: integration', function () {
 
   const useCasesConfig = new Map([
     [
+      'internal_dependencies',
+      {
+        variants: new Map([['v3-10', { configuration: { Runtime: 'python3.10' } }]]),
+      },
+    ],
+    [
       'success',
       {
         variants: new Map([
@@ -1076,6 +1082,13 @@ describe('Python: integration', function () {
         `echo "raise Exception('This is a dummy module that should never get imported.')" > ${fixturesDirname}/sls_sdk/__init__.py`,
       ].join('\n')
     );
+    exec(
+      [
+        `mkdir -p ${fixturesDirname}/google`,
+        `touch ${fixturesDirname}/google/__init__.py`,
+        `echo "foo = 'bar'" > ${fixturesDirname}/google/protobuf.py`,
+      ].join('\n')
+    );
 
     pyProjectToml = toml.parse(
       await fsp.readFile(
@@ -1251,6 +1264,7 @@ describe('Python: integration', function () {
     await Promise.all([
       fsp.rmdir(`${fixturesDirname}/test_dependencies`, { recursive: true, force: true }),
       fsp.rmdir(`${fixturesDirname}/sls_sdk`, { recursive: true, force: true }),
+      fsp.rmdir(`${fixturesDirname}/google`, { recursive: true, force: true }),
     ]);
   });
 });
