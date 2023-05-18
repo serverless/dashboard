@@ -5,6 +5,9 @@ const { expect } = require('chai');
 const requireUncached = require('ncjsm/require-uncached');
 
 describe('instrumentation/express-app.js', () => {
+  before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+  });
   describe('Basic', () => {
     let instrumentExpressApp;
     let serverless;

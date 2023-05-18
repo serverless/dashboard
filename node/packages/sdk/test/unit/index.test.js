@@ -8,6 +8,7 @@ describe('index.test.js', () => {
   let serverlessSdk;
   let rootSpan;
   before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
     requireUncached(() => {
       const TraceSpan = require('../../lib/trace-span');
       serverlessSdk = require('../../');
@@ -48,6 +49,11 @@ describe('index.test.js', () => {
   });
 
   it('should not crash on invalid .setTag input', () => {
-    serverlessSdk.setTag();
+    delete process.env.SLS_CRASH_ON_SDK_ERROR;
+    try {
+      serverlessSdk.setTag();
+    } finally {
+      process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+    }
   });
 });
