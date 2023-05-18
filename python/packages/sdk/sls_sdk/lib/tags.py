@@ -4,7 +4,11 @@ from datetime import datetime
 from math import inf, nan
 from re import Pattern
 from typing import Dict, List, Mapping, Tuple, Optional, Any
-from js_regex import compile
+from .imports import internally_imported
+
+with internally_imported("js_regex"):
+    from js_regex import compile
+
 from typing_extensions import Final, get_args
 from threading import Lock
 from .error import report as report_error
