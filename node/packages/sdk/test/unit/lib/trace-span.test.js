@@ -9,6 +9,7 @@ describe('lib/trace-span.test.js', () => {
   let TraceSpan;
   let Long;
   before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
     requireUncached(() => {
       Long = require('long');
       TraceSpan = require('../../../lib/trace-span');

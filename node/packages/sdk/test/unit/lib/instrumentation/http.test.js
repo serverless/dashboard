@@ -8,6 +8,9 @@ const requireUncached = require('ncjsm/require-uncached');
 const TEST_SERVER_PORT = 3177;
 
 describe('lib/instrumentation/http.js', () => {
+  before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+  });
   describe('basic', () => {
     let serverlessSdk;
     let server;

@@ -8,6 +8,7 @@ describe('lib/report-warning.test.js', () => {
   let serverlessSdk;
   let reportWarning;
   before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
     requireUncached(() => {
       serverlessSdk = require('../../..');
       reportWarning = require('../../../lib/report-warning');

@@ -12,6 +12,7 @@ describe('lib/instrumentation/node-process-stdout-stderr.js', () => {
   let serverlessSdk;
   let instrumentNodeConsole;
   before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
     requireUncached(() => {
       serverlessSdk = require('../../../../');
       instrumentNodeConsole = require('../../../../lib/instrumentation/node-process-stdout-stderr');

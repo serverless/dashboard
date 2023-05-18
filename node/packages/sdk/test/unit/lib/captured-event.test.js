@@ -11,6 +11,7 @@ describe('lib/captured-event.test.js', () => {
   let Tags;
   let Long;
   before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
     requireUncached(() => {
       Long = require('long');
       TraceSpan = require('../../../lib/trace-span');
@@ -103,15 +104,20 @@ describe('lib/captured-event.test.js', () => {
     });
 
     it('should not throw on invalid user input', () => {
-      // eslint-disable-next-line no-new
-      new CapturedEvent('test.custom', {
-        customTags: { 'fooo': {}, 'W$#&^@#&$': 'raz' },
-        customFingerprint: {},
-      });
-      // eslint-disable-next-line no-new
-      new CapturedEvent('test.custom', {
-        customFingerprint: {},
-      });
+      delete process.env.SLS_CRASH_ON_SDK_ERROR;
+      try {
+        // eslint-disable-next-line no-new
+        new CapturedEvent('test.custom', {
+          customTags: { 'fooo': {}, 'W$#&^@#&$': 'raz' },
+          customFingerprint: {},
+        });
+        // eslint-disable-next-line no-new
+        new CapturedEvent('test.custom', {
+          customFingerprint: {},
+        });
+      } finally {
+        process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+      }
     });
   });
 });
