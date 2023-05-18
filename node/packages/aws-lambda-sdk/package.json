@@ -4,7 +4,7 @@
   "version": "0.15.1",
   "author": "Serverless, Inc.",
   "dependencies": {
-    "@serverless/sdk": "^0.5.18",
+    "@serverless/sdk": "^0.5.19",
     "@serverless/sdk-schema": "^0.15.5",
     "d": "^1.0.1",
     "ext": "^1.7.0",
