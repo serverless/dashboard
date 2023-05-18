@@ -41,6 +41,20 @@ describe('lib/instrumentation/node-process-stdout-stderr.js', () => {
       expect(capturedEvent.customTags.get('testtag')).to.equal('test tag');
       expect(capturedEvent._origin).to.equal('nodeConsole');
     });
+
+    it('should not instrument error string', () => {
+      let capturedEvent = null;
+      serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));
+
+      const logger = new PowertoolsLogger({
+        serviceName: 'test-app',
+        persistentLogAttributes: { testtag: 'test tag' },
+      });
+
+      logger.error('Test Error');
+      expect(capturedEvent).to.be.null;
+    });
+
     it('should instrument warning', () => {
       let capturedEvent;
       serverlessSdk._eventEmitter.once('captured-event', (event) => (capturedEvent = event));

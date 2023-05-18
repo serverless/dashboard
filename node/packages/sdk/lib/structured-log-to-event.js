@@ -79,13 +79,12 @@ const handleErrorLog = (logLineParsed) => {
   } else {
     // In this case we do best attempt at parsing.
     // AWS Lambda Powertools will fall in this category.
-    const [errKey, errObj] = Object.entries(logLineParsed).find(
+    const errorLineData = Object.entries(logLineParsed).find(
       ([, value]) => value && value.message && value.stack
     );
+    if (!errorLineData) return;
 
-    if (!errKey || !errObj) {
-      return;
-    }
+    const [errKey, errObj] = errorLineData;
     const tags = Object.fromEntries(
       Object.entries(logLineParsed)
         .filter(([key]) => ![...highCardinalityAttributes, errKey].includes(key))
