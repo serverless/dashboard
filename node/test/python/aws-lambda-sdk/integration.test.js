@@ -492,7 +492,7 @@ describe('Python: integration', function () {
                 FunctionName: urlEndpointLambdaName,
                 Handler: 'api_endpoint.handler',
                 Role: coreConfig.roleArn,
-                Runtime: 'python3.9',
+                Runtime: 'python3.10',
                 Code: {
                   ZipFile: resolveFileZipBuffer(path.resolve(fixturesDirname, 'api_endpoint.py')),
                 },
@@ -611,12 +611,7 @@ describe('Python: integration', function () {
   ]);
 
   const useCasesConfig = new Map([
-    [
-      'internal_dependencies',
-      {
-        variants: new Map([['v3-10', { configuration: { Runtime: 'python3.10' } }]]),
-      },
-    ],
+    ['internal_dependencies', {}],
     [
       'success',
       {
@@ -1111,7 +1106,7 @@ describe('Python: integration', function () {
       TracePayload,
       fixturesDirname,
       baseLambdaConfiguration: {
-        Runtime: 'python3.9',
+        Runtime: 'python3.10',
         Layers: [coreConfig.layerInternalArn],
         Environment: {
           Variables: {
