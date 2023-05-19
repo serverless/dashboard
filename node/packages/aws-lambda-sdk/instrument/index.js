@@ -182,7 +182,7 @@ const clearRootSpan = () => {
   delete awsLambdaSpan.id;
   delete awsLambdaSpan.endTime;
   awsLambdaSpan.tags.reset();
-  awsLambdaSpan.subSpans.clear();
+  awsLambdaSpan._subSpans.clear();
   capturedEvents.length = 0;
   if (objHasOwnProperty.call(serverlessSdk, '_customTags')) serverlessSdk._customTags.clear();
 };
