@@ -28,7 +28,8 @@ def make_http_request(host, path, use_ssl=False):
         else:
             conn = http.client.HTTPConnection(host)
         conn.request("GET", path, headers={"someHeader": "bar"})
-        conn.getresponse()
+        response = conn.getresponse()
+        response.read()
     finally:
         if conn:
             conn.close()

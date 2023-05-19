@@ -36,6 +36,7 @@ if serverlessSdk._is_dev_mode:
                 },
             )
             response = _connection.getresponse()
+            response.read()
             if response.status != 200:
                 serverlessSdk._report_warning(
                     "Cannot propagate telemetry, "
