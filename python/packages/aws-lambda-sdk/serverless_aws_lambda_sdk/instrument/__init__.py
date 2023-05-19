@@ -264,10 +264,10 @@ class Instrumenter:
                 serverlessSdk.trace_spans.aws_lambda_invocation.close(end_time=end_time)
 
             self.aws_lambda.close(end_time=end_time)
+            self._flush_and_close_event_loop()
 
             if get_invocation_context():
                 self._report_trace(is_error_outcome)
-            self._flush_and_close_event_loop()
             self._clear_root_span()
 
             debug_log(
