@@ -1,6 +1,6 @@
 import time
 import json
-from unittest.mock import patch, call
+from unittest.mock import patch, call, MagicMock
 import pytest
 
 
@@ -289,3 +289,32 @@ def test_root_span_reuse():
         "otherchild",
     ]
     sls_sdk.lib.trace.root_span.sub_spans.clear()
+
+
+def test_leftover_spans():
+    # given
+    from importlib import reload
+    import sls_sdk.lib.trace
+
+    reload(sls_sdk.lib.trace)
+    from sls_sdk.lib.trace import TraceSpan
+
+    span = TraceSpan("root")
+    TraceSpan("child1")
+    TraceSpan("child2")
+
+    original_report_warning = sls_sdk.serverlessSdk._report_warning
+    sls_sdk.serverlessSdk._report_warning = MagicMock()
+
+    # when
+    span.close()
+
+    # then
+    assert [x.name for x in sls_sdk.lib.trace.root_span.spans] == [
+        "root",
+        "child1",
+        "child2",
+    ]
+    sls_sdk.lib.trace.root_span.sub_spans.clear()
+    sls_sdk.serverlessSdk._report_warning.assert_called_once()
+    sls_sdk.serverlessSdk._report_warning = original_report_warning

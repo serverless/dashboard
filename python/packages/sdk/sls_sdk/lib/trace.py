@@ -1,6 +1,5 @@
 from __future__ import annotations
 from collections.abc import Iterable
-import logging
 import time
 import threading
 from typing import List, Optional, Callable
@@ -24,8 +23,6 @@ from .id import generate_id
 from .name import get_resource_name
 from .tags import Tags, convert_tags_to_protobuf
 from .instrumentation.wrapper import replace_method
-
-logger = logging.getLogger(__name__)
 
 
 __all__: Final[List[str]] = [
@@ -228,9 +225,13 @@ class TraceSpan:
 
             if left_over_spans:
                 spans = ", ".join([s.name for s in left_over_spans])
-                logger.error(
+                from .. import serverlessSdk
+
+                serverlessSdk._report_warning(
                     "Serverless SDK Warning: Following trace spans didn't end before"
-                    + f" end of lambda invocation: {spans}"
+                    + f" end of lambda invocation: {spans}",
+                    "SDK_SPAN_NOT_CLOSED",
+                    "USER",
                 )
             _CONTEXT.set(self)
         else:
