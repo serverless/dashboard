@@ -9,7 +9,12 @@ from .imports import internally_imported
 with internally_imported("js_regex"):
     from js_regex import compile
 
-from typing_extensions import Final, get_args
+import sys
+
+if sys.version_info >= (3, 8):
+    from typing import Final, get_args
+else:
+    from typing_extensions import Final, get_args
 from threading import Lock
 from .error import report as report_error
 from ..base import TagType, ValidTags

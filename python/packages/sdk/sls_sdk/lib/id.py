@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from typing import List
 from secrets import token_hex
-from typing_extensions import Final
+import sys
+
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
 
 from ..base import TraceId
 

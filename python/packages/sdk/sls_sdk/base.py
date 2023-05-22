@@ -3,8 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Union
 from pathlib import Path
-from typing_extensions import Final
+import sys
 
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
 
 SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 

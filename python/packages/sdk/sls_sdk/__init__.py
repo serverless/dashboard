@@ -2,7 +2,11 @@ from __future__ import annotations
 import sys
 from os import environ
 from typing import List, Optional
-from typing_extensions import Final
+
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
 from types import SimpleNamespace
 
 from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
