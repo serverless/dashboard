@@ -252,6 +252,34 @@ if (!process.env.SLS_UNIT_TEST_RUN) {
   wrapUnhandledErrorListener('unhandledRejection');
 }
 
+const observeNotRespondingHandler = (() => {
+  // When event loop is drained, AWS closes the invocation without waiting for an eventual
+  // callback to be called or promise resolved.
+  // Below logic we detect and handle this scenario
+  const exit = () => {
+    if (typeof global[Symbol.for('aws.lambda.beforeExit')] === 'function') {
+      global[Symbol.for('aws.lambda.beforeExit')]();
+    }
+  };
+
+  return () => {
+    const originalCallback = global[Symbol.for('aws.lambda.beforeExit')];
+    global[Symbol.for('aws.lambda.beforeExit')] = () => {
+      global[Symbol.for('aws.lambda.beforeExit')] = originalCallback;
+      if (!isCurrentInvocationResolved) {
+        serverlessSdk._reportWarning(
+          'Invocation closed without handler providing response for the invocation',
+          'HANDLER_NO_RESPONSE',
+          { type: 'USER' }
+        );
+        closeTrace('success').finally(exit);
+      } else {
+        exit();
+      }
+    };
+  };
+})();
+
 module.exports = (originalHandler, options = {}) => {
   ensurePlainFunction(originalHandler, { name: 'originalHandler' });
   serverlessSdk._initialize(options);
@@ -283,6 +311,7 @@ module.exports = (originalHandler, options = {}) => {
 
     try {
       serverlessSdk._debugLog('Invocation: start');
+      observeNotRespondingHandler();
       invocationContextAccessor.set(context);
       if (invocationId > 1) awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);

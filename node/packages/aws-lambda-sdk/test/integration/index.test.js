@@ -2188,6 +2188,40 @@ describe('integration', function () {
       },
     ],
     [
+      'no-response-callback',
+      {
+        variants: new Map([
+          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
+          ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
+        ]),
+        config: {
+          isCustomResponse: true,
+          capturedEvents: [
+            { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_SDK_USER' },
+          ],
+        },
+      },
+    ],
+    [
+      'no-response-thenable',
+      {
+        variants: new Map([
+          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
+          ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
+          ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
+          ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
+        ]),
+        config: {
+          isCustomResponse: true,
+          capturedEvents: [
+            { name: 'telemetry.warning.generated.v1', type: 'WARNING_TYPE_SDK_USER' },
+          ],
+        },
+      },
+    ],
+    [
       'delayed-http-request',
       {
         variants: new Map([
