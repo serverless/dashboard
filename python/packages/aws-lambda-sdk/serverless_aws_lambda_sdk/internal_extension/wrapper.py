@@ -2,8 +2,12 @@ from __future__ import annotations
 import importlib
 from os import environ
 from typing import List
+import sys
 
-from typing_extensions import Final
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
 
 __all__: Final[List[str]] = [
     "handler",

@@ -5,7 +5,12 @@ from .imports import internally_imported
 with internally_imported("js_regex"):
     from js_regex import compile
 
-from typing_extensions import Final
+import sys
+
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
 from ..exceptions import InvalidTraceSpanName
 
 

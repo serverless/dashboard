@@ -5,7 +5,11 @@ import sys
 import copy
 import json
 from typing import List, Optional, Any
-from typing_extensions import Final
+
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
 import random
 from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
 from sls_sdk.lib.imports import internally_imported
