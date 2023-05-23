@@ -82,15 +82,16 @@ func FindTraceId(logs []LogItem) string {
 
 	for _, log := range logs {
 		if log.LogType == "spans" {
-			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
-			var devModePayload schema.TracePayload
-			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
-			if traceErr == nil && devModePayload.Spans != nil && len(devModePayload.Spans) > 0 && devModePayload.Spans[0] != nil {
-				traceId = base64.StdEncoding.EncodeToString(devModePayload.Spans[0].TraceId)
-				break
-			} else if traceErr == nil && devModePayload.Events != nil && len(devModePayload.Events) > 0 && devModePayload.Events[0] != nil {
-				traceId = base64.StdEncoding.EncodeToString(devModePayload.Events[0].TraceId)
-				break
+			if rawPayload, decodeErr := base64.StdEncoding.DecodeString(log.Record.(string)); decodeErr == nil {
+				var devModePayload schema.TracePayload
+				traceErr := proto.Unmarshal(rawPayload, &devModePayload)
+				if traceErr == nil && devModePayload.Spans != nil && len(devModePayload.Spans) > 0 && devModePayload.Spans[0] != nil {
+					traceId = base64.StdEncoding.EncodeToString(devModePayload.Spans[0].TraceId)
+					break
+				} else if traceErr == nil && devModePayload.Events != nil && len(devModePayload.Events) > 0 && devModePayload.Events[0] != nil {
+					traceId = base64.StdEncoding.EncodeToString(devModePayload.Events[0].TraceId)
+					break
+				}
 			}
 		}
 	}
@@ -140,13 +141,14 @@ func FindInitErrorLog(logs []LogItem) *LogItem {
 func FindResData(logs []LogItem) *LogItem {
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
-			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
-			var reqResPayload schema.RequestResponse
-			reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
-			if reqResErr == nil {
-				origin := reqResPayload.GetOrigin().String()
-				if origin == "ORIGIN_RESPONSE" {
-					return &log
+			if rawPayload, decodeErr := base64.StdEncoding.DecodeString(log.Record.(string)); decodeErr == nil {
+				var reqResPayload schema.RequestResponse
+				reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
+				if reqResErr == nil {
+					origin := reqResPayload.GetOrigin().String()
+					if origin == "ORIGIN_RESPONSE" {
+						return &log
+					}
 				}
 			}
 		}
@@ -157,13 +159,14 @@ func FindResData(logs []LogItem) *LogItem {
 func FindReqData(logs []LogItem) *LogItem {
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
-			rawPayload, _ := base64.StdEncoding.DecodeString(log.Record.(string))
-			var reqResPayload schema.RequestResponse
-			reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
-			if reqResErr == nil {
-				origin := reqResPayload.GetOrigin().String()
-				if origin == "ORIGIN_REQUEST" {
-					return &log
+			if rawPayload, decodeErr := base64.StdEncoding.DecodeString(log.Record.(string)); decodeErr == nil {
+				var reqResPayload schema.RequestResponse
+				reqResErr := proto.Unmarshal(rawPayload, &reqResPayload)
+				if reqResErr == nil {
+					origin := reqResPayload.GetOrigin().String()
+					if origin == "ORIGIN_REQUEST" {
+						return &log
+					}
 				}
 			}
 		}
@@ -278,7 +281,10 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 	}
 	for i, log := range logs {
 		if log.LogType == "function" && !IsCapturedLogMessage(log.Record) {
-			t, _ := time.Parse(time.RFC3339, log.Time)
+			logTime := time.Now()
+			if t, timeParseError := time.Parse(time.RFC3339, log.Time); timeParseError == nil {
+				logTime = t
+			}
 			if !strings.Contains(log.Record.(string), "SERVERLESS_TELEMETRY.") {
 				// Apparently these environment variables don't
 				// exist in the extension 🤷‍♂️
@@ -289,7 +295,7 @@ func FormatLogs(logs []LogItem, requestId string, accountId string, traceId stri
 				sequenceId := fmt.Sprintf("%v", time.Now().UnixNano()+int64(i))
 				messages = append(messages, &schema.LogEvent{
 					Body:      rec,
-					Timestamp: uint64(t.UnixMilli()),
+					Timestamp: uint64(logTime.UnixMilli()),
 					// Allow the backend to handle setting
 					// the severity levels
 					SeverityText:   "Info",
@@ -322,23 +328,24 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 	for _, log := range logs {
 		if log.LogType == "reqRes" {
 			foundReqRes = true
-			jsonString, _ := json.Marshal(log.Metadata)
-			meta := LogItem{}
-			json.Unmarshal(jsonString, &meta)
-			metadata = append(metadata, &meta)
-			/* Parse req/res data and add tags we are adding below
-			Aws: &tags.AwsTags{
-				AccountId:    &accountId,
-				Region:       &region,
-				RequestId:    &requestId,
-				ResourceName: &functionName,
-			},
-			OrgId: &orgId,
-			Sdk: &tags.SdkTags{
-				Name:    "@serverless/external-extension",
-				Version: "N/A",
-			}, */
-			messages = append(messages, []byte(log.Record.(string)))
+			if jsonString, jsonError := json.Marshal(log.Metadata); jsonError == nil {
+				meta := LogItem{}
+				json.Unmarshal(jsonString, &meta)
+				metadata = append(metadata, &meta)
+				/* Parse req/res data and add tags we are adding below
+				Aws: &tags.AwsTags{
+					AccountId:    &accountId,
+					Region:       &region,
+					RequestId:    &requestId,
+					ResourceName: &functionName,
+				},
+				OrgId: &orgId,
+				Sdk: &tags.SdkTags{
+					Name:    "@serverless/external-extension",
+					Version: "N/A",
+				}, */
+				messages = append(messages, []byte(log.Record.(string)))
+			}
 		}
 	}
 
@@ -347,7 +354,10 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 		isHistorical := false
 		body := ""
 		payloadType := "aws-lambda-request"
-		reqTime, _ := time.Parse("2006-01-02T15:04:05.000Z", hasPlatformStart.Time)
+		reqTime := time.Now()
+		if r, timeParseError := time.Parse("2006-01-02T15:04:05.000Z", hasPlatformStart.Time); timeParseError == nil {
+			reqTime = r
+		}
 		epoch := uint64(reqTime.UnixNano())
 		orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
 		region := os.Getenv("AWS_REGION")
@@ -396,7 +406,10 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 		isHistorical := false
 		body := ""
 		payloadType := "aws-lambda-response"
-		reqTime, _ := time.Parse("2006-01-02T15:04:05.000Z", hasRuntimeDone.Time)
+		reqTime := time.Now()
+		if r, timeParseError := time.Parse("2006-01-02T15:04:05.000Z", hasRuntimeDone.Time); timeParseError == nil {
+			reqTime = r
+		}
 		epoch := uint64(reqTime.UnixNano())
 		orgId := os.Getenv("SLS_DEV_MODE_ORG_ID")
 		region := os.Getenv("AWS_REGION")
@@ -496,46 +509,49 @@ func ForwardActivity(payloads []schema.DevModeTransportPayload) (int, error) {
 	if (len(finalPayload.Logs) == 0) && len(finalPayload.RequestResponse) == 0 && len(finalPayload.Traces) == 0 {
 		return 200, nil
 	}
-	body, _ := proto.Marshal(&finalPayload)
-	// Send data to backends
-	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
-	var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
-	// Gzip the body
-	var gzipBody bytes.Buffer
-	gz := gzip.NewWriter(&gzipBody)
-	if _, err := gz.Write(body); err != nil {
-		return 500, nil
-	}
-	gz.Close()
+	if body, protoMarshalError := proto.Marshal(&finalPayload); protoMarshalError == nil {
+		// Send data to backends
+		var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
+		var _, toLogs = os.LookupEnv("SLS_TEST_EXTENSION_LOG")
+		// Gzip the body
+		var gzipBody bytes.Buffer
+		gz := gzip.NewWriter(&gzipBody)
+		if _, err := gz.Write(body); err != nil {
+			return 500, nil
+		}
+		gz.Close()
 
-	// If we are running integration tests we just want to write the JSON payloads to CW
-	if toLogs {
-		lib.ReportDevModePayload(gzipBody.String())
-		return 200, nil
-	} else {
-		url := lib.GetBaseUrl() + path
-		lib.Info("Publish URL", url)
-		// If we are running unit tests we want to publish logs to the local testing server
-		if internalLogsOnly {
-			extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
-			if !ok {
-				lib.Error("AWS_LAMBDA_RUNTIME_API is not set")
+		// If we are running integration tests we just want to write the JSON payloads to CW
+		if toLogs {
+			lib.ReportDevModePayload(gzipBody.String())
+			return 200, nil
+		} else {
+			url := lib.GetBaseUrl() + path
+			lib.Info("Publish URL", url)
+			// If we are running unit tests we want to publish logs to the local testing server
+			if internalLogsOnly {
+				extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
+				if !ok {
+					lib.Error("AWS_LAMBDA_RUNTIME_API is not set")
+				}
+				url = fmt.Sprintf("http://%s/save"+path, extensions_api_address)
 			}
-			url = fmt.Sprintf("http://%s/save"+path, extensions_api_address)
-		}
 
-		token, _ := os.LookupEnv("SLS_DEV_TOKEN")
-		client := &http.Client{}
-		req, _ := http.NewRequest("POST", url, &gzipBody)
-		req.Header.Add("Content-Type", "application/gzip")
-		req.Header.Add("Authorization", "Bearer "+token)
-		req.Header.Add("sls-token-type", "orgToken")
-		res, resErr := client.Do(req)
-		if resErr != nil {
-			lib.Error("API Call failed", res.StatusCode, res.Body, resErr)
+			token, _ := os.LookupEnv("SLS_DEV_TOKEN")
+			client := &http.Client{}
+			if req, newRequestError := http.NewRequest("POST", url, &gzipBody); newRequestError == nil {
+				req.Header.Add("Content-Type", "application/gzip")
+				req.Header.Add("Authorization", "Bearer "+token)
+				req.Header.Add("sls-token-type", "orgToken")
+				res, resErr := client.Do(req)
+				if resErr != nil {
+					lib.Error("API Call failed", res.StatusCode, res.Body, resErr)
+				}
+				return res.StatusCode, resErr
+			}
 		}
-		return res.StatusCode, resErr
 	}
+	return 200, nil
 }
 
 func AggregateActivity(logs []LogItem, requestId string, accountId string, traceId string) *schema.DevModeTransportPayload {
@@ -550,47 +566,50 @@ func AggregateActivity(logs []LogItem, requestId string, accountId string, trace
 	if len(payloads) != 0 {
 		for index, payload := range payloads {
 			functionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
-			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
-			var devModePayload schema.RequestResponse
-			reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
-			if reqResErr == nil {
-				// Attach metadata from the Lambda Telemetry API
-				// to the finalPayload
-				if len(metadata) > index {
-					meta := metadata[index]
-					// Update the response payload so that it uses the
-					// time from the platform.runtimeDone event
-					if meta.Time != "" && devModePayload.Origin == schema.RequestResponse_ORIGIN_RESPONSE {
-						metaTime, err := time.Parse("2006-01-02T15:04:05.000Z", meta.Time)
-						if err == nil {
-							epoch := uint64(metaTime.UnixNano())
-							devModePayload.Timestamp = &epoch
+			if rawPayload, decodeErr := base64.StdEncoding.DecodeString(string(payload)); decodeErr == nil {
+				var devModePayload schema.RequestResponse
+				reqResErr := proto.Unmarshal(rawPayload, &devModePayload)
+				if reqResErr == nil {
+					// Attach metadata from the Lambda Telemetry API
+					// to the finalPayload
+					if len(metadata) > index {
+						meta := metadata[index]
+						// Update the response payload so that it uses the
+						// time from the platform.runtimeDone event
+						if meta.Time != "" && devModePayload.Origin == schema.RequestResponse_ORIGIN_RESPONSE {
+							metaTime, err := time.Parse("2006-01-02T15:04:05.000Z", meta.Time)
+							if err == nil {
+								epoch := uint64(metaTime.UnixNano())
+								devModePayload.Timestamp = &epoch
+							}
+						}
+						if meta.LogType == "platform.initReport" {
+							if jsonString, jsonErr := json.Marshal(meta.Record); jsonErr == nil {
+								reportData := InitReportRecord{}
+								json.Unmarshal(jsonString, &reportData)
+							}
+						} else if meta.LogType == "platform.runtimeDone" {
+							if jsonString, jsonErr := json.Marshal(meta.Record); jsonErr == nil {
+								reportData := RuntimeDoneRecord{}
+								json.Unmarshal(jsonString, &reportData)
+							}
 						}
 					}
-					if meta.LogType == "platform.initReport" {
-						jsonString, _ := json.Marshal(meta.Record)
-						reportData := InitReportRecord{}
-						json.Unmarshal(jsonString, &reportData)
-					} else if meta.LogType == "platform.runtimeDone" {
-						jsonString, _ := json.Marshal(meta.Record)
-						reportData := RuntimeDoneRecord{}
-						json.Unmarshal(jsonString, &reportData)
+
+					if devModePayload.Tags == nil {
+						devModePayload.Tags = &tags.Tags{}
 					}
-				}
+					devModePayload.Tags.Aws = &tags.AwsTags{
+						AccountId:    &accountId,
+						RequestId:    &requestId,
+						Region:       &region,
+						ResourceName: &functionName,
+					}
 
-				if devModePayload.Tags == nil {
-					devModePayload.Tags = &tags.Tags{}
+					aggregatedActivity.RequestResponse = append(aggregatedActivity.RequestResponse, &devModePayload)
+				} else {
+					lib.Info("Proto Error", reqResErr)
 				}
-				devModePayload.Tags.Aws = &tags.AwsTags{
-					AccountId:    &accountId,
-					RequestId:    &requestId,
-					Region:       &region,
-					ResourceName: &functionName,
-				}
-
-				aggregatedActivity.RequestResponse = append(aggregatedActivity.RequestResponse, &devModePayload)
-			} else {
-				lib.Info("Proto Error", reqResErr)
 			}
 		}
 	}
@@ -599,11 +618,12 @@ func AggregateActivity(logs []LogItem, requestId string, accountId string, trace
 	tracePayloads := CollectTraceData(logs)
 	if len(tracePayloads) != 0 {
 		for _, payload := range tracePayloads {
-			rawPayload, _ := base64.StdEncoding.DecodeString(string(payload))
-			var devModePayload schema.TracePayload
-			traceErr := proto.Unmarshal(rawPayload, &devModePayload)
-			if traceErr == nil {
-				aggregatedActivity.Traces = append(aggregatedActivity.Traces, &devModePayload)
+			if rawPayload, decodeErr := base64.StdEncoding.DecodeString(string(payload)); decodeErr == nil {
+				var devModePayload schema.TracePayload
+				traceErr := proto.Unmarshal(rawPayload, &devModePayload)
+				if traceErr == nil {
+					aggregatedActivity.Traces = append(aggregatedActivity.Traces, &devModePayload)
+				}
 			}
 		}
 	}
