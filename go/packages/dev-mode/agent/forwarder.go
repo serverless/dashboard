@@ -491,6 +491,11 @@ func ForwardActivity(payloads []schema.DevModeTransportPayload) (int, error) {
 		finalPayload.RequestResponse = append(finalPayload.RequestResponse, activity.RequestResponse...)
 		finalPayload.Traces = append(finalPayload.Traces, activity.Traces...)
 	}
+	// If we aggregate all of the data together and there is no data to send we should just return here rather
+	// than forwarding an empty payload
+	if (len(finalPayload.Logs) == 0) && len(finalPayload.RequestResponse) == 0 && len(finalPayload.Traces) == 0 {
+		return 200, nil
+	}
 	body, _ := proto.Marshal(&finalPayload)
 	// Send data to backends
 	var _, internalLogsOnly = os.LookupEnv("SLS_TEST_EXTENSION_INTERNAL_LOG")
