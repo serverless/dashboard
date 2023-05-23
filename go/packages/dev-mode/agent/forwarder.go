@@ -545,7 +545,7 @@ func ForwardActivity(payloads []schema.DevModeTransportPayload) (int, error) {
 				req.Header.Add("sls-token-type", "orgToken")
 				res, resErr := client.Do(req)
 				if resErr != nil {
-					lib.Error("API Call failed", res.StatusCode, res.Body, resErr)
+					lib.Error("API Call failed", resErr)
 				}
 				return res.StatusCode, resErr
 			}
