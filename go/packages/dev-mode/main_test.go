@@ -233,7 +233,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 	if validationData.NextCount < 2 {
 		t.Errorf("Expected NextCount %d Received %d", 2, validationData.NextCount)
 	}
-	// Reset  validations
+	// Reset validations
 	resetValidations()
 
 	// Second invocation
@@ -306,7 +306,7 @@ func TestInvokeStartDoneTwice(t *testing.T) {
 
 	// End execution
 	extensionPlatformRuntimeDone(requestId2)
-	// Reset  validations
+	// Reset validations
 	resetValidations()
 	extensionShutdown(requestId2)
 	wg.Wait()
@@ -363,7 +363,7 @@ func TestStartInvokeDone(t *testing.T) {
 		}
 		for index, event := range protoPayload.LogEvents {
 			if event.Body != messages[index] {
-				t.Errorf("Expected log message %s Received %s", event.Body, messages[index])
+				t.Errorf("Expected log message %s Received %s", messages[index], event.Body)
 			}
 		}
 	}
@@ -502,5 +502,7 @@ func TestInvokeWithInitError(t *testing.T) {
 			}
 		}
 	}
+	// Reset  validations
+	resetValidations()
 	wg.Wait()
 }
