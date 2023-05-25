@@ -45,36 +45,23 @@ on any of these properties.
 
 ## Event Types
 
-- `ERROR_TYPE_UNCAUGHT` - The Lambda function handler had a fatal error and
-caused the invocation to fail.
-- `ERROR_TYPE_CAUGHT_USER` - The Lambda function handler had an error that was
-captured using the SDK. This can include Error objects or strings that were
-captured implicitly (e.g. `console.error`) or explicitly using the provided
-SDK methods.
-- `ERROR_TYPE_CAUGHT_SDK_USER` - An internal SDK error that was reported due to
-misuse of the SDK. These errors do not cause handler failures, but misusage of
-the SDK may result in partial collection. For example, using the `setTag` method
-with invalid inputs will result in this type of error, and the tag will not be
-set.
-- `ERROR_TYPE_CAUGHT_SDK_INTERNAL` - This is an internal SDK error. These errors
-will not cause handler failures. This type of error is rare and monitored by
-Serverless.
-- `WARNING_TYPE_USER` - This is a warning message that was generated in the
-handler and collected by the SDK. For example, `console.warn("record lookup
-failed")`, would result in this type of warning.
-- `WARNING_TYPE_SDK_USER` - A warning reported by the SDK due to user misuse in
-the handler, but not due to misuse of the SDK. For example, if both a callback
-and Promise resolution is attached this will cause unwanted side-effects on the
-SDK.
-- `WARNING_TYPE_SDK_INTERNAL` - An internal SDK warning that was reported due to
-an internal issue impacting the SDK but not caused by SDK usage. These are
-non-fatal issues that may result in partial data collection.
-- `NOTICE_TYPE_SDK_INTERNAL` - An internal SDK notice is a valid condition but
-results in limited functionality. These are non-fatal issues that are
-informative and can be ignored. For example, if a binary input payload is used
-on a Lambda function as input, then Dev Mode will not ingest the payload as it
-can't be shown in Console. This event type can be seen in the Trace Details, but
-it can't be filtered on Metrics or Trace Explorer.
+- **Uncaught Error** (`ERROR_TYPE_UNCAUGHT`) - The Lambda function handler had a
+fatal error and caused the invocation to fail.
+- **Caught Error** (`ERROR_TYPE_CAUGHT_USER`) - The Lambda function handler had
+an error that was captured using the SDK, structured logging library (e.g. Pino,
+AWS Lambda PowerTools, Winston), or standard out (e.g. `console.error`).
+- **Warning** (`WARNING_TYPE_USER`)  - The Lambda function handler had a warning
+that was captured using the SDK, structured logging library (e.g. Pino, AWS
+Lambda PowerTools, Winston), or standard out (e.g. `console.warn`).
+- **SDK Error** (`ERROR_TYPE_CAUGHT_SDK_USER`) - An SDK usage error that was
+reported due to misuse of the SDK. These errors do not cause handler failures,
+but misusage of the SDK may result in partial collection. For example, using the
+`setTag` method with invalid inputs will result in this type of error, and the
+tag will not be set.
+- **SDK Warning** (`WARNING_TYPE_SDK_USER`) - A warning reported by the SDK due
+to user misuse in the handler, but not due to misuse of the SDK. For example, if
+both a callback and Promise resolution is attached this will cause unwanted
+side-effects on the SDK.
 
 ## Trace Details
 
