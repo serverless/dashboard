@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.3](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.2...@serverless/aws-lambda-sdk@0.15.3) (2023-05-25)
+
+### Bug Fixes
+
+- Fix handling of not responding handlers ([7d06d67](https://github.com/serverless/console/commit/7d06d673a1162e0cb8e4967e6845bda858684c7a))
+
+### Maintenance Improvements
+
+- Access sub spans collection directly ([251fce4](https://github.com/serverless/console/commit/251fce463b3322e62b297cee5425fb3aa2aca0d1))
+
 ### [0.15.2](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.1...@serverless/aws-lambda-sdk@0.15.2) (2023-05-18)
 
 ### Bug Fixes
