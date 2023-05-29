@@ -627,7 +627,6 @@ describe('integration', function () {
       'callback',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -797,7 +796,6 @@ describe('integration', function () {
       'esbuild-from-esm-callback',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -808,7 +806,6 @@ describe('integration', function () {
       'thenable',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -819,7 +816,6 @@ describe('integration', function () {
       'callback-error',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -831,7 +827,6 @@ describe('integration', function () {
       'thenable-error',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -843,7 +838,6 @@ describe('integration', function () {
       'error-uncaught',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -855,7 +849,6 @@ describe('integration', function () {
       'error-uncaught-immediate',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -867,7 +860,6 @@ describe('integration', function () {
       'error-uncaught-resolution-race',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -879,7 +871,6 @@ describe('integration', function () {
       'error-unhandled',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -1996,16 +1987,6 @@ describe('integration', function () {
       {
         variants: new Map([
           [
-            'v12',
-            {
-              config: { configuration: { Runtime: 'nodejs12.x' } },
-              variants: new Map([
-                ['dev-mode', devModeConfiguration],
-                ['regular', {}],
-              ]),
-            },
-          ],
-          [
             'v14',
             {
               config: { configuration: { Runtime: 'nodejs14.x' } },
@@ -2176,7 +2157,6 @@ describe('integration', function () {
       'callback-no-result',
       {
         variants: new Map([
-          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
           ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
           ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
           ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
@@ -2191,7 +2171,6 @@ describe('integration', function () {
       'no-response-callback',
       {
         variants: new Map([
-          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
           ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
           ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
           ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
@@ -2208,7 +2187,6 @@ describe('integration', function () {
       'no-response-thenable',
       {
         variants: new Map([
-          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
           ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
           ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
           ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
@@ -2225,7 +2203,6 @@ describe('integration', function () {
       'delayed-http-request',
       {
         variants: new Map([
-          ['v12', { config: { configuration: { Runtime: 'nodejs12.x' } } }],
           ['v14', { config: { configuration: { Runtime: 'nodejs14.x' } } }],
           ['v16', { config: { configuration: { Runtime: 'nodejs16.x' } } }],
           ['v18', { config: { configuration: { Runtime: 'nodejs18.x' } } }],
@@ -2254,7 +2231,6 @@ describe('integration', function () {
       'sdk',
       {
         variants: new Map([
-          ['v12', { configuration: { Runtime: 'nodejs12.x' } }],
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
@@ -2266,8 +2242,6 @@ describe('integration', function () {
       'structured-logging-events',
       {
         variants: new Map([
-          // Most of the larger logger libraries, including AWS Powertools do not
-          // support Node 12 unless bundled. As such we test against just 14,16, & 18
           ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
           ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
