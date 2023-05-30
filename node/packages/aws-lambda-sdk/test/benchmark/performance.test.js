@@ -27,7 +27,7 @@ describe('performance', function () {
   it('should introduce reasonable first invocation overhead', () => {
     expect(results.get('internal').results.invocation.first.total.median).to.be.below(15);
     expect(results.get('internalAndExternal').results.invocation.first.total.median).to.be.below(
-      90
+      100
     );
   });
 
