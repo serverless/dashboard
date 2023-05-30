@@ -793,6 +793,35 @@ describe('integration', function () {
       },
     ],
     [
+      'callback-postponed-exit',
+      {
+        test: ({ invocationsData }) => {
+          for (const [
+            index,
+            {
+              trace: { spans },
+            },
+          ] of invocationsData.entries()) {
+            spans.shift();
+            if (!index) spans.shift();
+            const [invocationSpan, httpRequestSpan] = spans;
+
+            expect(httpRequestSpan.name).to.equal('node.http.request');
+            expect(httpRequestSpan.parentSpanId.toString()).to.equal(invocationSpan.id.toString());
+
+            const { tags } = httpRequestSpan;
+            expect(tags.http.method).to.equal('GET');
+            expect(tags.http.protocol).to.equal('HTTP/1.1');
+            expect(tags.http.host).to.equal('localhost:3177');
+            expect(tags.http.path).to.equal('/');
+            expect(tags.http.queryParameterNames).to.deep.equal(['foo']);
+            expect(tags.http.requestHeaderNames).to.deep.equal(['someHeader']);
+            expect(tags.http.statusCode.toString()).to.equal('200');
+          }
+        },
+      },
+    ],
+    [
       'esbuild-from-esm-callback',
       {
         variants: new Map([
