@@ -38,7 +38,7 @@ type (
 )
 
 func marshalCustomTags(options *EventOptions) *string {
-	if options.CustomTags == nil || len(options.CustomTags) == 0 {
+	if options == nil || options.CustomTags == nil || len(options.CustomTags) == 0 {
 		return nil
 	}
 	b, err := json.Marshal(options.CustomTags)
