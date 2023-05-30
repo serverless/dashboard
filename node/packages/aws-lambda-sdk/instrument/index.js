@@ -326,14 +326,25 @@ module.exports = (originalHandler, options = {}) => {
       }
 
       const wrapAwsCallback =
-        (someAwsCallback) =>
+        (someAwsCallback, isCallbackResolution = false) =>
         (...args) => {
           if (invocationId !== currentInvocationId) return;
           if (isCurrentInvocationResolved) return;
-          closeTrace(
-            args[0] == null ? 'success' : 'error:handled',
-            args[0] == null ? args[1] : args[0]
-          ).then(() => someAwsCallback(...args), someAwsCallback);
+
+          if (isCallbackResolution && args[0] == null && context.callbackWaitsForEmptyEventLoop) {
+            isCurrentInvocationResolved = true;
+            someAwsCallback(...args);
+            const awsExitCallback = global[Symbol.for('aws.lambda.beforeExit')];
+            global[Symbol.for('aws.lambda.beforeExit')] = () => {
+              global[Symbol.for('aws.lambda.beforeExit')] = awsExitCallback;
+              closeTrace('success', args[1]).finally(awsExitCallback);
+            };
+          } else {
+            closeTrace(
+              args[0] == null ? 'success' : 'error:handled',
+              args[0] == null ? args[1] : args[0]
+            ).then(() => someAwsCallback(...args), someAwsCallback);
+          }
         };
       originalDone = context.done;
       contextDone = wrapAwsCallback(originalDone);
@@ -341,7 +352,7 @@ module.exports = (originalHandler, options = {}) => {
       context.succeed = (result) => contextDone(null, result);
       context.fail = (err) => contextDone(err == null ? 'handled' : err);
 
-      if (awsCallback) wrappedCallback = wrapAwsCallback(awsCallback);
+      if (awsCallback) wrappedCallback = wrapAwsCallback(awsCallback, true);
       // TODO: Insert eventual request handling
       serverlessSdk._debugLog(
         'Overhead duration: Internal request:',
