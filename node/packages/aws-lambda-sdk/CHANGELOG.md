@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.4](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.3...@serverless/aws-lambda-sdk@0.15.4) (2023-05-30)
+
+### Bug Fixes
+
+- Fix handling of case where runtime waits for an empty event loop ([947a769](https://github.com/serverless/console/commit/947a7690ee548a6ec62576333d38359815368c04))
+
 ### [0.15.3](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.2...@serverless/aws-lambda-sdk@0.15.3) (2023-05-25)
 
 ### Bug Fixes
