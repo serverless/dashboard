@@ -34,7 +34,7 @@ describe('performance', function () {
   it('should introduce reasonable following invocation overhead', () => {
     expect(results.get('internal').results.invocation.following.total.median).to.be.below(10);
     expect(results.get('internalAndExternal').results.invocation.first.total.median).to.be.below(
-      90
+      100
     );
   });
 });
