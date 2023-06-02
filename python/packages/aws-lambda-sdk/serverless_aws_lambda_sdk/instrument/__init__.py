@@ -21,6 +21,7 @@ from .lib.invocation_context import (
 from .lib.payload_conversion import to_trace_payload, to_request_response_payload
 from .lib.event_tags import resolve as resolve_event_tags
 from .lib.response_tags import resolve as resolve_response_tags
+from .lib.api_events import is_api_event
 from sls_sdk.lib.trace import TraceSpan
 from sls_sdk.lib.captured_event import CapturedEvent
 import base64
@@ -81,6 +82,8 @@ class Instrumenter:
     """
 
     def __init__(self):
+        self.is_first_invocation = True
+        self.is_after_not_sampled_out_api_request = False
         self.current_invocation_id = 0
         serverlessSdk._captured_events = []
         self.dev_mode = None
@@ -172,23 +175,51 @@ class Instrumenter:
         self.dev_mode.add_request_response_payload(payload_buffer.SerializeToString())
 
     def _report_trace(self, is_error_outcome: bool):
-        is_sampled_out = (
-            (not is_error_outcome)
-            and (not serverlessSdk._is_debug_mode)
-            and (not serverlessSdk._is_dev_mode)
-            and (
-                not [
-                    e
-                    for e in serverlessSdk._captured_events
-                    if e.name
-                    in [
-                        "telemetry.error.generated.v1",
-                        "telemetry.warning.generated.v1",
-                    ]
+        should_set_is_after_not_sampled_out_api_request = False
+        _is_api_event = is_api_event()
+
+        def calculate_is_sampled_out():
+            # This function determines if a trace should be sampled out or not
+            nonlocal should_set_is_after_not_sampled_out_api_request
+            if is_error_outcome:
+                return False  # Do not sample out when invocation ends with error
+            if serverlessSdk._is_debug_mode:
+                return False  # Do not sample out when in debug mode
+            if serverlessSdk._is_dev_mode:
+                return False  # Do not sample out when in dev mode
+            if [
+                e
+                for e in serverlessSdk._captured_events
+                if e.name
+                in [
+                    "telemetry.error.generated.v1",
                 ]
-            )
-            and random.random() > 0.2
-        )
+            ]:
+                return False  # Do not sample out when any error event is captured
+            if self.is_after_not_sampled_out_api_request:
+                # Do not sample out two consecutive API requests
+                # # (to handle OPTIONS + actual request)
+                if _is_api_event:
+                    return False
+
+            # Do not sample first invocation, otherwise set sampling rate at 10%
+            # (for API we apply correction as requests are passed through in pairs)
+            if not self.is_first_invocation and random.random() > (
+                0.05 if _is_api_event else 0.1
+            ):
+                return True
+
+            should_set_is_after_not_sampled_out_api_request = _is_api_event
+            return False
+
+        is_sampled_out = calculate_is_sampled_out()
+
+        self.is_first_invocation = False
+
+        if self.is_after_not_sampled_out_api_request:
+            self.is_after_not_sampled_out_api_request = False
+        elif should_set_is_after_not_sampled_out_api_request:
+            self.is_after_not_sampled_out_api_request = True
 
         def _map_span(span: TraceSpan) -> Optional[TraceSpan]:
             nonlocal is_sampled_out
