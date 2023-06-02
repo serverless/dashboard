@@ -335,7 +335,7 @@ def test_instrument_sdk_sampled_out(
     monkeypatch, instrumenter, sampled_out, mocked_print
 ):
     # given
-    monkeypatch.setattr("random.random", lambda: 0.9 if sampled_out else 0.1)
+    monkeypatch.setattr("random.random", lambda: 1 if sampled_out else 0)
     from ..fixtures.lambdas.sdk_sampled_out import handler
 
     instrumented = instrumenter.instrument(lambda: handler)
@@ -355,6 +355,32 @@ def test_instrument_sdk_sampled_out(
         [
             "aws.lambda",
             "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "user.span",
+        ],
+        1,
+    )
+
+    # first invocation is not sampled out!
+    assert trace_payload.HasField("custom_tags")
+
+    # subsequent invocation
+    mocked_print.reset_mock()
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = deserialize_trace(serialized)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
             "aws.lambda.invocation",
         ]
         + (["user.span"] if not sampled_out else []),
