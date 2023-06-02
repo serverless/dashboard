@@ -201,6 +201,9 @@ module.exports = (event) => {
       },
       { prefix: 'aws.lambda.http' }
     );
+    // It's possible that express instrumentation already set this tag
+    // it's sign of unexpected configuration, which we ignore
+    awsLambdaSpan.tags.delete('aws.lambda.http_router.path');
     awsLambdaSpan.tags.set('aws.lambda.http_router.path', requestContext.resourcePath);
     return;
   }
