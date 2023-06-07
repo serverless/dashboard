@@ -10,7 +10,7 @@ const capitalize = require('ext/string_/capitalize');
 const ServerlessSdkError = require('./error');
 const reportError = require('./report-error');
 
-const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]+$/);
+const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]{1,256}$/);
 
 const ensureTagName = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_TAG_NAME';
