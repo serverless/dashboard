@@ -81,9 +81,9 @@ serverlessSdk.instrumentation.awsSdkV2.install(AWS)
 serverlessSdk.instrumentation.awsSdkV3Client.install(client)
 
 // Instruments Express.js
-// Ensure you install the instrumentation immediately after
-// initializing your express app as shown below
 const expressApp = express();
+// Ensure you install the SDK instrumentation before
+// installing any express middleware
 serverlessSdk.instrumentation.expressApp.install(expressApp)
 ```
 
