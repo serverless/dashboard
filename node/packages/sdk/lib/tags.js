@@ -9,6 +9,7 @@ const resolveException = require('type/lib/resolve-exception');
 const capitalize = require('ext/string_/capitalize');
 const ServerlessSdkError = require('./error');
 const reportError = require('./report-error');
+const MAX_VALUE_LENGTH = require('./max-tag-value-length');
 
 const isValidTagName = RegExp.prototype.test.bind(/^[a-zA-Z0-9_.-]{1,256}$/);
 
@@ -34,7 +35,16 @@ const ensureTagName = (() => {
 const ensureTagValue = (() => {
   const errorCode = 'INVALID_TRACE_SPAN_TAG_VALUE';
   return (inputValue, tagName) => {
-    if (typeof inputValue === 'string') return inputValue;
+    if (typeof inputValue === 'string') {
+      if (Buffer.from(inputValue).length > MAX_VALUE_LENGTH) {
+        return resolveException(inputValue, null, {
+          errorCode,
+          errorMessage: `Invalid trace span tag value for "${tagName}": Too large string:"%v"`,
+          Error: ServerlessSdkError,
+        });
+      }
+      return inputValue;
+    }
     if (typeof inputValue === 'number') {
       return ensureFinite(inputValue, {
         errorCode,
@@ -48,7 +58,7 @@ const ensureTagValue = (() => {
     if (isDate(inputValue)) return inputValue.toISOString();
     if (Array.isArray(inputValue)) {
       let type = null;
-      return inputValue.map((item) => {
+      const normalizedValue = inputValue.map((item) => {
         if (typeof item === 'string') {
           if (type == null) type = 'string';
           if (type === 'string') return item;
@@ -83,6 +93,14 @@ const ensureTagValue = (() => {
           Error: ServerlessSdkError,
         });
       });
+      if (Buffer.from(JSON.stringify(normalizedValue)).length > MAX_VALUE_LENGTH) {
+        return resolveException(inputValue, null, {
+          errorCode,
+          errorMessage: `Invalid trace span tag value for "${tagName}": Too large value:"%v"`,
+          Error: ServerlessSdkError,
+        });
+      }
+      return normalizedValue;
     }
     return resolveException(inputValue, null, {
       errorCode,
