@@ -71,6 +71,7 @@ yarn add @serverless/aws-lambda-sdk
 Use the following methods to instrument the AWS client libraries and Express.js.
 
 ```javascript
+const express = require('express');
 const serverlessSdk = require("@serverless/aws-lambda-sdk");
 
 // Instrument AWS SDK v2
@@ -79,7 +80,10 @@ serverlessSdk.instrumentation.awsSdkV2.install(AWS)
 // Instrument AWS SDK v3 client
 serverlessSdk.instrumentation.awsSdkV3Client.install(client)
 
-// instruments Express.js
+// Instruments Express.js
+const expressApp = express();
+// Ensure you install the SDK instrumentation before
+// installing any express middleware
 serverlessSdk.instrumentation.expressApp.install(expressApp)
 ```
 
