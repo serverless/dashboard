@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.20](https://github.com/serverless/console/compare/@serverless/sdk@0.5.19...@serverless/sdk@0.5.20) (2023-06-07)
+
+### Features
+
+- Enforce limits on tag values ([8985b99](https://github.com/serverless/console/commit/8985b99b3c56cf8de30a50b3c855301eef84c25c))
+- Enforce max length on tag name ([38a771b](https://github.com/serverless/console/commit/38a771bb9d072f0c6d7c7bd1bf82870223a31317))
+
 ### [0.5.19](https://github.com/serverless/console/compare/@serverless/sdk@0.5.18...@serverless/sdk@0.5.19) (2023-05-18)
 
 ### Bug Fixes
