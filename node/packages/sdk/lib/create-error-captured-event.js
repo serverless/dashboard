@@ -6,6 +6,7 @@ const isError = require('type/error/is');
 const CapturedEvent = require('./captured-event');
 const resolveStackTraceString = require('./resolve-stack-trace-string');
 const resolveNonErrorName = require('./resolve-non-error-name');
+const limitTagValue = require('./limit-tag-value');
 
 const typeMap = new Map([
   ['unhandled', 1],
@@ -29,12 +30,13 @@ module.exports = (error, options = {}) => {
   const tags = { type: typeMap.get(type) };
   if (isError(error)) {
     tags.name = error.name;
-    tags.message = error.message;
+    tags.message = limitTagValue(error.message);
   } else {
     tags.name = options._name || resolveNonErrorName(error);
-    tags.message = typeof error === 'string' ? error : util.inspect(error);
+    tags.message = limitTagValue(typeof error === 'string' ? error : util.inspect(error));
   }
-  tags.stacktrace = options._stack || resolveStackTraceString(error);
+  tags.stacktrace = limitTagValue(options._stack || resolveStackTraceString(error));
+
   capturedEvent.tags.setMany(tags, { prefix: 'error' });
 
   if (
