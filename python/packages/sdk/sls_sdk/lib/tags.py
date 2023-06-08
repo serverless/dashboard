@@ -1,10 +1,12 @@
 from __future__ import annotations
 import re
 from datetime import datetime
+import json
 from math import inf, nan
 from re import Pattern
 from typing import Dict, List, Mapping, Tuple, Optional, Any
 from .imports import internally_imported
+from .tag_value import MAX_VALUE_LENGTH
 
 with internally_imported("js_regex"):
     from js_regex import compile
@@ -148,6 +150,11 @@ def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
         return value
 
     elif isinstance(value, str):
+        if len(value.encode()) > MAX_VALUE_LENGTH:
+            raise InvalidTraceSpanTagValue(
+                f"Invalid trace span tag value for {attr}: "
+                f"Too large string: {value}"
+            )
         return value
 
     elif isinstance(value, (int, float)):
@@ -165,10 +172,13 @@ def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
         return value
 
     if isinstance(value, List):
-        valid: bool = all(ensure_tag_value("tags", item) is not None for item in value)
-
-        if valid:
-            return value
+        normalized_value = [ensure_tag_value("tags", item) for item in value]
+        if len(json.dumps(normalized_value, default=str).encode()) > MAX_VALUE_LENGTH:
+            raise InvalidTraceSpanTagValue(
+                f"Invalid trace span tag value for {attr}: "
+                f"Too large string: {value}"
+            )
+        return normalized_value
 
     raise InvalidTraceSpanTagValue(
         f"Invalid trace span tag value for {attr}: "
