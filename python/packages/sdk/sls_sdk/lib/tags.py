@@ -27,8 +27,7 @@ from ..exceptions import (
     SdkException,
 )
 
-# from https://github.com/serverless/console/blob/fe64a4f53529285e89a64f7d50ec9528a3c4ce57/node/packages/sdk/lib/tags.js#L12
-RE: Final[str] = r"^[a-zA-Z0-9_.-]+$"
+RE: Final[str] = r"^[a-zA-Z0-9_.-]{1,256}$"
 RE_C: Final[Pattern] = compile(RE)
 
 
