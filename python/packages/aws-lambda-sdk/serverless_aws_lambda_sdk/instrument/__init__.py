@@ -25,7 +25,7 @@ from .lib.api_events import is_api_event
 from sls_sdk.lib.trace import TraceSpan
 from sls_sdk.lib.captured_event import CapturedEvent
 import base64
-import zlib
+import gzip
 
 
 def debug_log(msg):
@@ -255,7 +255,7 @@ class Instrumenter:
             else None,
         }
         payload = to_trace_payload(payload_dct)
-        compressed_payload = zlib.compress(payload.SerializeToString())
+        compressed_payload = gzip.compress(payload.SerializeToString())
         print(
             f"SERVERLESS_TELEMETRY.TZ.{base64.b64encode(compressed_payload).decode('utf-8')}"
         )
