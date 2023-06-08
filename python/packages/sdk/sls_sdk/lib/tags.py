@@ -132,9 +132,8 @@ def ensure_tag_name(name: str) -> str:
     )
 
 
-def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
+def _ensure_singular_tag_value(attr: str, value: TagType) -> TagType:
     valid_types: Tuple[type] = get_args(TagType)  # type: ignore
-    valid_types = (*valid_types, list)  # type: ignore
 
     if not isinstance(value, valid_types):
         raise InvalidTraceSpanTagValue(
@@ -170,19 +169,23 @@ def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
     elif isinstance(value, bool):
         return value
 
+    raise InvalidTraceSpanTagValue(
+        f"Invalid trace span tag value for {attr}: "
+        f"Expected {valid_types}, received {value}"
+    )
+
+
+def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
     if isinstance(value, List):
-        normalized_value = [ensure_tag_value("tags", item) for item in value]
+        normalized_value = [_ensure_singular_tag_value("tags", item) for item in value]
         if len(json.dumps(normalized_value, default=str).encode()) > MAX_VALUE_LENGTH:
             raise InvalidTraceSpanTagValue(
                 f"Invalid trace span tag value for {attr}: "
                 f"Too large string: {value}"
             )
         return normalized_value
-
-    raise InvalidTraceSpanTagValue(
-        f"Invalid trace span tag value for {attr}: "
-        f"Expected {valid_types}, received {value}"
-    )
+    else:
+        return _ensure_singular_tag_value(attr, value)
 
 
 def _snake_to_camel_case(string):

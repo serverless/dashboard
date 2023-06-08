@@ -242,12 +242,20 @@ def test_tags_invalid_names_and_values_bulk(tags: Tags, monkeypatch):
 
 
 def test_tags_invalid_names_and_values_bulk_internal_method_raises_exception(
-    tags: Tags, monkeypatch
+    tags: Tags,
 ):
     # given
-    mock = MagicMock()
-    monkeypatch.setattr(sls_sdk.lib.tags, "report_error", mock)
+    data = {name: "" for name in INVALID_NAMES}
 
     # when
     with pytest.raises(SdkException):
-        tags._update({name: "" for name in INVALID_NAMES})
+        tags._update(data)
+
+
+def test_tags_non_flat_list_raises_exception(tags: Tags):
+    # given
+    data = {"foo": ["bar", ["baz"]]}
+
+    # when
+    with pytest.raises(SdkException):
+        tags._update(data)

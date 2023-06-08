@@ -20,8 +20,7 @@ with open(Path(__file__).parent / "VERSION") as version_file:
 
 TraceId = str
 Nanoseconds = int
-DateStr = str
 
-TagType = Union[str, int, float, DateStr, bool, datetime]
+TagType = Union[str, int, float, bool, datetime]
 TagList = List[TagType]
 ValidTags = Union[TagType, TagList]
