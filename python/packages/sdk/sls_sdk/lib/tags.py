@@ -1,10 +1,12 @@
 from __future__ import annotations
 import re
 from datetime import datetime
+import json
 from math import inf, nan
 from re import Pattern
 from typing import Dict, List, Mapping, Tuple, Optional, Any
 from .imports import internally_imported
+from .tag_value import MAX_VALUE_LENGTH
 
 with internally_imported("js_regex"):
     from js_regex import compile
@@ -25,8 +27,7 @@ from ..exceptions import (
     SdkException,
 )
 
-# from https://github.com/serverless/console/blob/fe64a4f53529285e89a64f7d50ec9528a3c4ce57/node/packages/sdk/lib/tags.js#L12
-RE: Final[str] = r"^[a-zA-Z0-9_.-]+$"
+RE: Final[str] = r"^[a-zA-Z0-9_.-]{1,256}$"
 RE_C: Final[Pattern] = compile(RE)
 
 
@@ -131,9 +132,8 @@ def ensure_tag_name(name: str) -> str:
     )
 
 
-def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
+def _ensure_singular_tag_value(attr: str, value: TagType) -> TagType:
     valid_types: Tuple[type] = get_args(TagType)  # type: ignore
-    valid_types = (*valid_types, list)  # type: ignore
 
     if not isinstance(value, valid_types):
         raise InvalidTraceSpanTagValue(
@@ -148,6 +148,11 @@ def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
         return value
 
     elif isinstance(value, str):
+        if len(value.encode()) > MAX_VALUE_LENGTH:
+            raise InvalidTraceSpanTagValue(
+                f"Invalid trace span tag value for {attr}: "
+                f"Too large string: {value}"
+            )
         return value
 
     elif isinstance(value, (int, float)):
@@ -164,16 +169,23 @@ def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
     elif isinstance(value, bool):
         return value
 
-    if isinstance(value, List):
-        valid: bool = all(ensure_tag_value("tags", item) is not None for item in value)
-
-        if valid:
-            return value
-
     raise InvalidTraceSpanTagValue(
         f"Invalid trace span tag value for {attr}: "
         f"Expected {valid_types}, received {value}"
     )
+
+
+def ensure_tag_value(attr: str, value: ValidTags) -> ValidTags:
+    if isinstance(value, List):
+        normalized_value = [_ensure_singular_tag_value("tags", item) for item in value]
+        if len(json.dumps(normalized_value, default=str).encode()) > MAX_VALUE_LENGTH:
+            raise InvalidTraceSpanTagValue(
+                f"Invalid trace span tag value for {attr}: "
+                f"Too large string: {value}"
+            )
+        return normalized_value
+    else:
+        return _ensure_singular_tag_value(attr, value)
 
 
 def _snake_to_camel_case(string):

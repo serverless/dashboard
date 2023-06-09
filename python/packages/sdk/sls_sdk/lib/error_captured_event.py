@@ -5,6 +5,7 @@ from typing import Optional
 from .tags import Tags
 from .captured_event import CapturedEvent
 from .stack_trace_string import resolve as resolve_stack_trace_string
+from .tag_value import limit_tag_value
 
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ def create(
     timestamp: Optional[int] = None,
     tags: Optional[Tags] = None,
     type: str = "handledUser",
-    name=None,
-    stack=None,
+    name: Optional[str] = None,
+    stack: Optional[str] = None,
     origin: Optional[str] = None,
     fingerprint: Optional[str] = None,
 ):
@@ -42,11 +43,11 @@ def create(
     }
     if isinstance(error, Exception):
         _tags["name"] = builtins_type(error).__name__
-        _tags["message"] = str(error)
     else:
         _tags["name"] = name or builtins_type(error).__name__
-        _tags["message"] = str(error)
-    _tags["stacktrace"] = stack or resolve_stack_trace_string(error)
+
+    _tags["message"] = limit_tag_value(str(error))
+    _tags["stacktrace"] = limit_tag_value(stack or resolve_stack_trace_string(error))
     captured_event.tags.update(_tags, prefix="error")
 
     # to avoid circular dependency, require inline
