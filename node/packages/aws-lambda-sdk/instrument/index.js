@@ -100,7 +100,7 @@ const reportResponse = async (response, context, endTime) => {
   await sendTelemetry('request-response', payloadBuffer);
 };
 
-let isFirstInvocation = true;
+const gapsBetweenInvocations = [];
 let isAfterNotSampledApiRequest = false;
 
 const maxLogLineLength = 256 * 1024;
@@ -125,13 +125,23 @@ const reportTrace = ({ isErrorOutcome }) => {
         // Do not sample two consecutive API requests (to handle OPTIONS + actual request)
         if (isApiEvent) return false;
       }
-      // Do not sample first invocation, otherwise set sampling rate at 20%
+      // Do not sample until we gather durations for at least 5 between-invocation gaps
+      if (gapsBetweenInvocations.length < 5) return false;
+      // Do not sample if average gap between invocations is greater than 1 second
+      if (
+        gapsBetweenInvocations.reduce((a, b) => a + b, 0) / gapsBetweenInvocations.length >
+        1000
+      ) {
+        return false;
+      }
+
+      // Set sampling rate at 20%
       // (for API we apply correction as requests are passed through in pairs)
-      if (!isFirstInvocation && Math.random() > (isApiEvent ? 0.1 : 0.2)) return true;
+      if (Math.random() > (isApiEvent ? 0.1 : 0.2)) return true;
+
       shouldSetIsAfterNotSampledApiRequest = isApiEvent;
       return false;
     })() || undefined;
-  isFirstInvocation = false;
   if (isAfterNotSampledApiRequest) isAfterNotSampledApiRequest = false;
   else if (shouldSetIsAfterNotSampledApiRequest) isAfterNotSampledApiRequest = true;
 
@@ -352,6 +362,7 @@ const resolveOutcomeEnumValue = (value) => {
 };
 
 let isCurrentInvocationResolved = false;
+let previousInvocationEndTime = null;
 
 const clearRootSpan = () => {
   delete awsLambdaSpan.traceId;
@@ -400,6 +411,7 @@ const closeTrace = async (outcome, outcomeResult) => {
 
     await Promise.all(serverlessSdk._deferredTelemetryRequests);
     serverlessSdk._deferredTelemetryRequests.length = 0;
+    previousInvocationEndTime = Date.now();
     serverlessSdk._debugLog(
       'Overhead duration: Internal response:',
       `${Math.round(Number(process.hrtime.bigint() - endTime) / 1000000)}ms`
@@ -489,6 +501,11 @@ module.exports = (originalHandler, options = {}) => {
       serverlessSdk._debugLog('Invocation: start');
       observeNotRespondingHandler();
       invocationContextAccessor.set(context);
+      if (previousInvocationEndTime) {
+        gapsBetweenInvocations.push(Date.now() - previousInvocationEndTime);
+        previousInvocationEndTime = null;
+        if (gapsBetweenInvocations.length > 5) gapsBetweenInvocations.shift();
+      }
       if (invocationId > 1) awsLambdaSpan.startTime = requestStartTime;
       awsLambdaSpan.tags.set('aws.lambda.request_id', context.awsRequestId);
       if (isResponseStreaming) awsLambdaSpan.tags.set('aws.lambda.response_mode', 2);
