@@ -123,9 +123,9 @@ const reportTrace = ({ isErrorOutcome }) => {
         // Do not sample two consecutive API requests (to handle OPTIONS + actual request)
         if (isApiEvent) return false;
       }
-      // Do not sample first invocation, otherwise set sampling rate at 10%
+      // Do not sample first invocation, otherwise set sampling rate at 20%
       // (for API we apply correction as requests are passed through in pairs)
-      if (!isFirstInvocation && Math.random() > (isApiEvent ? 0.05 : 0.1)) return true;
+      if (!isFirstInvocation && Math.random() > (isApiEvent ? 0.1 : 0.2)) return true;
       shouldSetIsAfterNotSampledApiRequest = isApiEvent;
       return false;
     })() || undefined;
