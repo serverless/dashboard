@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import json
 import importlib
+import time
 from .. import compare_handlers, context
 from .test_assertions import (
     assert_trace_payload,
@@ -340,31 +341,31 @@ def test_instrument_sdk_sampled_out(
 
     instrumented = instrumenter.instrument(lambda: handler)
 
-    # when
-    instrumented({}, context)
-    serialized = [
-        x[0][0]
-        for x in mocked_print.call_args_list
-        if x[0][0].startswith(TARGET_LOG_PREFIX)
-    ][0].replace(TARGET_LOG_PREFIX, "")
+    # first 5 invocations are not sampled out!
+    for _ in range(5):
+        # when
+        instrumented({}, context)
+        serialized = [
+            x[0][0]
+            for x in mocked_print.call_args_list
+            if x[0][0].startswith(TARGET_LOG_PREFIX)
+        ][0].replace(TARGET_LOG_PREFIX, "")
 
-    # then
-    trace_payload = deserialize_trace(serialized)
-    assert_trace_payload(
-        trace_payload,
-        [
-            "aws.lambda",
-            "aws.lambda.initialization",
-            "aws.lambda.invocation",
-            "user.span",
-        ],
-        1,
-    )
+        # then
+        trace_payload = deserialize_trace(serialized)
+        assert_trace_payload(
+            trace_payload,
+            [
+                "aws.lambda",
+                "aws.lambda.initialization",
+                "aws.lambda.invocation",
+                "user.span",
+            ],
+            1,
+        )
 
-    # first invocation is not sampled out!
-    assert trace_payload.HasField("custom_tags")
+        assert trace_payload.HasField("custom_tags")
 
-    # subsequent invocation
     mocked_print.reset_mock()
 
     # when
@@ -390,6 +391,54 @@ def test_instrument_sdk_sampled_out(
     assert (sampled_out and not trace_payload.HasField("custom_tags")) or (
         not sampled_out and trace_payload.HasField("custom_tags")
     )
+
+
+def test_instrument_sdk_infrequent_not_sampled_out(
+    monkeypatch, instrumenter, mocked_print
+):
+    # given
+    number_of_invocations = 10
+    mocked_time = MagicMock()
+    # Make sure 1 second passes in between the calls to time_ns
+    # The first invocation uses time_ns once, subsequent invocations use it twice
+    mocked_time.side_effect = [
+        1 + 1_000_000 * x for x in range(number_of_invocations * 2 - 1)
+    ]
+    monkeypatch.setattr("time.time_ns", mocked_time)
+    monkeypatch.setattr("random.random", lambda: 0)
+    from ..fixtures.lambdas.sdk_sampled_out import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # None of the invocations are sampled out!
+    for _ in range(number_of_invocations):
+        # when
+        instrumented({}, context)
+        serialized = [
+            x[0][0]
+            for x in mocked_print.call_args_list
+            if x[0][0].startswith(TARGET_LOG_PREFIX)
+        ][0].replace(TARGET_LOG_PREFIX, "")
+
+        # then
+        trace_payload = deserialize_trace(serialized)
+        assert_trace_payload(
+            trace_payload,
+            [
+                "aws.lambda",
+            ]
+            + (["aws.lambda.initialization"] if _ == 0 else [])
+            + [
+                "aws.lambda.invocation",
+                "user.span",
+            ],
+            1,
+        )
+        assert trace_payload.HasField("custom_tags")
+
+        mocked_print.reset_mock()
+
+    assert mocked_time.call_count == number_of_invocations * 2 - 1
 
 
 def test_instrument_lambda_success_dev_mode_without_server(
@@ -455,7 +504,6 @@ def test_instrument_lambda_success_dev_mode_with_server(
 
     def lambda_handler(event, context):
         from serverless_aws_lambda_sdk import serverlessSdk
-        import time
 
         for i in range(capture_error_count):
             time.sleep(0.02)

@@ -82,7 +82,8 @@ class Instrumenter:
     """
 
     def __init__(self):
-        self.is_first_invocation = True
+        self.previous_invocation_end_time = None
+        self.gaps_between_invocations = []
         self.is_after_not_sampled_out_api_request = False
         self.current_invocation_id = 0
         serverlessSdk._captured_events = []
@@ -202,19 +203,27 @@ class Instrumenter:
                 if _is_api_event:
                     return False
 
-            # Do not sample first invocation, otherwise set sampling rate at 10%
-            # (for API we apply correction as requests are passed through in pairs)
-            if not self.is_first_invocation and random.random() > (
-                0.05 if _is_api_event else 0.1
+            # Do not sample out until we gather durations for
+            # at least 5 between-invocation gaps
+            if len(self.gaps_between_invocations) < 5:
+                return False
+            # Do not sample out if average gap between invocations
+            # is greater than 1 second
+            if (
+                sum(self.gaps_between_invocations) / len(self.gaps_between_invocations)
+                > 1_000_000
             ):
+                return False
+
+            # Set sampling rate at 20%
+            # (for API we apply correction as requests are passed through in pairs)
+            if random.random() > (0.1 if _is_api_event else 0.2):
                 return True
 
             should_set_is_after_not_sampled_out_api_request = _is_api_event
             return False
 
         is_sampled_out = calculate_is_sampled_out()
-
-        self.is_first_invocation = False
 
         if self.is_after_not_sampled_out_api_request:
             self.is_after_not_sampled_out_api_request = False
@@ -305,6 +314,7 @@ class Instrumenter:
                 self._report_trace(is_error_outcome)
             self._clear_root_span()
 
+            self.previous_invocation_end_time = time.time_ns()
             debug_log(
                 "Overhead duration: Internal response:"
                 + f"{int((time.perf_counter_ns() - end_time) / 1000_000)}ms"
@@ -331,6 +341,15 @@ class Instrumenter:
             try:
                 debug_log("Invocation: start")
                 set_invocation_context(context)
+
+                if self.previous_invocation_end_time:
+                    self.gaps_between_invocations.append(
+                        time.time_ns() - self.previous_invocation_end_time
+                    )
+                    self.previous_invocation_end_time = None
+                    if len(self.gaps_between_invocations) > 5:
+                        self.gaps_between_invocations.pop(0)
+
                 if self.current_invocation_id > 1:
                     self.aws_lambda.start_time = request_start_time
 
