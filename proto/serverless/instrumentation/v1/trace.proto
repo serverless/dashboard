@@ -32,6 +32,9 @@ message TracePayload {
     // Whether the trace payload represents sampled out invocation and in result contains just
     // core spans and no events
     optional bool is_sampled_out = 6;
+
+    // Whether the trace payload represents truncated result (to fit max 256KB size limit)
+    optional bool is_truncated = 7;
 }
 
 message Span {
