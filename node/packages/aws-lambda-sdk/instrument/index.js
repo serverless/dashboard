@@ -103,6 +103,8 @@ const reportResponse = async (response, context, endTime) => {
 let isFirstInvocation = true;
 let isAfterNotSampledApiRequest = false;
 
+const maxLogLineLength = 256 * 1024;
+
 const reportTrace = ({ isErrorOutcome }) => {
   const isApiEvent = resolveIsApiEvent();
   let shouldSetIsAfterNotSampledApiRequest = false;
@@ -133,32 +135,206 @@ const reportTrace = ({ isErrorOutcome }) => {
   if (isAfterNotSampledApiRequest) isAfterNotSampledApiRequest = false;
   else if (shouldSetIsAfterNotSampledApiRequest) isAfterNotSampledApiRequest = true;
 
-  const payload = (serverlessSdk._lastTrace = {
+  let payloadSpans = Array.from(awsLambdaSpan.spans).filter((span) => {
+    if (!isSampledOut) return true;
+    return coreTraceSpanNames.has(span.name);
+  });
+  let payloadCapturedEvents = isSampledOut ? [] : capturedEvents.filter(filterCapturedEvent);
+  const payloadCustomTags =
+    !isSampledOut && objHasOwnProperty.call(serverlessSdk, '_customTags')
+      ? JSON.stringify(serverlessSdk._customTags)
+      : undefined;
+  let payload = (serverlessSdk._lastTrace = {
     isSampledOut,
     slsTags: {
       orgId: serverlessSdk.orgId,
       service: process.env.AWS_LAMBDA_FUNCTION_NAME,
       sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
     },
-    spans: Array.from(awsLambdaSpan.spans, (span) => {
-      if (isSampledOut && !coreTraceSpanNames.has(span.name)) return null;
+    spans: payloadSpans.map((span) => {
       const spanPayload = span.toProtobufObject();
       delete spanPayload.input;
       delete spanPayload.output;
       return spanPayload;
-    }).filter(Boolean),
-    events: isSampledOut
-      ? []
-      : capturedEvents
-          .filter(filterCapturedEvent)
-          .map((capturedEvent) => capturedEvent.toProtobufObject()),
-    customTags:
-      !isSampledOut && objHasOwnProperty.call(serverlessSdk, '_customTags')
-        ? JSON.stringify(serverlessSdk._customTags)
-        : undefined,
+    }),
+    events: payloadCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+    customTags: payloadCustomTags,
   });
-  const payloadBuffer = (serverlessSdk._lastTraceBuffer =
+  let payloadBuffer = (serverlessSdk._lastTraceBuffer =
     traceProto.TracePayload.encode(payload).finish());
+  let resultLogText = `SERVERLESS_TELEMETRY.TZ.${zlib.gzipSync(payloadBuffer).toString('base64')}`;
+  if (resultLogText.length <= maxLogLineLength) {
+    process._rawDebug(resultLogText);
+    return;
+  }
+
+  serverlessSdk._debugLog(
+    `Payload size (${resultLogText.length}) exceeds maximum size (${maxLogLineLength}). ` +
+      'Attempting truncation'
+  );
+  // 1st Truncation attempt
+  // Strip all non-warning and non-error events
+  // Strip all spans that are not parents of error or warning events
+  const spansWithWarnings = new Set();
+  const spansWithErrors = new Set();
+  let isTruncated = false;
+  payloadCapturedEvents = payloadCapturedEvents.filter((capturedEvent) => {
+    let targetSet;
+    switch (capturedEvent.name) {
+      case 'telemetry.error.generated.v1':
+        targetSet = spansWithErrors;
+        break;
+      case 'telemetry.warning.generated.v1':
+        targetSet = spansWithWarnings;
+        break;
+      default:
+        isTruncated = true;
+        return false;
+    }
+    let currentSpan = capturedEvent.traceSpan;
+    while (currentSpan) {
+      targetSet.add(currentSpan);
+      currentSpan = currentSpan.parentSpan;
+    }
+    return true;
+  });
+  payloadSpans = payloadSpans.filter((traceSpan) => {
+    if (coreTraceSpanNames.has(traceSpan.name)) return true;
+    if (spansWithErrors.has(traceSpan) || spansWithWarnings.has(traceSpan)) return true;
+    isTruncated = true;
+    return false;
+  });
+
+  if (isTruncated) {
+    payload = serverlessSdk._lastTrace = {
+      isSampledOut,
+      isTruncated: true,
+      slsTags: {
+        orgId: serverlessSdk.orgId,
+        service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
+      },
+      spans: payloadSpans.map((span) => {
+        const spanPayload = span.toProtobufObject();
+        delete spanPayload.input;
+        delete spanPayload.output;
+        return spanPayload;
+      }),
+      events: payloadCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+      customTags: payloadCustomTags,
+    };
+    payloadBuffer = serverlessSdk._lastTraceBuffer =
+      traceProto.TracePayload.encode(payload).finish();
+    resultLogText = `SERVERLESS_TELEMETRY.TZ.${zlib.gzipSync(payloadBuffer).toString('base64')}`;
+    if (resultLogText.length <= maxLogLineLength) {
+      process._rawDebug(resultLogText);
+      return;
+    }
+    serverlessSdk._debugLog(
+      `Payload size (${resultLogText.length}) exceeds maximum size (${maxLogLineLength}). ` +
+        'Attempting truncation #2'
+    );
+  }
+
+  // 2nd Truncation attempt
+  // Strip all custom tags
+  if (payloadCustomTags) {
+    payload = serverlessSdk._lastTrace = {
+      isSampledOut,
+      isTruncated: true,
+      slsTags: {
+        orgId: serverlessSdk.orgId,
+        service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
+      },
+      spans: payloadSpans.map((span) => {
+        const spanPayload = span.toProtobufObject();
+        delete spanPayload.input;
+        delete spanPayload.output;
+        return spanPayload;
+      }),
+      events: payloadCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+    };
+
+    payloadBuffer = serverlessSdk._lastTraceBuffer =
+      traceProto.TracePayload.encode(payload).finish();
+    resultLogText = `SERVERLESS_TELEMETRY.TZ.${zlib.gzipSync(payloadBuffer).toString('base64')}`;
+    if (resultLogText.length <= maxLogLineLength) {
+      process._rawDebug(resultLogText);
+      return;
+    }
+    serverlessSdk._debugLog(
+      `Payload size (${resultLogText.length}) exceeds maximum size (${maxLogLineLength}). ` +
+        'Attempting truncation #3'
+    );
+  }
+
+  // 3rd Truncation attempt
+  // Strip all warning events and related spans
+  isTruncated = false;
+  payloadCapturedEvents = payloadCapturedEvents.filter((capturedEvent) => {
+    if (capturedEvent.name === 'telemetry.error.generated.v1') return true;
+    isTruncated = true;
+    return false;
+  });
+  if (isTruncated) {
+    payloadSpans = payloadSpans.filter(
+      (traceSpan) => coreTraceSpanNames.has(traceSpan.name) || spansWithErrors.has(traceSpan)
+    );
+
+    payload = serverlessSdk._lastTrace = {
+      isSampledOut,
+      isTruncated: true,
+      slsTags: {
+        orgId: serverlessSdk.orgId,
+        service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
+      },
+      spans: payloadSpans.map((span) => {
+        const spanPayload = span.toProtobufObject();
+        delete spanPayload.input;
+        delete spanPayload.output;
+        return spanPayload;
+      }),
+      events: payloadCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+    };
+    payloadBuffer = serverlessSdk._lastTraceBuffer =
+      traceProto.TracePayload.encode(payload).finish();
+    resultLogText = `SERVERLESS_TELEMETRY.TZ.${zlib.gzipSync(payloadBuffer).toString('base64')}`;
+    if (resultLogText.length <= maxLogLineLength) {
+      process._rawDebug(resultLogText);
+      return;
+    }
+    serverlessSdk._debugLog(
+      `Payload size (${resultLogText.length}) exceeds maximum size (${maxLogLineLength}). ` +
+        'Attempting truncation #4'
+    );
+  }
+
+  // 4th Truncation attempt
+  // Strip all error events (aside of eventual lambda resolution error)
+  // Strip all non-core spans
+  payloadCapturedEvents = payloadCapturedEvents.filter(
+    (capturedEvent) => capturedEvent.tags.get('error.type') === 1
+  );
+  payloadSpans = payloadSpans.filter((traceSpan) => coreTraceSpanNames.has(traceSpan.name));
+  payload = serverlessSdk._lastTrace = {
+    isSampledOut,
+    isTruncated: true,
+    slsTags: {
+      orgId: serverlessSdk.orgId,
+      service: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      sdk: { name: pkgJson.name, version: pkgJson.version, runtime: 'nodejs' },
+    },
+    spans: payloadSpans.map((span) => {
+      const spanPayload = span.toProtobufObject();
+      delete spanPayload.input;
+      delete spanPayload.output;
+      return spanPayload;
+    }),
+    events: payloadCapturedEvents.map((capturedEvent) => capturedEvent.toProtobufObject()),
+  };
+  payloadBuffer = serverlessSdk._lastTraceBuffer = traceProto.TracePayload.encode(payload).finish();
   process._rawDebug(`SERVERLESS_TELEMETRY.TZ.${zlib.gzipSync(payloadBuffer).toString('base64')}`);
 };
 
