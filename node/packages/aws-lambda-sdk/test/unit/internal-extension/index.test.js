@@ -744,6 +744,46 @@ describe('internal-extension/index.test.js', () => {
     expect(String(routeSpan.parentSpanId)).to.equal(String(routerSpan.id));
   });
 
+  it('should truncate large payloads (attempt #1)', async () => {
+    const {
+      trace: {
+        input: { spans },
+      },
+    } = await handleInvocation('truncated');
+
+    expect(spans.length).to.equal(3);
+  });
+
+  it('should truncate large payloads (attempt #2)', async () => {
+    const {
+      trace: {
+        input: { spans, customTags },
+      },
+    } = await handleInvocation('truncated', { payload: { truncationMethod: '2' } });
+
+    expect(spans.length).to.equal(3);
+    expect(customTags).to.equal(undefined);
+  });
+
+  it('should truncate large payloads (attempt #3)', async () => {
+    const {
+      trace: {
+        input: { spans },
+      },
+    } = await handleInvocation('truncated', { payload: { truncationMethod: '3' } });
+
+    expect(spans.length).to.equal(3);
+  });
+
+  it('should truncate large payloads (attempt #4)', async () => {
+    const {
+      trace: {
+        input: { spans },
+      },
+    } = await handleInvocation('truncated', { payload: { truncationMethod: '4' } });
+
+    expect(spans.length).to.equal(3);
+  });
   it('should handle properly multiple async flows', async () => {
     const {
       trace: {
