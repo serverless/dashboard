@@ -1028,6 +1028,7 @@ will make up the complete Trace.
 | events | [Event](#serverless-instrumentation-v1-Event) | repeated | A list of Events to be ingested. Ingest does not impose a limit on the number of Events in a single payload. It is the responsibility of the Event producers to limit the size of paylaods based on their own requirements. |
 | custom_tags | [string](#string) | optional | The optional custom trace tags to be set by the user This is expected to be a JSON object in string format. |
 | is_sampled_out | [bool](#bool) | optional | Whether the trace payload represents sampled out invocation and in result contains just core spans and no events |
+| is_truncated | [bool](#bool) | optional | Whether the trace payload represents truncated result (to fit max 256KB size limit) |
 
 
 
