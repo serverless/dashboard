@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.12 (2023-06-15)
+
+### Features
+
+- Restrict tag name and value sizes
+
 ## 0.4.11 (2023-05-22)
 
 ### Performance Improvements
