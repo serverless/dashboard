@@ -331,6 +331,7 @@ describe('Python: integration', function () {
     );
     if (response.status !== 200) {
       if (response.status === 404) {
+        log.debug('Retrying invocation of %s', testConfig.name);
         await wait(1000);
         return self(testConfig);
       }
@@ -739,6 +740,7 @@ describe('Python: integration', function () {
                 );
                 if (response.status !== 200) {
                   if (response.status === 404) {
+                    log.debug('Retrying invocation of %s', testConfig.name);
                     await wait(1000);
                     return self(testConfig);
                   }
@@ -799,6 +801,7 @@ describe('Python: integration', function () {
                 );
                 if (response.status !== 200) {
                   if (response.status === 404) {
+                    log.debug('Retrying invocation of %s', testConfig.name);
                     await wait(1000);
                     return self(testConfig);
                   }
@@ -856,6 +859,7 @@ describe('Python: integration', function () {
                 );
                 if (response.status !== 200) {
                   if (response.status === 404) {
+                    log.debug('Retrying invocation of %s', testConfig.name);
                     await wait(1000);
                     return self(testConfig);
                   }
@@ -954,6 +958,7 @@ describe('Python: integration', function () {
                 });
                 if (response.status !== 200) {
                   if (response.status === 404) {
+                    log.debug('Retrying invocation of %s', testConfig.name);
                     await wait(1000);
                     return self(testConfig);
                   }
