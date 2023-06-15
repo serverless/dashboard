@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.2.3 (2023-06-15)
+
+### Features
+
+- `TracePayload.is_truncated` ([a3df350](https://github.com/serverless/console/commit/a3df350aa5558edeaf4e7f75bf9660df709a80ad))
+
 ## 0.2.2 (2023-05-08)
 
 ### Maintenance Improvements
