@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.1.21 (2023-06-15)
+
+### Features
+
+- Update sampling algorithm to not sample infrequently invoked lambdas and to increase the sampling rate to 20%
+
 ## 0.1.20 (2023-06-08)
 
 ### Bug Fixes
