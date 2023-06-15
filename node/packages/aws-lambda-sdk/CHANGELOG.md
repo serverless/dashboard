@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.6](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.5...@serverless/aws-lambda-sdk@0.15.6) (2023-06-15)
+
+### Features
+
+- Truncate payload if exceeds 256KB ([516f32d](https://github.com/serverless/console/commit/516f32d610d029e270d0563ac74196adc299ab2e))
+
 ### [0.15.5](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.4...@serverless/aws-lambda-sdk@0.15.5) (2023-06-07)
 
 _Adapt updates from v0.5.20 of `@serverless/sdk`_
