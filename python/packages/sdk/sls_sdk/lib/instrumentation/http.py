@@ -397,7 +397,6 @@ class URLLib3Instrumenter(BaseInstrumenter):
 
                 trace_span.tags["http.status_code"] = response.status
                 self._capture_response_body(trace_span, response)
-
                 return response
         except Exception as ex:
             trace_span.tags["http.error_code"] = ex.__class__.__name__
@@ -409,7 +408,7 @@ class URLLib3Instrumenter(BaseInstrumenter):
     def _capture_response_body(self, trace_span, response):
         if not self.should_monitor_request_response:
             return
-        response_body = response.data
+
         response_length = int(response.headers.get("Content-Length", 0))
         if response_length > SDK._maximum_body_byte_length:
             SDK._report_notice(
@@ -418,8 +417,28 @@ class URLLib3Instrumenter(BaseInstrumenter):
                 trace_span,
             )
             return
+
+        response_body = None
+        # When the http request is issued through "urllib3" library,
+        # instrumenter can access the response body through the "data" attribute.
+        # This will consume the stream, but it's not a problem as the response data
+        # is cached and can be accessed again by upstream.
+
+        # However, when the http request is issued through "requests" library,
+        # requests library tries to consume the underlying stream itself and
+        # the instrumenter should not interfere with this by accessing
+        # the "data" attribute. Instead, instrumenter should peek the response,
+        # which will not consume the stream.
+        if (
+            hasattr(response, "_original_response")
+            and hasattr(response._original_response, "peek")
+            and callable(response._original_response.peek)
+        ):
+            response_body = response._original_response.peek()
+            if len(response_body) != response_length:
+                response_body = response.data
         try:
-            if response_body:
+            if response_body is not None:
                 trace_span.output = _decode_body(response_body)
         except Exception as ex:
             report_error(ex)
