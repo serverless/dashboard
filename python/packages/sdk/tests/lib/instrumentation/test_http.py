@@ -59,10 +59,11 @@ def test_instrument_http_client(
 
     conn = http.client.HTTPConnection(url.hostname, url.port)
     conn.request("POST", url.path + "?" + url.query, request_body, headers)
-    conn.getresponse()
+    resp = conn.getresponse()
     conn.close()
 
     # then
+    assert resp.read() == response_body
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
@@ -113,9 +114,10 @@ def test_instrument_urllib(
 
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, data=request_body) as response:
-        response.read()
+        resp = response.read()
 
     # then
+    assert resp == response_body
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
@@ -255,7 +257,7 @@ def test_instrument_requests_ignore_following_request(
     import requests
 
     ignore_following_request()
-    requests.get(
+    resp = requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
         data=request_body,
@@ -263,16 +265,18 @@ def test_instrument_requests_ignore_following_request(
 
     # then
     assert instrumented_sdk.trace_spans.root is None
+    assert resp.text == response_body.decode("utf-8")
 
     # when
     reset_ignore_following_request()
-    requests.get(
+    resp = requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
         data=request_body,
     )
 
     # then
+    assert resp.text == response_body.decode("utf-8")
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
@@ -323,11 +327,14 @@ def test_instrument_aiohttp(
                 httpserver.url_for("/foo/bar?baz=qux"), data=request_body
             ) as resp:
                 print(resp.status)
-                print(await resp.text())
+                response = await resp.text()
+                print(response)
+                return response
 
-    asyncio.run(_get())
+    resp = asyncio.run(_get())
 
     # then
+    assert resp == response_body.decode("utf-8")
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert instrumented_sdk.trace_spans.root.tags == {
@@ -495,11 +502,14 @@ def test_instrument_aiohttp_sls_ignore(
                 httpserver.url_for("/foo/bar?baz=qux"), data=request_body
             ) as resp:
                 print(resp.status)
-                print(await resp.text())
+                response = await resp.text()
+                print(response)
+                return response
 
-    asyncio.run(_get())
+    resp = asyncio.run(_get())
 
     # then
+    assert resp == response_body.decode("utf-8")
     assert instrumented_sdk.trace_spans.root is None
 
 
@@ -514,11 +524,12 @@ def test_instrument_duration_requests(instrumented_sdk, httpserver: HTTPServer):
     # when
     import requests
 
-    requests.get(
+    resp = requests.get(
         httpserver.url_for("/foo/bar"),
     )
 
     # then
+    assert resp.text == "ok"
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.end_time
@@ -542,10 +553,11 @@ def test_instrument_duration_http_client(instrumented_sdk, httpserver: HTTPServe
 
     conn = http.client.HTTPConnection(url.hostname, url.port)
     conn.request("POST", url.path + "?" + url.query)
-    conn.getresponse()
+    resp = conn.getresponse()
     conn.close()
 
     # then
+    assert resp.read().decode("utf-8") == "ok"
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.end_time
@@ -570,9 +582,10 @@ def test_instrument_duration_urllib(instrumented_sdk, httpserver: HTTPServer):
 
     req = urllib.request.Request(url)
     with urllib.request.urlopen(req) as response:
-        response.read()
+        resp = response.read()
 
     # then
+    assert resp.decode("utf-8") == "ok"
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.end_time
@@ -592,7 +605,7 @@ def test_instrument_duration_urllib3(instrumented_sdk, httpserver: HTTPServer):
     # when
     import urllib3
 
-    urllib3.PoolManager().request(
+    resp = urllib3.PoolManager().request(
         "POST",
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"Foo": "Bar"},
@@ -600,6 +613,7 @@ def test_instrument_duration_urllib3(instrumented_sdk, httpserver: HTTPServer):
     )
 
     # then
+    assert resp.data.decode("utf-8") == "ok"
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.end_time
@@ -623,11 +637,14 @@ def test_instrument_duration_aiohttp(instrumented_sdk, httpserver):
         async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
             async with session.get(httpserver.url_for("/foo/bar?baz=qux")) as resp:
                 print(resp.status)
-                print(await resp.text())
+                response = await resp.text()
+                print(response)
+                return response
 
-    asyncio.run(_get())
+    resp = asyncio.run(_get())
 
     # then
+    assert resp == "ok"
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
         instrumented_sdk.trace_spans.root.end_time
@@ -649,13 +666,14 @@ def test_instrument_requests_post_data_from_file(
     import requests
 
     with open(__file__, "rb") as f:
-        requests.post(
+        resp = requests.post(
             httpserver.url_for("/foo/bar?baz=qux"),
             headers={"User-Agent": "foo"},
             data=f,
         )
 
     # then
+    assert resp.text == "ok"
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
@@ -699,13 +717,14 @@ def test_instrument_requests_with_binary_body(
     # when
     import requests
 
-    requests.get(
+    resp = requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
         data=SMALL_REQUEST_PAYLOAD,
     )
 
     # then
+    assert resp.content == b"\x8b"
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
