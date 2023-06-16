@@ -160,13 +160,14 @@ def test_instrument_urllib3(
     # when
     import urllib3
 
-    urllib3.PoolManager().request(
+    resp = urllib3.PoolManager().request(
         "POST",
         httpserver.url_for("/foo/bar?baz=qux"),
         body=request_body,
     )
 
     # then
+    assert resp.data == response_body
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert instrumented_sdk.trace_spans.root.tags == {
@@ -200,13 +201,14 @@ def test_instrument_requests(
     # when
     import requests
 
-    requests.get(
+    resp = requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
         headers={"User-Agent": "foo"},
         data=request_body,
     )
 
     # then
+    assert resp.text == response_body.decode("utf-8")
     assert len(instrumented_sdk.trace_spans.root.spans) == 1
     assert instrumented_sdk.trace_spans.root.name == "python.http.request"
     assert (
