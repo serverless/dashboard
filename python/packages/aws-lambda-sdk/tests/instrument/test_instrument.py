@@ -919,3 +919,111 @@ def test_instrument_dynamodb(instrumenter, monkeypatch):
         assert span.tags.aws.sdk.dynamodb.table_name == "test-table"
 
     assert not trace_payload.events
+
+
+def test_instrument_lambda_truncate_attempt_1(instrumenter, mocked_print):
+    # given
+    from ..fixtures.lambdas.truncated import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = deserialize_trace(serialized)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
+
+
+def test_instrument_lambda_truncate_attempt_2(instrumenter, mocked_print):
+    # given
+    from ..fixtures.lambdas.truncated import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({"truncationMethod": "2"}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = deserialize_trace(serialized)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
+
+
+def test_instrument_lambda_truncate_attempt_3(instrumenter, mocked_print):
+    # given
+    from ..fixtures.lambdas.truncated import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({"truncationMethod": "3"}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = deserialize_trace(serialized)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
+
+
+def test_instrument_lambda_truncate_attempt_4(instrumenter, mocked_print):
+    # given
+    from ..fixtures.lambdas.truncated import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({"truncationMethod": "4"}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = deserialize_trace(serialized)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+        ],
+        1,
+    )
