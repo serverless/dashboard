@@ -419,23 +419,17 @@ class URLLib3Instrumenter(BaseInstrumenter):
             return
 
         response_body = None
-        # When the http request is issued through "urllib3" library,
-        # instrumenter can access the response body through the "data" attribute.
-        # This will consume the stream, but it's not a problem as the response data
-        # is cached and can be accessed again by upstream.
-
-        # However, when the http request is issued through "requests" library,
-        # requests library tries to consume the underlying stream itself and
-        # the instrumenter should not interfere with this by accessing
-        # the "data" attribute. Instead, instrumenter should peek the response,
-        # which will not consume the stream.
+        # if data is peekable, use it instead of the response.data
+        # this makes sure the response body is not consumed when
+        # instrumenting http requests through "requests" library.
         if (
             hasattr(response, "_original_response")
             and hasattr(response._original_response, "peek")
             and callable(response._original_response.peek)
         ):
             response_body = response._original_response.peek()
-            if len(response_body) != response_length:
+            length = len(response_body)
+            if length == 0 and length != response_length:
                 response_body = response.data
         try:
             if response_body is not None:
