@@ -68,7 +68,7 @@ jobs:
         run: |
           cd python/packages
 
-          python3 -m pip install tox pyproject-fmt
+          python3 -m pip install tox pyproject-fmt==0.10.0
 
           for directory in */; do
             if [ -f "$directory/pyproject.toml" ]; then
