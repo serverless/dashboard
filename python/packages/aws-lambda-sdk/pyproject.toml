@@ -56,6 +56,9 @@ repository = "https://github.com/serverless/console"
 [tool.setuptools.dynamic]
 version = {file = "./serverless_aws_lambda_sdk/VERSION"}
 
+[tool.ruff]
+exclude = ["tests"]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
@@ -70,6 +73,3 @@ exclude = [
 [[tool.mypy.overrides]]
 module = "wrapt"
 ignore_missing_imports = true
-
-[tool.ruff]
-exclude = ["tests"]
