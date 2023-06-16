@@ -23,8 +23,8 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "serverless-sdk~=0.4.11",
-    "serverless-sdk-schema~=0.2.1",
+    "serverless-sdk~=0.4.12",
+    "serverless-sdk-schema~=0.2.3",
     "typing-extensions~=4.5", # included in Python 3.8 - 3.11
 ]
 [project.optional-dependencies]
