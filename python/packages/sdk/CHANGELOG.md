@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.13 (2023-06-17)
+
+### Bug Fixes
+
+- Fix dev mode http requests
+
 ## 0.4.12 (2023-06-15)
 
 ### Features
