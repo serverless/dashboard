@@ -4,7 +4,7 @@ import time
 import sys
 import copy
 import json
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Set
 
 if sys.version_info >= (3, 8):
     from typing import Final
@@ -22,10 +22,20 @@ from .lib.payload_conversion import to_trace_payload, to_request_response_payloa
 from .lib.event_tags import resolve as resolve_event_tags
 from .lib.response_tags import resolve as resolve_response_tags
 from .lib.api_events import is_api_event
+from .lib.captured_event import should_include as should_include_event_captured_event
 from sls_sdk.lib.trace import TraceSpan
 from sls_sdk.lib.captured_event import CapturedEvent
 import base64
 import gzip
+
+
+MAX_LOG_LINE_LENGTH = 256 * 1024
+
+CORE_TRACE_SPAN_NAMES = [
+    "aws.lambda",
+    "aws.lambda.initialization",
+    "aws.lambda.invocation",
+]
 
 
 def debug_log(msg):
@@ -36,6 +46,42 @@ def debug_log(msg):
 __all__: Final[List[str]] = [
     "instrument",
 ]
+
+
+def _get_result_log_text(
+    spans: list[TraceSpan],
+    captured_events: list[CapturedEvent],
+    custom_tags: Optional[str],
+    is_sampled_out: bool,
+    is_truncated: bool,
+) -> str:
+    def _convert_span(span: TraceSpan) -> dict[str, Any]:
+        span_payload = span.to_protobuf_dict()
+        del span_payload["input"]
+        del span_payload["output"]
+        return span_payload
+
+    payload_dct = {
+        "isSampledOut": is_sampled_out or None,
+        "isTruncated": is_truncated or None,
+        "slsTags": {
+            "orgId": serverlessSdk.org_id,
+            "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
+            "sdk": {
+                "name": serverlessSdk.name,
+                "version": serverlessSdk.version,
+                "runtime": "python",
+            },
+        },
+        "spans": [_convert_span(s) for s in spans],
+        "events": [e.to_protobuf_dict() for e in captured_events],
+        "customTags": custom_tags,
+    }
+
+    payload = to_trace_payload(payload_dct)
+    compressed_payload = gzip.compress(payload.SerializeToString())
+    serialized = base64.b64encode(compressed_payload).decode("utf-8")
+    return f"SERVERLESS_TELEMETRY.TZ.{serialized}"
 
 
 def _resolve_outcome_enum_value(outcome: str) -> int:
@@ -230,44 +276,178 @@ class Instrumenter:
         elif should_set_is_after_not_sampled_out_api_request:
             self.is_after_not_sampled_out_api_request = True
 
-        def _map_span(span: TraceSpan) -> Optional[TraceSpan]:
+        def _filter_spans_if_sampled_out(span: TraceSpan) -> bool:
             nonlocal is_sampled_out
-            core_trace_span_names = [
-                "aws.lambda",
-                "aws.lambda.initialization",
-                "aws.lambda.invocation",
-            ]
-            if is_sampled_out and span.name not in core_trace_span_names:
-                return None
-            span_payload = span.to_protobuf_dict()
-            del span_payload["input"]
-            del span_payload["output"]
-            return span_payload
+            if is_sampled_out and span.name not in CORE_TRACE_SPAN_NAMES:
+                return False
+            return True
 
-        payload_dct = {
-            "isSampledOut": is_sampled_out or None,
-            "slsTags": {
-                "orgId": serverlessSdk.org_id,
-                "service": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None),
-                "sdk": {
-                    "name": serverlessSdk.name,
-                    "version": serverlessSdk.version,
-                    "runtime": "python",
-                },
-            },
-            "spans": [s for s in map(_map_span, self.aws_lambda.spans) if s],
-            "events": [e.to_protobuf_dict() for e in serverlessSdk._captured_events]
-            if not is_sampled_out
-            else [],
-            "customTags": json.dumps(serverlessSdk._custom_tags)
-            if not is_sampled_out
-            else None,
-        }
-        payload = to_trace_payload(payload_dct)
-        compressed_payload = gzip.compress(payload.SerializeToString())
-        print(
-            f"SERVERLESS_TELEMETRY.TZ.{base64.b64encode(compressed_payload).decode('utf-8')}"
+        payload_spans = list(
+            filter(_filter_spans_if_sampled_out, self.aws_lambda.spans)
         )
+        payload_captured_events = (
+            []
+            if is_sampled_out
+            else list(
+                filter(
+                    should_include_event_captured_event, serverlessSdk._captured_events
+                )
+            )
+        )
+        payload_custom_tags = (
+            json.dumps(serverlessSdk._custom_tags) if not is_sampled_out else None
+        )
+
+        is_truncated = False
+
+        result_log_text = _get_result_log_text(
+            payload_spans,
+            payload_captured_events,
+            payload_custom_tags,
+            is_sampled_out,
+            is_truncated,
+        )
+        if len(result_log_text) <= MAX_LOG_LINE_LENGTH:
+            return print(result_log_text)
+
+        debug_log(
+            f"Payload size ({len(result_log_text)}) "
+            f"exceeds maximum size ({MAX_LOG_LINE_LENGTH}). "
+            "Attempting truncation"
+        )
+
+        # 1st Truncation attempt
+        # Strip all non-warning and non-error events
+        # Strip all spans that are not parents of error or warning events
+        spans_with_warnings: Set[TraceSpan] = set()
+        spans_with_errors: Set[TraceSpan] = set()
+
+        def _filter_warning_and_error_events(event: CapturedEvent) -> bool:
+            nonlocal is_truncated
+            target_set = None
+            if event.name == "telemetry.error.generated.v1":
+                target_set = spans_with_errors
+            elif event.name == "telemetry.warning.generated.v1":
+                target_set = spans_with_warnings
+            else:
+                is_truncated = True
+                return False
+            current_span = event.trace_span
+            while current_span:
+                target_set.add(current_span)
+                current_span = current_span.parent_span
+            return True
+
+        payload_captured_events = list(
+            filter(_filter_warning_and_error_events, payload_captured_events)
+        )
+
+        def _filter_spans_that_are_parents_of_warning_and_error_events(
+            span: TraceSpan,
+        ) -> bool:
+            nonlocal is_truncated
+            if span.name in CORE_TRACE_SPAN_NAMES:
+                return True
+            if span in spans_with_errors or span in spans_with_warnings:
+                return True
+            is_truncated = True
+            return False
+
+        payload_spans = list(
+            filter(
+                _filter_spans_that_are_parents_of_warning_and_error_events,
+                payload_spans,
+            )
+        )
+
+        if is_truncated:
+            result_log_text = _get_result_log_text(
+                payload_spans,
+                payload_captured_events,
+                payload_custom_tags,
+                is_sampled_out,
+                is_truncated,
+            )
+            if len(result_log_text) <= MAX_LOG_LINE_LENGTH:
+                return print(result_log_text)
+
+            debug_log(
+                f"Payload size ({len(result_log_text)}) "
+                f"exceeds maximum size ({MAX_LOG_LINE_LENGTH}). "
+                "Attempting truncation #2"
+            )
+
+        # 2nd Truncation attempt
+        # Strip all custom tags
+        if payload_custom_tags:
+            result_log_text = _get_result_log_text(
+                payload_spans,
+                payload_captured_events,
+                None,
+                is_sampled_out,
+                is_truncated,
+            )
+            if len(result_log_text) <= MAX_LOG_LINE_LENGTH:
+                return print(result_log_text)
+
+            debug_log(
+                f"Payload size ({len(result_log_text)}) "
+                f"exceeds maximum size ({MAX_LOG_LINE_LENGTH}). "
+                "Attempting truncation #3"
+            )
+
+        # 3rd Truncation attempt
+        # Strip all warning events and related spans
+        is_truncated = False
+
+        def _filter_error_events_and_related_spans(event: CapturedEvent) -> bool:
+            nonlocal is_truncated
+            if event.name == "telemetry.error.generated.v1":
+                return True
+            else:
+                is_truncated = True
+                return False
+
+        payload_captured_events = list(
+            filter(_filter_error_events_and_related_spans, payload_captured_events)
+        )
+        if is_truncated:
+            payload_spans = [
+                s
+                for s in payload_spans
+                if s.name in CORE_TRACE_SPAN_NAMES or s in spans_with_errors
+            ]
+            result_log_text = _get_result_log_text(
+                payload_spans,
+                payload_captured_events,
+                None,
+                is_sampled_out,
+                is_truncated,
+            )
+            if len(result_log_text) <= MAX_LOG_LINE_LENGTH:
+                return print(result_log_text)
+
+            debug_log(
+                f"Payload size ({len(result_log_text)}) "
+                f"exceeds maximum size ({MAX_LOG_LINE_LENGTH}). "
+                "Attempting truncation #4"
+            )
+
+        # 4th Truncation attempt
+        # Strip all error events
+        # Strip all non-core spans
+        payload_captured_events = [
+            e for e in payload_captured_events if e.tags.get("error.type") == 1
+        ]
+        payload_spans = [s for s in payload_spans if s.name in CORE_TRACE_SPAN_NAMES]
+        result_log_text = _get_result_log_text(
+            payload_spans,
+            payload_captured_events,
+            None,
+            is_sampled_out,
+            is_truncated,
+        )
+        return print(result_log_text)
 
     def _flush_and_close_event_loop(self):
         if self.dev_mode:
