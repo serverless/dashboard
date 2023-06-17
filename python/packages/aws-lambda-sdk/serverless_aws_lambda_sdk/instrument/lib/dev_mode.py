@@ -1,14 +1,17 @@
-import json
-from threading import Thread, Event, Lock
-import os
+from sls_sdk.lib.imports import internally_imported
+
+with internally_imported():
+    import json
+    from threading import Thread, Event, Lock
+    import os
+    import builtins
+    import logging
+
 from .telemetry import send, close_connection
 from .sdk import serverlessSdk
 from .invocation_context import get as get_invocation_context
 from .payload_conversion import to_trace_payload
-from sls_sdk.lib.imports import internally_imported
 from .captured_event import should_include as should_include_event_captured_event
-import builtins
-import logging
 
 _original_print = builtins.print
 
@@ -86,7 +89,7 @@ class DevModeThread(Thread):
         )  # used to buffer spans and captured events
         self._is_stopped = Event()  # used to stop the thread
 
-    @internally_imported("google")
+    @internally_imported()
     def _send_all(self):
         (
             spans,

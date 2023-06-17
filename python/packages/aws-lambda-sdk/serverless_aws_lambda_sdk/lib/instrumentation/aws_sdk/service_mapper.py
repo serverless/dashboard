@@ -1,4 +1,7 @@
-from abc import ABC, abstractmethod
+from sls_sdk.lib.imports import internally_imported
+
+with internally_imported():
+    from abc import ABC, abstractmethod
 
 
 class ServiceMapper(ABC):

@@ -1,12 +1,16 @@
-import os
-import platform
-import logging
-import sys
+from sls_sdk.lib.imports import internally_imported
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
+with internally_imported():
+    import os
+    import platform
+    import logging
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
+
 from sls_sdk.lib.trace import TraceSpan
 from sls_sdk.lib.timing import _DIFF
 

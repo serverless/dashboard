@@ -1,4 +1,8 @@
-import json
+from sls_sdk.lib.imports import internally_imported
+
+with internally_imported():
+    import json
+
 import serverless_aws_lambda_sdk
 
 

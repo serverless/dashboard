@@ -1,3 +1,9 @@
+from sls_sdk.lib.imports import internally_imported
+
+with internally_imported():
+    import re
+    import importlib
+
 from ..lib.instrumentation.aws_sdk.safe_stringify import safe_stringify
 from ..lib.instrumentation.aws_sdk.service_mapper import get_mapper_for_service
 from sls_sdk import serverlessSdk
@@ -7,8 +13,6 @@ from sls_sdk.lib.instrumentation.http import (
     reset_ignore_following_request,
 )
 from sls_sdk.lib.instrumentation.wrapper import replace_method
-import re
-import importlib
 
 _instrumenter = None
 _import_hook = ImportHook("botocore")

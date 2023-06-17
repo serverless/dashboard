@@ -1,9 +1,12 @@
 from .sdk import serverlessSdk
 
 if serverlessSdk._is_dev_mode:
-    import time
-    import http.client
+    from sls_sdk.lib.imports import internally_imported
     from sls_sdk.lib.instrumentation.http import ignore_following_request
+
+    with internally_imported():
+        import time
+        import http.client
 
     _connection = None
 
@@ -44,7 +47,8 @@ if serverlessSdk._is_dev_mode:
                     "DEV_MODE_SERVER_REJECTION",
                 )
         except Exception as ex:
-            import traceback
+            with internally_imported():
+                import traceback
 
             error = "".join(traceback.TracebackException.from_exception(ex).format())
             serverlessSdk._report_warning(
