@@ -2,7 +2,7 @@ from __future__ import annotations
 from re import Pattern
 from .imports import internally_imported
 
-with internally_imported("js_regex"):
+with internally_imported():
     from js_regex import compile
 
 import sys

@@ -33,18 +33,16 @@ def internally_imported(
             _INTERNAL_MODULES
         )  # Restore previous internal imports to sys.modules to make them visible
 
+        # At this point we yield control, so that our layer's modules can be imported
         yield
 
+        # At this point, modules were imported, so we need to undo the changes we made
         sys.path = original_sys_path  # Rollback the path change
 
         # Remove the internal modules from sys.modules
         # to prevent them being imported by customer code
         for module_name in sys.modules.copy():
-            if module_name not in previously_cached_modules and [
-                prefix
-                for prefix in top_level_module_names
-                if module_name == prefix or module_name.startswith(f"{prefix}.")
-            ]:
+            if module_name not in previously_cached_modules:
                 _INTERNAL_MODULES[module_name] = sys.modules[module_name]
                 del sys.modules[module_name]
 

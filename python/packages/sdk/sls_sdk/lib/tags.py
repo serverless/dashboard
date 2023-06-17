@@ -8,7 +8,7 @@ from typing import Dict, List, Mapping, Tuple, Optional, Any
 from .imports import internally_imported
 from .tag_value import MAX_VALUE_LENGTH
 
-with internally_imported("js_regex"):
+with internally_imported():
     from js_regex import compile
 
 import sys

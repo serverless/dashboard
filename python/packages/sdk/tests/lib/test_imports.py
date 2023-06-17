@@ -20,9 +20,7 @@ def test_internally_imported():
         del sys.modules["flask"]
 
     # when
-    with internally_imported(
-        "flask", internal_path=str(Path(__file__).resolve().parent)
-    ):
+    with internally_imported(internal_path=str(Path(__file__).resolve().parent)):
         import flask
 
         os.remove(path)
