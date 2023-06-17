@@ -15,9 +15,7 @@ if bool(os.environ.get("SLS_DEV_MODE_ORG_ID")):
 
 
 @contextmanager
-def internally_imported(
-    *top_level_module_names: str, internal_path: str = "/opt/python"
-):
+def internally_imported(internal_path: str = "/opt/python"):
     def _import():
         previously_cached_modules = sys.modules.copy()
         original_sys_path = sys.path.copy()
