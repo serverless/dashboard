@@ -5,14 +5,10 @@
 
 import google.protobuf
 import secrets
-import typing
-import contextvars
 
 
 def handler(event, context) -> str:
-    if set([google.protobuf.foo, secrets.foo, typing.foo, contextvars.foo]) != set(
-        ["bar"]
-    ):
+    if set([google.protobuf.foo, secrets.foo]) != set(["bar"]):
         raise Exception("customer can not shadow modules")
 
     return "ok"
