@@ -1,7 +1,10 @@
-import traceback
-import sys
-import inspect
-from typing import Optional, Any
+from .imports import internally_imported
+
+with internally_imported():
+    import traceback
+    import sys
+    import inspect
+    from typing import Optional, Any
 
 
 def resolve(error: Optional[Any] = None) -> str:

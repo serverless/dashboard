@@ -1,5 +1,9 @@
 from logging import Logger
-import json
+
+from ..imports import internally_imported
+
+with internally_imported():
+    import json
 
 from ..error import report as report_error
 from ..error_captured_event import create as create_error_captured_event

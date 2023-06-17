@@ -1,5 +1,8 @@
 from .warning_captured_event import create as create_warning_captured_event
-import logging
+from .imports import internally_imported
+
+with internally_imported():
+    import logging
 
 
 logger = logging.getLogger(__name__)

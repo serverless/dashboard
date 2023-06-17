@@ -1,5 +1,8 @@
-import sys
-from importlib.machinery import PathFinder, SourceFileLoader
+from ..imports import internally_imported
+
+with internally_imported():
+    import sys
+    from importlib.machinery import PathFinder, SourceFileLoader
 
 
 class CustomImporter:

@@ -1,8 +1,10 @@
-import os
-from builtins import type as builtins_type
+from .imports import internally_imported
 from .stack_trace_string import resolve as resolve_stack_trace_string
 
-import logging
+with internally_imported():
+    import os
+    from builtins import type as builtins_type
+    import logging
 
 
 logger = logging.getLogger(__name__)

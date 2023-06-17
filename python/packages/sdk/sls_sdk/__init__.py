@@ -1,13 +1,17 @@
 from __future__ import annotations
-import sys
-from os import environ
-from typing import List, Optional
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
-from types import SimpleNamespace
+from .lib.imports import internally_imported
+
+with internally_imported():
+    import sys
+    from os import environ
+    from typing import List, Optional
+
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
+    from types import SimpleNamespace
 
 from .base import Nanoseconds, SLS_ORG_ID, __version__, __name__
 from .lib import trace
