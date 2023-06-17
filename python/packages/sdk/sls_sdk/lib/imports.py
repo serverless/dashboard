@@ -2,10 +2,9 @@ from __future__ import annotations
 from contextlib import contextmanager
 import sys
 import os
-from typing import Dict
-from types import ModuleType
+from typing import Dict, Any
 
-_INTERNAL_MODULES: Dict[str, ModuleType] = dict()
+_INTERNAL_MODULES: Dict[str, Any] = dict()
 
 _LOCK = None
 

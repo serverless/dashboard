@@ -1,10 +1,13 @@
-import sys
-from typing import Callable
+from .imports import internally_imported
 
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
+with internally_imported():
+    import sys
+    from typing import Callable
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal
 
 EVENT_TYPE = Literal["captured-event", "trace-span-close"]
 

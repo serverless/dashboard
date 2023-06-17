@@ -1,14 +1,19 @@
 from __future__ import annotations
-from typing import List, Optional
-import time
-import json
-from backports.cached_property import cached_property  # available in Python >=3.8
-import sys
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
+from .imports import internally_imported
+
+with internally_imported():
+    from typing import List, Optional
+    import time
+    import json
+    from backports.cached_property import cached_property  # available in Python >=3.8
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
+
 from .timing import to_protobuf_epoch_timestamp
 from .id import generate_id
 from .name import get_resource_name

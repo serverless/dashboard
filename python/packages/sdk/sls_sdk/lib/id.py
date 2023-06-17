@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import List
-from secrets import token_hex
-import sys
+from .imports import internally_imported
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
+with internally_imported():
+    from typing import List
+    from secrets import token_hex
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
 
 from ..base import TraceId
 

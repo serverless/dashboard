@@ -1,5 +1,8 @@
-import time
-from typing import Optional
+from .imports import internally_imported
+
+with internally_imported():
+    import time
+    from typing import Optional
 
 
 _DIFF = time.time_ns() - time.perf_counter_ns()

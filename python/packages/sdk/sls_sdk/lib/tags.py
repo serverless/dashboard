@@ -1,23 +1,24 @@
 from __future__ import annotations
-import re
-from datetime import datetime
-import json
-from math import inf, nan
-from re import Pattern
-from typing import Dict, List, Mapping, Tuple, Optional, Any
+
 from .imports import internally_imported
-from .tag_value import MAX_VALUE_LENGTH
 
 with internally_imported():
+    import re
+    from datetime import datetime
+    import json
+    from math import inf, nan
+    from re import Pattern
+    from typing import Dict, List, Mapping, Tuple, Optional, Any
     from js_regex import compile
+    import sys
 
-import sys
+    if sys.version_info >= (3, 8):
+        from typing import Final, get_args
+    else:
+        from typing_extensions import Final, get_args
+    from threading import Lock
 
-if sys.version_info >= (3, 8):
-    from typing import Final, get_args
-else:
-    from typing_extensions import Final, get_args
-from threading import Lock
+from .tag_value import MAX_VALUE_LENGTH
 from .error import report as report_error
 from ..base import TagType, ValidTags
 from ..exceptions import (

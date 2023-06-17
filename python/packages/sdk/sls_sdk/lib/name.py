@@ -1,16 +1,17 @@
 from __future__ import annotations
-from re import Pattern
+
 from .imports import internally_imported
 
 with internally_imported():
+    from re import Pattern
     from js_regex import compile
+    import sys
 
-import sys
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
 from ..exceptions import InvalidTraceSpanName
 
 

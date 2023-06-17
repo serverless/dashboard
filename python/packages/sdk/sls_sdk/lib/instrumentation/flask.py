@@ -1,7 +1,12 @@
-import re
 from sls_sdk import serverlessSdk
+
+from ..imports import internally_imported
+
+with internally_imported():
+    import re
+    from functools import partial
+
 from ..error import report as report_error
-from functools import partial
 from .import_hook import ImportHook
 
 _instrumenter = None

@@ -1,15 +1,22 @@
 from __future__ import annotations
-import time
-import contextvars
-import contextlib
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
+
+import sls_sdk
+
+from ..imports import internally_imported
+
+with internally_imported():
+    import time
+    import contextvars
+    import contextlib
+    from urllib.parse import urlparse
+    from urllib.parse import parse_qs
+    import io
+    from typing import Iterable
+
 from ..error import report as report_error
 from .import_hook import ImportHook
-import sls_sdk
 from .wrapper import replace_method
-import io
-from typing import Iterable
+
 
 SDK = sls_sdk.serverlessSdk
 _IGNORE_FOLLOWING_REQUEST = contextvars.ContextVar("ignore", default=False)

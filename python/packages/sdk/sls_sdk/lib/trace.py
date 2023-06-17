@@ -1,18 +1,23 @@
 from __future__ import annotations
-from collections.abc import Iterable
-import time
-import threading
-from typing import List, Optional, Callable
-from contextvars import ContextVar
-from backports.cached_property import cached_property  # available in Python >=3.8
-import sys
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
+from .imports import internally_imported
 
-import json
+with internally_imported():
+    from collections.abc import Iterable
+    import time
+    import threading
+    from typing import List, Optional, Callable
+    from contextvars import ContextVar
+    from backports.cached_property import cached_property  # available in Python >=3.8
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
+
+    import json
+
 from .instrumentation.import_hook import ImportHook
 from .timing import to_protobuf_epoch_timestamp
 from ..base import Nanoseconds, TraceId

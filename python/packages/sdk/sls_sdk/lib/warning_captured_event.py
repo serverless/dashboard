@@ -1,6 +1,10 @@
-import logging
-import time
-from typing import Optional
+from .imports import internally_imported
+
+with internally_imported():
+    import logging
+    import time
+    from typing import Optional
+
 from .tags import Tags
 from .captured_event import CapturedEvent
 from .stack_trace_string import resolve as resolve_stack_trace_string

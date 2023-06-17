@@ -1,5 +1,9 @@
-from typing import Optional
-import time
+from .imports import internally_imported
+
+with internally_imported():
+    from typing import Optional
+    import time
+
 from .trace import TraceSpan
 from .captured_event import CapturedEvent
 

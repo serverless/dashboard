@@ -1,4 +1,7 @@
-from functools import partial
+from ..imports import internally_imported
+
+with internally_imported():
+    from functools import partial
 
 
 class ReplacementMethod(object):
