@@ -1,18 +1,28 @@
 from __future__ import annotations
-import os
-import time
-import sys
-import copy
-import json
-from typing import List, Optional, Any, Set
 
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
-import random
+from sls_sdk.lib.imports import internally_imported
+
+with internally_imported():
+    import os
+    import time
+    import sys
+    import copy
+    import json
+    from typing import List, Optional, Any, Set
+
+    if sys.version_info >= (3, 8):
+        from typing import Final
+    else:
+        from typing_extensions import Final
+    import random
+
+    import base64
+    import gzip
+
 from sls_sdk.lib.timing import to_protobuf_epoch_timestamp
 from sls_sdk.lib.imports import internally_imported
+from sls_sdk.lib.trace import TraceSpan
+from sls_sdk.lib.captured_event import CapturedEvent
 from .lib.sdk import serverlessSdk
 from .lib.invocation_context import (
     set as set_invocation_context,
@@ -23,10 +33,6 @@ from .lib.event_tags import resolve as resolve_event_tags
 from .lib.response_tags import resolve as resolve_response_tags
 from .lib.api_events import is_api_event
 from .lib.captured_event import should_include as should_include_event_captured_event
-from sls_sdk.lib.trace import TraceSpan
-from sls_sdk.lib.captured_event import CapturedEvent
-import base64
-import gzip
 
 
 MAX_LOG_LINE_LENGTH = 256 * 1024
@@ -454,7 +460,7 @@ class Instrumenter:
             self.dev_mode.terminate()
             self.dev_mode = None
 
-    @internally_imported("google")
+    @internally_imported()
     def _close_trace(self, outcome: str, outcome_result: Optional[Any] = None):
         self.is_root_span_reset = False
         try:
@@ -517,7 +523,7 @@ class Instrumenter:
     def _handler(self, user_handler, event, context):
         request_start_time = time.perf_counter_ns()
         self.current_invocation_id += 1
-        with internally_imported("google"):
+        with internally_imported():
             try:
                 debug_log("Invocation: start")
                 set_invocation_context(context)

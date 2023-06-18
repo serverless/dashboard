@@ -1072,6 +1072,11 @@ describe('Python: integration', function () {
   let sdkVersion;
   let beforeTimestamp;
 
+  const shadowedModules = [
+    ['google', 'protobuf'],
+    ['secrets', '__init__'],
+  ];
+
   before(async () => {
     exec(
       `pip install pynamodb==5.5.0 yarl==1.8.2 aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
@@ -1082,13 +1087,17 @@ describe('Python: integration', function () {
         `echo "raise Exception('This is a dummy module that should never get imported.')" > ${fixturesDirname}/sls_sdk/__init__.py`,
       ].join('\n')
     );
-    exec(
-      [
-        `mkdir -p ${fixturesDirname}/google`,
-        `touch ${fixturesDirname}/google/__init__.py`,
-        `echo "foo = 'bar'" > ${fixturesDirname}/google/protobuf.py`,
-      ].join('\n')
-    );
+    shadowedModules.map((module) => {
+      const moduleName = module[0];
+      const moduleFile = module[1];
+      return exec(
+        [
+          `mkdir -p ${fixturesDirname}/${moduleName}`,
+          `touch ${fixturesDirname}/${moduleName}/${moduleFile}.py`,
+          `echo "foo = 'bar'" > ${fixturesDirname}/${moduleName}/${moduleFile}.py`,
+        ].join('\n')
+      );
+    });
 
     pyProjectToml = toml.parse(
       await fsp.readFile(
@@ -1264,7 +1273,9 @@ describe('Python: integration', function () {
     await Promise.all([
       fsp.rmdir(`${fixturesDirname}/test_dependencies`, { recursive: true, force: true }),
       fsp.rmdir(`${fixturesDirname}/sls_sdk`, { recursive: true, force: true }),
-      fsp.rmdir(`${fixturesDirname}/google`, { recursive: true, force: true }),
+      ...shadowedModules.map((module) =>
+        fsp.rmdir(`${fixturesDirname}/${module[0]}`, { recursive: true, force: true })
+      ),
     ]);
   });
 });

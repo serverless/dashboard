@@ -1,7 +1,5 @@
 from __future__ import annotations
-import os
-import logging
-from typing import Optional
+
 import sys
 import inspect
 from pathlib import Path
@@ -19,12 +17,19 @@ finally:
     if _path_modified:
         sys.path.pop(0)
 
-
+from .instrumentation import aws_sdk  # noqa E402
 from .trace_spans.aws_lambda import aws_lambda_span  # noqa E402
+
 from sls_sdk import ServerlessSdk, TraceSpans  # noqa E402
 from sls_sdk.lib.trace import TraceSpan  # noqa E402
 from sls_sdk.lib.captured_event import CapturedEvent  # noqa E402
-from .instrumentation import aws_sdk  # noqa E402
+
+from sls_sdk.lib.imports import internally_imported  # noqa E402
+
+with internally_imported():
+    from typing import Optional
+    import logging
+    import os
 
 # module metadata
 __name__ = "serverless-aws-lambda-sdk"
