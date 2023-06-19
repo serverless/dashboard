@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.2.0 (2023-06-19)
+
+### ⚠ BREAKING CHANGES
+
+- Module name arguments for `internally_imported` method is removed
+- System modules are also imported internally and not visible otherwise
+
 ## 0.1.21 (2023-06-15)
 
 ### Features
