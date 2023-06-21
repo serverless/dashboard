@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.5.1 (2023-06-20)
+
+### Bug Fixes
+
+- Temporarily turn off response observation
+
 ## 0.5.0 (2023-06-18)
 
 ### ⚠ BREAKING CHANGES
