@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.7](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.6...@serverless/aws-lambda-sdk@0.15.7) (2023-06-22)
+
+### Features
+
+- Do not sample infrequently invoked functions ([da93c42](https://github.com/serverless/console/commit/da93c426fe353f410b6f26c2118e2c16713af34a))
+- Increase sampling rate to 20% ([a3ca4a3](https://github.com/serverless/console/commit/a3ca4a3b8693cf5cb8362107a42a83109c9de330))
+
 ### [0.15.6](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.5...@serverless/aws-lambda-sdk@0.15.6) (2023-06-15)
 
 ### Features
