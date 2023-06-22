@@ -624,6 +624,16 @@ describe('integration', function () {
       },
     ],
     [
+      'mjs-callback',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+      },
+    ],
+    [
       'callback',
       {
         variants: new Map([
@@ -2287,6 +2297,13 @@ describe('integration', function () {
       'esm-sdk/index',
       {
         // ESM import from modules referenced in NODE_PATH is supported only in nodejs18.x+
+        variants: new Map([['v18', { configuration: { Runtime: 'nodejs18.x' } }]]),
+        config: sdkTestConfig,
+      },
+    ],
+    [
+      'mjs-sdk',
+      {
         variants: new Map([['v18', { configuration: { Runtime: 'nodejs18.x' } }]]),
         config: sdkTestConfig,
       },
