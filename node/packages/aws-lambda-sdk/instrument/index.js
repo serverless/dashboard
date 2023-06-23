@@ -72,7 +72,7 @@ const reportRequest = async (event, context) => {
     spanId: Buffer.from(awsLambdaSpan.id),
     requestId: context.awsRequestId,
     timestamp: toProtobufEpochTimestamp(traceSpans.awsLambdaInvocation.startTime),
-    body: resolveBodyString(event, 'INPUT'),
+    body: resolveBodyString(event, 'INPUT') || undefined,
     origin: 1,
   });
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =

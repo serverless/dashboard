@@ -1149,5 +1149,52 @@ describe('internal-extension/index.test.js', () => {
       delete strippedPayload.body;
       expect(JSON.parse(request.input.body)).to.deep.equal(strippedPayload);
     });
+
+    it('should strip large request bodies', async () => {
+      const payload = {
+        version: '2.0',
+        routeKey: 'POST /v2',
+        rawPath: '/v2',
+        rawQueryString: 'lone=value&multi=one,stillone&multi=two',
+        headers: {
+          'content-length': '385',
+          'content-type':
+            'multipart/form-data; boundary=--------------------------419073009317249310175915',
+          'multi': 'one,stillone,two',
+        },
+        queryStringParameters: {
+          lone: 'value',
+          multi: 'one,stillone,two',
+        },
+        requestContext: {
+          accountId: '205994128558',
+          apiId: 'xxx',
+          domainName: 'xxx.execute-api.us-east-1.amazonaws.com',
+          domainPrefix: 'xx',
+          http: {
+            method: 'POST',
+            path: '/v2',
+            protocol: 'HTTP/1.1',
+            sourceIp: '80.55.87.22',
+            userAgent: 'PostmanRuntime/7.29.0',
+          },
+          requestId: 'XyGnwhe0oAMEJJw=',
+          routeKey: 'POST /v2',
+          stage: '$default',
+          time: '01/Sep/2022:13:46:51 +0000',
+          timeEpoch: 1662040011065,
+        },
+        body: `{"s":"${'t'.repeat(130 * 1000)}"}`,
+        isBase64Encoded: false,
+      };
+
+      const { request } = await handleInvocation('api-endpoint', {
+        isApiEndpoint: true,
+        isBodyAltered: true,
+        payload,
+      });
+
+      expect(request.body).to.equal(undefined);
+    });
   });
 });
