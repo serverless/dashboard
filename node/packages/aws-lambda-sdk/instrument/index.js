@@ -61,7 +61,7 @@ const resolveBodyString = (data, prefix) => {
   return stringifiedBody;
 };
 
-const reportRequest = async (event, context) => {
+const reportRequest = (event, context) => {
   const payload = (serverlessSdk._lastRequest = {
     slsTags: {
       orgId: serverlessSdk.orgId,
@@ -77,10 +77,10 @@ const reportRequest = async (event, context) => {
   });
   const payloadBuffer = (serverlessSdk._lastRequestBuffer =
     requestResponseProto.RequestResponse.encode(payload).finish());
-  await sendTelemetry('request-response', payloadBuffer);
+  return sendTelemetry('request-response', payloadBuffer);
 };
 
-const reportResponse = async (response, context, endTime) => {
+const reportResponse = (response, context, endTime) => {
   const responseString = resolveBodyString(response, 'OUTPUT');
   const payload = (serverlessSdk._lastResponse = {
     slsTags: {
@@ -97,7 +97,7 @@ const reportResponse = async (response, context, endTime) => {
   });
   const payloadBuffer = (serverlessSdk._lastResponseBuffer =
     requestResponseProto.RequestResponse.encode(payload).finish());
-  await sendTelemetry('request-response', payloadBuffer);
+  return sendTelemetry('request-response', payloadBuffer);
 };
 
 const gapsBetweenInvocations = [];
