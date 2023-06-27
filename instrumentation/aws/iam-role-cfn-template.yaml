@@ -1484,7 +1484,11 @@ Resources:
               # https://docs.aws.amazon.com/IAM/latest/APIReference/API_ListPolicyVersions.html
               - "iam:ListPolicyVersions"
               - "iam:DeleteRolePolicy"
+              # Grants permission to Create the Service Linked Roles that Serverless needs to operate. Each ServiceLinkedRole is defined in the resource block below
+              # https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateServiceLinkedRole.html
+              - "iam:CreateServiceLinkedRole"
             Resource:
+              - !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/apidestinations.events.amazonaws.com/AWSServiceRoleForAmazonEventBridgeApiDestinations
               - !Sub "${AWS::StackId}"
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessRole"
               - !Sub "arn:aws:iam::${AWS::AccountId}:role/ServerlessMonitoringRole"
