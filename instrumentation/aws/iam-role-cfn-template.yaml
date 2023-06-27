@@ -30,12 +30,6 @@ Resources:
         Ref: ExternalId
       Version:
         Ref: Version
-  APIDestinationsEventBridgeServiceLinkedRole:
-    Type: AWS::IAM::ServiceLinkedRole
-    DeletionPolicy: Retain
-    Properties:
-      AWSServiceName: apidestinations.events.amazonaws.com
-      Description: Enables access to the Secrets Manager Secrets created by AWS EventBridge
   ServerlessEventSubscriptionExecutionRole:
     Type: AWS::IAM::Role
     Properties:
