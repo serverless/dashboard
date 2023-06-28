@@ -546,6 +546,7 @@ func ForwardActivity(payloads []schema.DevModeTransportPayload) (int, error) {
 				res, resErr := client.Do(req)
 				if resErr != nil {
 					lib.Error("API Call failed", resErr)
+					return 500, resErr
 				}
 				return res.StatusCode, resErr
 			}
