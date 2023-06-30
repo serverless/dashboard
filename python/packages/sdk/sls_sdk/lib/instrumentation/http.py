@@ -101,6 +101,11 @@ class BaseInstrumenter:
             return
 
         decoded = _decode_body(body)
+        # TODO: Temporary handling of `decoded` being `None` case
+        # Ideally we should invetsigate why `decoded` is `None`
+        # and ensure we handle it properly
+        if not decoded:
+            return
         length = len(decoded)
 
         if length > SDK._maximum_body_byte_length:
