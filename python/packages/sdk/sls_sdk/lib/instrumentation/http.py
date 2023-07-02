@@ -127,10 +127,10 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
         self._original_init = None
 
     async def _capture_response_body(self, trace_span, response):
-        # TODO: Turned off temporarily, until we have response body observation fixed
-        return
         # response is a aiohttp.ClientResponse object
-        if not self.should_monitor_request_response:
+        if not self.should_monitor_request_response or not hasattr(
+            response.content, "unread_data"
+        ):
             return
         if (
             response.content_length
@@ -144,6 +144,7 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
             return
         try:
             response_body = await response.read()
+            response.content.unread_data(response_body)
             if response_body:
                 trace_span.output = _decode_body(response_body)
         except Exception as ex:
@@ -319,8 +320,6 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         return _func
 
     def _capture_response_body(self, trace_span, response):
-        # TODO: Turned off temporarily, until we have response body observation fixed
-        return
         if not self.should_monitor_request_response:
             return
         if response.length > SDK._maximum_body_byte_length:
@@ -422,8 +421,6 @@ class URLLib3Instrumenter(BaseInstrumenter):
                 trace_span.close()
 
     def _capture_response_body(self, trace_span, response):
-        # TODO: Turned off temporarily, until we have response body observation fixed
-        return
         if not self.should_monitor_request_response:
             return
 
