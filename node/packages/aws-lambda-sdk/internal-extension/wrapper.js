@@ -4,6 +4,14 @@
 
 'use strict';
 
+// We need to ensure the node path always contains the runtime path. If it does not
+// We fail to resolve our local import of `@serverless/sdk` in the `serverlessSdk` initialization at the root of this
+// package.
+if (process.env.NODE_PATH && !process.env.NODE_PATH.includes('/opt/nodejs/node_modules')) {
+  process.env.NODE_PATH += ':/opt/nodejs/node_modules';
+  require('module').Module._initPaths();
+}
+
 process.env._HANDLER = process.env._ORIGIN_HANDLER;
 delete process.env._ORIGIN_HANDLER;
 
