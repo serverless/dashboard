@@ -21,4 +21,5 @@ module.exports.install = () => {
 module.exports.uninstall = () => {
   cjsHook.unregister('/aws-sdk/lib/core.js');
   cjsHook.unregister('/@aws-sdk/smithy-client/dist-cjs/client.js');
+  cjsHook.unregister('/@smithy/smithy-client/dist-cjs/client.js');
 };
