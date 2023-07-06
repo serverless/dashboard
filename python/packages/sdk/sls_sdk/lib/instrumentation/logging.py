@@ -18,50 +18,51 @@ _original_warning = None
 _original_warn = None
 
 
-def _resolve_message(*args) -> str:
-    return args[0] % args[1:]
+def _resolve_message(msg, *args) -> str:
+    msg = str(msg)
+    if args:
+        msg = msg % args
+    return msg
 
 
-def _error(self, *args, **kwargs):
+def _error(self, msg, *args, **kwargs):
     try:
-        if (
-            len(args) == 1
-            and type(args[0]) is dict
-            and args[0].get("source") == "serverlessSdk"
-        ):
-            args = (json.dumps(args[0], indent=2),) + args[1:]
+        if isinstance(msg, dict) and msg.get("source") == "serverlessSdk" and not args:
+            msg = json.dumps(msg, indent=2)
             return
-        if len(args) == 1 and isinstance(args[0], BaseException):
-            message = args[0]
+        elif not args and isinstance(msg, BaseException):
+            message = msg
         else:
-            message = _resolve_message(*args)
+            message = _resolve_message(msg, *args)
         create_error_captured_event(message, origin="pythonLogging")
     except Exception as ex:
         report_error(ex)
     finally:
-        _original_error(self, *args, **kwargs)
+        _original_error(self, msg, *args, **kwargs)
 
 
 def _warning(call_warn: bool = False):
-    def __warning(self, *args, **kwargs):
+    def __warning(self, msg, *args, **kwargs):
         try:
             if (
-                len(args) == 1
-                and type(args[0]) is dict
-                and args[0].get("source") == "serverlessSdk"
+                isinstance(msg, dict)
+                and msg.get("source") == "serverlessSdk"
+                and not args
             ):
-                args = (json.dumps(args[0], indent=2),) + args[1:]
+                msg = json.dumps(msg, indent=2)
                 return
-            create_warning_captured_event(
-                _resolve_message(*args), origin="pythonLogging"
-            )
+            elif not args and isinstance(msg, BaseException):
+                message = msg
+            else:
+                message = _resolve_message(msg, *args)
+            create_warning_captured_event(message, origin="pythonLogging")
         except Exception as ex:
             report_error(ex)
         finally:
             if call_warn:
-                _original_warn(self, *args, **kwargs)
+                _original_warn(self, msg, *args, **kwargs)
             else:
-                _original_warning(self, *args, **kwargs)
+                _original_warning(self, msg, *args, **kwargs)
 
     return __warning
 
