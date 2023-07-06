@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.9](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.8...@serverless/aws-lambda-sdk@0.15.9) (2023-07-06)
+
+### Bug Fixes
+
+- Ensure NODE_PATH always contains required paths ([47acfd2](https://github.com/serverless/console/commit/47acfd24f7d7ba818f056e640eda6281f1f57580))
+- Ensure to expose uncaught exceptions ([45e4893](https://github.com/serverless/console/commit/45e4893791062b4a455baae98e929b509531d749))
+- Instrument [@smithy](https://github.com/smithy) scoped smithy client ([f6fe1d7](https://github.com/serverless/console/commit/f6fe1d788b1a2fb2e6b2d7590a7f3f2e7f547223))
+- Unregister @smithy/smithy-client instrumentation on uninstall ([31e8b9b](https://github.com/serverless/console/commit/31e8b9b708244d756cacca6799f1fe5be97ced09))
+
 ### [0.15.8](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.7...@serverless/aws-lambda-sdk@0.15.8) (2023-06-23)
 
 ### Bug Fixes
