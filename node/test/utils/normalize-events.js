@@ -30,11 +30,11 @@ module.exports = (events) =>
               throw new Error(`Unexpected warning type: ${tags.warning.type}`);
           }
         case 'telemetry.notice.generated.v1':
-          switch (tags.warning.type) {
+          switch (tags.notice.type) {
             case 1:
               return 'NOTICE_TYPE_SDK_INTERNAL';
             default:
-              throw new Error(`Unexpected notice type: ${tags.warning.type}`);
+              throw new Error(`Unexpected notice type: ${tags.notice.type}`);
           }
         default:
           throw new Error(`Unexpected event name: ${name}`);

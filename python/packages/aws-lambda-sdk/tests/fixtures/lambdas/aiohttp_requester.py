@@ -28,7 +28,9 @@ def make_http_request(url):
     async def _request():
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers={"someHeader": "bar"}) as resp:
-                await resp.text()
+                body = await resp.text()
+                if not body:
+                    raise Exception("Could not read response body.")
 
     asyncio.run(_request())
     sys.path.pop()
