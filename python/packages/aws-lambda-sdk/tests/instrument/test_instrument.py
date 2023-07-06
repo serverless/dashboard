@@ -1027,3 +1027,36 @@ def test_instrument_lambda_truncate_attempt_4(instrumenter, mocked_print):
         ],
         1,
     )
+
+
+def test_dev_mode_does_not_break_aiobotocore(reset_sdk_dev_mode, mocked_print):
+    # given
+    from serverless_aws_lambda_sdk.instrument import Instrumenter
+
+    instrumenter = Instrumenter()
+    from ..fixtures.lambdas.aiobotocore_requester import handler
+
+    instrumented = instrumenter.instrument(lambda: handler)
+
+    # when
+    instrumented({}, context)
+    serialized = [
+        x[0][0]
+        for x in mocked_print.call_args_list
+        if x[0][0].startswith(TARGET_LOG_PREFIX)
+    ][0].replace(TARGET_LOG_PREFIX, "")
+
+    # then
+    trace_payload = deserialize_trace(serialized)
+    assert_trace_payload(
+        trace_payload,
+        [
+            "aws.lambda",
+            "aws.lambda.initialization",
+            "aws.lambda.invocation",
+            "python.https.request",
+        ],
+        1,
+    )
+
+    mocked_print.reset_mock()

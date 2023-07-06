@@ -452,6 +452,7 @@ describe('Python: integration', function () {
   };
 
   const httpTestConfig = new Map([
+    ['dev-mode', devModeConfiguration],
     [
       'http',
       {
@@ -1002,6 +1003,15 @@ describe('Python: integration', function () {
       },
     ],
     [
+      'aiobotocore_requester',
+      {
+        variants: new Map([
+          ['dev-mode', devModeConfiguration],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
+        ]),
+      },
+    ],
+    [
       'dashboard/s_hello',
       {
         variants: new Map([
@@ -1079,7 +1089,7 @@ describe('Python: integration', function () {
 
   before(async () => {
     exec(
-      `pip install pynamodb==5.5.0 yarl==1.8.2 aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 --target="${fixturesDirname}/test_dependencies"`
+      `pip install pynamodb==5.5.0 yarl==1.8.2 aiohttp==3.8.4 serverless-wsgi==3.0.2 flask==2.2.3 aiobotocore==2.5.1 --target="${fixturesDirname}/test_dependencies"`
     );
     exec(
       [

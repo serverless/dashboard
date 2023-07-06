@@ -5,6 +5,11 @@ with internally_imported():
     from google.protobuf import json_format
 
 
+@internally_imported()
+def serialize_to_string(trace: TracePayload) -> str:
+    return trace.SerializeToString()
+
+
 def to_trace_payload(payload_dct: dict) -> TracePayload:
     spans = payload_dct["spans"]
     events = payload_dct["events"]

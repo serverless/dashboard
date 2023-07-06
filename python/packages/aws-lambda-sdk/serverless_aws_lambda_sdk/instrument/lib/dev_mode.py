@@ -10,7 +10,7 @@ with internally_imported():
 from .telemetry import send, close_connection
 from .sdk import serverlessSdk
 from .invocation_context import get as get_invocation_context
-from .payload_conversion import to_trace_payload
+from .payload_conversion import to_trace_payload, serialize_to_string
 from .captured_event import should_include as should_include_event_captured_event
 
 _original_print = builtins.print
@@ -87,9 +87,8 @@ class DevModeThread(Thread):
         self._buffered_data = (
             ThreadSafeBuffer()
         )  # used to buffer spans and captured events
-        self._is_stopped = Event()  # used to stop the thread
+        self._is_stopped_event = Event()  # used to stop the thread
 
-    @internally_imported()
     def _send_all(self):
         (
             spans,
@@ -131,7 +130,7 @@ class DevModeThread(Thread):
                 s for s in payload["spans"] if s["name"] != "aws.lambda"
             ]
 
-        send("trace", to_trace_payload(payload).SerializeToString())
+        send("trace", serialize_to_string(to_trace_payload(payload)))
 
     def add_span(self, span):
         """Executes in the context of the main thread."""
@@ -152,7 +151,7 @@ class DevModeThread(Thread):
         self._has_started.set()
 
         while True:
-            is_stopped = self._is_stopped.wait(0.05)
+            is_stopped = self._is_stopped_event.wait(0.05)
             if is_stopped:
                 break
 
@@ -165,7 +164,7 @@ class DevModeThread(Thread):
         """
         Signal the thread to stop, any remaining data will be flushed.
         """
-        self._is_stopped.set()
+        self._is_stopped_event.set()
         self.join()
 
 

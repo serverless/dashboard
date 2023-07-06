@@ -29,7 +29,9 @@ def make_http_request(host, path, use_ssl=False):
             conn = http.client.HTTPConnection(host)
         conn.request("GET", path, headers={"someHeader": "bar"})
         response = conn.getresponse()
-        response.read()
+        body = response.read()
+        if not body:
+            raise Exception("Could not read response body.")
     finally:
         if conn:
             conn.close()
