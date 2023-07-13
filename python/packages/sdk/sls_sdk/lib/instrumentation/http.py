@@ -11,7 +11,7 @@ with internally_imported():
     from urllib.parse import urlparse
     from urllib.parse import parse_qs
     import io
-    from typing import Iterable
+    from typing import Iterable, Optional, Any
 
 from ..error import report as report_error
 from .import_hook import ImportHook
@@ -43,23 +43,31 @@ def safe_call(func):
     return wrapper
 
 
+def _decode_bytes(body: bytes, encoding: Optional[str], gzip: Any):
+    if encoding == "gzip":
+        return gzip.decompress(body).decode("utf-8")
+    return body.decode("utf-8")
+
+
 @safe_call
-def _decode_body(body):
+def _decode_body(body: Any, encoding: Optional[str] = None, gzip: Optional[Any] = None):
     if isinstance(body, bytes):
-        return body.decode("utf-8")
+        return _decode_bytes(body, encoding, gzip)
     elif isinstance(body, str):
         return body
     elif isinstance(body, io.IOBase):
         if body.seekable():
             current_position = body.tell()
             try:
-                return body.read().decode("utf-8")
+                return _decode_bytes(body.read(), encoding, gzip)
             finally:
                 body.seek(current_position)
+        elif hasattr(body, "peek"):
+            return _decode_bytes(body.peek(), encoding, gzip)
         else:
-            return body.peek().decode("utf-8")
+            return None
     elif isinstance(body, Iterable):
-        return b"".join(body).decode("utf-8")
+        return _decode_bytes(b"".join(body), encoding, gzip)
     else:
         return None
 
@@ -69,6 +77,7 @@ class BaseInstrumenter:
         self._import_hook = ImportHook(target_module)
         self._is_installed = False
         self._module = None
+        self._gzip = None
 
     def install(self, should_monitor_request_response):
         if self._is_installed:
@@ -80,6 +89,12 @@ class BaseInstrumenter:
 
         self._import_hook.enable(self._install)
         self._is_installed = True
+
+        if should_monitor_request_response:
+            with internally_imported():
+                import gzip
+
+                self._gzip = gzip
 
     def uninstall(self):
         if not self._is_installed:
@@ -94,16 +109,15 @@ class BaseInstrumenter:
     def _uninstall(self, module):
         raise NotImplementedError
 
-    def _capture_request_body(self, trace_span, body):
+    def _capture_request_body(
+        self, trace_span, body: Any, encoding: Optional[str] = None
+    ):
         if not body:
             return
         if not self.should_monitor_request_response:
             return
 
-        decoded = _decode_body(body)
-        # TODO: Temporary handling of `decoded` being `None` case
-        # Ideally we should invetsigate why `decoded` is `None`
-        # and ensure we handle it properly
+        decoded = _decode_body(body, encoding, self._gzip)
         if not decoded:
             return
         length = len(decoded)
@@ -196,7 +210,11 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
         if not hasattr(trace_config_ctx, "trace_span"):
             return
         self._capture_request_body(
-            trace_config_ctx.trace_span, trace_config_ctx.request_body
+            trace_config_ctx.trace_span,
+            trace_config_ctx.request_body,
+            params.headers.get("Content-Encoding")
+            if hasattr(params, "headers")
+            else None,
         )
         trace_config_ctx.trace_span.tags.update(
             {"status_code": params.response.status}, prefix="http"
@@ -286,7 +304,9 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
                     },
                     prefix="http",
                 )
-                self._capture_request_body(trace_span, body)
+                self._capture_request_body(
+                    trace_span, body, headers.get("Content-Encoding")
+                )
 
                 self._original_request(
                     _self, method, url, body, headers, encode_chunked=encode_chunked
@@ -405,7 +425,9 @@ class URLLib3Instrumenter(BaseInstrumenter):
                 },
                 prefix="http",
             )
-            self._capture_request_body(trace_span, body)
+            self._capture_request_body(
+                trace_span, body, headers.get("Content-Encoding")
+            )
 
             with URLLib3Instrumenter._prevent_recursive_instrumentation():
                 response = actual_url_open(*args, **kwargs)

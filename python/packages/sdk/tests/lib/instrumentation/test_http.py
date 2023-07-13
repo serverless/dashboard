@@ -4,6 +4,8 @@ import asyncio
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Request, Response
 import sys
+import gzip
+import json
 from types import SimpleNamespace
 import uuid
 from urllib.parse import urlparse
@@ -15,6 +17,8 @@ SMALL_REQUEST_PAYLOAD = b"a"
 
 LARGE_RESPONSE_PAYLOAD = b"r" * 1024 * 128
 SMALL_RESPONSE_PAYLOAD = b"r"
+
+GZIPPED_REQUEST_PAYLOAD = gzip.compress(json.dumps({"foo": "bar"}).encode("utf-8"))
 
 
 def _assert_request_response_body(sdk, request_body, response_body):
@@ -37,6 +41,7 @@ def _assert_request_response_body(sdk, request_body, response_body):
     [
         (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
         (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+        (GZIPPED_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
     ],
 )
 def test_instrument_http_client(
@@ -56,6 +61,10 @@ def test_instrument_http_client(
 
     url = urlparse(httpserver.url_for("/foo/bar?baz=qux"))
     headers = {"User-Agent": "foo"}
+    request_body_to_assert = request_body
+    if request_body == GZIPPED_REQUEST_PAYLOAD:
+        headers["Content-Encoding"] = "gzip"
+        request_body_to_assert = gzip.decompress(request_body)
 
     conn = http.client.HTTPConnection(url.hostname, url.port)
     conn.request("POST", url.path + "?" + url.query, request_body, headers)
@@ -83,7 +92,9 @@ def test_instrument_http_client(
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
-    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+    _assert_request_response_body(
+        instrumented_sdk, request_body_to_assert, response_body
+    )
 
 
 @pytest.mark.parametrize(
@@ -91,6 +102,7 @@ def test_instrument_http_client(
     [
         (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
         (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+        (GZIPPED_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
     ],
 )
 def test_instrument_urllib(
@@ -111,6 +123,10 @@ def test_instrument_urllib(
 
     url = httpserver.url_for("/foo/bar?baz=qux")
     headers = {"User-Agent": "foo"}
+    request_body_to_assert = request_body
+    if request_body == GZIPPED_REQUEST_PAYLOAD:
+        headers["Content-Encoding"] = "gzip"
+        request_body_to_assert = gzip.decompress(request_body)
 
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, data=request_body) as response:
@@ -137,7 +153,9 @@ def test_instrument_urllib(
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
-    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+    _assert_request_response_body(
+        instrumented_sdk, request_body_to_assert, response_body
+    )
 
 
 @pytest.mark.parametrize(
@@ -145,6 +163,7 @@ def test_instrument_urllib(
     [
         (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
         (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+        (GZIPPED_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
     ],
 )
 def test_instrument_urllib3(
@@ -162,10 +181,17 @@ def test_instrument_urllib3(
     # when
     import urllib3
 
+    headers = {}
+    request_body_to_assert = request_body
+    if request_body == GZIPPED_REQUEST_PAYLOAD:
+        headers["Content-Encoding"] = "gzip"
+        request_body_to_assert = gzip.decompress(request_body)
+
     resp = urllib3.PoolManager().request(
         "POST",
         httpserver.url_for("/foo/bar?baz=qux"),
         body=request_body,
+        headers=headers,
     )
 
     # then
@@ -177,11 +203,13 @@ def test_instrument_urllib3(
         "http.protocol": "HTTP/1.1",
         "http.host": f"127.0.0.1:{httpserver.port}",
         "http.path": "/foo/bar",
-        "http.request_header_names": [],
+        "http.request_header_names": [] if headers == {} else ["Content-Encoding"],
         "http.query_parameter_names": ["baz"],
         "http.status_code": 200,
     }
-    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+    _assert_request_response_body(
+        instrumented_sdk, request_body_to_assert, response_body
+    )
 
 
 @pytest.mark.parametrize(
@@ -189,6 +217,7 @@ def test_instrument_urllib3(
     [
         (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
         (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+        (GZIPPED_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
     ],
 )
 def test_instrument_requests(
@@ -203,9 +232,14 @@ def test_instrument_requests(
     # when
     import requests
 
+    headers = {"User-Agent": "foo"}
+    request_body_to_assert = request_body
+    if request_body == GZIPPED_REQUEST_PAYLOAD:
+        headers["Content-Encoding"] = "gzip"
+        request_body_to_assert = gzip.decompress(request_body)
     resp = requests.get(
         httpserver.url_for("/foo/bar?baz=qux"),
-        headers={"User-Agent": "foo"},
+        headers=headers,
         data=request_body,
     )
 
@@ -230,7 +264,9 @@ def test_instrument_requests(
         "User-Agent"
         in instrumented_sdk.trace_spans.root.tags["http.request_header_names"]
     )
-    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+    _assert_request_response_body(
+        instrumented_sdk, request_body_to_assert, response_body
+    )
 
 
 @pytest.mark.parametrize(
@@ -304,6 +340,7 @@ def test_instrument_requests_ignore_following_request(
     [
         (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
         (LARGE_REQUEST_PAYLOAD, LARGE_RESPONSE_PAYLOAD),
+        (GZIPPED_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
     ],
 )
 def test_instrument_aiohttp(
@@ -321,8 +358,14 @@ def test_instrument_aiohttp(
     # when
     import aiohttp
 
+    headers = {"User-Agent": "foo"}
+    request_body_to_assert = request_body
+    if request_body == GZIPPED_REQUEST_PAYLOAD:
+        headers["Content-Encoding"] = "gzip"
+        request_body_to_assert = gzip.decompress(request_body)
+
     async def _get():
-        async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(
                 httpserver.url_for("/foo/bar?baz=qux"), data=request_body
             ) as resp:
@@ -342,11 +385,13 @@ def test_instrument_aiohttp(
         "http.protocol": "HTTP/1.1",
         "http.host": f"127.0.0.1:{httpserver.port}",
         "http.path": "/foo/bar",
-        "http.request_header_names": ["User-Agent"],
+        "http.request_header_names": [k for k in headers.keys()],
         "http.query_parameter_names": ["baz"],
         "http.status_code": 200,
     }
-    _assert_request_response_body(instrumented_sdk, request_body, response_body)
+    _assert_request_response_body(
+        instrumented_sdk, request_body_to_assert, response_body
+    )
 
 
 @pytest.mark.parametrize(
