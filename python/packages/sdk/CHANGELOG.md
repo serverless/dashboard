@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.5.3 (2023-07-17)
+
+### Bug Fixes
+
+- Fix logging instrumentation by interpreting arguments the same way as builtin logging module
+- Handle compressed request body when instrumenting http
+- Fix botocore instrumentation by making sure downstream http request is not instrumented
+
 ## 0.5.2 (2023-07-06)
 
 ### Bug Fixes
