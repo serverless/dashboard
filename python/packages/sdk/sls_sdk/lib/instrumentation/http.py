@@ -321,7 +321,6 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
             trace_span = _HTTP_SPAN.get()
             if (
                 not trace_span
-                # or trace_span.tags.get("http.method") is None
                 or _IGNORE_FOLLOWING_REQUEST.get()
                 or _DISABLE_NATIVE_INSTRUMENTATION.get()
             ):
