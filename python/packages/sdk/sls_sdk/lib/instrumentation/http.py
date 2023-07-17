@@ -269,11 +269,7 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         # See https://docs.python.org/3/library/http.client.html#http.client.HTTPConnection.request
         # for the signature of the request method
         def _func(_self, method, url, body=None, headers={}, *, encode_chunked=False):
-            _self._sls_ignore = (
-                _IGNORE_FOLLOWING_REQUEST.get() or _DISABLE_NATIVE_INSTRUMENTATION.get()
-            )
-
-            if _self._sls_ignore:
+            if _IGNORE_FOLLOWING_REQUEST.get() or _DISABLE_NATIVE_INSTRUMENTATION.get():
                 return self._original_request(
                     _self, method, url, body, headers, encode_chunked=encode_chunked
                 )
@@ -325,7 +321,12 @@ class NativeHTTPInstrumenter(BaseInstrumenter):
         # for the signature of the getresponse method
         def _func(_self, *args, **kwargs):
             trace_span = _HTTP_SPAN.get()
-            if getattr(self, "_sls_ignore", False) or not trace_span:
+            if (
+                not trace_span
+                # or trace_span.tags.get("http.method") is None
+                or _IGNORE_FOLLOWING_REQUEST.get()
+                or _DISABLE_NATIVE_INSTRUMENTATION.get()
+            ):
                 return self._original_getresponse(_self, *args, **kwargs)
 
             try:
