@@ -519,45 +519,6 @@ def test_instrument_aiohttp_noops_if_aiohttp_is_not_installed():
         sls_sdk.lib.instrumentation.http.uninstall()
 
 
-@pytest.mark.parametrize(
-    "request_body,response_body",
-    [
-        (SMALL_REQUEST_PAYLOAD, SMALL_RESPONSE_PAYLOAD),
-    ],
-)
-def test_instrument_aiohttp_sls_ignore(
-    instrumented_sdk,
-    httpserver: HTTPServer,
-    request_body,
-    response_body,
-):
-    # given
-    def handler(request: Request):
-        return Response(response_body)
-
-    httpserver.expect_request("/foo/bar").respond_with_handler(handler)
-
-    # when
-    import aiohttp
-
-    async def _get():
-        async with aiohttp.ClientSession(headers={"User-Agent": "foo"}) as session:
-            session._sls_ignore = True
-            async with session.get(
-                httpserver.url_for("/foo/bar?baz=qux"), data=request_body
-            ) as resp:
-                print(resp.status)
-                response = await resp.text()
-                print(response)
-                return response
-
-    resp = asyncio.run(_get())
-
-    # then
-    assert resp == response_body.decode("utf-8")
-    assert instrumented_sdk.trace_spans.root is None
-
-
 def test_instrument_duration_requests(instrumented_sdk, httpserver: HTTPServer):
     # given
     def handler(request: Request):

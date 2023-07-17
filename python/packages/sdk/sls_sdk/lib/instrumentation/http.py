@@ -165,8 +165,6 @@ class NativeAIOHTTPInstrumenter(BaseInstrumenter):
             report_error(ex)
 
     async def _on_request_start(self, session, trace_config_ctx, params):
-        if hasattr(session, "_sls_ignore") and session._sls_ignore:
-            return
         trace_config_ctx.start_time = time.perf_counter_ns()
         SDK._debug_log("HTTP request")
         trace_config_ctx.trace_span = SDK._create_trace_span(
