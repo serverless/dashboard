@@ -5,8 +5,8 @@ package serverless.instrumentation.tags.v1;
 import "serverless/instrumentation/tags/v1/aws.proto";
 import "serverless/instrumentation/tags/v1/common.proto";
 import "serverless/instrumentation/tags/v1/error.proto";
-import "serverless/instrumentation/tags/v1/warning.proto";
 import "serverless/instrumentation/tags/v1/notice.proto";
+import "serverless/instrumentation/tags/v1/warning.proto";
 
 option go_package = ".;protoc";
 
@@ -29,6 +29,10 @@ message Tags {
 
   // These sdk tags are added at ingest time so we know where the data was generated from
   optional serverless.instrumentation.tags.v1.SdkTags sdk = 112;
+
+  // These tags are used when a Dashboard app is instrumented.
+  // It is added to all schemas during ingest as part of our data enrichment process.
+  optional serverless.instrumentation.tags.v1.DashboardTags dashboard = 116;
 
   // Environment is added to all schemas during ingest as part of our data enrichment process
   // @validation_top_level
@@ -80,4 +84,11 @@ message SdkTags {
   string version = 2;
   // SDK runtime (e.g. nodejs)
   optional string runtime = 3;
+}
+
+message DashboardTags {
+  // The name of the Dashboard application that was instrumented.
+  string app = 1;
+  // The name of the Dashboard service that was instrumented.
+  string service = 2;
 }
