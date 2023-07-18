@@ -36,6 +36,7 @@
     - [NoticeTags.NoticeType](#serverless-instrumentation-tags-v1-NoticeTags-NoticeType)
   
 - [serverless/instrumentation/tags/v1/tags.proto](#serverless_instrumentation_tags_v1_tags-proto)
+    - [DashboardTags](#serverless-instrumentation-tags-v1-DashboardTags)
     - [SdkTags](#serverless-instrumentation-tags-v1-SdkTags)
     - [SlsTags](#serverless-instrumentation-tags-v1-SlsTags)
     - [Tags](#serverless-instrumentation-tags-v1-Tags)
@@ -541,6 +542,22 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 
 
 
+<a name="serverless-instrumentation-tags-v1-DashboardTags"></a>
+
+### DashboardTags
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| app | [string](#string) |  | The name of the Dashboard application that was instrumented. |
+| service | [string](#string) |  | The name of the Dashboard service that was instrumented. |
+
+
+
+
+
+
 <a name="serverless-instrumentation-tags-v1-SdkTags"></a>
 
 ### SdkTags
@@ -591,6 +608,7 @@ Generic tagset intended to describe incoming or outgoing HTTP requests
 | http | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making an http request |
 | https | [HttpTags](#serverless-instrumentation-tags-v1-HttpTags) | optional | These tags are used when an http library is making a https request |
 | sdk | [SdkTags](#serverless-instrumentation-tags-v1-SdkTags) | optional | These sdk tags are added at ingest time so we know where the data was generated from |
+| dashboard | [DashboardTags](#serverless-instrumentation-tags-v1-DashboardTags) | optional | These tags are used when a Dashboard app is instrumented. It is added to all schemas during ingest as part of our data enrichment process. |
 | environment | [string](#string) | optional | Environment is added to all schemas during ingest as part of our data enrichment process @validation_top_level |
 | namespace | [string](#string) | optional | Namespace is added to all schemas during ingest as part of our data enrichment process @validation_top_level |
 | org_id | [string](#string) | optional | OrgId is added to all schemas during ingest as part of our data enrichment process @validation_top_level @validation_single_string |
