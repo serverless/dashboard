@@ -9,13 +9,14 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"serverless/dev-mode-extension/lib"
 	"strings"
 	"time"
 
+	"serverless/dev-mode-extension/lib"
+
+	tags "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/tags/v1"
+	schema "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
 	"github.com/google/uuid"
-	tags "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
-	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -333,17 +334,17 @@ func CollectRequestResponseData(logs []LogItem, requestId string, accountId stri
 				json.Unmarshal(jsonString, &meta)
 				metadata = append(metadata, &meta)
 				/* Parse req/res data and add tags we are adding below
-				Aws: &tags.AwsTags{
-					AccountId:    &accountId,
-					Region:       &region,
-					RequestId:    &requestId,
-					ResourceName: &functionName,
-				},
-				OrgId: &orgId,
-				Sdk: &tags.SdkTags{
-					Name:    "@serverless/external-extension",
-					Version: "N/A",
-				}, */
+				   Aws: &tags.AwsTags{
+				   	AccountId:    &accountId,
+				   	Region:       &region,
+				   	RequestId:    &requestId,
+				   	ResourceName: &functionName,
+				   },
+				   OrgId: &orgId,
+				   Sdk: &tags.SdkTags{
+				   	Name:    "@serverless/external-extension",
+				   	Version: "N/A",
+				   }, */
 				messages = append(messages, []byte(log.Record.(string)))
 			}
 		}

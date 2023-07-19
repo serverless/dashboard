@@ -7,19 +7,20 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"serverless/dev-mode-extension/agent"
-	"serverless/dev-mode-extension/extension"
-	"serverless/dev-mode-extension/lib"
-	"serverless/dev-mode-extension/logsapi"
 	"strings"
 	"syscall"
 	"time"
 
+	"serverless/dev-mode-extension/agent"
+	"serverless/dev-mode-extension/extension"
+	"serverless/dev-mode-extension/lib"
+	"serverless/dev-mode-extension/logsapi"
+
+	schema "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/golang-collections/go-datastructures/queue"
-	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"go.uber.org/zap"
 )
 

@@ -1,8 +1,9 @@
 package slslambda
 
 import (
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"time"
+
+	"buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
 )
 
 type initializationSpan struct {

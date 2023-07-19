@@ -3,14 +3,14 @@ module serverless/dev-mode-extension
 go 1.18
 
 require (
+	buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go v1.31.0-20230718154650-050338f58701.1
 	github.com/aws/aws-sdk-go v1.44.106
 	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
 	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.9.1
-	go.buf.build/protocolbuffers/go/serverless/sdk-schema v1.3.31
 	go.uber.org/zap v1.23.0
-	google.golang.org/protobuf v1.28.1
+	google.golang.org/protobuf v1.31.0
 )
 
 require (
