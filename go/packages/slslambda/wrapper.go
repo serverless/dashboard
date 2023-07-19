@@ -3,10 +3,11 @@ package slslambda
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-lambda-go/lambda"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"runtime/debug"
 	"time"
+
+	"buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 type bytesHandlerFunc func(context.Context, []byte) ([]byte, error)

@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"time"
 
+	schema "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
 )
 

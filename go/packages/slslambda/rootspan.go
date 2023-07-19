@@ -1,10 +1,11 @@
 package slslambda
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
-	"go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"time"
+
+	tagsv1 "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/tags/v1"
+	"buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 type rootSpan struct {

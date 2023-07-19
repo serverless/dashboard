@@ -15,10 +15,10 @@ import (
 
 	u "serverless/dev-mode-extension/utils"
 
+	schema "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/google/uuid"
-	schema "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 	"google.golang.org/protobuf/proto"
 )
 

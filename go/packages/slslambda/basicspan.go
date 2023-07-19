@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	tagsv1 "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/tags/v1"
+	instrumentationv1 "buf.build/gen/go/serverless/sdk-schema/protocolbuffers/go/serverless/instrumentation/v1"
 	"github.com/aws/aws-sdk-go/aws"
-	tagsv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/tags/v1"
-	instrumentationv1 "go.buf.build/protocolbuffers/go/serverless/sdk-schema/serverless/instrumentation/v1"
 )
 
 type basicSpan struct {
