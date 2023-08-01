@@ -59,6 +59,9 @@ serverlessSdk.setTag = (name, value) => {
     reportError(error, { type: 'USER' });
   }
 };
+serverlessSdk.setEndpoint = (endpoint) => {
+  serverlessSdk._userDefinedEndpoint = endpoint;
+};
 
 // Private
 const settings = (serverlessSdk._settings = {});
