@@ -28,7 +28,11 @@ module.exports.install = (layerPrototype) => {
         res.on('finish', () => {
           const endTime = process.hrtime.bigint();
           const rootSpan = serverlessSdk.traceSpans.root;
-          if (rootSpan && expressRouteData.path) {
+          if (rootSpan && serverlessSdk._userDefinedEndpoint) {
+            rootSpan.tags.delete('aws.lambda.http_router.path');
+            rootSpan.tags.set('aws.lambda.http_router.path', serverlessSdk._userDefinedEndpoint);
+          }
+          if (rootSpan && expressRouteData.path && !serverlessSdk._userDefinedEndpoint) {
             // Override eventual API Gateway's `resourcePath`
             rootSpan.tags.delete('aws.lambda.http_router.path');
             rootSpan.tags.set('aws.lambda.http_router.path', expressRouteData.path);
