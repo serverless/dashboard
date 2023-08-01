@@ -401,6 +401,12 @@ const closeTrace = async (outcome, outcomeResult) => {
       traceSpans.awsLambdaInitialization.close({ endTime });
     }
     if (traceSpans.awsLambdaInvocation) traceSpans.awsLambdaInvocation.close({ endTime });
+
+    if (serverlessSdk._userDefinedEndpoint) {
+      awsLambdaSpan.tags.delete('aws.lambda.http_router.path');
+      awsLambdaSpan.tags.set('aws.lambda.http_router.path', serverlessSdk._userDefinedEndpoint);
+    }
+
     awsLambdaSpan.close({ endTime });
     // Root span comes with "aws.lambda.*" tags, which require unconditionally requestId
     // which we don't have if handler crashed at initialization
