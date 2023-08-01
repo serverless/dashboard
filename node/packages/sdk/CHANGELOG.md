@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.21](https://github.com/serverless/console/compare/@serverless/sdk@0.5.20...@serverless/sdk@0.5.21) (2023-08-01)
+
+### Features
+
+- Add setEndpoint to SDK ([e67efc6](https://github.com/serverless/console/commit/e67efc6b67bb5063d970b1b14c6228780cc78777))
+
 ### [0.5.20](https://github.com/serverless/console/compare/@serverless/sdk@0.5.19...@serverless/sdk@0.5.20) (2023-06-07)
 
 ### Features
