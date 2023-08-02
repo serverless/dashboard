@@ -48,6 +48,45 @@ describe('index.test.js', () => {
     expect(serverlessSdk._customTags.get('tag')).to.equal('value');
   });
 
+  it('should expose .createTraceSpan', () => {
+    expect(serverlessSdk.createTraceSpan).to.be.instanceOf(Object);
+  });
+
+  it('should create an implicit span using .createTraceSpan with a single argument', () => {
+    const span = serverlessSdk.createTraceSpan('test');
+    span.close();
+    expect(span).to.be.instanceOf(Object);
+    expect(span.name).to.equal('test');
+    expect(span.parentSpan).to.equal(rootSpan);
+    expect(span.endTime).to.not.be.undefined;
+  });
+
+  it('should create an sync encaspulated span using .createTraceSpan', () => {
+    const spans = [];
+    serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
+    const result = serverlessSdk.createTraceSpan('test', () => {
+      return 'test';
+    });
+    expect(spans.length).to.equal(1);
+    expect(spans[0].name).to.equal('test');
+    expect(spans[0].parentSpan).to.equal(rootSpan);
+    expect(spans[0].endTime).to.not.be.undefined;
+    expect(result).to.equal('test');
+  });
+
+  it('should create an async encaspulated span using .createTraceSpan', async () => {
+    const spans = [];
+    serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
+    const result = await serverlessSdk.createTraceSpan('test', async () => {
+      return new Promise((resolve) => resolve('test'));
+    });
+    expect(spans.length).to.equal(1);
+    expect(spans[0].name).to.equal('test');
+    expect(spans[0].parentSpan).to.equal(rootSpan);
+    expect(spans[0].endTime).to.not.be.undefined;
+    expect(result).to.equal('test');
+  });
+
   it('should not crash on invalid .setTag input', () => {
     delete process.env.SLS_CRASH_ON_SDK_ERROR;
     try {

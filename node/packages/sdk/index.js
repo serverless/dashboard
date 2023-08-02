@@ -10,6 +10,8 @@ if (uniGlobal.serverlessSdk) {
 uniGlobal.serverlessSdk = module.exports;
 
 const ensureString = require('type/string/ensure');
+const isFunction = require('type/function/is');
+const isThenable = require('type/thenable/is');
 const d = require('d');
 const lazy = require('d/lazy');
 const Tags = require('./lib/tags');
@@ -61,6 +63,33 @@ serverlessSdk.setTag = (name, value) => {
 };
 serverlessSdk.setEndpoint = (endpoint) => {
   serverlessSdk._userDefinedEndpoint = endpoint;
+};
+serverlessSdk.createTraceSpan = (name, closure) => {
+  const span = serverlessSdk._createTraceSpan(name);
+
+  if (closure && isThenable(closure)) {
+    return closure.then(
+      (result) => {
+        span.close();
+        return result;
+      },
+      (error) => {
+        span.close();
+        throw error;
+      }
+    );
+  }
+
+  if (closure && isFunction(closure)) {
+    let result;
+    try {
+      result = closure();
+    } finally {
+      span.close();
+    }
+    return result;
+  }
+  return span;
 };
 
 // Private
