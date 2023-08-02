@@ -1,9 +1,14 @@
+import TraceSpan from '../lib/trace-span';
 import ExpressAppInstrument from './instrumentation/express-app';
 
 export interface TraceSpans {}
 
 export interface Instrumentation {
   expressApp: ExpressAppInstrument;
+}
+
+export interface TraceSpan {
+  close: () => void;
 }
 
 export interface Sdk {
@@ -28,7 +33,9 @@ export interface Sdk {
   ): undefined;
   setTag(name: string, value: boolean | number | string | Date | Array<unknown> | null): undefined;
   setEndpoint(endpoint: string): undefined;
-  createTraceSpan(name: string, closure?: (() => T) | (() => Promise<T>))
+  createTraceSpan(name: string): TraceSpan;
+  createTraceSpan(name: string, closure: () => T): T;
+  createTraceSpan(name: string, closure: () => Promise<T>): Promise<T>;
 }
 
 export interface SdkOptions {
