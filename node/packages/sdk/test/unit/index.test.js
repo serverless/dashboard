@@ -48,6 +48,34 @@ describe('index.test.js', () => {
     expect(serverlessSdk._customTags.get('tag')).to.equal('value');
   });
 
+  it('should not crash on invalid .setTag input', () => {
+    delete process.env.SLS_CRASH_ON_SDK_ERROR;
+    try {
+      serverlessSdk.setTag();
+    } finally {
+      process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+    }
+  });
+});
+
+describe('.createTraceSpan', () => {
+  let serverlessSdk;
+  let rootSpan;
+  before(() => {
+    process.env.SLS_CRASH_ON_SDK_ERROR = '1';
+    requireUncached(() => {
+      const TraceSpan = require('../../lib/trace-span');
+      serverlessSdk = require('../../');
+      // Ensure to trigger unerlying lazy require
+      serverlessSdk.instrumentation.expressApp;
+      rootSpan = new TraceSpan('test');
+    });
+  });
+  after(() => {
+    rootSpan.close();
+    delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
+  });
+  before(() => {});
   it('should expose .createTraceSpan', () => {
     expect(serverlessSdk.createTraceSpan).to.be.instanceOf(Object);
   });
@@ -85,14 +113,5 @@ describe('index.test.js', () => {
     expect(spans[0].parentSpan).to.equal(rootSpan);
     expect(spans[0].endTime).to.not.be.undefined;
     expect(result).to.equal('test');
-  });
-
-  it('should not crash on invalid .setTag input', () => {
-    delete process.env.SLS_CRASH_ON_SDK_ERROR;
-    try {
-      serverlessSdk.setTag();
-    } finally {
-      process.env.SLS_CRASH_ON_SDK_ERROR = '1';
-    }
   });
 });
