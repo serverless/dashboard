@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.10](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.9...@serverless/aws-lambda-sdk@0.15.10) (2023-08-02)
+
+### Features
+
+- Support setEndpoint in Lambda SDK ([c7766ee](https://github.com/serverless/console/commit/c7766ee2929f3fdd21bb3a47bab44dddcd237550))
+
 ### [0.15.9](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.8...@serverless/aws-lambda-sdk@0.15.9) (2023-07-06)
 
 ### Bug Fixes
