@@ -28,6 +28,7 @@ export interface Sdk {
   ): undefined;
   setTag(name: string, value: boolean | number | string | Date | Array<unknown> | null): undefined;
   setEndpoint(endpoint: string): undefined;
+  createTraceSpan(name: string, closure?: (() => T) | (() => Promise<T>))
 }
 
 export interface SdkOptions {
