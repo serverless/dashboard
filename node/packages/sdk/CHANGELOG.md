@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.22](https://github.com/serverless/console/compare/@serverless/sdk@0.5.21...@serverless/sdk@0.5.22) (2023-08-02)
+
+### Features
+
+- Add support for custom spans ([c43f756](https://github.com/serverless/console/commit/c43f75676ed7a14ed211de0965c010f3cb9080dd))
+
+### Bug Fixes
+
+- Seperate createTraceSpan tests into its own block ([f6d85b0](https://github.com/serverless/console/commit/f6d85b06c9012c6e5074151ad29c8b1380a146d2))
+
 ### [0.5.21](https://github.com/serverless/console/compare/@serverless/sdk@0.5.20...@serverless/sdk@0.5.21) (2023-08-01)
 
 ### Features
