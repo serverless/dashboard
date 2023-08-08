@@ -85,11 +85,12 @@ class Instrumenter:
         if not self._flask.request.endpoint:
             return
         try:
-            if self._flask.request.path:
+            endpoint = serverlessSdk._user_defined_endpoint or self._flask.request.path
+            if endpoint:
                 del serverlessSdk.trace_spans.root.tags["aws.lambda.http_router.path"]
                 serverlessSdk.trace_spans.root.tags[
                     "aws.lambda.http_router.path"
-                ] = self._flask.request.path
+                ] = endpoint
             span_name = ".".join(
                 [
                     "flask",

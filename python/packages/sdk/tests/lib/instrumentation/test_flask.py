@@ -208,3 +208,28 @@ def test_flask_original_behaviour_restored_after_uninstall(app):
     # then
     assert sls_sdk.lib.trace.root_span is None
     assert not events
+
+
+def test_set_endpoint(app):
+    # given
+    import requests
+    from sls_sdk import serverlessSdk
+
+    request_body = {"foo": "bar"}
+    endpoint = "/baz"
+    serverlessSdk.set_endpoint(endpoint)
+
+    # when
+    response = requests.get(
+        f"http://127.0.0.1:{TEST_SERVER_PORT}/",
+        headers={"User-Agent": "foo"},
+        data=request_body,
+    )
+    app.shutdown()
+
+    # then
+    assert response.status_code == 200
+    assert response.content == b"ok"
+    root = serverlessSdk.trace_spans.root
+    assert [s.name for s in root.spans] == ["flask", "flask.route.get.helloworld"]
+    assert root.tags["aws.lambda.http_router.path"] == endpoint

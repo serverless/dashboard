@@ -87,6 +87,7 @@ class ServerlessSdk:
     _is_debug_mode: bool
     _is_dev_mode: bool
     _maximum_body_byte_length: int
+    _user_defined_endpoint: Optional[str] = None
 
     def __init__(self):
         self._is_initialized = False
@@ -174,6 +175,9 @@ class ServerlessSdk:
             self._custom_tags._set(name, value)
         except Exception as ex:
             report_error(ex, type="USER")
+
+    def set_endpoint(self, endpoint: str):
+        self._user_defined_endpoint = endpoint
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
