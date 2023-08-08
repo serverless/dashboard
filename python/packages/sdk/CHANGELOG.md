@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.5.4 (2023-08-08)
+
+### Features
+
+- Add `set_endpoint` method to SDK
+
 ## 0.5.3 (2023-07-17)
 
 ### Bug Fixes
