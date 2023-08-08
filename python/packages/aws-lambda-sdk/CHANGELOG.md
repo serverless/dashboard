@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.2.2 (2023-08-08)
+
+### Features
+
+- Support `set_endpoint` in Lambda SDK
+
+### Bug Fixes
+
+- Fix botocore and logging instrumentations
+- Fix and turn on response body observation in dev-mode
+- Fix internal imports to minimize interference with custom imports
+
 ## 0.2.1 (2023-06-21)
 
 ### Bug Fixes
