@@ -496,6 +496,12 @@ class Instrumenter:
             if serverlessSdk.trace_spans.aws_lambda_invocation:
                 serverlessSdk.trace_spans.aws_lambda_invocation.close(end_time=end_time)
 
+            if serverlessSdk._user_defined_endpoint:
+                del self.aws_lambda.tags["aws.lambda.http_router.path"]
+                self.aws_lambda.tags[
+                    "aws.lambda.http_router.path"
+                ] = serverlessSdk._user_defined_endpoint
+
             self.aws_lambda.close(end_time=end_time)
             self._flush_and_close_event_loop()
 
