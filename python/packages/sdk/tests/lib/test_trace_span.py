@@ -64,17 +64,17 @@ def test_span_with_context_manager():
         assert span.end_time is None, "should be open"
 
     # when & then
-    with TraceSpan("foo") as _outer_span:
-        assert_open(_outer_span, "foo")
+    with TraceSpan("outer") as _outer_span:
+        assert_open(_outer_span, "outer")
         outer_span = _outer_span
 
-        with TraceSpan("bar") as _inner_span:
-            assert_open(_outer_span, "foo")
-            assert_open(_inner_span, "bar")
+        with TraceSpan("inner") as _inner_span:
+            assert_open(_outer_span, "outer")
+            assert_open(_inner_span, "inner")
             inner_span = _inner_span
 
         assert inner_span.end_time is not None, "inner span should be closed"
-        assert_open(_outer_span, "foo")
+        assert_open(_outer_span, "outer")
 
     assert outer_span.end_time is not None, "outer span should be closed"
 
