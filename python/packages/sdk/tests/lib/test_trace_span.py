@@ -18,10 +18,12 @@ def test_root_span():
     root_span = TraceSpan("root")
 
     # then
-    assert type(root_span.trace_id) == str, "should automatically generate `trace_id`"
-    assert type(root_span.id) == str, "should automatically generate `id`"
-    assert (
-        type(root_span.start_time) == int
+    assert isinstance(
+        root_span.trace_id, str
+    ), "should automatically generate `trace_id`"
+    assert isinstance(root_span.id, str), "should automatically generate `id`"
+    assert isinstance(
+        root_span.start_time, int
     ), "should automatically generate `start_time`"
 
 
@@ -39,10 +41,10 @@ def test_sub_span():
     assert (
         child_span.trace_id == root_span.trace_id
     ), "should expose `trace_id` of a root span"
-    assert type(child_span.id) == str, "should automatically generate `id`"
+    assert isinstance(child_span.id, str), "should automatically generate `id`"
     assert child_span.id != root_span.id, "should have a unique `id`"
-    assert (
-        type(child_span.start_time) == int
+    assert isinstance(
+        child_span.start_time, int
     ), "should automatically generate `start_time`"
     assert (
         child_span.start_time != root_span.start_time
