@@ -179,5 +179,8 @@ class ServerlessSdk:
     def set_endpoint(self, endpoint: str):
         self._user_defined_endpoint = endpoint
 
+    def create_span(self, name: str):
+        return self._create_trace_span(name)
+
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()

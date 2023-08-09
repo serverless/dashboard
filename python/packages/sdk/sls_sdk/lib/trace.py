@@ -102,6 +102,13 @@ class TraceSpan:
     def __repr__(self):
         return self.__str__()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        if self.end_time is None:
+            self.close()
+
     @staticmethod
     def resolve_current_span() -> Optional[TraceSpan]:
         # Current span is resolved in the following order:
