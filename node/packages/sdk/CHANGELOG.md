@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.24](https://github.com/serverless/console/compare/@serverless/sdk@0.5.23...@serverless/sdk@0.5.24) (2023-08-09)
+
+### Bug Fixes
+
+- Use createSpan instead of createTraceSpan ([a1d3e19](https://github.com/serverless/console/commit/a1d3e1964ee1bf871edba79e1651ed204e5c608a))
+
 ### [0.5.23](https://github.com/serverless/console/compare/@serverless/sdk@0.5.22...@serverless/sdk@0.5.23) (2023-08-02)
 
 ### Bug Fixes
