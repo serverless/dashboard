@@ -64,7 +64,7 @@ serverlessSdk.setTag = (name, value) => {
 serverlessSdk.setEndpoint = (endpoint) => {
   serverlessSdk._userDefinedEndpoint = endpoint;
 };
-serverlessSdk.createTraceSpan = (name, closure) => {
+serverlessSdk.createSpan = (name, closure) => {
   const span = serverlessSdk._createTraceSpan(name);
 
   if (closure && isThenable(closure)) {
