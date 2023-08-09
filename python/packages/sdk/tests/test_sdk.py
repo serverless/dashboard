@@ -273,3 +273,27 @@ def test_sdk_exposes_create_span_with_context_manager(instrumented_sdk):
         assert span.spans == [span]
 
     assert span.end_time is not None
+
+
+def test_sdk_exposes_create_span_with_context_manager_throwing_exception(
+    instrumented_sdk,
+):
+    # given
+    span_name = "foo"
+    exception = None
+
+    # when
+    try:
+        with instrumented_sdk.create_span(span_name) as span:
+            # then
+            assert span.name == span_name
+            assert span.start_time is not None
+            assert span.end_time is None
+            assert span.spans == [span]
+
+            raise Exception("My error")
+    except Exception as e:
+        exception = e
+
+    assert span.end_time is not None
+    assert exception is not None
