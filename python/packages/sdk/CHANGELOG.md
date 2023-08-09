@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.5.5 (2023-08-09)
+
+### Features
+
+- Add `create_span` method to SDK
+- Auto close trace spans with context manager
+
 ## 0.5.4 (2023-08-08)
 
 ### Features
