@@ -343,6 +343,23 @@ describe('Python: integration', function () {
     return { duration, payload };
   };
 
+  const sdkCreateSpanTestConfig = {
+    isCustomResponse: true,
+    test: ({ invocationsData }) => {
+      for (const [, { trace }] of invocationsData.entries()) {
+        const { spans } = trace;
+        const parentSpan = spans.find(({ name }) => name === 'user.parent');
+        const childOneSpan = spans.find(({ name }) => name === 'user.child.one');
+        const childTwoSpan = spans.find(({ name }) => name === 'user.child.two');
+        expect(parentSpan).to.exist;
+        expect(childOneSpan).to.exist;
+        expect(childTwoSpan).to.exist;
+        expect(childOneSpan.parentSpanId.toString()).to.equal(parentSpan.id.toString());
+        expect(childTwoSpan.parentSpanId.toString()).to.equal(parentSpan.id.toString());
+      }
+    },
+  };
+
   const sdkTestConfig = {
     isCustomResponse: true,
     capturedEvents: [
@@ -1332,6 +1349,17 @@ describe('Python: integration', function () {
           ['dev-mode', devModeConfiguration],
         ]),
         config: sdkTestConfig,
+      },
+    ],
+    [
+      'sdk_create_span',
+      {
+        variants: new Map([
+          ['v3-8', { configuration: { Runtime: 'python3.8' } }],
+          ['v3-9', { configuration: { Runtime: 'python3.9' } }],
+          ['v3-10', { configuration: { Runtime: 'python3.10' } }],
+        ]),
+        config: sdkCreateSpanTestConfig,
       },
     ],
     [
