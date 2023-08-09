@@ -58,7 +58,7 @@ describe('index.test.js', () => {
   });
 });
 
-describe('.createTraceSpan', () => {
+describe('.createSpan', () => {
   let serverlessSdk;
   let rootSpan;
   before(() => {
@@ -76,12 +76,12 @@ describe('.createTraceSpan', () => {
     delete require('uni-global')('serverless/sdk/202212').serverlessSdk;
   });
   before(() => {});
-  it('should expose .createTraceSpan', () => {
-    expect(serverlessSdk.createTraceSpan).to.be.instanceOf(Object);
+  it('should expose .createSpan', () => {
+    expect(serverlessSdk.createSpan).to.be.instanceOf(Object);
   });
 
-  it('should create an implicit span using .createTraceSpan with a single argument', () => {
-    const span = serverlessSdk.createTraceSpan('test');
+  it('should create an implicit span using .createSpan with a single argument', () => {
+    const span = serverlessSdk.createSpan('test');
     span.close();
     expect(span).to.be.instanceOf(Object);
     expect(span.name).to.equal('test');
@@ -89,10 +89,10 @@ describe('.createTraceSpan', () => {
     expect(span.endTime).to.not.be.undefined;
   });
 
-  it('should create an sync encaspulated span using .createTraceSpan', () => {
+  it('should create an sync encaspulated span using .createSpan', () => {
     const spans = [];
     serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
-    const result = serverlessSdk.createTraceSpan('test', () => {
+    const result = serverlessSdk.createSpan('test', () => {
       return 'test';
     });
     expect(spans.length).to.equal(1);
@@ -102,10 +102,10 @@ describe('.createTraceSpan', () => {
     expect(result).to.equal('test');
   });
 
-  it('should create an async encaspulated span using .createTraceSpan', async () => {
+  it('should create an async encaspulated span using .createSpan', async () => {
     const spans = [];
     serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
-    const result = await serverlessSdk.createTraceSpan('test', async () => {
+    const result = await serverlessSdk.createSpan('test', async () => {
       return new Promise((resolve) => resolve('test'));
     });
     expect(spans.length).to.equal(1);

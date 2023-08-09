@@ -33,9 +33,9 @@ export interface Sdk {
   ): undefined;
   setTag(name: string, value: boolean | number | string | Date | Array<unknown> | null): undefined;
   setEndpoint(endpoint: string): undefined;
-  createTraceSpan(name: string): TraceSpan;
-  createTraceSpan(name: string, closure: () => T): T;
-  createTraceSpan(name: string, closure: () => Promise<T>): Promise<T>;
+  createSpan(name: string): TraceSpan;
+  createSpan(name: string, closure: () => T): T;
+  createSpan(name: string, closure: () => Promise<T>): Promise<T>;
 }
 
 export interface SdkOptions {
