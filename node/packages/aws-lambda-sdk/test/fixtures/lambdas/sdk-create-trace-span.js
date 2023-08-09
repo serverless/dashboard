@@ -11,11 +11,11 @@ module.exports.handler = async (event) => {
     if (sdk !== sdkMirror) throw new Error('SDK exports mismatch');
   }
 
-  const span = sdk.createTraceSpan('user.parent');
+  const span = sdk.createSpan('user.parent');
 
-  sdk.createTraceSpan('user.child.one', () => {});
+  sdk.createSpan('user.child.one', () => {});
 
-  await sdk.createTraceSpan('user.child.two', async () => {});
+  await sdk.createSpan('user.child.two', async () => {});
 
   span.close();
 
