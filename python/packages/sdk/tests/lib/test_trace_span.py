@@ -1,5 +1,6 @@
 import time
 import json
+from typing import Optional
 from unittest.mock import patch, call, MagicMock
 import pytest
 
@@ -48,6 +49,37 @@ def test_sub_span():
     ), "should have a different `start_time`"
     assert child_span.name == "child", "should expose `name`"
     assert child_span in root_span.sub_spans
+
+
+def test_span_with_context_manager():
+    # given
+    from sls_sdk.lib.trace import TraceSpan
+
+    outer_span: Optional[TraceSpan] = None
+    inner_span: Optional[TraceSpan] = None
+
+    def assert_open(span: TraceSpan, name: str):
+        assert span.name == name, "should have a `name`"
+        assert span.start_time is not None, "should have a `start_time`"
+        assert span.end_time is None, "should be open"
+
+    # when & then
+    with TraceSpan("foo") as _outer_span:
+        assert_open(_outer_span, "foo")
+        outer_span = _outer_span
+
+        with TraceSpan("bar") as _inner_span:
+            assert_open(_outer_span, "foo")
+            assert_open(_inner_span, "bar")
+            inner_span = _inner_span
+
+        assert inner_span.end_time is not None, "inner span should be closed"
+        assert_open(_outer_span, "foo")
+
+    assert outer_span.end_time is not None, "outer span should be closed"
+
+    assert inner_span.parent_span == outer_span
+    assert outer_span.spans == [outer_span, inner_span]
 
 
 def test_span_init_start_time():

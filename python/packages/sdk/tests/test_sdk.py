@@ -238,3 +238,38 @@ def test_initialize_extension(instrumented_sdk):
 
     # then
     instrumented_sdk._initialize_extension.assert_called_once_with("foo", bar="baz")
+
+
+def test_sdk_exposes_create_span(instrumented_sdk):
+    # given
+    span_name = "foo"
+
+    # when
+    span = instrumented_sdk.create_span(span_name)
+
+    # then
+    assert span.name == span_name
+    assert span.start_time is not None
+    assert span.end_time is None
+    assert span.spans == [span]
+
+    # when
+    span.close()
+
+    # then
+    assert span.end_time is not None
+
+
+def test_sdk_exposes_create_span_with_context_manager(instrumented_sdk):
+    # given
+    span_name = "foo"
+
+    # when
+    with instrumented_sdk.create_span(span_name) as span:
+        # then
+        assert span.name == span_name
+        assert span.start_time is not None
+        assert span.end_time is None
+        assert span.spans == [span]
+
+    assert span.end_time is not None
