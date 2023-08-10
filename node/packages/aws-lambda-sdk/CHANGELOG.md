@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.12](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.11...@serverless/aws-lambda-sdk@0.15.12) (2023-08-10)
+
+### Bug Fixes
+
+- Use createSpan instead of createTraceSpan ([d455c52](https://github.com/serverless/console/commit/d455c52c85071fea48d5cf4c56784eca92c1d79a))
+
 ### [0.15.11](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.10...@serverless/aws-lambda-sdk@0.15.11) (2023-08-03)
 
 ### Features
