@@ -41,6 +41,18 @@ Set custom (user defined) trace tag
 - `name` _(str)_ - Tag name, can contain alphanumeric (both lower and upper case), `-`, `_` and `.` characters
 - `value` (any) - Tag value. Can be _str_, _bool_, _int_, _float_, _datetime_ or _List_ containing any values of prior listed types
 
+### `.set_endpoint(endpoint)`
+
+Sets a custom value for `aws.lambda.http_router.path` tag
+
+- `endpoint` _(str)_ - Custom endpoint value to set as the tag's value
+
+### `.create_span(name)`
+
+Create custom trace span
+
+- `name` _(str)_ - Span name, should contain dot separated tokens that follow the pattern `[a-z][a-z0-9]*`
+
 ## Thread safety
 
 Public properties and methods of the `serverlessSdk` object is intended to be thread-safe without need for any special measurements to be taken by consumers.
