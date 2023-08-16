@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.25](https://github.com/serverless/console/compare/@serverless/sdk@0.5.24...@serverless/sdk@0.5.25) (2023-08-16)
+
+### Bug Fixes
+
+- Handle async closures in createSpan correctly ([8c9e03f](https://github.com/serverless/console/commit/8c9e03f15746e71c948e0fe6b3a9bf9c6c15785c))
+
 ### [0.5.24](https://github.com/serverless/console/compare/@serverless/sdk@0.5.23...@serverless/sdk@0.5.24) (2023-08-09)
 
 ### Bug Fixes
