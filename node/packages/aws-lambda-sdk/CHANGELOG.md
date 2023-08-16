@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.13](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.12...@serverless/aws-lambda-sdk@0.15.13) (2023-08-16)
+
+### Bug Fixes
+
+- Update base SDK version and add test fixture for async createSpan ([77c1917](https://github.com/serverless/console/commit/77c1917c63700cb64345997666ab7acab3dac5b5))
+
 ### [0.15.12](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.11...@serverless/aws-lambda-sdk@0.15.12) (2023-08-10)
 
 ### Bug Fixes
