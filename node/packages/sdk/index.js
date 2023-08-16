@@ -67,26 +67,27 @@ serverlessSdk.setEndpoint = (endpoint) => {
 serverlessSdk.createSpan = (name, closure) => {
   const span = serverlessSdk._createTraceSpan(name);
 
-  if (closure && isThenable(closure)) {
-    return closure.then(
-      (result) => {
-        span.close();
-        return result;
-      },
-      (error) => {
-        span.close();
-        throw error;
-      }
-    );
-  }
-
   if (closure && isFunction(closure)) {
     let result;
     try {
       result = closure();
-    } finally {
+    } catch (e) {
       span.close();
+      throw e;
     }
+    if (isThenable(result)) {
+      return result.then(
+        (resolution) => {
+          span.close();
+          return resolution;
+        },
+        (error) => {
+          span.close();
+          throw error;
+        }
+      );
+    }
+    span.close();
     return result;
   }
   return span;
