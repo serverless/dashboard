@@ -499,6 +499,23 @@ describe('integration', function () {
     },
   };
 
+  const sdkCreateSpanAsyncNestedTestConfig = {
+    isCustomResponse: true,
+    test: ({ invocationsData }) => {
+      for (const [, { trace }] of invocationsData.entries()) {
+        const { spans } = trace;
+        const parentSpan = spans.find(({ name }) => name === 'user.parent');
+        const childOneSpan = spans.find(({ name }) => name === 'user.child.one');
+        const childTwoSpan = spans.find(({ name }) => name === 'user.child.two');
+        expect(parentSpan).to.exist;
+        expect(childOneSpan).to.exist;
+        expect(childTwoSpan).to.exist;
+        expect(childOneSpan.parentSpanId.toString()).to.equal(parentSpan.id.toString());
+        expect(childTwoSpan.parentSpanId.toString()).to.equal(childOneSpan.id.toString());
+      }
+    },
+  };
+
   const sdkTestConfig = {
     isCustomResponse: true,
     capturedEvents: [
@@ -2664,6 +2681,17 @@ describe('integration', function () {
           ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
         ]),
         config: sdkCreateTraceSpanTestConfig,
+      },
+    ],
+    [
+      'sdk-create-span-async-nested',
+      {
+        variants: new Map([
+          ['v14', { configuration: { Runtime: 'nodejs14.x' } }],
+          ['v16', { configuration: { Runtime: 'nodejs16.x' } }],
+          ['v18', { configuration: { Runtime: 'nodejs18.x' } }],
+        ]),
+        config: sdkCreateSpanAsyncNestedTestConfig,
       },
     ],
     [
