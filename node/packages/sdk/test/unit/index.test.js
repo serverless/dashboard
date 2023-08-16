@@ -114,4 +114,23 @@ describe('.createSpan', () => {
     expect(spans[0].endTime).to.not.be.undefined;
     expect(result).to.equal('test');
   });
+
+  it('should create nested spans using async context .createSpan', async () => {
+    const spans = [];
+    serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
+    const result = await serverlessSdk.createSpan('test.test1', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await serverlessSdk.createSpan('test.test2', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      });
+      return new Promise((resolve) => resolve('test'));
+    });
+
+    expect(spans.length).to.equal(2);
+    expect(spans[0].name).to.equal('test.test2');
+    expect(spans[1].parentSpan).to.equal(rootSpan);
+    expect(spans[1].name).to.equal('test.test1');
+    expect(spans[0].parentSpan).to.equal(spans[1]);
+    expect(result).to.equal('test');
+  });
 });
