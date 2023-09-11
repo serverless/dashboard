@@ -83,7 +83,7 @@ def _reset_sdk_reimport(
     else:
         monkeypatch.delenv("SLS_SDK_DEBUG", False)
 
-    if hasattr(request, "param") and type(request.param) is dict:
+    if hasattr(request, "param") and isinstance(request.param, dict):
         for key in request.param:
             monkeypatch.setenv(key, request.param[key])
 
