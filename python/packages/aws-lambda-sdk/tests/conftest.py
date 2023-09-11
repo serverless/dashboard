@@ -24,7 +24,6 @@ def _reset_sdk(
     monkeypatch, request, is_dev_mode: bool = False, is_debug_mode: bool = False
 ):
     module_prefixes_to_delete = [
-        "serverless_sdk",
         "sls_sdk",
         "threading",
         "concurrent.futures",

@@ -56,7 +56,6 @@ def _reset_sdk_reimport(
         sys.meta_path.remove(import_hook[0])
 
     module_prefixes_to_delete = [
-        "serverless_sdk",
         "sls_sdk",
         "threading",
         "concurrent.futures",
@@ -93,7 +92,7 @@ def _reset_sdk_reimport(
         importlib.import_module(module)
 
     # make sure the SDK is imported
-    importlib.import_module("serverless_sdk")
+    importlib.import_module("sls_sdk")
 
 
 @pytest.fixture(scope="session")
