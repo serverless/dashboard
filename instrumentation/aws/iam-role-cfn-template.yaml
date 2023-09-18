@@ -1575,6 +1575,9 @@ Resources:
               # Grants permission to delete a delivery stream and its data.
               # https://docs.aws.amazon.com/firehose/latest/APIReference/API_DeleteDeliveryStream.html
               - "firehose:DeleteDeliveryStream"
+              # Grants permission to update a delivery stream's destination configuration.
+              # https://docs.aws.amazon.com/firehose/latest/APIReference/API_UpdateDestination.html
+              - "firehose:UpdateDestination"
             Resource:
               - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_metrics-firehose"
               - !Sub "arn:aws:firehose:*:${AWS::AccountId}:deliverystream/serverless_logs-firehose"
