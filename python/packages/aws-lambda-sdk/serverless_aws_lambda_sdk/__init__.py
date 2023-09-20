@@ -64,7 +64,9 @@ baseSdk._is_dev_mode = bool(os.environ.get("SLS_DEV_MODE_ORG_ID"))
 baseSdk.instrumentation.aws_sdk = aws_sdk
 
 
-def _initialize_extension(self, disable_aws_sdk_monitoring=False, disable_trace_sampling=False):
+def _initialize_extension(
+    self, disable_aws_sdk_monitoring=False, disable_trace_sampling=False
+):
     try:
         settings = self._settings
         self._settings.disable_aws_sdk_monitoring = bool(

@@ -239,7 +239,7 @@ class Instrumenter:
             # This function determines if a trace should be sampled out or not
             nonlocal should_set_is_after_not_sampled_out_api_request
             if serverlessSdk._settings.disable_sampling:
-                return False # Do not sample out when disable_sampling set
+                return False  # Do not sample out when disable_sampling set
             if is_error_outcome:
                 return False  # Do not sample out when invocation ends with error
             if serverlessSdk._is_debug_mode:
