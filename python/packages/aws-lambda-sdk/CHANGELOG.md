@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.3.1 (2023-09-20)
+
+- Add support for env SLS_DISABLE_TRACE_SAMPLING
+
 ## 0.3.0 (2023-09-14)
 
 ### ⚠ BREAKING CHANGES
