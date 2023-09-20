@@ -28,6 +28,10 @@ Disable automated AWS SDK monitoring
 
 Disable automated express monitoring
 
+##### `SLS_DISABLE_TRACE_SAMPLING` (or `options.disableTraceSampling`)
+
+Disable automatic trace sampling
+
 ### Instrumentation
 
 AWS Lambda SDK automatically creates `aws.lambda`, `aws.lambda.initialization` and `aws.lambda.invocation` trace spans.

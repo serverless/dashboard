@@ -20,6 +20,9 @@ serverlessSdk._initializeExtension = (options) => {
     serverlessSdk._settings.disableAwsSdkMonitoring = Boolean(
       process.env.SLS_DISABLE_AWS_SDK_MONITORING || options.disableAwsSdkMonitoring
     );
+    serverlessSdk._settings.disableTraceSampling = Boolean(
+      process.env.SLS_DISABLE_TRACE_SAMPLING || options.disableTraceSampling
+    );
     if (!settings.disableAwsSdkMonitoring) {
       require('./lib/instrumentation/aws-sdk').install();
     }
