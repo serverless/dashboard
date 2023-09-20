@@ -111,7 +111,9 @@ const reportTrace = ({ isErrorOutcome }) => {
   const isSampledOut =
     (() => {
       // This function determines if a trace should be sampled or not
-      //
+
+      // If `disableTraceSampling` is set to true then we sample nothing
+      if (serverlessSdk._settings && serverlessSdk._settings.disableTraceSample) return false;
       // Do not sample when invocation ends with error
       if (isErrorOutcome) return false;
       // Do not sample when in debug mode
