@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.14](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.13...@serverless/aws-lambda-sdk@0.15.14) (2023-09-20)
+
+### Features
+
+- Add support for env SLS_DISABLE_TRACE_SAMPLING ([#876](https://github.com/serverless/console/issues/876)) ([e6601f7](https://github.com/serverless/console/commit/e6601f759c5a41cda150221ccf848493915d869f))
+
 ### [0.15.13](https://github.com/serverless/console/compare/@serverless/aws-lambda-sdk@0.15.12...@serverless/aws-lambda-sdk@0.15.13) (2023-08-16)
 
 ### Bug Fixes
