@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.26](https://github.com/serverless/console/compare/@serverless/sdk@0.5.25...@serverless/sdk@0.5.26) (2023-09-27)
+
+### Bug Fixes
+
+- Report SDK user error for invalid span name ([#879](https://github.com/serverless/console/issues/879)) ([73b091d](https://github.com/serverless/console/commit/73b091d6eead7ecec1b8591c129cc942667613f2))
+
 ### [0.5.25](https://github.com/serverless/console/compare/@serverless/sdk@0.5.24...@serverless/sdk@0.5.25) (2023-08-16)
 
 ### Bug Fixes
