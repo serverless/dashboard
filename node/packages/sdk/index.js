@@ -65,32 +65,55 @@ serverlessSdk.setEndpoint = (endpoint) => {
   serverlessSdk._userDefinedEndpoint = endpoint;
 };
 serverlessSdk.createSpan = (name, closure) => {
-  const span = serverlessSdk._createTraceSpan(name);
+  let span;
+
+  try {
+    span = serverlessSdk._createTraceSpan(name);
+  } catch (error) {
+    try {
+      reportError(error, { type: 'USER' });
+    } catch (err) {
+      // ignore
+    }
+  }
 
   if (closure && isFunction(closure)) {
     let result;
     try {
       result = closure();
     } catch (e) {
-      span.close();
+      if (span) {
+        span.close();
+      }
       throw e;
     }
     if (isThenable(result)) {
       return result.then(
         (resolution) => {
-          span.close();
+          if (span) {
+            span.close();
+          }
           return resolution;
         },
         (error) => {
-          span.close();
+          if (span) {
+            span.close();
+          }
           throw error;
         }
       );
     }
-    span.close();
+    if (span) {
+      span.close();
+    }
     return result;
   }
-  return span;
+
+  if (span) {
+    return span;
+  }
+
+  return { close: () => {} };
 };
 
 // Private

@@ -133,4 +133,36 @@ describe('.createSpan', () => {
     expect(spans[0].parentSpan).to.equal(spans[1]);
     expect(result).to.equal('test');
   });
+
+  it('should not create a span if span name is invalid with a single argument', async () => {
+    const spans = [];
+    serverlessSdk._settings.disableCapturedEventsStdout = true;
+    serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
+    const span = serverlessSdk.createSpan('testspan-1');
+    span.close();
+    expect(spans.length).to.equal(0);
+  });
+
+  it('should not create a span if span name is invalid with a encaspulated context', async () => {
+    const spans = [];
+    serverlessSdk._settings.disableCapturedEventsStdout = true;
+    serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
+    const result = serverlessSdk.createSpan('testspan-1', () => {
+      return 'test';
+    });
+    expect(spans.length).to.equal(0);
+    expect(result).to.equal('test');
+  });
+
+  it('should not create a span if span name is invalid with an async encaspulated context', async () => {
+    const spans = [];
+    serverlessSdk._settings.disableCapturedEventsStdout = true;
+    serverlessSdk._eventEmitter.on('trace-span-close', (traceSpan) => spans.push(traceSpan));
+    const result = await serverlessSdk.createSpan('testspan-1', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return 'test';
+    });
+    expect(spans.length).to.equal(0);
+    expect(result).to.equal('test');
+  });
 });
