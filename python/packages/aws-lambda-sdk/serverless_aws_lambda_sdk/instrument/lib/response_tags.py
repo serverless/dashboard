@@ -1,5 +1,5 @@
 from .sdk import serverlessSdk
-from .api_events import is_api_event
+from .api_events import is_api_event, is_api_gateway_v2_event
 
 aws_lambda_span = serverlessSdk.trace_spans.aws_lambda
 
@@ -10,7 +10,7 @@ def _get_response_status_code(response):
         status_code = response.get("statusCode")
 
     if status_code is None:
-        return None
+        return 200 if is_api_gateway_v2_event() else None
 
     try:
         return int(status_code)
