@@ -1,5 +1,5 @@
 from __future__ import annotations
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 
 def test_non_api_event(reset_sdk):
@@ -86,12 +86,48 @@ def test_api_event_error(reset_sdk):
         "serverless_aws_lambda_sdk.instrument.lib.response_tags.is_api_event"
     ) as mock_is_api_event:
         mock_is_api_event.return_value = True
-        resolve(str(status_code))
+
+        with patch(
+            "serverless_aws_lambda_sdk.instrument.lib.response_tags.is_api_gateway_v2_event"
+        ) as mock_is_api_gateway_v2_event:
+            mock_is_api_gateway_v2_event.return_value = False
+            resolve(str(status_code))
 
     # then
     mock_is_api_event.assert_called_once()
+    mock_is_api_gateway_v2_event.assert_called_once()
     assert not hasattr(
         serverlessSdk.trace_spans.aws_lambda.tags, "aws.lambda.http.status_code"
+    )
+    assert not hasattr(
+        serverlessSdk.trace_spans.aws_lambda.tags, "aws.lambda.http.error_code"
+    )
+
+
+def test_api_event_api_gateway_v2_success(reset_sdk):
+    # given
+    from serverless_aws_lambda_sdk.instrument.lib.response_tags import resolve
+    from serverless_aws_lambda_sdk import serverlessSdk
+
+    response = "success"
+
+    # when
+    with patch(
+        "serverless_aws_lambda_sdk.instrument.lib.response_tags.is_api_event"
+    ) as mock_is_api_event:
+        mock_is_api_event.return_value = True
+
+        with patch(
+            "serverless_aws_lambda_sdk.instrument.lib.response_tags.is_api_gateway_v2_event"
+        ) as mock_is_api_gateway_v2_event:
+            mock_is_api_gateway_v2_event.return_value = True
+            resolve(response)
+
+    # then
+    mock_is_api_event.assert_called_once()
+    mock_is_api_gateway_v2_event.assert_called_once()
+    assert (
+        serverlessSdk.trace_spans.aws_lambda.tags["aws.lambda.http.status_code"] == 200
     )
     assert not hasattr(
         serverlessSdk.trace_spans.aws_lambda.tags, "aws.lambda.http.error_code"

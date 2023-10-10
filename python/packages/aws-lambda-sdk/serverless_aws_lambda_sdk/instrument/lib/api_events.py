@@ -11,3 +11,9 @@ def is_api_event():
         "aws.lambda.url",
         "aws.elasticloadbalancing.http",
     ]
+
+
+def is_api_gateway_v2_event():
+    return (
+        aws_lambda_span.tags.get("aws.lambda.event_type") == "aws.apigatewayv2.http.v2"
+    )
